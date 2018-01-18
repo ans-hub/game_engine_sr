@@ -32,6 +32,7 @@ namespace cfg {
 
   constexpr int kSpaceColor = 0;
   constexpr int kStarsCnt = 500;
+  constexpr int kStarTrack = 20;  // coeff using to eval star tracks
   constexpr int kVelocity = 43;      // viewport velocity
   constexpr int kMaxVelocity = 95;
   constexpr int kNearZ = 10;

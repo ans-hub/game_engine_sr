@@ -21,7 +21,6 @@ Logic::Logic(GlWindow& win, Level& level, AudioOut& audio)
   audio.Load(cfg::kExplodeSnd, false);
   audio.Load(cfg::kShotSnd, false);
   audio.Load(cfg::kWingSnd, false);
-  // audio.Load(cfg::kShakeSnd, false);
   audio.Play(cfg::kBackgroundMusic);
   
   InitCannon();
@@ -46,13 +45,7 @@ bool Logic::Process()
 
   ProcessCannon(mpos, mbtn);
   ProcessVelocity(kbtn);
-
-  // Process game over
-
-  if (kbtn == Btn::ESC)
-    return false;
-  else
-    return true;
+  return ProcessGameState(kbtn);
 }
 
 void Logic::InitCannon()
@@ -280,6 +273,23 @@ void Logic::ProcessCannon(Pos& pos, Btn key)
     cannon.wait_ = 0;
     cannon.ready_ = true;
   }
+}
+
+bool Logic::ProcessGameState(Btn kbtn)
+{
+#ifdef DEBUG
+  if (kbtn == Btn::SPACE) {
+    do{
+      if (win_.ReadKeyboardBtn(BtnType::KB_DOWN) == Btn::SPACE)
+        break;
+    } while (true);
+  }
+#endif
+
+  if (kbtn == Btn::ESC)
+    return false;
+  else
+    return true;
 }
 
 } // namespace anshub

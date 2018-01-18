@@ -58,7 +58,10 @@ void Scene::DrawStarfield()
   for (const auto& star : level_.stars_)
   {
     int z = star.z;
-    for (int i = 0; i <= level_.velocity_/20; ++i)    // draw star tracks
+    
+    // Emulate stars track
+
+    for (int i = 0; i <= level_.velocity_ / cfg::kStarTrack; ++i)
     {
       double x_per = half_w_ * star.x / z;
       double y_per = half_h_ * star.y / z;
@@ -72,7 +75,8 @@ void Scene::DrawStarfield()
         buffer_[x_scr + y_scr * w_] = color;
       }
 
-      z -= level_.velocity_;
+      int step = (cfg::kStarFarZ / level_.velocity_); // near to kNearZ - less step
+      z -= z / step;
       if (z <= cfg::kNearZ)
         break;
     }
