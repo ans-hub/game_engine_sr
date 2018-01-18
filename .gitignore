@@ -1,0 +1,15 @@
+# Executables
+raiders
+raiders_debug
+*.out
+*.app
+
+# Temporary
+*.tmp
+*.ghc
+
+# Objects
+*.o
+*.obj
+*.d
+*.dep
