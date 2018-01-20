@@ -1,8 +1,8 @@
 // ***********************************************************************
 // File:    fx_colors.h
 // Descr:   helpers color functions 
-// Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2018
+// URL:     https://github.com/ans-hub/game_console
 //***********************************************************************
 
 #include <fx_colors.h>
@@ -12,14 +12,14 @@ namespace anshub {
 // Returns color in word-order ARGB format (little-endian) where the most
 // signification byte is b, and less is a
 
-int color::MakeARGB(byte a, byte r, byte g, byte b)
+int color_helpers::MakeARGB(byte a, byte r, byte g, byte b)
 {
   return (b << 24) | (g << 16) | (r << 8) | a;
 }
 
 // Split ARGB byte-ordered little-endian into r,g,b,a components
 
-void color::SplitARGB(int color, byte& b, byte& g, byte& r, byte& a)
+void color_helpers::SplitARGB(int color, byte& b, byte& g, byte& r, byte& a)
 {
   b = (color >> 24) & 0xff;
   g = (color >> 16) & 0xff;
@@ -29,7 +29,7 @@ void color::SplitARGB(int color, byte& b, byte& g, byte& r, byte& a)
 
 // Increase brightness of rgba color (given in word-order)
 
-int color::IncreaseBrightness(int color, double k)
+int color_helpers::IncreaseBrightness(int color, double k)
 {
   unsigned int a = 255;
   unsigned int r = (int)(((color>>8)&0xff)*k);
@@ -43,11 +43,12 @@ int color::IncreaseBrightness(int color, double k)
 
 } // namespace anshub
 
-// Note : all colors are ARGB (word-ordered), which is eq BGRA (byte-ordered)
-// This means that on the little-endian arch color stored in memory as ARGB
-// (and we read this right to left - b,g,r,a), but opengl system would see at this
-// 4 bytes not as for complete 32 bit, but as byte-ordered representaion, left to
-// right. Thus format_ data member of Buffer class is GL_BGRA (in byte-ordered
+// Note : all colors are BGRA (word-ordered), which is eq ARGB (byte-ordered)
+// This means that on the little-endian arch color stored in memory as BGRA
+// (and we read this right to left - b,g,r,a), but when we speak in byte-ordered
+// meaning, we speak as 4 bytes not as for complete 32 bit, but as byte-ordered
+// representaion, left to right. Thus format_ data member of Buffer class is
+// GL_BGRA (in byte-ordered
 // meanings)
 
 // https://en.wikipedia.org/wiki/RGBA_color_space

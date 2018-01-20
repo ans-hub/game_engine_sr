@@ -66,14 +66,14 @@ bool polygon::PointInside(const Vertexes& poly, const Point& p)
 
 bool polygon::PointInside(double x0, double y0, double x1, double y1, double px, double py)
 {
-  if (px <= x0 || px >= x1 || py <= y0 || py >= y1)
+  if (px < x0 || px > x1 || py < y0 || py > y1)
     return false;
   return true;
 }
 
 bool polygon::PointInside(const Point& p1, const Point& p2, const Point& p)
 {
-  if (p.x <= p1.x || p.x >= p1.x || p.y <= p2.y || p.y >= p2.y)
+  if (p.x < p1.x || p.x > p1.x || p.y < p2.y || p.y > p2.y)
     return false;
   return true;
 }
@@ -87,7 +87,7 @@ bool polygon::PointsInside(double x0, double y0, double x1, double y1, std::vect
 {
   for (const auto& p : v)
   {
-    if (p.x <= x0 || p.x >= x1 || p.y <= y0 || p.y >= y1)
+    if (p.x < x0 || p.x > x1 || p.y < y0 || p.y > y1)
       return false;
   }
   return true;

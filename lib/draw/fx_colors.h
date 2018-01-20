@@ -1,12 +1,12 @@
 // *************************************************************
 // File:    fx_colors.h
 // Descr:   helpers color functions 
-// Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2018
+// URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
-#ifndef SMPL_FXCOLORS_H
-#define SMPL_FXCOLORS_H
+#ifndef GL_FXCOLORS_H
+#define GL_FXCOLORS_H
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,7 +14,7 @@
 
 namespace anshub {
 
-namespace color {
+namespace color_helpers {
 
 using byte  = unsigned char;
 
@@ -22,8 +22,8 @@ int   MakeARGB(byte, byte, byte, byte);
 void  SplitARGB(int color, byte&, byte&, byte&, byte&);
 int   IncreaseBrightness(int, double);
 
-} // namespace color
+} // namespace color_helpers
 
 } // namespace anshub
 
-#endif  // SMPL_FXCOLORS_H
+#endif  // GL_FXCOLORS_H

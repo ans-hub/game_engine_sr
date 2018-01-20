@@ -15,7 +15,8 @@ Level::Level(int ships)
   , cannon_{}
   , explosions_{}
   , score_{0}
-  , velocity_{cfg::kVelocity}
+  , enemy_shots_{}
+  , velocity_{cfg::kStartVelocity}
 { }
 
 } // namespace anshub

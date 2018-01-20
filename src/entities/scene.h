@@ -9,6 +9,7 @@
 #define GAME_SCENE_H
 
 #include <sstream>
+#include <iomanip>
 #include <cmath>
 
 #include "lib/window/gl_window.h"
@@ -17,8 +18,8 @@
 #include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
+#include "lib/draw/fx_colors.h"
 #include "lib/math/fx_polygons.h"
-#include "lib/math/fx_colors.h"
 
 #include "src/entities/level.h"
 
@@ -35,6 +36,7 @@ private:
 
   void DrawStarfield();
   void DrawWarships();
+  void DrawWarshipsAttack();
   void DrawShake();
   void DrawCannon();
   void DrawExplosions();

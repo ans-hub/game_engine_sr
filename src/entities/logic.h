@@ -11,7 +11,9 @@
 #include "lib/window/gl_window.h"
 #include "lib/audio/audio_out.h"
 #include "lib/system/rand_toolkit.h"
-#include "lib/math/fx_colors.h"
+#include "lib/draw/fx_colors.h"
+#include "lib/math/point.h"
+#include "lib/math/fx_polygons.h"
 #include "lib/system/timer.h" 
 
 #include "src/config.h"
@@ -34,6 +36,7 @@ private:
 
   void MoveStarfield();
   void MoveWarships();
+  void AttackWarships();
 
   void ProcessExplosions();
   void PrepareExplosion(Starship&);

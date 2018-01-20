@@ -36,6 +36,8 @@ Starship::Starship()
   , bounding_box_{}
   , dead_{true}
   , audible_{false}
+  , in_attack_{false}
+  , aim_attack_{-1,-1,-1}
 { }
 
 } // namespace anshub

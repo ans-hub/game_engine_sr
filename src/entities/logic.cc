@@ -24,9 +24,9 @@ Logic::Logic(GlWindow& win, Level& level, AudioOut& audio)
   audio.Play(cfg::kBackgroundMusic);
   
   InitCannon();
-  InitStarfield();                  // more prefferable move it to
-  for (auto& ship : level_.ships_)  // level class  constructor ???
-    InitWarship(ship);            
+  InitStarfield();
+  for (auto& ship : level_.ships_)
+    InitWarship(ship);
 }
 
 bool Logic::Process()
@@ -35,6 +35,7 @@ bool Logic::Process()
 
   MoveStarfield();
   MoveWarships();
+  AttackWarships();
   ProcessExplosions();
 
   // Process keyboard and events base on it
@@ -89,11 +90,17 @@ void Logic::InitWarship(Starship& ship)
 
 void Logic::MoveStarfield()
 {
+  int half_w = win_.Width() >> 1;
+  int half_h = win_.Height() >> 1;
+
   for (auto& star : level_.stars_)
   {
     star.z -= level_.velocity_;
-    if (star.z <= cfg::kNearZ)
-      star.z = cfg::kStarFarZ;
+    if (star.z <= cfg::kNearZ) {
+      star.x = rand_toolkit::get_rand(-half_w, half_w);
+      star.y = rand_toolkit::get_rand(-half_h, half_h);
+      star.z = cfg::kStarFarZ;  
+    }
   }
 }
 
@@ -110,10 +117,10 @@ void Logic::MoveWarships()
 
     ship.pos_.x += ship.vel_.x;
     ship.pos_.y += ship.vel_.y;
-    ship.pos_.z += ship.vel_.z - level_.velocity_;  // todo: make as vector
+    ship.pos_.z += ship.vel_.z - level_.velocity_;
 
     double bright = cfg::kMaxBrightness - (ship.pos_.z * step);
-    ship.color_ = color::IncreaseBrightness(cfg::kShipColor, bright);
+    ship.color_ = color_helpers::IncreaseBrightness(cfg::kShipColor, bright);
     
     int audible_dist = cfg::kNearZ + cfg::kAudibleShip;
     if (ship.pos_.z <= audible_dist && !ship.audible_) {
@@ -123,6 +130,36 @@ void Logic::MoveWarships()
 
     if (ship.pos_.z <= cfg::kNearZ) {
       InitWarship(ship);
+    }
+  }
+}
+
+void Logic::AttackWarships()
+{
+  auto& player = level_.player_;
+
+  for (auto& ship : level_.ships_)
+  {
+    if (ship.dead_)
+      continue;
+    if (ship.pos_.z <= cfg::kMinShotDist)
+      continue;
+    // if (ship.in_attack_)
+    //   continue;
+    
+    ship.in_attack_ = !(bool)(rand_toolkit::get_rand(0, 500) % 250);
+    
+    if (ship.in_attack_)
+    {
+      ship.aim_attack_.x = rand_toolkit::get_rand(-player.w*2, player.w*2);
+      ship.aim_attack_.y = rand_toolkit::get_rand(-player.h*2, player.h*2);
+      ship.aim_attack_.z = cfg::kEnemyAttackZ;
+
+      if (polygon::PointInside(-player.w, -player.h, player.w, player.h,
+        ship.aim_attack_.x, ship.aim_attack_.y)) {
+          audio_.Play(cfg::kScratchSnd);
+          player.life -= cfg::kEnemyStrenght;
+        }
     }
   }
 }
@@ -285,6 +322,9 @@ bool Logic::ProcessGameState(Btn kbtn)
     } while (true);
   }
 #endif
+
+  if (level_.player_.life <= 0)
+    return false;
 
   if (kbtn == Btn::ESC)
     return false;

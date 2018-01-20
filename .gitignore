@@ -13,3 +13,7 @@ raiders_debug
 *.obj
 *.d
 *.dep
+
+# Libraries
+*.a
+*.so

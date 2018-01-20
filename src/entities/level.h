@@ -21,11 +21,14 @@ namespace anshub {
 
 struct Level
 {
+  const int kShotsVel_ = 2000;
+
   using VStarships  = std::vector<Starship>;
   using VSegments   = std::vector<Segment>;
   using VStarfield  = std::vector<Point>;
   using VVelocity   = std::vector<Vector3d>;
   using VExplosions = std::vector<std::pair<VSegments, VVelocity>>;
+  using VEnemyShots = std::vector<std::pair<Point, Point>>;
 
   Level(int ships);
 
@@ -35,6 +38,7 @@ struct Level
   VStarfield  stars_;
   Cannon      cannon_;
   VExplosions explosions_;
+  VEnemyShots enemy_shots_;
   Player      player_;
   
   // States

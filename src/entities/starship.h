@@ -44,8 +44,13 @@ struct Starship
   Vertexes  vx_;            // model vertexes (local coords)
   Edges     ed_;            // model edges (pair of indexes in vx_)
   Rect      bounding_box_;  // used for laser hit detection 
+  
+  // States
+
   bool      dead_;          // is dead ?
   bool      audible_;       // is audible for current viewpoint ?
+  bool      in_attack_;     // is attack now ?
+  Point     aim_attack_;    // point of attack
 
 }; // struct Starship
 

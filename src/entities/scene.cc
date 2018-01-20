@@ -33,6 +33,7 @@ void Scene::Build()
   buffer_.Clear();
   DrawStarfield();
   DrawWarships();
+  DrawWarshipsAttack();
   DrawShake();
   DrawCannon();
   DrawExplosions();
@@ -69,13 +70,13 @@ void Scene::DrawStarfield()
       int y_scr = half_h_ - y_per;
 
       brightness = (cfg::kMaxBrightness*2) - (star.z * kColor);
-      color = color::IncreaseBrightness(cfg::kStarColor, brightness);
+      color = color_helpers::IncreaseBrightness(cfg::kStarColor, brightness);
 
       if (polygon::PointInside(0, 0, w_-1, h_-1, x_scr, y_scr)) {
         buffer_[x_scr + y_scr * w_] = color;
       }
 
-      int step = (cfg::kStarFarZ / level_.velocity_); // near to kNearZ - less step
+      int step = (cfg::kStarFarZ / (level_.velocity_ + 1)); // near to kNearZ - less step
       z -= z / step;
       if (z <= cfg::kNearZ)
         break;
@@ -94,7 +95,7 @@ void Scene::DrawWarships()
     if (ship.dead_)
       continue;
 
-    // This block creates unreal borders
+    // This block creates unreal borders for shooting purposes
 
     Point& min = ship.bounding_box_.a;
     Point& max = ship.bounding_box_.b;
@@ -104,7 +105,7 @@ void Scene::DrawWarships()
     max.y = max.x;
     
     brightness = cfg::kMaxBrightness - (ship.pos_.z * kColor);
-    color = color::IncreaseBrightness(cfg::kShipColor, brightness);
+    color = color_helpers::IncreaseBrightness(cfg::kShipColor, brightness);
 
     for (const auto& edge : ship.ed_)
     {
@@ -151,6 +152,41 @@ void Scene::DrawWarships()
   }
 }
 
+void Scene::DrawWarshipsAttack()
+{
+  double kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / cfg::kShipFarZ;         
+  
+  for (auto& ship : level_.ships_)
+  {
+    if (!ship.dead_ && ship.in_attack_)
+    {
+      double x_per_1 = half_w_ * (ship.pos_.x / ship.pos_.z);
+      double y_per_1 = half_h_ * (ship.pos_.y / ship.pos_.z);
+      double x_per_2 = half_w_ * (ship.aim_attack_.x / ship.aim_attack_.z);
+      double y_per_2 = half_h_ * (ship.aim_attack_.y / ship.aim_attack_.z);
+
+      // Convert to screen coords (since in virtual coords 0;0 is the center)
+
+      int x_scr_1 = half_w_ + x_per_1;
+      int y_scr_1 = half_h_ - y_per_1;
+      int x_scr_2 = half_w_ + x_per_2;
+      int y_scr_2 = half_h_ - y_per_2;
+
+      if (draw_helpers::ClipSegment(0, 0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
+      {
+        double bright_k_1 = cfg::kMaxBrightness - (ship.pos_.z * kColor);
+        double bright_k_2 = cfg::kMaxBrightness - (ship.aim_attack_.z * kColor);
+            
+        draw_helpers::DrawLine(
+          x_scr_1, y_scr_1, x_scr_2, y_scr_2,
+          cfg::kEnemyShotColor, bright_k_1, bright_k_2*2,
+          buffer_
+        );
+      }
+    }
+  }
+}
+
 void Scene::DrawShake()
 {
 
@@ -173,13 +209,22 @@ void Scene::DrawCannon()
     draw_helpers::DrawLine(
       b.x, b.y, t.x, t.y, cfg::kAimColor, buffer_);
 
-    if (level_.cannon_.shot_) {
+    double kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / cfg::kShipFarZ;         
+    double bright_k_1 = cfg::kMaxBrightness - (cfg::kShipFarZ * kColor);
+    double bright_k_2 = cfg::kMaxBrightness - (cfg::kNearZ * kColor);
+            
+    if (level_.cannon_.shot_)
+    {
       if (rand_toolkit::coin_toss())
         draw_helpers::DrawLine(
-          0, 0, mid.x, mid.y, cfg::kCannonColor, buffer_);
+          0, 0, mid.x, mid.y, cfg::kCannonColor, bright_k_2, bright_k_1,
+          buffer_
+        );
       else
         draw_helpers::DrawLine(
-          w_-1, 0, mid.x, mid.y, cfg::kCannonColor, buffer_);
+          w_-1, 0, mid.x, mid.y, cfg::kCannonColor, bright_k_2, bright_k_1,
+          buffer_
+        );
     }
   }
 }
@@ -194,14 +239,10 @@ void Scene::DrawExplosions()
   {
     for (const auto& edge : expl.first)
     {
-      double x_per_1 = 
-        half_w_ * (edge.a.x) / (edge.a.z);
-      double y_per_1 = 
-        half_h_ * (edge.a.y) / (edge.a.z);
-      double x_per_2 = 
-        half_w_ * (edge.b.x) / (edge.b.z);
-      double y_per_2 = 
-        half_h_ * (edge.b.y) / (edge.b.z);
+      double x_per_1 = half_w_ * (edge.a.x) / (edge.a.z);
+      double y_per_1 = half_h_ * (edge.a.y) / (edge.a.z);
+      double x_per_2 = half_w_ * (edge.b.x) / (edge.b.z);
+      double y_per_2 = half_h_ * (edge.b.y) / (edge.b.z);
 
       int x_scr_1 = half_w_ + x_per_1;
       int y_scr_1 = half_h_ - y_per_1;
@@ -212,7 +253,7 @@ void Scene::DrawExplosions()
           polygon::PointInside(0, 0, w_-1, h_-1, x_scr_2, y_scr_2))
       {
         brightness = cfg::kMaxBrightness*4 - (edge.a.z * kColor);
-        color = color::IncreaseBrightness(cfg::kExplColor, brightness);
+        color = color_helpers::IncreaseBrightness(cfg::kExplColor, brightness);
         
         draw_helpers::DrawLine(
           x_scr_1, y_scr_1, x_scr_2, y_scr_2, color, buffer_);
@@ -224,13 +265,18 @@ void Scene::DrawExplosions()
 void Scene::PrintInfo()
 {
   std::ostringstream oss {};
-  oss << "Velocity: " << level_.velocity_ << "     ";
-  oss << "FPS: ";
+  oss << "Velocity: " << std::setw(7) << std::left << level_.velocity_;
+  oss << "Life: " << std::setw(7) << std::left << level_.player_.life;  
+
+  text_.PrintString(60, 70, oss.str().c_str());
+
+  oss.str("");
+  oss.clear();
+  oss << "FPS: " << std::setw(7);
   if (prev_fps_)
-    oss << prev_fps_;
-  else 
-    oss << "  ";
-  text_.PrintString(60, 60, oss.str().c_str());
+    oss << prev_fps_ ;
+
+  text_.PrintString(60, 50, oss.str().c_str());  
 }
 
 void Scene::CountFPS()
