@@ -47,7 +47,7 @@ bool Logic::Process()
   auto mpos = win_.ReadMousePos();
 
   ProcessCannon(mpos, mbtn);
-  ProcessVelocity(kbtn);
+  ProcessViewport(kbtn);
   return ProcessGameState(kbtn);
 }
 
@@ -66,7 +66,7 @@ void Logic::InitStarfield()
   for (auto& star : level_.stars_)
   {
     star.x = rand_toolkit::get_rand(-half_w, half_w);
-    star.y = rand_toolkit::get_rand(-half_h, half_h);
+    star.y = rand_toolkit::get_rand(-half_w, half_w);
     star.z = rand_toolkit::get_rand(cfg::kNearZ, cfg::kStarFarZ);    
   }
 }
@@ -100,7 +100,7 @@ void Logic::MoveStarfield()
     star.z -= level_.velocity_;
     if (star.z <= cfg::kNearZ) {
       star.x = rand_toolkit::get_rand(-half_w, half_w);
-      star.y = rand_toolkit::get_rand(-half_h, half_h);
+      star.y = rand_toolkit::get_rand(-half_w, half_w);
       star.z = cfg::kStarFarZ;  
     }
   }
@@ -108,10 +108,6 @@ void Logic::MoveStarfield()
 
 void Logic::MoveWarships()
 {
-  // Prepare color step
-
-  double step = (cfg::kMaxBrightness - cfg::kMinBrightness) / cfg::kShipFarZ;
-
   for (auto& ship : level_.ships_)
   {
     if (ship.dead_)
@@ -120,9 +116,6 @@ void Logic::MoveWarships()
     ship.pos_.x += ship.vel_.x;
     ship.pos_.y += ship.vel_.y;
     ship.pos_.z += ship.vel_.z - level_.velocity_;
-
-    double bright = cfg::kMaxBrightness - (ship.pos_.z * step);
-    ship.color_ = color_helpers::IncreaseBrightness(cfg::kShipColor, bright);
     
     int audible_dist = cfg::kNearZ + cfg::kAudibleShip;
     if (ship.pos_.z <= audible_dist && !ship.audible_) {
@@ -146,30 +139,36 @@ void Logic::AttackWarships()
   {
     if (ship.dead_)
       continue;
+
     if (ship.pos_.z <= cfg::kMinShotDist)
       continue;
-    // if (ship.in_attack_)
-      // continue;
 
     bool is_attack = !(bool)(rand_toolkit::get_rand(0, 500) % 250);
-    if (is_attack && !ship.attack_seq_) {
-      ship.attack_seq_ = rand_toolkit::get_rand(1,3);
+    if (is_attack && !ship.attack_seq_)
+    {
+      ship.attack_seq_ = rand_toolkit::get_rand(3, 5);
       ship.attack_wait_ = 0;
     }
+
+    // If in active attack state, the shot, else wait attack_wait_ == 0 
 
     if (ship.attack_seq_ && !ship.attack_wait_)
     {
       ship.attack_wait_ = 5;
       --ship.attack_seq_;
-      const int kVelZ = -800;
+      
+      // Define end point of the shot
+
       Point shot_end;
-      shot_end.x = rand_toolkit::get_rand(-player.w*2, player.w*2);
-      shot_end.y = rand_toolkit::get_rand(-player.h*2, player.h*2);
+      shot_end.x = rand_toolkit::get_rand(-player.w_*2, player.w_*2);
+      shot_end.y = rand_toolkit::get_rand(-player.h_*2, player.h_*2);
       shot_end.z = cfg::kEnemyAttackZ;
 
+      // Evaluate velocity vector of the shot
+
       Point shot_vel;
-      shot_vel.z = kVelZ;
-      double k_dz = std::abs((shot_end.z - ship.pos_.z) / kVelZ);
+      shot_vel.z = cfg::kEnemyShotVel;
+      double k_dz = std::abs((shot_end.z - ship.pos_.z) / shot_vel.z);
       shot_vel.x = (shot_end.x - ship.pos_.x) / k_dz;
       shot_vel.y = (shot_end.y - ship.pos_.y) / k_dz;
 
@@ -186,34 +185,39 @@ void Logic::ProcessEnemyShots()
 {
   auto& player = level_.player_;
   
-  int near_z = cfg::kNearZ;
-  int far_z  = cfg::kShipFarZ;
-  
   for (auto& shot : level_.enemy_shots_)
   {
-    shot.first = shot.first + shot.second;
-    std::cerr << player.w << ' ' << player.h << '-';
-    std::cerr << shot.first.x << ' ' << shot.first.y << ' ' << shot.first.z << '\n';
-    // if (shot.first.z > 50 && shot.first.z < 900) {
-      if (polygon::PointInside(-player.w, -player.h, player.w, player.h,
-      shot.first.x, shot.first.y)) {
-        if (shot.first.z <= std::fabs(shot.second.z)) {
-          audio_.Play(cfg::kScratchSnd);
-          player.life -= cfg::kEnemyStrenght;
-        }
+    auto& shot_pos = shot.first;
+    auto& shot_vel = shot.second;
+
+    shot_pos = shot_pos + shot_vel;
+
+    if (polygon::PointInside(
+      -player.w_, -player.h_, player.w_, player.h_, shot.first.x, shot.first.y))
+    {
+      if (shot.first.z <= std::fabs(shot.second.z))
+      {
+        audio_.Play(cfg::kScratchSnd);
+        player.life_ -= cfg::kEnemyStrenght;
+        player.offset_angle_ += rand_toolkit::get_rand(-5, 5);  // shake after hit
       }
-      else if (shot.first.z < 0)
-        audio_.Play(cfg::kEnemySnd);
-    // }
+    }
+    else if (shot.first.z < 0)
+      audio_.Play(cfg::kEnemySnd);
   }
+
+  // Clear enemy shots which is out of viewpoint
+
+  int near_z = cfg::kNearZ;
 
   level_.enemy_shots_.erase(
   std::remove_if(level_.enemy_shots_.begin(), level_.enemy_shots_.end(), 
-  [&near_z, &far_z](const auto& shot)
+  [&near_z](const auto& shot)
   {
     if (shot.first.z <= near_z)
       return true;
-    return false;
+    else
+      return false;
   }), level_.enemy_shots_.end()
   );
 }
@@ -331,16 +335,34 @@ void Logic::PrepareExplosion(Starship& ship)
   );
 }
 
-void Logic::ProcessVelocity(Btn key)
+void Logic::ProcessViewport(Btn key)
 {
-  if (key == Btn::Q)
+  auto& player = level_.player_;
+  
+  // Process velocity
+
+  if (key == Btn::W)
     ++level_.velocity_;
-  else if (key == Btn::A)
+  else if (key == Btn::S)
     --level_.velocity_;
   if (level_.velocity_ <= 0)
     level_.velocity_ = 0;
   else if (level_.velocity_ >= cfg::kMaxVelocity)
     level_.velocity_ = cfg::kMaxVelocity;
+  
+  // Process velocity
+
+  if (key == Btn::A)
+    --player.curr_angle_;
+  if (key == Btn::D)
+    ++player.curr_angle_;  
+
+  // Process angle offset
+  
+    if (player.offset_angle_ < 0)
+      player.offset_angle_ = -(player.offset_angle_ + 1);
+    else if (player.offset_angle_ > 0)
+      player.offset_angle_ = -(player.offset_angle_ - 1);
 }
 
 void Logic::ProcessCannon(Pos& pos, Btn key)
@@ -377,7 +399,7 @@ bool Logic::ProcessGameState(Btn kbtn)
   }
 #endif
 
-  if (level_.player_.life <= 0)
+  if (level_.player_.life_ <= 0)
     return false;
 
   if (kbtn == Btn::ESC)

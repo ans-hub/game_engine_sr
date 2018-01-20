@@ -16,7 +16,7 @@ namespace cfg {
 // Music settings
 //****************************************************************************
 
-  constexpr const char* kStarFarZkBackgroundMusic = "resources/sounds/background.mp3";
+  constexpr const char* kBackgroundMusic = "resources/sounds/background.mp3";
 
 //****************************************************************************
 // Sounds settings
@@ -82,7 +82,7 @@ namespace color {
   constexpr int kMinShotDist = 10000;
   constexpr int kEnemyAttackZ = 50;   // enemy attack aim in z
   constexpr int kEnemyStrenght = 1;
-
+  constexpr int kEnemyShotVel = -800;
 
 } // namespace cfg
 

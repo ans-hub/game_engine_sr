@@ -14,7 +14,7 @@
 
 namespace anshub {
 
-namespace color_helpers {
+namespace color {
 
 using byte  = unsigned char;
 

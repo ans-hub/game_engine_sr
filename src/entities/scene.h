@@ -20,6 +20,7 @@
 #include "lib/draw/gl_text.h"
 #include "lib/draw/fx_colors.h"
 #include "lib/math/fx_polygons.h"
+#include "lib/math/math.h"
 
 #include "src/entities/level.h"
 
@@ -37,7 +38,6 @@ private:
   void DrawStarfield();
   void DrawWarships();
   void DrawWarshipsAttack();
-  void DrawShake();
   void DrawCannon();
   void DrawExplosions();
 
@@ -64,6 +64,11 @@ private:
   int       curr_fps_;
   int       prev_fps_;
   slong     time_passed_;
+  
+  // Math tables
+
+  math::Table sin_tab_;
+  math::Table cos_tab_;
 
 }; // class Scene
 

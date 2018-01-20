@@ -42,7 +42,7 @@ private:
   void ProcessExplosions();
   void PrepareExplosion(Starship&);
   void ProcessCannon(Pos&, Btn);
-  void ProcessVelocity(Btn);
+  void ProcessViewport(Btn);
   bool ProcessGameState(Btn);
   
   GlWindow&   win_;

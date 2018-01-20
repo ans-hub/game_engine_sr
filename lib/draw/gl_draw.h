@@ -22,7 +22,7 @@
 
 namespace anshub {
 
-namespace draw_helpers {
+namespace draw {
 
   void DrawPoint(int, int, int, Buffer&);
   void DrawPoint(int, int, int, uint*, int);

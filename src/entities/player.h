@@ -15,23 +15,28 @@ namespace anshub {
 struct Player
 {
   Player() 
-    : w(40), h(40)
-    , pos(0,0,0)
-    , life{cfg::kPlayerLife}
+    : w_(40), h_(40)
+    , pos_(0,0,0)
+    , life_{cfg::kPlayerLife}
     , dead_{false}
     , bang_{false}
-    , shaked_{false} { } 
+    , shaked_{false}
+    , curr_angle_{0}
+    , offset_angle_{0}
+  { } 
 
-  int w;          // player width
-  int h;          // player height
-  Point pos;      // player pos
-  int   life;     // player life 
+  double Angle() const { return curr_angle_ + offset_angle_; }
+
+  int w_;          // player width
+  int h_;          // player height
+  Point pos_;      // player pos
+  int   life_;     // player life 
   bool dead_;
   bool bang_;
   bool shaked_;
   bool side_;
-  int x_offset_;
-  int y_offset_;
+  double curr_angle_;   // rotate angle
+  double offset_angle_;
 
 }; // struct Player
 

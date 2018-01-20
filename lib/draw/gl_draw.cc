@@ -9,7 +9,7 @@
 
 namespace anshub {
 
-namespace draw_helpers {
+namespace draw {
 
 // Draws point using Buffer object
 
@@ -111,7 +111,7 @@ void DrawLine(int x1, int y1, int x2, int y2, int color, double b_1, double b_2,
 		if (long_len > 0) {
 			long_len += y1;
 			for (int j = 0x8000 + (x1 << 16); y1 <= long_len; ++y1) {
-				curr_color = color_helpers::IncreaseBrightness(color, b_1+step_total);
+				curr_color = color::IncreaseBrightness(color, b_1+step_total);
         step_total += bright_step;
         DrawPoint(j >> 16, y1, curr_color, buf);
 				j += dec_inc;
@@ -120,7 +120,7 @@ void DrawLine(int x1, int y1, int x2, int y2, int color, double b_1, double b_2,
 		}
 		long_len += y1;
 		for (int j = 0x8000 + (x1 << 16); y1 >= long_len; --y1) {
-      curr_color = color_helpers::IncreaseBrightness(color, b_1+step_total);
+      curr_color = color::IncreaseBrightness(color, b_1+step_total);
       step_total += bright_step;
       DrawPoint(j >> 16, y1, curr_color, buf);	
 			j -= dec_inc;
@@ -131,7 +131,7 @@ void DrawLine(int x1, int y1, int x2, int y2, int color, double b_1, double b_2,
 	if (long_len > 0) {
 		long_len += x1;
 		for (int j = 0x8000 + (y1 << 16); x1<= long_len; ++x1) {
-      curr_color = color_helpers::IncreaseBrightness(color, b_1+step_total);
+      curr_color = color::IncreaseBrightness(color, b_1+step_total);
       step_total += bright_step;
 			DrawPoint(x1, j >> 16, curr_color, buf);
 			j += dec_inc;
@@ -140,7 +140,7 @@ void DrawLine(int x1, int y1, int x2, int y2, int color, double b_1, double b_2,
 	}
 	long_len += x1;
 	for (int j = 0x8000 + (y1 << 16); x1 >= long_len; --x1) {
-    curr_color = color_helpers::IncreaseBrightness(color, b_1 + step_total);
+    curr_color = color::IncreaseBrightness(color, b_1 + step_total);
     step_total += bright_step;
 		DrawPoint(x1, j >> 16, curr_color, buf);
 		j -= dec_inc;
@@ -210,6 +210,6 @@ bool ClipSegment(
   return true;
 }
 
-} // namespace draw_helpers
+} // namespace draw
 
 } // namespace anshub

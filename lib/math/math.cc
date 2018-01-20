@@ -33,15 +33,15 @@ math::Table math::BuildSinTable()
 {
   math::Table t(361);
   for (int i = 0; i < 361; ++i)
-    t[i] = std::sin(i);
+    t[i] = std::sin(Deg2rad(i));
   return t;
 }
 
-math::Table BuildCosTable()
+math::Table math::BuildCosTable()
 {
   math::Table t(361);
   for (int i = 0; i < 361; ++i)
-    t[i] = std::cos(i);
+    t[i] = std::cos(Deg2rad(i));
   return t;
 }
 

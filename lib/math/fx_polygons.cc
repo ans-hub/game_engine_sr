@@ -120,4 +120,19 @@ bool polygon::CutConvex(Vertexes& p1, Vertexes& p2, const Line& l)
   return true;
 }
 
+// Rotates point (by origin) (https://goo.gl/2y3sNZ)
+//  Cx = Ax + (Bx−Ax)*cos⁡α − (By−Ay)*sin⁡α
+//  Cy = Ay + (Bx−Ax)*sinα + (By−Ay)*cosα
+// where A - origin, B - old point, C - new point
+
+void RotatePoint(
+  double& x, double& y, double th, math::Table& sin, math::Table& cos)
+{
+  double sin_theta = math::FastSinCos(sin, th);
+  double cos_theta = math::FastSinCos(cos, th);
+  x = x * cos_theta - y * sin_theta;
+  y = y * sin_theta + y * cos_theta;
+}
+
+
 } // namespace anshub
