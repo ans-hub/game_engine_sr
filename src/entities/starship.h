@@ -49,8 +49,8 @@ struct Starship
 
   bool      dead_;          // is dead ?
   bool      audible_;       // is audible for current viewpoint ?
-  bool      in_attack_;     // is attack now ?
-  Point     aim_attack_;    // point of attack
+  int       attack_seq_;    //
+  int       attack_wait_;
 
 }; // struct Starship
 

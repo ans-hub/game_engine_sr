@@ -23,6 +23,7 @@ int main()
 
   constexpr int kWidth = 800;
   constexpr int kHeight = 600;
+  // constexpr int kFpsWait = 10;
   constexpr int kFpsWait = 35;
   constexpr int kShipsCnt = 13;
 

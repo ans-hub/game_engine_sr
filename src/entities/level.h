@@ -28,7 +28,7 @@ struct Level
   using VStarfield  = std::vector<Point>;
   using VVelocity   = std::vector<Vector3d>;
   using VExplosions = std::vector<std::pair<VSegments, VVelocity>>;
-  using VEnemyShots = std::vector<std::pair<Point, Point>>;
+  using VEnemyShots = std::vector<std::pair<Point, Point>>; // pos, vel
 
   Level(int ships);
 

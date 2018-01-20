@@ -21,6 +21,7 @@ Logic::Logic(GlWindow& win, Level& level, AudioOut& audio)
   audio.Load(cfg::kExplodeSnd, false);
   audio.Load(cfg::kShotSnd, false);
   audio.Load(cfg::kWingSnd, false);
+  audio.Load(cfg::kEnemySnd, false);
   audio.Play(cfg::kBackgroundMusic);
   
   InitCannon();
@@ -36,6 +37,7 @@ bool Logic::Process()
   MoveStarfield();
   MoveWarships();
   AttackWarships();
+  ProcessEnemyShots();
   ProcessExplosions();
 
   // Process keyboard and events base on it
@@ -134,6 +136,8 @@ void Logic::MoveWarships()
   }
 }
 
+// Prepare enemy attack
+
 void Logic::AttackWarships()
 {
   auto& player = level_.player_;
@@ -145,23 +149,73 @@ void Logic::AttackWarships()
     if (ship.pos_.z <= cfg::kMinShotDist)
       continue;
     // if (ship.in_attack_)
-    //   continue;
-    
-    ship.in_attack_ = !(bool)(rand_toolkit::get_rand(0, 500) % 250);
-    
-    if (ship.in_attack_)
-    {
-      ship.aim_attack_.x = rand_toolkit::get_rand(-player.w*2, player.w*2);
-      ship.aim_attack_.y = rand_toolkit::get_rand(-player.h*2, player.h*2);
-      ship.aim_attack_.z = cfg::kEnemyAttackZ;
+      // continue;
 
+    bool is_attack = !(bool)(rand_toolkit::get_rand(0, 500) % 250);
+    if (is_attack && !ship.attack_seq_) {
+      ship.attack_seq_ = rand_toolkit::get_rand(1,3);
+      ship.attack_wait_ = 0;
+    }
+
+    if (ship.attack_seq_ && !ship.attack_wait_)
+    {
+      ship.attack_wait_ = 5;
+      --ship.attack_seq_;
+      const int kVelZ = -800;
+      Point shot_end;
+      shot_end.x = rand_toolkit::get_rand(-player.w*2, player.w*2);
+      shot_end.y = rand_toolkit::get_rand(-player.h*2, player.h*2);
+      shot_end.z = cfg::kEnemyAttackZ;
+
+      Point shot_vel;
+      shot_vel.z = kVelZ;
+      double k_dz = std::abs((shot_end.z - ship.pos_.z) / kVelZ);
+      shot_vel.x = (shot_end.x - ship.pos_.x) / k_dz;
+      shot_vel.y = (shot_end.y - ship.pos_.y) / k_dz;
+
+      level_.enemy_shots_.push_back(std::make_pair(ship.pos_, shot_vel));
+    }
+    else
+      --ship.attack_wait_;  // todo: possible overflow???
+  }
+}
+
+// Process enemy attack
+
+void Logic::ProcessEnemyShots()
+{
+  auto& player = level_.player_;
+  
+  int near_z = cfg::kNearZ;
+  int far_z  = cfg::kShipFarZ;
+  
+  for (auto& shot : level_.enemy_shots_)
+  {
+    shot.first = shot.first + shot.second;
+    std::cerr << player.w << ' ' << player.h << '-';
+    std::cerr << shot.first.x << ' ' << shot.first.y << ' ' << shot.first.z << '\n';
+    // if (shot.first.z > 50 && shot.first.z < 900) {
       if (polygon::PointInside(-player.w, -player.h, player.w, player.h,
-        ship.aim_attack_.x, ship.aim_attack_.y)) {
+      shot.first.x, shot.first.y)) {
+        if (shot.first.z <= std::fabs(shot.second.z)) {
           audio_.Play(cfg::kScratchSnd);
           player.life -= cfg::kEnemyStrenght;
         }
-    }
+      }
+      else if (shot.first.z < 0)
+        audio_.Play(cfg::kEnemySnd);
+    // }
   }
+
+  level_.enemy_shots_.erase(
+  std::remove_if(level_.enemy_shots_.begin(), level_.enemy_shots_.end(), 
+  [&near_z, &far_z](const auto& shot)
+  {
+    if (shot.first.z <= near_z)
+      return true;
+    return false;
+  }), level_.enemy_shots_.end()
+  );
 }
 
 void Logic::ProcessExplosions()

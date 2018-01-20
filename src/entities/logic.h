@@ -37,6 +37,7 @@ private:
   void MoveStarfield();
   void MoveWarships();
   void AttackWarships();
+  void ProcessEnemyShots();
 
   void ProcessExplosions();
   void PrepareExplosion(Starship&);

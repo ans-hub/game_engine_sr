@@ -16,7 +16,7 @@ namespace cfg {
 // Music settings
 //****************************************************************************
 
-  constexpr const char* kBackgroundMusic = "resources/sounds/background.mp3";
+  constexpr const char* kStarFarZkBackgroundMusic = "resources/sounds/background.mp3";
 
 //****************************************************************************
 // Sounds settings
@@ -26,6 +26,7 @@ namespace cfg {
   constexpr const char* kExplodeSnd = "resources/sounds/explode.mp3";
   constexpr const char* kWingSnd = "resources/sounds/wing.mp3";
   constexpr const char* kScratchSnd = "resources/sounds/scratch.mp3";
+  constexpr const char* kEnemySnd = "resources/sounds/enemy.mp3";
 
 //****************************************************************************
 // Game settings
@@ -70,17 +71,17 @@ namespace color {
   constexpr int kStarsCnt = 500;
   constexpr int kStarTrack = 20;      // coeff using to eval star tracks
   constexpr int kNearZ = 10;
-  constexpr int kStarFarZ = 2000;
-  constexpr int kShipFarZ = 20000;
+  constexpr int kStarFarZ = 2000;     // optimized for 800  
+  constexpr int kShipFarZ = 20000;    // optimized for 600
 
   // Enemy settings
 
   constexpr int kAudibleShip = 1600;
   constexpr int kEnemyVelocity = 100;
   constexpr int kDebrisCnt = 4;       // coeff to multi destroyed ship edges
-  constexpr int kMinShotDist = 7000;
+  constexpr int kMinShotDist = 10000;
   constexpr int kEnemyAttackZ = 50;   // enemy attack aim in z
-  constexpr int kEnemyStrenght = 5;
+  constexpr int kEnemyStrenght = 1;
 
 
 } // namespace cfg

@@ -154,16 +154,21 @@ void Scene::DrawWarships()
 
 void Scene::DrawWarshipsAttack()
 {
-  double kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / cfg::kShipFarZ;         
   
-  for (auto& ship : level_.ships_)
+  for (auto& shot : level_.enemy_shots_)
   {
-    if (!ship.dead_ && ship.in_attack_)
-    {
-      double x_per_1 = half_w_ * (ship.pos_.x / ship.pos_.z);
-      double y_per_1 = half_h_ * (ship.pos_.y / ship.pos_.z);
-      double x_per_2 = half_w_ * (ship.aim_attack_.x / ship.aim_attack_.z);
-      double y_per_2 = half_h_ * (ship.aim_attack_.y / ship.aim_attack_.z);
+    auto& shot_pos = shot.first;
+    auto& shot_vel = shot.second;
+
+    Point shot_start;
+    shot_start.x = shot_pos.x - (shot_vel.x);
+    shot_start.y = shot_pos.y - (shot_vel.y);
+    shot_start.z = shot_pos.z - (shot_vel.z);
+    
+    double x_per_1 = half_w_ * (shot_start.x / shot_start.z);
+    double y_per_1 = half_h_ * (shot_start.y / shot_start.z);
+    double x_per_2 = half_w_ * (shot_pos.x / shot_pos.z);
+    double y_per_2 = half_h_ * (shot_pos.y / shot_pos.z);
 
       // Convert to screen coords (since in virtual coords 0;0 is the center)
 
@@ -174,8 +179,9 @@ void Scene::DrawWarshipsAttack()
 
       if (draw_helpers::ClipSegment(0, 0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
       {
-        double bright_k_1 = cfg::kMaxBrightness - (ship.pos_.z * kColor);
-        double bright_k_2 = cfg::kMaxBrightness - (ship.aim_attack_.z * kColor);
+        double kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / shot_pos.z;         
+        double bright_k_1 = cfg::kMaxBrightness - (shot_pos.z * kColor);
+        double bright_k_2 = cfg::kMaxBrightness - (50 * kColor);
             
         draw_helpers::DrawLine(
           x_scr_1, y_scr_1, x_scr_2, y_scr_2,
@@ -183,7 +189,6 @@ void Scene::DrawWarshipsAttack()
           buffer_
         );
       }
-    }
   }
 }
 
