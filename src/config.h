@@ -65,22 +65,22 @@ namespace color {
   constexpr int kCannonWait = 10;
   constexpr int kPlayerLife = 100;
   
-  // World settings
+  // World settings (optimized for screen 800x600)
 
   constexpr int kFillColor = color::kBlack;
   constexpr int kStarsCnt = 500;
-  constexpr int kStarTrack = 20;      // coeff using to eval star tracks
+  constexpr int kStarTrack = 20;      // coeff. to eval star tracks
   constexpr int kNearZ = 10;
-  constexpr int kStarFarZ = 2000;     // optimized for 800  
-  constexpr int kShipFarZ = 20000;    // optimized for 600
+  constexpr int kStarFarZ = 2000;  
+  constexpr int kShipFarZ = 20000;
 
   // Enemy settings
 
   constexpr int kAudibleShip = 1600;
   constexpr int kEnemyVelocity = 100;
-  constexpr int kDebrisCnt = 4;       // coeff to multi destroyed ship edges
+  constexpr int kDebrisCnt = 4;       // coeff. to multi destroyed ship edges
   constexpr int kMinShotDist = 10000;
-  constexpr int kEnemyAttackZ = 50;   // enemy attack aim in z
+  constexpr int kEnemyAttackZ = 50;   // enemy attack aim in z coordinate
   constexpr int kEnemyStrenght = 1;
   constexpr int kEnemyShotVel = -800;
 

@@ -23,7 +23,6 @@ int main()
 
   constexpr int kWidth = 800;
   constexpr int kHeight = 600;
-  // constexpr int kFpsWait = 10;
   constexpr int kFpsWait = 35;
   constexpr int kShipsCnt = 13;
 
@@ -33,7 +32,7 @@ int main()
   auto mode = io_helpers::FindNearestVideoMode(kWidth, kHeight);
 
   GlWindow win (pos.x, pos.y, kWidth, kHeight, "Raiders 3D");
-  // win.ToggleFullscreen(mode);
+  win.ToggleFullscreen(mode);
   win.HideCursor();
   rand_toolkit::start_rand();
 

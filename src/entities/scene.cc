@@ -35,11 +35,16 @@ void Scene::Build()
   buffer_.Clear();
   DrawStarfield();
   DrawWarships();
-  DrawWarshipsAttack();
   DrawCannon();
+  DrawWarshipsAttack();
   DrawExplosions();
   buffer_.SendDataToFB();
+
   PrintInfo();
+  if (level_.state_ == GameState::WIN)
+    PrintCentered("YOU ARE WIN! RETRY? (Y/N)");    
+  else if (level_.state_ == GameState::DEAD)
+    PrintCentered("YOU ARE DEAD. RETRY? (Y/N)");
   CountFPS();
 }
 
@@ -319,7 +324,7 @@ void Scene::PrintInfo()
   std::ostringstream oss {};
   oss << "Velocity: " << std::setw(7) << std::left << level_.velocity_;
   oss << "Life: " << std::setw(7) << std::left << level_.player_.life_; 
-
+ 
   text_.PrintString(60, 70, oss.str().c_str());
 
   oss.str("");
@@ -328,7 +333,15 @@ void Scene::PrintInfo()
   if (prev_fps_)
     oss << prev_fps_ ;
 
+  oss << std::setw(20) << std::left << "Controls: W,S,A,L";
+
   text_.PrintString(60, 50, oss.str().c_str());  
+}
+
+void Scene::PrintCentered(const char* msg)
+{
+  std::ostringstream oss {msg};
+  text_.PrintString(w_/2-oss.str().size()*7/2, h_/2, oss.str().c_str());  
 }
 
 void Scene::CountFPS()

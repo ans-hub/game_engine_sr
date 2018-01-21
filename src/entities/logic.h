@@ -17,7 +17,6 @@
 #include "lib/system/timer.h" 
 
 #include "src/config.h"
-#include "src/entities/enums.h"
 #include "src/entities/aliases.h"
 #include "src/entities/level.h"
 
@@ -48,7 +47,6 @@ private:
   GlWindow&   win_;
   Level&      level_;
   AudioOut&   audio_;
-  GameState   state_;
 
 }; // class Logic
 

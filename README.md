@@ -1,3 +1,11 @@
+## Implementation
+
+glDrawLine
+
+## Notes about implementation
+
+in two classes, not in each entitie
+
 ## Todo:
 
 - volume inc/dec in audio_out

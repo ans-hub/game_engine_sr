@@ -14,9 +14,12 @@ Level::Level(int ships)
   , stars_(cfg::kStarsCnt)
   , cannon_{}
   , explosions_{}
-  , score_{0}
   , enemy_shots_{}
+  , player_{}
+  , state_{GameState::PLAY}
+  , score_{0}
   , velocity_{cfg::kStartVelocity}
+  , ships_destroyed_{0}
 { }
 
 } // namespace anshub

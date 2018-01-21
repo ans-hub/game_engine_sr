@@ -13,7 +13,6 @@ Logic::Logic(GlWindow& win, Level& level, AudioOut& audio)
   : win_{win}
   , level_(level)
   , audio_{audio}
-  , state_{GameState::INIT}
 {
   // Preload music in memory
 
@@ -32,22 +31,25 @@ Logic::Logic(GlWindow& win, Level& level, AudioOut& audio)
 
 bool Logic::Process()
 {
-  // Process level objects
-
-  MoveStarfield();
-  MoveWarships();
-  AttackWarships();
-  ProcessEnemyShots();
-  ProcessExplosions();
-
   // Process keyboard and events base on it
 
   auto kbtn = win_.ReadKeyboardBtn(BtnType::KB_DOWN);
   auto mbtn = win_.ReadMouseBtn(BtnType::MS_DOWN);
   auto mpos = win_.ReadMousePos();
+  
+  // Process level objects
 
-  ProcessCannon(mpos, mbtn);
-  ProcessViewport(kbtn);
+  MoveStarfield();
+  MoveWarships();
+  ProcessExplosions();
+  ProcessEnemyShots();
+
+  if (level_.state_ == GameState::PLAY)
+  {
+    AttackWarships();
+    ProcessCannon(mpos, mbtn);
+    ProcessViewport(kbtn);
+  }  
   return ProcessGameState(kbtn);
 }
 
@@ -184,8 +186,9 @@ void Logic::AttackWarships()
 void Logic::ProcessEnemyShots()
 {
   auto& player = level_.player_;
+  auto& enemy_shots = level_.enemy_shots_;
   
-  for (auto& shot : level_.enemy_shots_)
+  for (auto& shot : enemy_shots)
   {
     auto& shot_pos = shot.first;
     auto& shot_vel = shot.second;
@@ -207,18 +210,16 @@ void Logic::ProcessEnemyShots()
   }
 
   // Clear enemy shots which is out of viewpoint
-
-  int near_z = cfg::kNearZ;
-
-  level_.enemy_shots_.erase(
-  std::remove_if(level_.enemy_shots_.begin(), level_.enemy_shots_.end(), 
-  [&near_z](const auto& shot)
-  {
-    if (shot.first.z <= near_z)
+  
+  int  dist = cfg::kNearZ;
+  auto predicate = [&dist](const auto& shot) {
+    if (shot.first.z <= dist) 
       return true;
-    else
-      return false;
-  }), level_.enemy_shots_.end()
+    return false;
+  };
+  enemy_shots.erase(
+    std::remove_if(enemy_shots.begin(), enemy_shots.end(), predicate),
+    enemy_shots.end()
   );
 }
 
@@ -240,6 +241,7 @@ void Logic::ProcessExplosions()
         continue;
       else {
         ship.dead_ = true;
+        ++level_.ships_destroyed_;
         audio_.Play(cfg::kExplodeSnd);
         PrepareExplosion(ship);
       }
@@ -274,9 +276,7 @@ void Logic::ProcessExplosions()
   int near_z = cfg::kNearZ;
   int far_z  = cfg::kShipFarZ;
   
-  explosions.erase(
-  std::remove_if(explosions.begin(), explosions.end(), 
-  [&near_z, &far_z](const auto& expl)
+  auto predicate = [&near_z, &far_z](const auto& expl)
   {
     auto& edges = expl.first;
     for (auto& edge : edges) {
@@ -286,7 +286,11 @@ void Logic::ProcessExplosions()
       }
     }
     return false;
-  }), explosions.end()
+  };
+
+  explosions.erase(
+    std::remove_if(explosions.begin(), explosions.end(), predicate),
+    explosions.end()
   );
 }
 
@@ -391,17 +395,56 @@ void Logic::ProcessCannon(Pos& pos, Btn key)
 bool Logic::ProcessGameState(Btn kbtn)
 {
 #ifdef DEBUG
+  
+  // Pause
+
   if (kbtn == Btn::SPACE) {
     do{
       if (win_.ReadKeyboardBtn(BtnType::KB_DOWN) == Btn::SPACE)
         break;
     } while (true);
   }
+  
+  // Fast destroy enemy
+
+  if (kbtn == Btn::L)
+    level_.ships_destroyed_ = level_.ships_.size();
 #endif
 
-  if (level_.player_.life_ <= 0)
-    return false;
+  // Process dead state
 
+  if (level_.player_.life_ <= 0)
+  {
+    level_.state_ = GameState::DEAD;
+    // level_.enemy_shots_.clear();    // enemies doesn't shot in
+  }
+
+  // Process win state
+
+  if (level_.ships_.size() == level_.ships_destroyed_)
+  {
+    level_.state_ = GameState::WIN;
+    // level_.enemy_shots_.clear();
+  }
+
+  // Process repeat game
+
+  if (level_.state_ != GameState::PLAY)
+  {
+    if (kbtn == Btn::Y) {
+      level_.state_ = GameState::PLAY;
+      level_.ships_destroyed_ = 0;
+      level_.player_.life_ = cfg::kPlayerLife;
+      for (auto& ship : level_.ships_)
+        ship.dead_ = false;
+      return true;
+    }
+    else if (kbtn == Btn::N)
+      return false;
+  } 
+
+  // Process exit
+  
   if (kbtn == Btn::ESC)
     return false;
   else

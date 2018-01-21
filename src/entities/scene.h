@@ -42,6 +42,7 @@ private:
   void DrawExplosions();
 
   void PrintInfo();
+  void PrintCentered(const char*);
   void CountFPS();
 
   // Helpers data members for fast access

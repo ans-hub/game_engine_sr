@@ -11,10 +11,9 @@ namespace anshub {
 
 enum class GameState
 {
-  INIT,
-  START_LVL,
-  RUN,
-  EXIT
+  PLAY,
+  WIN,
+  DEAD
 
 }; // enum class GameState
 
