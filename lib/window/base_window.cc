@@ -177,11 +177,11 @@ auto BaseWindow::GetNextEvent()
   }
 }
 
-Btn BaseWindow::ReadKeyboardBtn(BtnType t)
+Btn BaseWindow::ReadKeyboardBtn(BtnType t)            // see note #1 
 {
   auto buf = Btn::NONE;
-  long type = 1L << static_cast<int>(t);              // see note #1
-  if (XCheckWindowEvent(disp_, self_, type, &event_)) // see note #2
+  long type = 1L << static_cast<int>(t);              // see note #2
+  if (XCheckWindowEvent(disp_, self_, type, &event_)) // see note #3
   {
     auto key = XkbKeycodeToKeysym(disp_, event_.xkey.keycode, 0, 0);
     buf = static_cast<Btn>(key);
@@ -192,8 +192,8 @@ Btn BaseWindow::ReadKeyboardBtn(BtnType t)
 Btn BaseWindow::ReadMouseBtn(BtnType t)
 {
   auto buf = Btn::NONE;
-  long type = 1L << static_cast<int>(t);              // see note #1  
-  if (XCheckWindowEvent(disp_, self_, type, &event_)) // see note #2
+  long type = 1L << static_cast<int>(t);              // see note #2  
+  if (XCheckWindowEvent(disp_, self_, type, &event_)) // see note #3
   {
     buf = static_cast<Btn>(event_.xbutton.button + kMouseBtnOffset);
   }
@@ -238,9 +238,11 @@ void BaseWindow::NotifyWhenClose()
 
 } // namespace anshub
 
-// Note #1 : if you ever seen what is event_mask is, you should understand
+// Note #3 : alternative way is to query is button is pressed or not
+
+// Note #2 : if you ever seen what is event_mask is, you should understand
 // what is it
 
-// Note #2 : XCheckWindowEvent don't wait for next event (like XNextEvent)
+// Note #3 : XCheckWindowEvent don't wait for next event (like XNextEvent)
 // but check if event is present. This function only works with masked
 // events. For not masked events you may use XCheckTypedWindowEvent()

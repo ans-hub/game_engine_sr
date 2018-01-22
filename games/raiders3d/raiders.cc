@@ -73,4 +73,5 @@ int main()
 // - custom rotate ships
 // - add alternative - broken ship
 // - delta time in main loop (???)
+// - add friend ships left top and right top
 // *************************************************************

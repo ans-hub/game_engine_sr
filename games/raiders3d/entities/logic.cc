@@ -16,7 +16,7 @@ Logic::Logic(GlWindow& win, Level& level, AudioOut& audio)
 {
   // Preload music in memory
 
-  audio.Load(cfg::kBackgroundMusic, false);
+  audio.Load(cfg::kBackgroundMusic, true);
   audio.Load(cfg::kExplodeSnd, false);
   audio.Load(cfg::kShotSnd, false);
   audio.Load(cfg::kWingSnd, false);
@@ -143,7 +143,7 @@ void Logic::AttackWarships()
     if (ship.pos_.z <= cfg::kMinShotDist)
       continue;
 
-    bool is_attack = !(bool)(rand_toolkit::get_rand(0, 500) % 250);
+    bool is_attack = !(bool)(rand_toolkit::get_rand(0, 200) % 50);
     if (is_attack && !ship.attack_seq_)
     {
       ship.attack_seq_ = rand_toolkit::get_rand(3, 5);
