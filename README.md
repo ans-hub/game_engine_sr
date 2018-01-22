@@ -11,13 +11,13 @@ One of the problems that I faced was an implementation of abstract linear addres
 In my implementation the linear video buffer is an abstraction consisting of an array in the system memory with a step of 4 bytes to store the pixel color in the format `ARGB (byte-ordered)`. Usually buffer has size is evaluated as *window_width x widnow_height x bytes_per_pixel*.
 
 The linear buffer has the following interface:
-- operator[] - allows you to access and write to the buffer data
-- Clear() - Clears the buffer with the specified color
-- SendDataToFB() - sends data to video memory (used at the end of rasterization)
+- `operator[]` - allows you to access and write to the buffer data
+- `Clear()` - Clears the buffer with the specified color
+- `SendDataToFB()` - sends data to video memory (used at the end of rasterization)
 
-SendDataToFB() implemented throught OpenGL function `glDrawLine`, which is now deprecated. But this fact is shouldn't be a problem since this function is present in compatibility opengl profile (or in the versions <= than 3.0).
+`SendDataToFB()` implemented throught OpenGL function `glDrawPixels`, which is now deprecated. But this fact is shouldn't be a problem since this function is present anywhere in compatibility opengl profile (or in the versions <= than 3.0).
 
-For systems which has only OpenGL ES implementations we have another way to substitute `glDrawLine` in core opengl profile (see comments in the end of `/lib/draw/gl_buffer.cc`).
+For systems which has only OpenGL ES implementations we have another way to substitute `glDrawPixels` in core opengl profile (see comments in the end of `/lib/draw/gl_buffer.cc`).
 
 This buffer can be easily reduced to 16 bit or 8 bit color space manually.
 
