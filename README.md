@@ -21,7 +21,7 @@ For systems which has only OpenGL ES implementations we have another way to subs
 
 ## Game console examples
 
-Directory `src` contains game (games) based on the game console. Currently there are placed game called "Raiders 3D" which is my implementation of the game originally written by Andre Lamothe.
+Directory `games` contains games (games) based on the game console. Currently there are placed game called `Raiders 3D` which is my implementation of the game originally written by Andre Lamothe.
 
 The main actions is placed in two classes `Logic` and `Scene`. It should be noted that this is an educational implementation, and thus most of the functions which is responsible for the behavior of objects are located in these two classes (`Logic` and `Scene`). Although in a real game it would be better to arrange some of the functions which is responsible for the behavior of objects in the implementation of these objects themselves.
 
@@ -45,6 +45,6 @@ When I started writing `math` library, I did not supposed that I would be use it
 
 ```bash
   $ git clone https://github.com/ans-hub/game_console
-  $ cd src/raiders/
+  $ cd games/raiders3d/
   $ make
 ```
