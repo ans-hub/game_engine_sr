@@ -26,8 +26,10 @@ namespace draw {
 
   void DrawPoint(int, int, int, Buffer&);
   void DrawPoint(int, int, int, uint*, int);
+  void DrawLineBres(int, int, int, int, int, Buffer&);
   void DrawLine(int, int, int, int, int color, Buffer&);
   void DrawLine(int, int, int, int, int, double br_1, double br_2, Buffer&);
+  void DrawLineWu(int, int, int, int, int, Buffer&);
   bool ClipSegment(int, int, int, int, int&, int&, int&, int&);
 
 } // namespace draw_helpers
