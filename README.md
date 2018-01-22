@@ -8,7 +8,7 @@ But in this great book we have a game console written for Windows. Thus for thos
 
 One of the problems that I faced was an implementation of abstract linear addressed video buffer.
 
-In my implementation the linear video buffer is an abstraction consisting of an array in the system memory with a step of 4 bytes to store the pixel color in the format RGBA. Usually buffer has size is evaluated as *window_width x widnow_height*.
+In my implementation the linear video buffer is an abstraction consisting of an array in the system memory with a step of 4 bytes to store the pixel color in the format `ARGB (byte-ordered)`. Usually buffer has size is evaluated as *window_width x widnow_height x bytes_per_pixel*.
 
 The linear buffer has the following interface:
 - operator[] - allows you to access and write to the buffer data
@@ -17,7 +17,9 @@ The linear buffer has the following interface:
 
 SendDataToFB() implemented throught OpenGL function `glDrawLine`, which is now deprecated. But this fact is shouldn't be a problem since this function is present in compatibility opengl profile (or in the versions <= than 3.0).
 
-For systems which has only OpenGL ES implementations we have another way to substitute `glDrawLine` in core opengl profile (see comments in the end of `/lib/draw/gl_buffer.cc`)
+For systems which has only OpenGL ES implementations we have another way to substitute `glDrawLine` in core opengl profile (see comments in the end of `/lib/draw/gl_buffer.cc`).
+
+This buffer can be easily reduced to 16 bit or 8 bit color space manually.
 
 ## Game console examples
 

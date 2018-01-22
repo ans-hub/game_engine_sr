@@ -43,13 +43,11 @@ int color::IncreaseBrightness(int color, double k)
 
 } // namespace anshub
 
-// Note : all colors are BGRA (word-ordered), which is eq ARGB (byte-ordered)
-// This means that on the little-endian arch color stored in memory as BGRA
-// (and we read this right to left - b,g,r,a), but when we speak in byte-ordered
-// meaning, we speak as 4 bytes not as for complete 32 bit, but as byte-ordered
-// representaion, left to right. Thus format_ data member of Buffer class is
-// GL_BGRA (in byte-ordered
-// meanings)
+// Note : all colors are ARGB (word-ordered). This means that on the little-endian
+// architecture all ARGB colors stored in memory right to left - b,g,r,a).
+// But in glDrawPixels opengl function we set type of pixel color as GL_BGRA. This is
+// all right since it is equivalent: ARGB (word-ordered) and BGRA (byte-ordered).
+// glDrawPixels interprets pixel not as 4 byte integer but as sequence of 4 bytes.
 
 // https://en.wikipedia.org/wiki/RGBA_color_space
 // http://www.laurenscorijn.com/articles/colormath-basics
