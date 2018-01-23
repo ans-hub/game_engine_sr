@@ -61,3 +61,18 @@ When I started writing `math` library, I did not supposed that I would be use it
   $ cd games/raiders3d/
   $ make
 ```
+
+## Notes about sigwin:
+
+This packages should be installed to work with screen resolution
+
+* cygutils-x11
+* libGLU1
+* xrandr
+* randrproto
+* libxcb-randr0
+
+Also is necessary to export PATH
+```
+  $ export PATH=/usr/local/lib:$PATH
+```
