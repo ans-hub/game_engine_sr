@@ -12,13 +12,13 @@ namespace anshub {
 
 struct Point
 {
-  Point() : x{-1}, y{-1}, z{-1} { }
+  Point() : x{-1.0}, y{-1.0}, z{-1.0} { }
   Point(double ax, double ay, double az) : x{ax}, y{ay}, z{az} { }
   double x;
   double y;
   double z;
   
-  void Zero() { x = 0; y = 0; z = 0; }
+  void Zero() { x = 0.0; y = 0.0; z = 0.0; }
 
   inline Point& operator*(double scalar) {
     this->x *= scalar;
