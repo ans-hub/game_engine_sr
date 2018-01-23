@@ -106,9 +106,17 @@ CTAttrs GetDefaultGlContextAttributes()
 FBConfigs GetFBConfigs(Display* disp, FBAttrs& attrs)
 {
   int cnt {0};
-  GLXFBConfig* fbc = glXChooseFBConfig(disp, DefaultScreen(disp), attrs.data(), &cnt);
+  GLXFBConfig* fbc = NULL;
+  
+  // Try to get any config (if something goes wrong) - see note below
+
+  fbc = glXChooseFBConfig(disp, DefaultScreen(disp), attrs.data(), &cnt);
+  if (!fbc)
+    fbc = glXChooseFBConfig(disp, DefaultScreen(disp), NULL, &cnt);
+
   if (!fbc)
     throw IOException("No appropriate fbconfigs found", errno);    
+
   FBConfigs result {};
   for (int i = 0; i < cnt; ++i)
   {
@@ -116,6 +124,9 @@ FBConfigs GetFBConfigs(Display* disp, FBAttrs& attrs)
     result.push_back(curr);
   } 
   return result;
+
+  // Note: on the cygwin glXChooseFBConfig() gives NULL when requested
+  // attr GLX_CONFIG_CAVEAT = GLX_NONE
 }
 
 // Choose framebuffer config with max sample buffers 

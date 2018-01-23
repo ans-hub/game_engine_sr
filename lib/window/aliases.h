@@ -43,6 +43,7 @@ using VisualPtr =
 
 // Other some useful aliases
 
+using ulong = unsigned long;
 using Pair = std::pair<int,int>;
 using CStr = const char*; 
 using Visual = XVisualInfo;

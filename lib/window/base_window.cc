@@ -98,9 +98,14 @@ void BaseWindow::ToggleFullscreen(int mode)
   vmode_ = io_helpers::ChangeVideoMode(disp_, root_, mode);
   io_helpers::GetWindowDimension(disp_, root_, &width_, &height_);
 
+  int wait = 1000;
   do {                  // wait when window is shown (usually after
-    usleep( 1000 );     // changing resolution) this is no smart
-    
+                        // changing resolution) this is no smart
+    timespec ts;        
+    ts.tv_sec  = wait / 1000;
+    ts.tv_nsec = wait * 1000000;
+    while ((nanosleep(&ts, &ts) == -1) && (errno == EINTR)) { }
+
   } while (GrabSuccess != XGrabPointer(
         disp_, self_, True, None, GrabModeAsync, GrabModeAsync,
         self_, None, CurrentTime));
