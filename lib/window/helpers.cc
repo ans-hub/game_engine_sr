@@ -326,6 +326,8 @@ void GetWindowDimension(Display* disp, Window win, int* w, int* h)
 //   auto config = ptr::XRRGetScreenInfo(disp, root);  
 // }
 
+// Returns nearest video mode to requested
+
 int FindNearestVideoMode(int w, int h)
 {
   int mode = 0; // usually 0 is always present (current video mode)
@@ -347,6 +349,24 @@ int FindNearestVideoMode(int w, int h)
 
   XCloseDisplay(disp);
   return mode;
+}
+
+// Returns number of video mode supported by randr extenstion
+// Otherwise, returns -1
+
+int FindVideoMode(int w, int h)
+{
+  Display* disp = XOpenDisplay(NULL);
+  auto modes = GetVideoModes(disp, XDefaultRootWindow(disp));
+  XCloseDisplay(disp);
+
+  auto to_find = std::make_pair(w, h);
+  auto finded = std::find(modes.begin(), modes.end(), to_find);
+
+  if (finded != modes.end())
+    return std::distance(modes.begin(), finded);
+  else
+    return -1;
 }
 
 

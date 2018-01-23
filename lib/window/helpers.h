@@ -64,6 +64,8 @@ namespace io_helpers {      // low-level io helpers
   void        GetWindowDimension(Display*, Window, int*, int*);
   // void        GetVModeDimension(Display*, Window, int, int*, int*);
   int         FindNearestVideoMode(int, int);
+  int         FindVideoMode(int, int);
+
 
   // Other usefull stuff
 

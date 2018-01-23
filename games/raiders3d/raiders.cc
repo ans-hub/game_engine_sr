@@ -29,7 +29,7 @@ int main()
   // Create window and usefull stuff
  
   auto pos  = io_helpers::GetXYToMiddle(kWidth, kHeight); 
-  auto mode = io_helpers::FindNearestVideoMode(kWidth, kHeight);
+  auto mode = io_helpers::FindVideoMode(kWidth, kHeight);
 
   GlWindow win (pos.x, pos.y, kWidth, kHeight, "Raiders 3D");
   win.ToggleFullscreen(mode);

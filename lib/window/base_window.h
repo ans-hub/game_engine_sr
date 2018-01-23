@@ -39,8 +39,8 @@ public:
   void  HideCursor();
   void  UnhideCursor();
   void  SetFocus();
-  void  ToggleFullscreen();
-  void  ToggleFullscreen(int);
+  bool  ToggleFullscreen();
+  bool  ToggleFullscreen(int);
   void  ToggleOnTop();
   bool  Closed();
   

@@ -86,14 +86,17 @@ void BaseWindow::SetFocus()
   XSetInputFocus(disp_, self_, RevertToNone, CurrentTime);
 }
 
-void BaseWindow::ToggleFullscreen()
+bool BaseWindow::ToggleFullscreen()
 {
   int curr = io_helpers::GetCurrentVideoMode(disp_, root_);
-  this->ToggleFullscreen(curr);  
+  return this->ToggleFullscreen(curr);  
 }
 
-void BaseWindow::ToggleFullscreen(int mode)
+bool BaseWindow::ToggleFullscreen(int mode)
 {
+  if (mode < 0)
+    return false;
+
   this->Move(0,0);
   vmode_ = io_helpers::ChangeVideoMode(disp_, root_, mode);
   io_helpers::GetWindowDimension(disp_, root_, &width_, &height_);
@@ -117,6 +120,8 @@ void BaseWindow::ToggleFullscreen(int mode)
 
   if (!fullscreen_)
     XUngrabPointer(disp_, CurrentTime);
+  
+  return true;
 
   // 1: the last thing is to catch VisibilityEvent and raise window (see Render());
   // 2: video mode changes back in destructor
