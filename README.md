@@ -62,9 +62,9 @@ When I started writing `math` library, I did not supposed that I would be use it
   $ make
 ```
 
-## Notes about sigwin:
+## Notes about cygwin:
 
-This packages should be installed to work with screen resolution
+This packages should be installed to work with video modes:
 
 * cygutils-x11
 * libGLU1
@@ -72,7 +72,7 @@ This packages should be installed to work with screen resolution
 * randrproto
 * libxcb-randr0
 
-Also is necessary to export PATH
-```
+Also is necessary to add path to environment variable PATH:
+```bash
   $ export PATH=/usr/local/lib:$PATH
 ```
