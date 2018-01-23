@@ -6,7 +6,6 @@ ROOTDIR = ../../
 # Setup libraries pathes and flags
 
 LIBDIR 		= $(ROOTDIR)lib
-LIBBASS 	= $(LIBDIR)/audio/3rdparty
 LIBAUDIO 	= $(LIBDIR)/audio
 LIBWINDOW = $(LIBDIR)/window
 LIBMATH 	= $(LIBDIR)/math
@@ -20,8 +19,9 @@ LDFLAGS  += -lbass -lX11 -lGL -lGLU -lXrandr				# external
 CXX 			= g++
 CXXFLAGS 	= -I $(ROOTDIR) -I .											# see note below
 CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
-CXXLIBS  += -L $(LIBBASS) -L $(LIBAUDIO) -L $(LIBWINDOW)
+CXXLIBS  += -L $(LIBAUDIO) -L $(LIBWINDOW)
 CXXLIBS  += -L $(LIBMATH) -L $(LIBDRAW) -L $(LIBSYSTEM)
+CXXLIBS  += -L /usr/local/lib/
 CXXFLAGS += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
 DBGFLAGS += -pg -no-pie															# profiler flags
@@ -31,11 +31,6 @@ RLSFLAGS  = -O2
 
 VPATH = entities/
 OBJECTS = logic.o level.o scene.o starship.o
-
-# Export libbass.so library path
-
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(LIBBASS)
-export LD_LIBRARY_PATH
 
 # Other stuff
 
