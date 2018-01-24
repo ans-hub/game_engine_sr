@@ -93,3 +93,5 @@ Also is necessary to add path to environment variable PATH:
 ```bash
   $ export PATH=/usr/local/lib:$PATH
 ```
+
+Installation of bass audio library is similar, but in the case of cygwin we should download windows library (`bass.dll`) and place it in `/usr/local/lib/`
