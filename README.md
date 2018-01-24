@@ -4,6 +4,8 @@ This repository contains implementation of `game console` suggested by Andre Lam
 
 But in this great book we have a game console written for Windows. Thus for those people who likes this book and want to start to write games and who haven't Windows this may became a problem.
 
+`Note: `This console is under development as I read the book
+
 ## Linear video buffer implementation
 
 One of the problems that I faced was an implementation of abstract linear addressed video buffer.
