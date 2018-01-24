@@ -47,24 +47,39 @@ When I started writing `math` library, I did not supposed that I would be use it
 
 ## Install
 
+### Check dependicies:
+
+Following packages should be installed (example given under Ubuntu 17.10):
+
 ```bash
-  # Install libbass.so library for audio module
-
-  $ wget http://www.un4seen.com/download.php?bass24-linux
-  $ unzip bass24-linux.zip -d basstmp/
-  $ cd basstmp/x64/mp3free/   # for 32-bit system use basstmp/mp3free instead
-  $ sudo cp libbass.so /usr/local/lib/
-  $ sudo chmod a+rx /usr/local/lib/libbass.so 
-  $ sudo ldconfig
-
-  # Finish the installation
-
-  $ git clone https://github.com/ans-hub/game_console
-  $ cd games/raiders3d/
-  $ make
+ $ sudo apt install mesa-common-dev
+ $ sudo apt install mesa-utils
+ $ sudo apt install libxrandr-dev
+ $ sudo apt install libglu1-mesa-dev
 ```
 
-## Notes about cygwin:
+### Install `libbass.so` audio library (for audio module):
+
+```bash
+  $ wget http://us.un4seen.com/files/bass24-linux.zip
+  $ unzip bass24-linux.zip -d tmp/
+  $ sudo cp tmp/x64/libbass.so /usr/local/lib/  # for 32-bit - tmp/libbass.so
+  $ sudo chmod a+rx /usr/local/lib/libbass.so
+  $ sudo ldconfig
+  $ rm -rf tmp/ bass24-linux.zip
+```
+
+P.S.: if something goes wrong while downloading bass audio library, then the best way is to use [direct link](https://www.un4seen.com/bass.html) for downloading library
+
+### Finish the installation:
+
+```bash
+  $ git clone https://github.com/ans-hub/game_console
+  $ cd games/raiders3d/
+  $ make    
+```
+
+## Notes about installation under cygwin:
 
 This packages should be installed to work with video modes:
 
