@@ -194,9 +194,14 @@ Btn BaseWindow::ReadKeyboardBtn(BtnType t)            // see note #1
   if (XCheckWindowEvent(disp_, self_, type, &event_)) // see note #3
   {
     auto key = XkbKeycodeToKeysym(disp_, event_.xkey.keycode, 0, 0);
+    char buff[20];
+    XLookupString(&event_.xkey, buff, 20, &key, NULL);  // see note below
     buf = static_cast<Btn>(key);
   }
   return buf;
+
+  // Note : This string is necessary if somewho press key in layout
+  // differ than ISO Latin-1
 }
 
 Btn BaseWindow::ReadMouseBtn(BtnType t)
