@@ -35,11 +35,13 @@ private:
 
   void MoveStarfield();
   void MoveWarships();
-  void AttackWarships();
-  void ProcessEnemyShots();
 
-  void ProcessExplosions();
+  void PrepareEnemyAttack();
   void PrepareExplosion(Starship&);
+
+  void ProcessEnemyAttack();
+  void ProcessPlayerShots();
+  void ProcessExplosions();
   void ProcessCannon(Pos&, Btn);
   void ProcessViewport(Btn);
   bool ProcessGameState(Btn);

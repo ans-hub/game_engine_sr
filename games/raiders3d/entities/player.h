@@ -20,6 +20,7 @@ struct Player
     , pos_(0,0,0)
     , velocity_{cfg::kStartVelocity}
     , life_{cfg::kPlayerLife}
+    , alarm_on_{false}
     , curr_angle_{0}
     , offset_angle_{0}
   { } 
@@ -30,7 +31,8 @@ struct Player
   int       h_;             // player height
   Point     pos_;           // player pos
   int       velocity_;      // player velocity
-  int       life_;          // player life 
+  int       life_;          // player life
+  bool      alarm_on_;      // flag means that alarm pre-destroy is on 
   double    curr_angle_;    // rotate angle
   double    offset_angle_;  // offset to rotate angle (shake imitation)
 

@@ -74,4 +74,5 @@ int main()
 // - add alternative - broken ship
 // - delta time in main loop (???)
 // - add friend ships left top and right top
+// - slow motion when ship is near and broken
 // *************************************************************

@@ -27,6 +27,7 @@ namespace cfg {
   constexpr const char* kWingSnd = "resources/sounds/wing.mp3";
   constexpr const char* kScratchSnd = "resources/sounds/scratch.mp3";
   constexpr const char* kEnemySnd = "resources/sounds/enemy.mp3";
+  constexpr const char* kAlarmSnd = "resources/sounds/alarm.mp3";
 
 //****************************************************************************
 // Game settings
@@ -67,6 +68,7 @@ namespace color {
   constexpr int kCrossVel = 5;
   constexpr int kCannonWait = 10;
   constexpr int kPlayerLife = 100;
+  constexpr int kAlarmLife = 25;      // when the alarm is switch on
   
   // World settings (optimized for screen 800x600)
 
