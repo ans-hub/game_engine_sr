@@ -31,9 +31,9 @@ public:
   explicit Matrix(Type);                  // for identity matrix creating
   Matrix(std::initializer_list<double>);  // for custom matrix creating
 
-  uint    Rows() const { return r_; }
-  uint    Cols() const { return c_; }
-  uint    Size() const { return size_; }
+  std::size_t Rows() const { return r_; }
+  std::size_t Cols() const { return c_; }
+  std::size_t Size() const { return size_; }
 
   Matrix& operator*=(double s)
   {
@@ -95,9 +95,9 @@ public:
   }
 
 private:
-  uint r_;
-  uint c_;
-  uint size_;
+  std::size_t r_;
+  std::size_t c_;
+  std::size_t size_;
   std::vector<double> data_;
 
 }; // struct Matrix

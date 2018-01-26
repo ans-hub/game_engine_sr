@@ -5,8 +5,8 @@
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
-#ifndef SMPL_MATH_H
-#define SMPL_MATH_H
+#ifndef GM_MATH_H
+#define GM_MATH_H
 
 #include <vector>
 #include <cmath>
@@ -34,4 +34,4 @@ namespace math {
 
 } // namespace anshub
 
-#endif  // SMPL_MATH_H
+#endif  // GM_MATH_H
