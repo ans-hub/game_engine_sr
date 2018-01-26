@@ -1,7 +1,7 @@
 // *************************************************************
 // File:    math.h
 // Descr:   math functions
-// Author:  Novoselov Anton @ 2017
+// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
@@ -22,6 +22,7 @@ namespace math {
   double Deg2rad(double);
   double Rad2deg(double);
   bool Fzero(double);
+  bool FlessZero(double);
   bool Feq(double, double);
 
   Table BuildSinTable();

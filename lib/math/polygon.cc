@@ -1,21 +1,21 @@
 // *************************************************************
-// File:    fx_polygons.cc
-// Descr:   polygon helpers functions 
-// Author:  Novoselov Anton @ 2017
+// File:    polygon.cc
+// Descr:   represents polygon 2d entity and helpers 
+// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
-#include "fx_polygons.h"
+#include "polygon.h"
 
 namespace anshub {
 
-void polygon::CheckInvariant(const Vertexes& p)
+void polygon2d::CheckInvariant(const Polygon& p)
 {
   if (p.size() < 2)
     throw MathExcept("X or Y coords less than 2");
 }
 
-double polygon::Square(const Vertexes& p)
+double polygon2d::Square(const Polygon& p)
 {
   CheckInvariant(p);
   
@@ -26,7 +26,7 @@ double polygon::Square(const Vertexes& p)
   return summ/2;
 }
 
-Point polygon::Barycenter(const Vertexes& p, double sq)
+Point polygon2d::Barycenter(const Polygon& p, double sq)
 {
   CheckInvariant(p);
   Point res {};
@@ -45,7 +45,7 @@ Point polygon::Barycenter(const Vertexes& p, double sq)
 // Based on:
 // https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
 
-bool polygon::PointInside(const Vertexes& poly, const Point& p)
+bool polygon2d::PointInside(const Polygon& poly, const Point& p)
 {
   int c = 0;
   int sz = (int)poly.size();
@@ -64,26 +64,29 @@ bool polygon::PointInside(const Vertexes& poly, const Point& p)
   return c == 0 ? false : true;
 }
 
-bool polygon::PointInside(double x0, double y0, double x1, double y1, double px, double py)
+bool polygon2d::PointInside(
+  double x0, double y0, double x1, double y1, double px, double py)
 {
   if (px < x0 || px > x1 || py < y0 || py > y1)
     return false;
   return true;
 }
 
-bool polygon::PointInside(const Point& p1, const Point& p2, const Point& p)
+bool polygon2d::PointInside(const Point& p1, const Point& p2, const Point& p)
 {
   if (p.x < p1.x || p.x > p1.x || p.y < p2.y || p.y > p2.y)
     return false;
   return true;
 }
 
-bool polygon::PointsInside(double x0, double y0, double x1, double y1, std::vector<Point>& v)
+bool polygon2d::PointsInside(
+  double x0, double y0, double x1, double y1, std::vector<Point>& v)
 {
-  return polygon::PointsInside(x0, y0, x1, y1, v);
+  return polygon2d::PointsInside(x0, y0, x1, y1, v);
 }
 
-bool polygon::PointsInside(double x0, double y0, double x1, double y1, std::vector<Point>&& v)
+bool polygon2d::PointsInside(
+  double x0, double y0, double x1, double y1, std::vector<Point>&& v)
 {
   for (const auto& p : v)
   {
@@ -93,11 +96,11 @@ bool polygon::PointsInside(double x0, double y0, double x1, double y1, std::vect
   return true;
 }
 
-bool polygon::CutConvex(Vertexes& p1, Vertexes& p2, const Line& l)
+bool polygon2d::CutConvex(Polygon& p1, Polygon& p2, const Line& l)
 {
   math_helpers::DummyPushBack(p1);
-  Vertexes t1{};
-  Vertexes t2{};
+  Polygon t1{};
+  Polygon t2{};
   bool in_two {false};
   
   for (auto it = p1.begin(); it != p1.end()-1; ++it)
@@ -109,7 +112,7 @@ bool polygon::CutConvex(Vertexes& p1, Vertexes& p2, const Line& l)
     
     Segment s(*it, *(it+1));
     Point p{};
-    if (line::Intersects(l,s,p)) {
+    if (line2d::Intersects(l,s,p)) {
       t1.push_back(p);
       t2.push_back(p);
       in_two = !in_two;
@@ -125,7 +128,7 @@ bool polygon::CutConvex(Vertexes& p1, Vertexes& p2, const Line& l)
 //  Cy = Ay + (Bx−Ax)*sinα + (By−Ay)*cosα
 // where A - origin, B - old point, C - new point
 
-void RotatePoint(
+void polygon2d::RotatePoint(
   double& x, double& y, double th, math::Table& sin, math::Table& cos)
 {
   double sin_theta = math::FastSinCos(sin, th);

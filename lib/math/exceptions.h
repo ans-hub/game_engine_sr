@@ -1,12 +1,12 @@
 // *************************************************************
 // File:    exceptions.h
 // Descr:   contains exceptions class
-// Author:  Novoselov Anton @ 2017
+// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
-#ifndef SMPL_EXCEPT_H
-#define SMPL_EXCEPT_H
+#ifndef GM_EXCEPT_H
+#define GM_EXCEPT_H
 
 #include <stdexcept>
 
@@ -19,4 +19,4 @@ struct MathExcept : std::logic_error
 
 } // namespace anshub
 
-#endif  // SMPL_EXCEPT_H
+#endif  // GM_EXCEPT_H

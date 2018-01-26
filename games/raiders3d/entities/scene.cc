@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    scene.cc
-// Descr:   simple 3d processor (just visualise all objects)
+// Descr:   builds visual game scene
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************

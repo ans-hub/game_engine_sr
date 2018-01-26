@@ -1,12 +1,12 @@
 // *************************************************************
 // File:    segment.h
-// Descr:   represents segment entitie
-// Author:  Novoselov Anton @ 2017
+// Descr:   represents 2d segment entity
+// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
-#ifndef SMPL_SEGMENT_H
-#define SMPL_SEGMENT_H
+#ifndef GM_SEGMENT_2D_H
+#define GM_SEGMENT_2D_H
 
 #include "point.h"
 
@@ -16,12 +16,18 @@ struct Segment
 {
   Segment() : a{}, b{} { }
   Segment(const Point& pa, const Point& pb) : a{pa}, b{pb} { }
-  virtual ~Segment() { }
   Point a;
   Point b;
 
 }; // struct Segment
 
-}  // namespace anshub
+namespace segment2d {
 
-#endif  // SMPL_SEGMENT_H
+  Point Divpoint(const Segment&, double);
+  bool  Clip(int, int, int, int, int&, int&, int&, int&);
+
+} // namespace segment2d
+
+} // namespace anshub
+
+#endif  // GM_SEGMENT_2D_H

@@ -1,29 +1,57 @@
 // *************************************************************
-// File:    line.h
-// Descr:   represents line
-// Author:  Novoselov Anton @ 2017
+// File:    line2d.h
+// Descr:   represents 2d line entity on the plane
+// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
-#ifndef SMPL_LINE_H
-#define SMPL_LINE_H
+#ifndef GM_LINE_2D_H
+#define GM_LINE_2D_H
 
 #include "point.h"
+#include "vector.h"
+#include "segment.h"
 
 namespace anshub {
 
+// Line struct represents 2d line using general form 
+//  ax + by + c = 0, where a || b (both) != 0
+
 struct Line
-{
-  Line() : a{1}, b{1}, c{0} { } // invariant (a || b != 0)
-  Line(double pa, double pb, double pc) : a{pa}, b{pb}, c{pc} { }
+{  
   double a;
   double b;
   double c;
+ 
+  Line() : a{1}, b{1}, c{0} { }   // invariant (a || b != 0)
+  Line(double pa, double pb, double pc) : a{pa}, b{pb}, c{pc} { }
+
+  // Returns intersection point with axises
+  
   double GetX(double y) const { return ((-b*y)-c) / a; }
   double GetY(double x) const { return ((-a*x)-c) / b; }
 
 }; // struct Line
 
-}  // namespace anshub
+// Helpers functions definition
 
-#endif  // SMPL_LINE_H
+namespace line2d
+{
+  // Returns equations of 2d lines by different sources
+
+  Line    Equation(const Point&, const Point&);
+  Line    Equation(const Point&, const Vector&);    // normal vector
+  Line    Equation(const Vector&);                  // radius-vector
+  Line    Perpendicular(const Line&, const Point&);
+
+  // Checks segments intersection and refresh intersection point
+
+  bool    Intersects(const Segment&, const Segment&, Point&);
+  bool    Intersects(const Line&, const Line&, Point&);
+  bool    Intersects(const Line&, const Segment&, Point&);
+
+} // namespace line2d
+
+} // namespace anshub
+
+#endif  // GM_LINE_2D_H

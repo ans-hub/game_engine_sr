@@ -1,7 +1,7 @@
 // *************************************************************
 // File:    math.cc
 // Descr:   math functions
-// Author:  Novoselov Anton @ 2017
+// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
@@ -20,8 +20,13 @@ double math::Rad2deg(double rad)
 }
 
 bool math::Fzero(double num)
-{ 
+{
   return std::abs(num) < kEpsilon;
+}
+
+bool math::FlessZero(double num)
+{
+  return num < kEpsilon;
 }
 
 bool math::Feq(double n1, double n2) 
@@ -47,7 +52,7 @@ math::Table math::BuildCosTable()
 
 double math::FastSinCos(const math::Table& t, double theta)
 {
-  theta = fmodf(theta,360);
+  theta = fmodf(theta, 360);
   if (theta < 0) theta += 360;
   int t_int = static_cast<int>(theta);
   double t_frac = theta - t_int;

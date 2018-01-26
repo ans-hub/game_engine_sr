@@ -22,7 +22,7 @@ int   MakeARGB(byte, byte, byte, byte);
 void  SplitARGB(int color, byte&, byte&, byte&, byte&);
 int   IncreaseBrightness(int, double);
 
-} // namespace color_helpers
+} // namespace color
 
 } // namespace anshub
 

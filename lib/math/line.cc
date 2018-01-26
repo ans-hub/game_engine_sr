@@ -1,17 +1,19 @@
 // *************************************************************
-// File:    fx_lines.cc
-// Descr:   helper functions to lines, segments and vectors 
-// Author:  Novoselov Anton @ 2017
+// File:    line.h
+// Descr:   represents 2d line entity on the plane
+// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
-#include "fx_lines.h"
+#include "line.h"
 
 namespace anshub {
 
-Line line::Equation(const Point& p1, const Point& p2)
+// Return equation of line by given 2 points
+
+Line line2d::Equation(const Point& p1, const Point& p2)
 {
-  // check if p1 == p2;
+  // todo: check if p1 == p2;
   Line res {};
   res.a = p1.y - p2.y;
   res.b = p2.x - p1.x;
@@ -22,7 +24,7 @@ Line line::Equation(const Point& p1, const Point& p2)
 // Returns equation of line by given point and perpendicular vector
 // A(x-x0) + B(y-y0) + C = 0 for v(A;B) and p(x0,y0)
 
-Line line::Equation(const Point& p, const Vec2d& v)
+Line line2d::Equation(const Point& p, const Vector& v)
 {
   Line res {};
   res.a = v.x;
@@ -31,32 +33,27 @@ Line line::Equation(const Point& p, const Vec2d& v)
   return res;
 }
 
-Line line::Equation(const Vec2d& v)
+// Returns equation of line by give radius-vector
+
+Line line2d::Equation(const Vector& v)
 {
-  return line::Equation(Point(0,0,0), Point(v.x, v.y, 0));
+  return line2d::Equation(Point(0,0,0), Point(v.x, v.y, 0));
 }
 
-Point line::Divpoint(const Segment& s, double ratio)
+// Returns perpendicular line to given line in given point
+
+Line line2d::Perpendicular(const Line& l, const Point& p)
 {
-  return Point(s.b.x-(s.b.x-s.a.x)*ratio, s.b.y-(s.b.y-s.a.y)*ratio, 0);
+  Point p1 {l.GetX(0.0), 0.0};
+  Point p2 {0.0, l.GetY(0.0)};
+  Vector dirv (p2-p1);
+  return line2d::Equation(p, dirv);
 }
 
-// Line perpendicular(const Line& l, const Point& p)
-// {
-
-// }
-
-Line Perpendicular(const Segment& seg, const Point& p)
+bool line2d::Intersects(const Segment& l, const Segment& r, Point& res)
 {
-  Vec2d v {seg};
-  Vec2d n = vector::Perpendicular(v);
-  return line::Equation(p,n);
-}
-
-bool line::Intersects(const Segment& l, const Segment& r, Point& res)
-{
-  Vec2d v1 {l};
-  Vec2d v2 {r};
+  Vector v1 {l};
+  Vector v2 {r};
   
   double vmul = v1.x*v2.y - v1.y*v2.x;  // vmul as matrix determ
   if (std::fabs(vmul) < kEpsilon)
@@ -74,7 +71,7 @@ bool line::Intersects(const Segment& l, const Segment& r, Point& res)
     return false;
 }
 
-bool line::Intersects(const Line& l1, const Line& l2, Point& p)
+bool line2d::Intersects(const Line& l1, const Line& l2, Point& p)
 {
   double det = l1.a*l2.b - l1.b*l2.a;
   if (std::fabs(det) < kEpsilon)
@@ -84,10 +81,10 @@ bool line::Intersects(const Line& l1, const Line& l2, Point& p)
   return true;
 }
 
-bool line::Intersects(const Line& l1, const Segment& s, Point& p)
+bool line2d::Intersects(const Line& l1, const Segment& s, Point& p)
 {
-  Line l2 = line::Equation(s.a, s.b);
-  if (line::Intersects(l1,l2,p))
+  Line l2 = line2d::Equation(s.a, s.b);
+  if (line2d::Intersects(l1,l2,p))
   {
     double xmax = std::max(s.a.x, s.b.x);
     double xmin = std::min(s.a.x, s.b.x);

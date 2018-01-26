@@ -7,7 +7,7 @@ SRCFILES = $(wildcard *.cc)
 # Coimpiler settings
 
 CXX = g++
-CXXFLAGS = -I $(SRCDIR) -ansi -pedantic-errors -Wall -Wextra -std=c++11 
+CXXFLAGS = -I $(SRCDIR) -ansi -pedantic-errors -Wall -Wextra -std=c++14
 CXXFLAGS += -MP -MMD
 DBGFLAGS = -ggdb3 -DDEBUG -O0 -pg -no-pie
 RLSFLAGS = -O2

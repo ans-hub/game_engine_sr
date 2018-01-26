@@ -1,12 +1,12 @@
 // *************************************************************
 // File:    helpers.h
 // Descr:   helpers math and geometry functions
-// Author:  Novoselov Anton @ 2017
+// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
-#ifndef SMPL_HELPERS_H
-#define SMPL_HELPERS_H
+#ifndef GM_HELPERS_H
+#define GM_HELPERS_H
 
 #include <vector>
 
@@ -33,4 +33,4 @@ void Swap(T& a, T& b) { T t {std::move(a)}; a = std::move(b); b = std::move(t); 
 
 } // namespace anshub
 
-#endif  // SMPL_HELPERS_H
+#endif  // GM_HELPERS_H
