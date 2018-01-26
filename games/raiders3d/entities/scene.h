@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    scene.h
-// Descr:   builds visual game scene
+// Descr:   simple 3d processor (just visualise all objects)
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************

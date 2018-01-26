@@ -311,11 +311,12 @@ void Logic::ProcessExplosions()
     {
       edge.a.x += vels[i].x;
       edge.a.y += vels[i].y;
-      edge.a.z += vels[i].z;
+      edge.a.z += vels[i].z - level_.player_.velocity_; 
       edge.b.x += vels[i].x;
       edge.b.y += vels[i].y;
-      edge.b.z += vels[i].z;
+      edge.b.z += vels[i].z - level_.player_.velocity_;
       ++i;
+      // where z + player_velocity is speed up edges with player velocity
     }
   }
 
@@ -410,8 +411,14 @@ bool Logic::ProcessGameState(Btn kbtn)
   
   // Fast destroy enemy
 
-  if (kbtn == Btn::L)
+  if (kbtn == Btn::L) {
+    for (auto& ship : level_.ships_) {
+      ship.dead_ = true;
+      PrepareExplosion(ship);
+    }
+    audio_.Play(cfg::kExplodeSnd);
     level_.ships_destroyed_ = level_.ships_.size();
+  }
 #endif
 
   // Process dead state
@@ -430,7 +437,22 @@ bool Logic::ProcessGameState(Btn kbtn)
   {
     level_.state_ = GameState::WIN;
     level_.enemy_shots_.clear();
+
+    // Imitate subspace jump (speed up all explisions)
+
     level_.player_.velocity_ = cfg::kMaxVelocity;
+    for (auto& expl : level_.explosions_)
+    {
+      auto& edges = expl.first;
+      auto& vels  = expl.second;
+      int i {0};
+      for (auto& edge : edges)
+      {
+        edge.a.z += vels[i].z - level_.player_.velocity_ * 2;
+        edge.b.z += vels[i].z - level_.player_.velocity_ * 2;
+        ++i;
+      }
+    }
     audio_.Stop(cfg::kAlarmSnd, false);
   }
 
