@@ -186,7 +186,7 @@ void Logic::PrepareEnemyAttack()
 void Logic::PrepareExplosion(Starship& ship)
 {
   std::vector<Segment>  edges;
-  std::vector<Vector3d> velocities;
+  std::vector<Vector> velocities;
   for (auto& edge : ship.ed_)
   {
     // Here we send ship pos to edges, since edges in ship has 
@@ -214,7 +214,7 @@ void Logic::PrepareExplosion(Starship& ship)
 
   for (std::size_t i = 0; i < edges.size(); ++i)
   {
-    Vector3d edge_vel;  // move ship vel to edges
+    Vector edge_vel;  // move ship vel to edges
     edge_vel.x = 2 * rand_toolkit::get_rand(ship.vel_.x-10, ship.vel_.x+10);
     edge_vel.y = 2 * rand_toolkit::get_rand(ship.vel_.y-10, ship.vel_.y+10);
     edge_vel.z = rand_toolkit::get_rand(ship.vel_.z-5, ship.vel_.z-5);
@@ -240,7 +240,7 @@ void Logic::ProcessEnemyAttack()
 
     shot_pos = shot_pos + shot_vel;
 
-    if (polygon::PointInside(
+    if (polygon2d::PointInside(
       -player.w_, -player.h_, player.w_, player.h_, shot.first.x, shot.first.y))
     {
       if (shot.first.z <= std::fabs(shot.second.z))

@@ -91,7 +91,7 @@ void Scene::DrawStarfield()
       brightness = (cfg::kMaxBrightness*2) - (star.z * kColor);
       color = color::IncreaseBrightness(cfg::kStarColor, brightness);
  
-      if (polygon::PointInside(0, 0, w_-1, h_-1, x_scr, y_scr))
+      if (polygon2d::PointInside(0, 0, w_-1, h_-1, x_scr, y_scr))
         buffer_[x_scr + y_scr * w_] = color;
 
       // Near to kNearZ - less step => more plume
@@ -170,7 +170,7 @@ void Scene::DrawWarships()
       int x_scr_2 = half_w_ + x_2;
       int y_scr_2 = half_h_ - y_2;
       
-      if (draw::ClipSegment(0, 0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
+      if (segment2d::Clip(0, 0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
       {
         draw::DrawLine(x_scr_1, y_scr_1, x_scr_2, y_scr_2, color, buffer_);
       }
@@ -227,7 +227,7 @@ void Scene::DrawWarshipsAttack()
     int x_scr_2 = half_w_ + x_2;
     int y_scr_2 = half_h_ - y_2;
     
-    if (draw::ClipSegment(0,0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
+    if (segment2d::Clip(0,0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
     {
       double c = cfg::kEnemyShotColor;
       double kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / shot_pos.z;
@@ -252,7 +252,7 @@ void Scene::DrawCannon()
 
   // Draw cross
 
-  if (polygon::PointsInside(0, 0, w_-1, h_-1, {l, r, t, b}))
+  if (polygon2d::PointsInside(0, 0, w_-1, h_-1, {l, r, t, b}))
   {
     draw::DrawLine(l.x, l.y, r.x, r.y, cfg::kAimColor, buffer_);
     draw::DrawLine(b.x, b.y, t.x, t.y, cfg::kAimColor, buffer_);
@@ -309,7 +309,7 @@ void Scene::DrawExplosions()
       int x_scr_2 = half_w_ + x_2;
       int y_scr_2 = half_h_ - y_2;
       
-      if (draw::ClipSegment(0, 0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
+      if (segment2d::Clip(0, 0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
       {
         brightness = cfg::kMaxBrightness*4 - (edge.a.z * kColor);
         color = color::IncreaseBrightness(cfg::kExplColor, brightness);

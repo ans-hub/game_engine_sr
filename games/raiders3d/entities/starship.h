@@ -11,7 +11,8 @@
 #include <vector>
 
 #include "config.h"
-#include "entities/aliases.h"
+#include "lib/math/vector.h"
+#include "lib/math/segment.h"
 
 #include "lib/math/point.h"
 #include "lib/math/segment.h"
@@ -35,11 +36,12 @@ struct Starship
 {
   using Vertexes = std::vector<Point>;  // n points
   using Edges = std::vector<Edge>;      // two number of points
+  using Rect = Segment;                 // simple left bottom and right top 
 
   Starship();
 
   Point     pos_;           // starship global pos
-  Vector3d  vel_;           // starship velocity
+  Vector    vel_;           // starship velocity
   int       color_;         // starship color
   Vertexes  vx_;            // model vertexes (local coords)
   Edges     ed_;            // model edges (pair of indexes in vx_)

@@ -19,7 +19,8 @@
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
 #include "lib/draw/fx_colors.h"
-#include "lib/math/fx_polygons.h"
+#include "lib/math/polygon.h"
+#include "lib/math/segment.h"
 #include "lib/math/math.h"
 
 #include "entities/level.h"

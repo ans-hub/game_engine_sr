@@ -17,11 +17,10 @@
 #include "lib/system/rand_toolkit.h"
 #include "lib/draw/fx_colors.h"
 #include "lib/math/point.h"
-#include "lib/math/fx_polygons.h"
+#include "lib/math/polygon.h"
 #include "lib/system/timer.h" 
 
 #include "config.h"
-#include "entities/aliases.h"
 #include "entities/level.h"
 
 namespace anshub {

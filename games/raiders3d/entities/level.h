@@ -12,6 +12,7 @@
 
 #include "config.h"
 #include "lib/math/point.h"
+#include "lib/math/vector.h"
 #include "lib/math/segment.h"
 
 #include "entities/enums.h"
@@ -26,7 +27,7 @@ struct Level
   using VStarships  = std::vector<Starship>;
   using VSegments   = std::vector<Segment>;
   using VStarfield  = std::vector<Point>;
-  using VVelocity   = std::vector<Vector3d>;
+  using VVelocity   = std::vector<Vector>;
   using VExplosions = std::vector<std::pair<VSegments, VVelocity>>;
   using VEnemyShots = std::vector<std::pair<Point, Point>>; // pos, vel
 
