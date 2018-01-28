@@ -17,7 +17,7 @@ LDFLAGS  += -lbass -lX11 -lGL -lGLU -lXrandr				# external
 # Setup compiler
 
 CXX 			= g++
-CXXFLAGS 	= -I $(ROOTDIR) -I .											# see note below
+CXXFLAGS 	= -I $(ROOTDIR) -I .	# see note below
 CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
 CXXLIBS  += -L $(LIBAUDIO) -L $(LIBWINDOW)
 CXXLIBS  += -L $(LIBMATH) -L $(LIBDRAW) -L $(LIBSYSTEM)

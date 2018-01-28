@@ -18,17 +18,20 @@ namespace anshub {
 namespace math {
 
   using Table = std::vector<double>;
-  
-  double Deg2rad(double);
-  double Rad2deg(double);
-  bool Fzero(double);
-  bool FlessZero(double);
-  bool Feq(double, double);
 
-  Table BuildSinTable();
-  Table BuildCosTable();
+  // Float helpers
 
-  double FastSinCos(const Table&, double);
+  bool    Fzero(double);
+  bool    FlessZero(double);
+  bool    Feq(double, double);
+
+  // Trigonometry helpers
+
+  double  Rad2deg(double);
+  double  Deg2rad(double);
+  Table   BuildSinTable();
+  Table   BuildCosTable();
+  double  FastSinCos(const Table&, double);
 
 } // namespace math
 

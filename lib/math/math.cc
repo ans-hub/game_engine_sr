@@ -9,15 +9,7 @@
 
 namespace anshub {
 
-double math::Deg2rad(double deg)
-{ 
-  return deg * kPI / 180.0;
-}
-
-double math::Rad2deg(double rad)
-{
-  return rad * 180.0 / kPI;
-}
+// Float helpers implementation
 
 bool math::Fzero(double num)
 {
@@ -32,6 +24,18 @@ bool math::FlessZero(double num)
 bool math::Feq(double n1, double n2) 
 { 
   return std::abs(n1-n2) < kEpsilon;
+}
+
+// Trigonometry helpers implementation
+
+double math::Deg2rad(double deg)
+{ 
+  return deg * kPI / 180.0;
+}
+
+double math::Rad2deg(double rad)
+{
+  return rad * 180.0 / kPI;
 }
 
 math::Table math::BuildSinTable()
