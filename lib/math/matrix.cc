@@ -9,14 +9,14 @@
 
 namespace anshub {
 
-double matrix::Determinant(const Matrix<2,2>& mx)
+float matrix::Determinant(const Matrix<2,2>& mx)
 {
   return (
     mx(0,0) * mx(1,1) - mx(0,1) * mx(1,0)
   );
 }
 
-double matrix::Determinant(const Matrix<3,3>& mx)
+float matrix::Determinant(const Matrix<3,3>& mx)
 {
   return (
     mx(0,0) * (mx(1,1) * mx(2,2) - mx(2,1) * mx(1,2)) - 
@@ -32,8 +32,8 @@ double matrix::Determinant(const Matrix<3,3>& mx)
 
 bool matrix::Inverse(const Matrix<2,2>& mx, Matrix<2,2>& res)
 {
-  double det = matrix::Determinant(mx);
-  double inv = 1 / det;
+  float det = matrix::Determinant(mx);
+  float inv = 1 / det;
 
   if (!math::Fzero(det))
   {
@@ -51,8 +51,8 @@ bool matrix::Inverse(const Matrix<2,2>& mx, Matrix<2,2>& res)
 
 bool matrix::Inverse(const Matrix<3,3>& mx, Matrix<3,3>& res)
 {
-  double det = matrix::Determinant(mx);
-  double inv = 1 / det;
+  float det = matrix::Determinant(mx);
+  float inv = 1 / det;
 
   if (!math::Fzero(det))
   {
@@ -75,7 +75,7 @@ bool matrix::Inverse(const Matrix<3,3>& mx, Matrix<3,3>& res)
 
 // Interpret vector as 2d vector with ficted w=1 (which real is unused z)
 
-Vector matrix::Multilplie(const Vector& v, const Matrix<3,3>& mx)
+Vector matrix::Multiplie(const Vector& v, const Matrix<3,3>& mx)
 {
   Vector res;
   res.x = v.x * mx(0,0) + v.y * mx(1,0) + v.w * mx(2,0);
@@ -86,14 +86,21 @@ Vector matrix::Multilplie(const Vector& v, const Matrix<3,3>& mx)
 
 // Interpret vector as 3d vector with ficted w=1 (which is real absent)
 
-Vector matrix::Multilplie(const Vector& v, const Matrix<4,4>& mx)
+Vector matrix::Multiplie(const Vector& v, const Matrix<4,4>& mx)
 {
   Vector res;
   res.x = v.x * mx(0,0) + v.y * mx(1,0) + v.z * mx(2,0) + v.w * mx(3,0);
-  res.y = v.x * mx(0,1) + v.y * mx(1,1) + v.y * mx(2,1) + v.w * mx(3,1);
+  res.y = v.x * mx(0,1) + v.y * mx(1,1) + v.z * mx(2,1) + v.w * mx(3,1);
   res.z = v.x * mx(0,2) + v.y * mx(1,2) + v.z * mx(2,2) + v.w * mx(3,2);
   res.w = v.x * mx(0,3) + v.y * mx(1,3) + v.z * mx(2,3) + v.w * mx(3,3);
   return res;
+}
+
+// Interpret point as 3d vector with ficted w=1 (which is real absent)
+
+Vector matrix::Multiplie(const Point& p, const Matrix<4,4>& mx)
+{
+  return matrix::Multiplie(static_cast<Vector>(p), mx);
 }
 
 } // namespace anshub

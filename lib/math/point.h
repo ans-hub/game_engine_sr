@@ -15,16 +15,16 @@ namespace anshub {
 struct Point
 {
   Point() : x{}, y{}, z{} { }
-  Point(double ax, double ay) : x{ax}, y{ay}, z{} { }
-  Point(double ax, double ay, double az) : x{ax}, y{ay}, z{az} { }
+  Point(float ax, float ay) : x{ax}, y{ay}, z{} { }
+  Point(float ax, float ay, float az) : x{ax}, y{ay}, z{az} { }
 
-  double x;
-  double y;
-  double z;
+  float x;
+  float y;
+  float z;
   
-  void Zero() { x = double(); y = double(); z = double(); }
+  void Zero() { x = float(); y = float(); z = float(); }
 
-  Point& operator*(double scalar) {
+  Point& operator*(float scalar) {
     this->x *= scalar;
     this->y *= scalar;
     this->z *= scalar;

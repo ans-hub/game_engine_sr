@@ -8,32 +8,44 @@
 #ifndef GM_MATH_H
 #define GM_MATH_H
 
-#include <vector>
 #include <cmath>
 
 #include "constants.h"
 
 namespace anshub {
 
+// Math helpers declaration
+
 namespace math {
 
-  using Table = std::vector<double>;
-
-  // Float helpers
-
-  bool    Fzero(double);
-  bool    FlessZero(double);
-  bool    Feq(double, double);
-
-  // Trigonometry helpers
-
-  double  Rad2deg(double);
-  double  Deg2rad(double);
-  Table   BuildSinTable();
-  Table   BuildCosTable();
-  double  FastSinCos(const Table&, double);
+  bool  Fzero(float);
+  bool  FNotZero(float);
+  bool  FlessZero(float);
+  bool  Feq(float, float);
 
 } // namespace math
+
+// Math helpers implementation
+
+inline bool math::Fzero(float num)
+{
+  return std::abs(num) < kEpsilon;
+}
+
+inline bool math::FNotZero(float num)
+{
+  return std::abs(num) < kEpsilon;
+}
+
+inline bool math::FlessZero(float num)
+{
+  return num < kEpsilon;
+}
+
+inline bool math::Feq(float n1, float n2) 
+{ 
+  return std::abs(n1-n2) < kEpsilon;
+}
 
 } // namespace anshub
 

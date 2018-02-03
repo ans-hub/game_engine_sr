@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    polygon.h
-// Descr:   represents polygon 2d entity and helpers
+// Descr:   represents 2d polygon helpers (works with vertexes)
 // Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
@@ -12,28 +12,32 @@
 
 #include "point.h"
 #include "line.h"
-#include "math.h"
+#include "trig.h"
 #include "helpers.h"
 
 namespace anshub {
 
-using Polygon = std::vector<Point>;
+using Vertexes = std::vector<Point>;  // see note #1 after code
 
 namespace polygon2d {
 
-  void    CheckInvariant(const Polygon&);
-  double  Square(const Polygon&);
-  Point   Barycenter(const Polygon&, double);
-  bool    PointInside(const Polygon&, const Point&);
-  bool    PointInside(double, double, double, double, double, double);
+  void    CheckInvariant(const Vertexes&);
+  float   Square(const Vertexes&);
+  Point   Barycenter(const Vertexes&, float);
+  bool    PointInside(const Vertexes&, const Point&);
+  bool    PointInside(float, float, float, float, float, float);
   bool    PointInside(const Point&, const Point&, const Point&);
-  bool    PointsInside(double, double, double, double, std::vector<Point>&);
-  bool    PointsInside(double, double, double, double, std::vector<Point>&&);
-  bool    CutConvex(Polygon&, Polygon&, const Line&);
-  void    RotatePoint(double&, double&, double, math::Table&, math::Table&);
+  bool    PointsInside(float, float, float, float, Vertexes&);
+  bool    PointsInside(float, float, float, float, Vertexes&&);
+  bool    CutConvex(Vertexes&, Vertexes&, const Line&);
+  void    RotatePoint(float&, float&, float, const TrigTable&);
 
 } // namespace polygon2d
 
 } // namespace anshub
 
 #endif  // GM_POLYGON_2D_H
+
+// Note #1 : this helper functions works with set of vertexes, but not with 
+// Polygon object, since Polygon object has much another meanings and data fields
+// and not necessary here (Polygon class placed in Draw library)

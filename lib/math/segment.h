@@ -8,6 +8,8 @@
 #ifndef GM_SEGMENT_2D_H
 #define GM_SEGMENT_2D_H
 
+#include <algorithm>
+
 #include "point.h"
 
 namespace anshub {
@@ -23,8 +25,9 @@ struct Segment
 
 namespace segment2d {
 
-  Point Divpoint(const Segment&, double);
+  Point Divpoint(const Segment&, float);
   bool  Clip(int, int, int, int, int&, int&, int&, int&);
+  bool  Clip(int, int, int, int, float&, float&, float&, float&);
 
 } // namespace segment2d
 

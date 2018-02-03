@@ -25,29 +25,33 @@ class Matrix
 {
 public:
   
+  using Container = std::vector<float>;
+
   enum Type { ZERO, IDENTITY }; // used to constructs zero or identity matrix
 
   Matrix();                               // for zero matrix creating
   explicit Matrix(Type);                  // for identity matrix creating
-  Matrix(std::initializer_list<double>);  // for custom matrix creating
+  Matrix(std::initializer_list<float>);   // for custom matrix creating
+  virtual ~Matrix() { }
 
   std::size_t Rows() const { return r_; }
   std::size_t Cols() const { return c_; }
   std::size_t Size() const { return size_; }
+  Container   Data() const { return data_; }
 
-  Matrix& operator*=(double s)
+  Matrix& operator*=(float s)
   {
     std::for_each (
-      data_.begin(), data_.end(), [&s](double& e){ e *= s; }
+      data_.begin(), data_.end(), [&s](float& e){ e *= s; }
     );
     return *this;
   }
-  Matrix& operator/=(double s)
+  Matrix& operator/=(float s)
   {
     if (math::Fzero(s))
       throw MathExcept("Matrix::operator/: zero divide");      
     std::for_each (
-      data_.begin(), data_.end(), [&s](double& e){ e /= s; }
+      data_.begin(), data_.end(), [&s](float& e){ e /= s; }
     );
     return *this;
   }
@@ -56,7 +60,7 @@ public:
     std::transform
     (
       data_.begin(), data_.end(), rhs.data_.begin(), data_.begin(),
-      std::plus<double>()
+      std::plus<float>()
     );
     return *this;
   }
@@ -65,22 +69,22 @@ public:
     std::transform
     (
       data_.begin(), data_.end(), rhs.data_.begin(), data_.begin(),
-      std::minus<double>()
+      std::minus<float>()
     ); 
     return *this;
   }
-  double operator()(int i, int k) const {
+  float operator()(int i, int k) const {
     return data_[i * c_ + k];
   }
-  double& operator()(int i, int k)
+  float& operator()(int i, int k)
   {
     return data_[i * c_ + k];
   }
-  friend inline Matrix operator*(Matrix lhs, double scalar) {
+  friend inline Matrix operator*(Matrix lhs, float scalar) {
     lhs *= scalar;
     return lhs;
   }
-  friend inline Matrix operator/(Matrix lhs, double scalar) {
+  friend inline Matrix operator/(Matrix lhs, float scalar) {
     lhs /= scalar;
     return lhs;
   }
@@ -94,11 +98,11 @@ public:
     return lhs;
   }
 
-private:
+protected:
   std::size_t r_;
   std::size_t c_;
   std::size_t size_;
-  std::vector<double> data_;
+  Container   data_;
 
 }; // struct Matrix
 
@@ -110,17 +114,18 @@ namespace matrix {
 
   // Special simple functions for frequently meets square matrixes
 
-  double  Determinant(const Matrix<2,2>&);
-  double  Determinant(const Matrix<3,3>&);
+  float   Determinant(const Matrix<2,2>&);
+  float   Determinant(const Matrix<3,3>&);
   bool    Inverse(const Matrix<2,2>&, Matrix<2,2>&);
   bool    Inverse(const Matrix<3,3>&, Matrix<3,3>&);
-  Vector  Multilplie(const Vector&, const Matrix<3,3>&);  // 2d+1 x mx<3,3>
-  Vector  Multilplie(const Vector&, const Matrix<4,4>&);  // 3d+1 x mx<4,4>
+  Vector  Multiplie(const Vector&, const Matrix<3,3>&);   // 2d+1 x mx<3,3>
+  Vector  Multiplie(const Vector&, const Matrix<4,4>&);   // 3d+1 x mx<4,4>
+  Vector  Multiplie(const Point&, const Matrix<4,4>&);    // 3d+1 x mx<4,4>
 
   // Helper functions to transform matrixes
 
   template<std::size_t R1, std::size_t R2, std::size_t C>   
-  Matrix<R1,R2> Multilplie(const Matrix<R1,C>&, const Matrix<C,R2>&);
+  Matrix<R1,R2> Multiplie(const Matrix<R1,C>&, const Matrix<C,R2>&);
 
   template<std::size_t R, std::size_t C> 
   Matrix<C,R> Transpose(const Matrix<R,C>&);  
@@ -172,7 +177,7 @@ Matrix<R,C>::Matrix(Type t)
 // Constructs the matrix with initializer list
 
 template<std::size_t R, std::size_t C>
-Matrix<R,C>::Matrix(std::initializer_list<double> list)
+Matrix<R,C>::Matrix(std::initializer_list<float> list)
   : r_{R}
   , c_{C}
   , size_{r_ * c_}
@@ -189,7 +194,7 @@ Matrix<R,C>::Matrix(std::initializer_list<double> list)
 // Multiplie matrixes (naive)
 
 template<std::size_t R1, std::size_t R2, std::size_t C>   
-Matrix<R1,R2> matrix::Multilplie(const Matrix<R1,C>& mx1, const Matrix<C,R2>& mx2)
+Matrix<R1,R2> matrix::Multiplie(const Matrix<R1,C>& mx1, const Matrix<C,R2>& mx2)
 {
   Matrix<R1,R2> res;
 

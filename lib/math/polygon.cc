@@ -9,31 +9,31 @@
 
 namespace anshub {
 
-void polygon2d::CheckInvariant(const Polygon& p)
+void polygon2d::CheckInvariant(const Vertexes& p)
 {
   if (p.size() < 2)
     throw MathExcept("X or Y coords less than 2");
 }
 
-double polygon2d::Square(const Polygon& p)
+float polygon2d::Square(const Vertexes& p)
 {
   CheckInvariant(p);
   
-  double summ {0};
+  float summ {0};
   int sz = (int)p.size();
   for (int i = 0, j = sz-1; i < sz; j = i++) // i - next, j - prev
     summ += (p[j].x * p[i].y - p[i].x * p[j].y);
   return summ/2;
 }
 
-Point polygon2d::Barycenter(const Polygon& p, double sq)
+Point polygon2d::Barycenter(const Vertexes& p, float sq)
 {
   CheckInvariant(p);
   Point res {};
   int sz = (int)p.size();
   for (int i = 0, j = sz-1; i < sz; j = i++)  // i - next, j - prev
   {
-    double summ = (p[j].x * p[i].y - p[i].x * p[j].y);
+    float summ = (p[j].x * p[i].y - p[i].x * p[j].y);
     res.x += (p[j].x + p[i].x) * summ;
     res.y += (p[j].y + p[i].y) * summ;
   }
@@ -45,7 +45,7 @@ Point polygon2d::Barycenter(const Polygon& p, double sq)
 // Based on:
 // https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
 
-bool polygon2d::PointInside(const Polygon& poly, const Point& p)
+bool polygon2d::PointInside(const Vertexes& poly, const Point& p)
 {
   int c = 0;
   int sz = (int)poly.size();
@@ -53,9 +53,9 @@ bool polygon2d::PointInside(const Polygon& poly, const Point& p)
   {
     Point prev = poly[j];
     Point curr = poly[i];
-    double deltaX = prev.x - curr.x;
-    double deltaY = prev.y - curr.y;
-    double ray = ( deltaX * (p.y-curr.y) / deltaY ) + curr.x;
+    float deltaX = prev.x - curr.x;
+    float deltaY = prev.y - curr.y;
+    float ray = ( deltaX * (p.y-curr.y) / deltaY ) + curr.x;
     bool pnt_beside = (curr.y > p.y) != (prev.y > p.y);
 
     if (pnt_beside && p.x < ray)
@@ -65,7 +65,7 @@ bool polygon2d::PointInside(const Polygon& poly, const Point& p)
 }
 
 bool polygon2d::PointInside(
-  double x0, double y0, double x1, double y1, double px, double py)
+  float x0, float y0, float x1, float y1, float px, float py)
 {
   if (px < x0 || px > x1 || py < y0 || py > y1)
     return false;
@@ -80,13 +80,13 @@ bool polygon2d::PointInside(const Point& p1, const Point& p2, const Point& p)
 }
 
 bool polygon2d::PointsInside(
-  double x0, double y0, double x1, double y1, std::vector<Point>& v)
+  float x0, float y0, float x1, float y1, std::vector<Point>& v)
 {
   return polygon2d::PointsInside(x0, y0, x1, y1, v);
 }
 
 bool polygon2d::PointsInside(
-  double x0, double y0, double x1, double y1, std::vector<Point>&& v)
+  float x0, float y0, float x1, float y1, std::vector<Point>&& v)
 {
   for (const auto& p : v)
   {
@@ -96,11 +96,11 @@ bool polygon2d::PointsInside(
   return true;
 }
 
-bool polygon2d::CutConvex(Polygon& p1, Polygon& p2, const Line& l)
+bool polygon2d::CutConvex(Vertexes& p1, Vertexes& p2, const Line& l)
 {
   math_helpers::DummyPushBack(p1);
-  Polygon t1{};
-  Polygon t2{};
+  Vertexes t1{};
+  Vertexes t2{};
   bool in_two {false};
   
   for (auto it = p1.begin(); it != p1.end()-1; ++it)
@@ -128,14 +128,12 @@ bool polygon2d::CutConvex(Polygon& p1, Polygon& p2, const Line& l)
 //  Cy = Ay + (Bx−Ax)*sinα + (By−Ay)*cosα
 // where A - origin, B - old point, C - new point
 
-void polygon2d::RotatePoint(
-  double& x, double& y, double th, math::Table& sin, math::Table& cos)
+void polygon2d::RotatePoint(float& x, float& y, float th, const TrigTable& angles)
 {
-  double sin_theta = math::FastSinCos(sin, th);
-  double cos_theta = math::FastSinCos(cos, th);
+  float sin_theta = angles.Sin(th);;
+  float cos_theta = angles.Cos(th);
   x = x * cos_theta - y * sin_theta;
   y = y * sin_theta + y * cos_theta;
 }
-
 
 } // namespace anshub

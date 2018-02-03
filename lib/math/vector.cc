@@ -15,14 +15,14 @@ namespace anshub {
 
 // Evaluate length as hypotenuse by Pithagorean theorem
 
-double vector::Length(const Vector& v)
+float vector::Length(const Vector& v)
 {
   return std::sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 }
 
 // The same as above but just square of hypotenuse
 
-double vector::SquareLength(const Vector& v)
+float vector::SquareLength(const Vector& v)
 {
   return (v.x * v.x) + (v.y * v.y) + (v.z * v.z);
 }
@@ -50,14 +50,14 @@ Vector vector::Normalize(const Vector& v)
   if (math::Fzero(len)) {
     throw MathExcept("vector::Normalize - zero length vector");
   }
-  double p = 1 / len;
+  float p = 1 / len;
   return Vector(v.x * p, v.y * p, v.z * p);
 }
 
 // Returns dot product (scalar) (evaluated by coordinates)
 // If result > 0, then angle between v1 & v2 from 0 to 90 degree
 
-double vector::DotProduct(const Vector& v1, const Vector& v2)
+float vector::DotProduct(const Vector& v1, const Vector& v2)
 {
   return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
 }
@@ -103,13 +103,13 @@ Vector vector::CrossProduct(const Vector& v1, const Vector& v2)
 //  1) don't use this function and think about another way of problem
 //  2) prenormalize vectors and use CosBetweenNormalized (which is DotProduct)
 
-double vector::CosBetween(const Vector& v1, const Vector& v2, bool norm)
+float vector::CosBetween(const Vector& v1, const Vector& v2, bool norm)
 {
   if (norm)
     return vector::DotProduct(v1, v2);
 
-  double l1 = v1.Length();
-  double l2 = v2.Length();
+  float l1 = v1.Length();
+  float l2 = v2.Length();
   if (math::Fzero(l1) || math::Fzero(l2))
     throw MathExcept("vector::CosBetween - zero length vector");
   else
@@ -118,10 +118,18 @@ double vector::CosBetween(const Vector& v1, const Vector& v2, bool norm)
 
 // Calculate angle between vectors (costs, if vectors are not normalized)
 
-double vector::AngleBetween(const Vector& v1, const Vector& v2, bool norm)
+float vector::AngleBetween(const Vector& v1, const Vector& v2, bool norm)
 {
-  double cosine = vector::CosBetween(v1, v2, norm);
-  return math::Rad2deg( std::acos(cosine) );
+  float cosine = vector::CosBetween(v1, v2, norm);
+  return trig::Rad2deg( std::acos(cosine) );
+}
+
+// Simplie divides all components by w
+
+void vector::ConvertFromHomogeneous(Vector& v)
+{
+  v /= v.w;
+  v.w = 1.0f;
 }
 
 // Checks if two vectors are collinear (type A)

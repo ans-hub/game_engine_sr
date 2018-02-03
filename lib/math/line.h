@@ -19,17 +19,17 @@ namespace anshub {
 
 struct Line
 {  
-  double a;
-  double b;
-  double c;
+  float a;
+  float b;
+  float c;
  
   Line() : a{1}, b{1}, c{0} { }   // invariant (a || b != 0)
-  Line(double pa, double pb, double pc) : a{pa}, b{pb}, c{pc} { }
+  Line(float pa, float pb, float pc) : a{pa}, b{pb}, c{pc} { }
 
   // Returns intersection point with axises
   
-  double GetX(double y) const { return ((-b*y)-c) / a; }
-  double GetY(double x) const { return ((-a*x)-c) / b; }
+  float GetX(float y) const { return ((-b*y)-c) / a; }
+  float GetY(float x) const { return ((-a*x)-c) / b; }
 
 }; // struct Line
 

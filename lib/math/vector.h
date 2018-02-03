@@ -12,6 +12,7 @@
 #include <cmath>
 
 #include "math.h"
+#include "trig.h"
 #include "exceptions.h"
 #include "segment.h"
 
@@ -24,35 +25,41 @@ namespace anshub {
 struct Vector
 {
   Vector() 
-    : x{}, y{}, z{} { }
+    : x{}, y{}, z{}, w{} { }
   explicit Vector(const Point& p) 
     : x{p.x}, y{p.y}, z{p.z}, w{1.0} { }
   Vector(const Vector& v1, const Vector& v2)
     : x{v2.x-v1.x}, y{v2.y-v1.y}, z{v2.z-v1.z}, w{1.0} { }
   Vector(const Point& p1, const Point& p2)
     : x{p2.x-p1.x}, y{p2.y-p1.y}, z{p2.z-p1.z}, w{1.0} { }
-  Vector(double ax, double ay) 
+  Vector(float ax, float ay) 
     : x{ax}, y{ay}, z{}, w{1.0} { }
-  Vector(double ax, double ay, double az) 
+  Vector(float ax, float ay, float az) 
     : x{ax}, y{ay}, z{az}, w{1.0} { }
   explicit Vector(const Segment& s) 
     : Vector(s.b - s.a) { }
   
-  double x;
-  double y;
-  double z;
-  double w;   // see note #2 after code
+  float x;
+  float y;
+  float z;
+  float w;   // see note #2 after code
 
-  double Length() const;
-  double SquareLength() const;  // used to exclude sqrt in some calculations
-  void   Normalize();
+  float Length() const;
+  float SquareLength() const;  // used to exclude sqrt in some calculations
+  void  Normalize();
 
-  void Zero() { x = double(); y = double(); z = double(); }
+  void  Zero() { x = 0.0f; y = 0.0f; z = 0.0f; w = 0.0f; }
 
-  Vector& operator*=(double scalar) {
+  Vector& operator*=(float scalar) {
     this->x *= scalar;
     this->y *= scalar;
     this->z *= scalar;
+    return *this;
+  }
+  Vector& operator/=(float scalar) {
+    this->x /= scalar;
+    this->y /= scalar;
+    this->z /= scalar;
     return *this;
   }
   Vector& operator+=(const Vector& rhs) {
@@ -75,8 +82,12 @@ struct Vector
   {
     return !(*this == v);
   }
-  friend inline Vector operator*(Vector lhs, double scalar) {
+  friend inline Vector operator*(Vector lhs, float scalar) {
     lhs *= scalar;
+    return lhs;
+  }
+  friend inline Vector operator/(Vector lhs, float scalar) {
+    lhs /= scalar;
     return lhs;
   }
   friend inline Vector operator-(Vector lhs, const Vector& rhs) {
@@ -100,17 +111,18 @@ struct Vector
 
 namespace vector {
 
-  double Length(const Vector&);
-  double SquareLength(const Vector&);
-  Vector Add(const Vector&, const Vector&);
-  Vector Sub(const Vector&, const Vector&);
-  Vector Normalize(const Vector&);
-  double DotProduct(const Vector&, const Vector&);
-  Vector CrossProduct(const Vector&, const Vector&);
-  bool   IsCollinearA(const Vector&, const Vector&, bool = false);
-  bool   IsCollinearB(const Vector&, const Vector&);
-  double CosBetween(const Vector&, const Vector&, bool = false);
-  double AngleBetween(const Vector&, const Vector&, bool = false);
+  float   Length(const Vector&);
+  float   SquareLength(const Vector&);
+  Vector  Add(const Vector&, const Vector&);
+  Vector  Sub(const Vector&, const Vector&);
+  Vector  Normalize(const Vector&);
+  float   DotProduct(const Vector&, const Vector&);
+  Vector  CrossProduct(const Vector&, const Vector&);
+  bool    IsCollinearA(const Vector&, const Vector&, bool = false);
+  bool    IsCollinearB(const Vector&, const Vector&);
+  float   CosBetween(const Vector&, const Vector&, bool = false);
+  float   AngleBetween(const Vector&, const Vector&, bool = false);
+  void    ConvertFromHomogeneous(Vector&);
   std::ostream& operator<<(std::ostream&, const Vector&);
 
 } // namespace vector
@@ -130,12 +142,12 @@ namespace vector2d {
 // INLINE MEMBER CLASS FUNCTIONS IMPLEMENTATION
 //****************************************************************************
 
-inline double Vector::Length() const
+inline float Vector::Length() const
 {
   return std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2));
 }
 
-inline double Vector::SquareLength() const
+inline float Vector::SquareLength() const
 {
   return std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2);
 }
@@ -144,11 +156,11 @@ inline double Vector::SquareLength() const
 
 inline void Vector::Normalize()
 {
-  double len = Length();
+  float len = Length();
   if (math::Fzero(len)) {
     throw MathExcept("vector::Normalize - zero length vector");
   }
-  double p = 1 / len;
+  float p = 1 / len;
   x *= p;
   y *= p;
   z *= p;
@@ -162,9 +174,9 @@ inline void Vector::Normalize()
 // has const reference to lhs. In both cases we create new point to return result.
 // We should test which case is better in perfomance.
 
-// Note #2: this is fiction coordinate which used only to multiply mxs. But really
-// in quaternions w coordinate uses to represents really coordinate (it may be multiplie,
-// add, and sub ...)
+// Note #2: this is fiction coordinate which used only to get capable of multiply mxs.
+// One important thing - is in perspective proj. In quaternions w coordinate uses to
+// represents really coordinate (it may be multiplie, add, and sub ...)
 
 // Todo #1 : may be do as Vector<2>, Vector<3> ??? Yes, surely
 // Todo #2 : make all inline ??? 

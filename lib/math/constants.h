@@ -12,12 +12,12 @@
 
 namespace anshub {
 
-constexpr double kEpsilon = std::numeric_limits<double>::epsilon();
-constexpr double kPI = 3.141592654;
-constexpr double kPI_mul2 = 6.283185307;
-constexpr double kPI_div2 = 1.570796327;
-constexpr double kPI_div4 = 0.785398163;
-constexpr double kPI_inv = 0.318309886;
+constexpr float kEpsilon = std::numeric_limits<float>::epsilon();
+constexpr float kPI = 3.14159265358979323846;
+constexpr float kPI_mul2 = 6.283185307;
+constexpr float kPI_div2 = 1.570796327;
+constexpr float kPI_div4 = 0.785398163;
+constexpr float kPI_inv = 0.318309886;
 
 } // namespace anshub
 

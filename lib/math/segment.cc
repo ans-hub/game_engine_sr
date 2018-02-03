@@ -11,7 +11,7 @@ namespace anshub {
 
 // Returns divide point using ratio
 
-Point segment2d::Divpoint(const Segment& s, double ratio)
+Point segment2d::Divpoint(const Segment& s, float ratio)
 {
   return Point(
     s.b.x - (s.b.x - s.a.x) * ratio,
@@ -38,12 +38,12 @@ bool segment2d::Clip(
 
   int vx = x2 - x1; // x component of directing vector
   int vy = y2 - y1; // y component of directing vector
-  double t0 = 0;    // with parametr t1 = 0 we have p1
-  double t1 = 1;    // with parametr t2 = 1 we have p2
+  float t0 = 0;    // with parametr t1 = 0 we have p1
+  float t1 = 1;    // with parametr t2 = 1 we have p2
   
-  double p;         // inequalities variables
-  double q; 
-  double t;
+  float p;         // inequalities variables
+  float q; 
+  float t;
 
   // Traverse through sides of clippint rect
 
@@ -81,6 +81,23 @@ bool segment2d::Clip(
   y1 += (t0 * vy);
 
   return true;
+}
+
+// Overloaded version of clip function above with float reference arguments
+
+bool segment2d::Clip(
+  int xmin, int ymin, int xmax, int ymax, float& x1, float& y1, float& x2, float& y2)
+{
+  int x1_ = x1;
+  int y1_ = y1;
+  int x2_ = x2;
+  int y2_ = y2;
+  bool result = segment2d::Clip(xmin, ymin, xmax, ymax, x1_, y1_, x2_, y2_);
+  x1 = x1_;
+  y1 = y1_;
+  x2 = x2_;
+  y2 = y2_;
+  return result;
 }
 
 }  // namespace anshub
