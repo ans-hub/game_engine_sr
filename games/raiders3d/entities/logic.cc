@@ -166,7 +166,7 @@ void Logic::PrepareEnemyAttack()
 
       Point shot_vel;
       shot_vel.z = cfg::kEnemyShotVel;
-      double k_dz = std::abs((shot_end.z - ship.pos_.z) / shot_vel.z);
+      float k_dz = std::abs((shot_end.z - ship.pos_.z) / shot_vel.z);
       shot_vel.x = (shot_end.x - ship.pos_.x) / k_dz;
       shot_vel.y = (shot_end.y - ship.pos_.y) / k_dz;
 

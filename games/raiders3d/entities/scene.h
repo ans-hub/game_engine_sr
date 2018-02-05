@@ -22,6 +22,7 @@
 #include "lib/math/polygon.h"
 #include "lib/math/segment.h"
 #include "lib/math/math.h"
+#include "lib/math/trig.h"
 
 #include "entities/level.h"
 
@@ -63,14 +64,10 @@ private:
   
   // Data members to store info
 
-  int       curr_fps_;
-  int       prev_fps_;
-  slong     time_passed_;
-  
-  // Math tables
-
-  math::Table sin_tab_;
-  math::Table cos_tab_;
+  int         curr_fps_;
+  int         prev_fps_;
+  slong       time_passed_;
+  TrigTable   trig_table_;
 
 }; // class Scene
 

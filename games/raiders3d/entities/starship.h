@@ -13,7 +13,6 @@
 #include "config.h"
 #include "lib/math/vector.h"
 #include "lib/math/segment.h"
-
 #include "lib/math/point.h"
 #include "lib/math/segment.h"
 
@@ -24,9 +23,9 @@ namespace anshub {
 struct Edge
 {
   Edge() : v1{-1.0}, v2{-1.0} { }
-  Edge(double a, double b) : v1{a}, v2{b} { }
-  double v1;  // number of vertex 1
-  double v2;  // number of vertex 2
+  Edge(float a, float b) : v1{a}, v2{b} { }
+  float v1;  // number of vertex 1
+  float v2;  // number of vertex 2
 
 }; // struct Edge
 
@@ -45,7 +44,7 @@ struct Starship
   int       color_;         // starship color
   Vertexes  vx_;            // model vertexes (local coords)
   Edges     ed_;            // model edges (pair of indexes in vx_)
-  Rect      bounding_box_;  // used for laser hit detection 
+  Rect      bounding_box_;  // used for laser hit detection
   
   // States
 

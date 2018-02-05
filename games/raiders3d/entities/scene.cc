@@ -22,8 +22,7 @@ Scene::Scene(GlWindow& win, Level& level)
   , curr_fps_{0}
   , prev_fps_{0}
   , time_passed_{0}
-  , sin_tab_{math::BuildSinTable()}
-  , cos_tab_{math::BuildCosTable()}
+  , trig_table_{}
 {
   timer_.Start();
 }
@@ -57,13 +56,13 @@ void Scene::DrawStarfield()
   // Prepare color for draw perspective
 
   int    color = 0;
-  double brightness = 0;
-  double kColor = ((cfg::kMaxBrightness*2)-cfg::kMinBrightness) / cfg::kStarFarZ; 
+  float brightness = 0;
+  float kColor = ((cfg::kMaxBrightness*2)-cfg::kMinBrightness) / cfg::kStarFarZ; 
 
   // Prepare rotation stuff
 
-  double sin_theta = math::FastSinCos(sin_tab_, level_.player_.Angle());
-  double cos_theta = math::FastSinCos(cos_tab_, level_.player_.Angle());
+  float sin_theta = trig_table_.Sin(level_.player_.Angle());
+  float cos_theta = trig_table_.Cos(level_.player_.Angle());
 
   // Draw each star using color in depends of distance
 
@@ -75,13 +74,13 @@ void Scene::DrawStarfield()
 
     for (int i = 0; i <= level_.player_.velocity_ / cfg::kStarTrack; ++i)
     {
-      double x_per = half_w_ * star.x / z;
-      double y_per = half_h_ * star.y / z;
+      float x_per = half_w_ * star.x / z;
+      float y_per = half_h_ * star.y / z;
 
       // Rotate using viewport angle
 
-      double x = x_per * cos_theta - y_per * sin_theta;
-      double y = x_per * sin_theta + y_per * cos_theta;
+      float x = x_per * cos_theta - y_per * sin_theta;
+      float y = x_per * sin_theta + y_per * cos_theta;
     
       // Screen coordinates
 
@@ -109,8 +108,8 @@ void Scene::DrawWarships()
   // Prepare color for draw perspective
   
   int    color = 0;
-  double brightness = 0;
-  double kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / cfg::kShipFarZ; 
+  float brightness = 0;
+  float kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / cfg::kShipFarZ; 
 
   for (auto& ship : level_.ships_)
   {
@@ -133,35 +132,35 @@ void Scene::DrawWarships()
 
     // Prepare rotation stuff
 
-    double sin_theta = math::FastSinCos(sin_tab_, level_.player_.Angle());
-    double cos_theta = math::FastSinCos(cos_tab_, level_.player_.Angle());
+    float sin_theta = trig_table_.Sin(level_.player_.Angle());
+    float cos_theta = trig_table_.Cos(level_.player_.Angle());
 
     for (const auto& edge : ship.ed_)
     {
       // Acsonometric projection
 
-      double x_per_1 = half_w_ *
+      float x_per_1 = half_w_ *
         (ship.pos_.x + ship.vx_[edge.v1].x) / 
         (ship.pos_.z + ship.vx_[edge.v1].z);
-      double y_per_1 = 
+      float y_per_1 = 
         half_h_ *
         (ship.pos_.y + ship.vx_[edge.v1].y) /
         (ship.pos_.z + ship.vx_[edge.v1].z);
-      double x_per_2 = 
+      float x_per_2 = 
         half_w_ *
         (ship.pos_.x + ship.vx_[edge.v2].x) /
         (ship.pos_.z + ship.vx_[edge.v2].z);
-      double y_per_2 = 
+      float y_per_2 = 
         half_h_ *
         (ship.pos_.y + ship.vx_[edge.v2].y) /
         (ship.pos_.z + ship.vx_[edge.v2].z);
 
       // Rotate using viewport angle
 
-      double x_1 = x_per_1 * cos_theta - y_per_1 * sin_theta;
-      double y_1 = x_per_1 * sin_theta + y_per_1 * cos_theta;
-      double x_2 = x_per_2 * cos_theta - y_per_2 * sin_theta;
-      double y_2 = x_per_2 * sin_theta + y_per_2 * cos_theta;
+      float x_1 = x_per_1 * cos_theta - y_per_1 * sin_theta;
+      float y_1 = x_per_1 * sin_theta + y_per_1 * cos_theta;
+      float x_2 = x_per_2 * cos_theta - y_per_2 * sin_theta;
+      float y_2 = x_per_2 * sin_theta + y_per_2 * cos_theta;
       
       // Screen coordinates
 
@@ -177,14 +176,14 @@ void Scene::DrawWarships()
 
       // Define new bounding boxes
 
-      min.x = std::min((int)min.x, x_scr_1);
-      min.x = std::min((int)min.x, x_scr_2);
-      min.y = std::min((int)min.y, y_scr_1);
-      min.y = std::min((int)min.y, y_scr_2);
-      max.x = std::max((int)max.x, x_scr_1);
-      max.x = std::max((int)max.x, x_scr_2);
-      max.y = std::max((int)max.y, y_scr_1);
-      max.y = std::max((int)max.y, y_scr_2);
+      min.x = std::fmin(min.x, x_scr_1);
+      min.x = std::fmin(min.x, x_scr_2);
+      min.y = std::fmin(min.y, y_scr_1);
+      min.y = std::fmin(min.y, y_scr_2);
+      max.x = std::fmax(max.x, x_scr_1);
+      max.x = std::fmax(max.x, x_scr_2);
+      max.y = std::fmax(max.y, y_scr_1);
+      max.y = std::fmax(max.y, y_scr_2);
     }
   }
 }
@@ -193,8 +192,8 @@ void Scene::DrawWarshipsAttack()
 {
   // Prepare rotation stuff
 
-  double sin_theta = math::FastSinCos(sin_tab_, level_.player_.Angle());
-  double cos_theta = math::FastSinCos(cos_tab_, level_.player_.Angle());
+  float sin_theta = trig_table_.Sin(level_.player_.Angle());
+  float cos_theta = trig_table_.Cos(level_.player_.Angle());
 
   for (auto& shot : level_.enemy_shots_)
   {
@@ -208,17 +207,17 @@ void Scene::DrawWarshipsAttack()
     shot_start.y = shot_pos.y - (shot_vel.y);
     shot_start.z = shot_pos.z - (shot_vel.z);
     
-    double x_per_1 = half_w_ * (shot_start.x / shot_start.z);
-    double y_per_1 = half_h_ * (shot_start.y / shot_start.z);
-    double x_per_2 = half_w_ * (shot_pos.x / shot_pos.z);
-    double y_per_2 = half_h_ * (shot_pos.y / shot_pos.z);
+    float x_per_1 = half_w_ * (shot_start.x / shot_start.z);
+    float y_per_1 = half_h_ * (shot_start.y / shot_start.z);
+    float x_per_2 = half_w_ * (shot_pos.x / shot_pos.z);
+    float y_per_2 = half_h_ * (shot_pos.y / shot_pos.z);
 
     // Rotate using viewport angle
     
-    double x_1 = x_per_1 * cos_theta - y_per_1 * sin_theta;
-    double y_1 = x_per_1 * sin_theta + y_per_1 * cos_theta;
-    double x_2 = x_per_2 * cos_theta - y_per_2 * sin_theta;
-    double y_2 = x_per_2 * sin_theta + y_per_2 * cos_theta;
+    float x_1 = x_per_1 * cos_theta - y_per_1 * sin_theta;
+    float y_1 = x_per_1 * sin_theta + y_per_1 * cos_theta;
+    float x_2 = x_per_2 * cos_theta - y_per_2 * sin_theta;
+    float y_2 = x_per_2 * sin_theta + y_per_2 * cos_theta;
       
     // Screen coordinates (since in virtual coords 0;0 is the center)
 
@@ -229,10 +228,10 @@ void Scene::DrawWarshipsAttack()
     
     if (segment2d::Clip(0,0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
     {
-      double c = cfg::kEnemyShotColor;
-      double kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / shot_pos.z;
-      double k1 = cfg::kMaxBrightness - (shot_pos.z * kColor);
-      double k2 = (cfg::kMaxBrightness - (50 * kColor) ) * 2;
+      float c = cfg::kEnemyShotColor;
+      float kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / shot_pos.z;
+      float k1 = cfg::kMaxBrightness - (shot_pos.z * kColor);
+      float k2 = (cfg::kMaxBrightness - (50 * kColor) ) * 2;
       draw::DrawLine(x_scr_1, y_scr_1, x_scr_2, y_scr_2, c, k1, k2, buffer_);
     }
   }
@@ -262,9 +261,9 @@ void Scene::DrawCannon()
 
   if (level_.cannon_.shot_)
   {
-    double kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / cfg::kShipFarZ;
-    double k1 = cfg::kMaxBrightness - (cfg::kShipFarZ * kColor);
-    double k2 = cfg::kMaxBrightness - (cfg::kNearZ * kColor);
+    float kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / cfg::kShipFarZ;
+    float k1 = cfg::kMaxBrightness - (cfg::kShipFarZ * kColor);
+    float k2 = cfg::kMaxBrightness - (cfg::kNearZ * kColor);
 
     if (rand_toolkit::coin_toss())
       draw::DrawLine(0, 0, mid.x, mid.y, cfg::kCannonColor, k2, k1, buffer_);
@@ -278,29 +277,29 @@ void Scene::DrawExplosions()
   // Prepare color stuff
 
   int    color = 0;
-  double brightness = 0;
-  double kColor = (cfg::kMaxBrightness*4-cfg::kMinBrightness) / cfg::kShipFarZ;
+  float brightness = 0;
+  float kColor = (cfg::kMaxBrightness*4-cfg::kMinBrightness) / cfg::kShipFarZ;
  
   // Prepare rotation stuff
 
-  double sin_theta = math::FastSinCos(sin_tab_, level_.player_.Angle());
-  double cos_theta = math::FastSinCos(cos_tab_, level_.player_.Angle());
+  float sin_theta = trig_table_.Sin(level_.player_.Angle());
+  float cos_theta = trig_table_.Cos(level_.player_.Angle());
 
   for (auto& expl : level_.explosions_)
   {
     for (const auto& edge : expl.first)
     {
-      double x_per_1 = half_w_ * (edge.a.x) / (edge.a.z);
-      double y_per_1 = half_h_ * (edge.a.y) / (edge.a.z);
-      double x_per_2 = half_w_ * (edge.b.x) / (edge.b.z);
-      double y_per_2 = half_h_ * (edge.b.y) / (edge.b.z);
+      float x_per_1 = half_w_ * (edge.a.x) / (edge.a.z);
+      float y_per_1 = half_h_ * (edge.a.y) / (edge.a.z);
+      float x_per_2 = half_w_ * (edge.b.x) / (edge.b.z);
+      float y_per_2 = half_h_ * (edge.b.y) / (edge.b.z);
 
       // Rotate using viewport angle
       
-      double x_1 = x_per_1 * cos_theta - y_per_1 * sin_theta;
-      double y_1 = x_per_1 * sin_theta + y_per_1 * cos_theta;
-      double x_2 = x_per_2 * cos_theta - y_per_2 * sin_theta;
-      double y_2 = x_per_2 * sin_theta + y_per_2 * cos_theta;
+      float x_1 = x_per_1 * cos_theta - y_per_1 * sin_theta;
+      float y_1 = x_per_1 * sin_theta + y_per_1 * cos_theta;
+      float x_2 = x_per_2 * cos_theta - y_per_2 * sin_theta;
+      float y_2 = x_per_2 * sin_theta + y_per_2 * cos_theta;
         
       // Screen coordinates
 

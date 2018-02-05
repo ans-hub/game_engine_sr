@@ -47,8 +47,8 @@ namespace color {
 
   // Color settings
 
-  constexpr double kMinBrightness = 0.7;
-  constexpr double kMaxBrightness = 2.5;
+  constexpr float kMinBrightness = 0.7;
+  constexpr float kMaxBrightness = 2.5;
   constexpr int kSpaceColor = color::kBlack;
   constexpr int kStarColor = color::kDeepGray;
   constexpr int kShipColor = color::kDeepYellow;

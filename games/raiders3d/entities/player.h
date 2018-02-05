@@ -25,16 +25,16 @@ struct Player
     , offset_angle_{0}
   { } 
 
-  double Angle() const { return curr_angle_ + offset_angle_; }
+  float   Angle() const { return curr_angle_ + offset_angle_; }
 
-  int       w_;             // player width
-  int       h_;             // player height
-  Point     pos_;           // player pos
-  int       velocity_;      // player velocity
-  int       life_;          // player life
-  bool      alarm_on_;      // flag means that alarm pre-destroy is on 
-  double    curr_angle_;    // rotate angle
-  double    offset_angle_;  // offset to rotate angle (shake imitation)
+  int     w_;             // player width
+  int     h_;             // player height
+  Point   pos_;           // player pos
+  int     velocity_;      // player velocity
+  int     life_;          // player life
+  bool    alarm_on_;      // flag means that alarm pre-destroy is on 
+  float   curr_angle_;    // rotate angle
+  float   offset_angle_;  // offset to rotate angle (shake imitation)
 
 }; // struct Player
 
