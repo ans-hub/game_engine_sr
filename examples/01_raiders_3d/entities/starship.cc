@@ -14,16 +14,16 @@ Starship::Starship()
   , vel_{}
   , color_{cfg::kShipColor}
   , vx_{
-      Point(-40, 40, 0),
-      Point(-40, 0, 0),
-      Point(-40,- 40, 0),
-      Point(-10, 0, 0),
-      Point(0, 20, 0),
-      Point(10, 0, 0),
-      Point(0, -20, 0),
-      Point(40, 40, 0),
-      Point(40, 0, 0),
-      Point(40, -40, 0) }
+      Vector(-40, 40, 0),
+      Vector(-40, 0, 0),
+      Vector(-40,- 40, 0),
+      Vector(-10, 0, 0),
+      Vector(0, 20, 0),
+      Vector(10, 0, 0),
+      Vector(0, -20, 0),
+      Vector(40, 40, 0),
+      Vector(40, 0, 0),
+      Vector(40, -40, 0) }
   , ed_{
       Edge(0, 2),
       Edge(1, 3),

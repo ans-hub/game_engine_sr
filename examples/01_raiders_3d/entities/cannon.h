@@ -8,18 +8,18 @@
 #ifndef GAME_CANNON_H
 #define GAME_CANNON_H
 
-#include "lib/math/point.h"
+#include "lib/math/vector.h"
 
 namespace anshub {
 
 struct Cannon
 {
   Cannon() : mid_{}, ready_{true}, shot_{false}, wait_{0} { }
-  Point mid_;
-  int   color_;
-  bool  ready_;     // ready state
-  bool  shot_;      // shot state
-  int   wait_;      // wait state
+  Vector  mid_;
+  int     color_;
+  bool    ready_;     // ready state
+  bool    shot_;      // shot state
+  int     wait_;      // wait state
 
 }; // struct Cannon
 

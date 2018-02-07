@@ -13,7 +13,6 @@
 #include "config.h"
 #include "lib/math/vector.h"
 #include "lib/math/segment.h"
-#include "lib/math/point.h"
 #include "lib/math/segment.h"
 
 namespace anshub {
@@ -33,13 +32,13 @@ struct Edge
 
 struct Starship
 {
-  using Vertexes = std::vector<Point>;  // n points
+  using Vertexes = std::vector<Vector>;  // n points
   using Edges = std::vector<Edge>;      // two number of points
   using Rect = Segment;                 // simple left bottom and right top 
 
   Starship();
 
-  Point     pos_;           // starship global pos
+  Vector    pos_;           // starship global pos
   Vector    vel_;           // starship velocity
   int       color_;         // starship color
   Vertexes  vx_;            // model vertexes (local coords)

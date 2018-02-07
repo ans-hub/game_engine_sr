@@ -8,6 +8,7 @@
 #ifndef GAME_PLAYER_H
 #define GAME_PLAYER_H
 
+#include "lib/math/vector.h"
 #include "config.h"
 
 namespace anshub {
@@ -29,7 +30,7 @@ struct Player
 
   int     w_;             // player width
   int     h_;             // player height
-  Point   pos_;           // player pos
+  Vector  pos_;           // player pos
   int     velocity_;      // player velocity
   int     life_;          // player life
   bool    alarm_on_;      // flag means that alarm pre-destroy is on 

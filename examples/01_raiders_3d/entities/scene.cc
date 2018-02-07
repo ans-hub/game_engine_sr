@@ -118,8 +118,8 @@ void Scene::DrawWarships()
 
     // This block creates unreal bounding boxes for shooting purposes
 
-    Point& min = ship.bounding_box_.a;
-    Point& max = ship.bounding_box_.b;
+    Vector& min = ship.bounding_box_.a;
+    Vector& max = ship.bounding_box_.b;
     min.x = std::numeric_limits<int>::max();
     min.y = min.x;
     max.x = std::numeric_limits<int>::min();
@@ -202,7 +202,7 @@ void Scene::DrawWarshipsAttack()
 
     // Prepare start of the segment represents laser shot
 
-    Point shot_start;
+    Vector shot_start;
     shot_start.x = shot_pos.x - (shot_vel.x);
     shot_start.y = shot_pos.y - (shot_vel.y);
     shot_start.z = shot_pos.z - (shot_vel.z);
@@ -244,10 +244,10 @@ void Scene::DrawCannon()
   auto& mid = level_.cannon_.mid_;
   int half_len = cfg::kCrossLen >> 1;
 
-  Point l (mid.x - half_len, mid.y, 0);
-  Point r (mid.x + half_len, mid.y, 0);
-  Point t (mid.x, mid.y + half_len, 0);
-  Point b (mid.x, mid.y - half_len, 0);
+  Vector l (mid.x - half_len, mid.y, 0);
+  Vector r (mid.x + half_len, mid.y, 0);
+  Vector t (mid.x, mid.y + half_len, 0);
+  Vector b (mid.x, mid.y - half_len, 0);
 
   // Draw cross
 

@@ -16,7 +16,7 @@
 #include "lib/audio/audio_out.h"
 #include "lib/system/rand_toolkit.h"
 #include "lib/draw/fx_colors.h"
-#include "lib/math/point.h"
+#include "lib/math/vector.h"
 #include "lib/math/polygon.h"
 #include "lib/system/timer.h" 
 

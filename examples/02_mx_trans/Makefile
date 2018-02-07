@@ -1,26 +1,25 @@
-# Builds main game
+# Builds main app
 
-APPNAME = raiders
+APPNAME = mx_trans
 ROOTDIR = ../../
 
 # Setup libraries pathes and flags
 
 LIBDIR 		= $(ROOTDIR)lib
-LIBAUDIO 	= $(LIBDIR)/audio
 LIBWINDOW = $(LIBDIR)/window
 LIBMATH 	= $(LIBDIR)/math
 LIBDRAW 	= $(LIBDIR)/draw
 LIBSYSTEM = $(LIBDIR)/system
-LDFLAGS 	= -lwindow -lmath -ldraw -lsystem -laudio	# internal
-LDFLAGS  += -lbass -lX11 -lGL -lGLU -lXrandr				# external
+LDFLAGS 	= -lwindow  -ldraw -lmath -lsystem 				# internal
+LDFLAGS  += -lX11 -lGL -lGLU -lXrandr								# external
 
 # Setup compiler
 
 CXX 			= g++
-CXXFLAGS 	= -I $(ROOTDIR) -I .	# see note below
+CXXFLAGS 	= -I $(ROOTDIR) -I .											# see note below
 CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
-CXXLIBS  += -L $(LIBAUDIO) -L $(LIBWINDOW)
-CXXLIBS  += -L $(LIBMATH) -L $(LIBDRAW) -L $(LIBSYSTEM)
+CXXLIBS  += -L $(LIBWINDOW) -L $(LIBMATH)
+CXXLIBS  += -L $(LIBDRAW) -L $(LIBSYSTEM)
 CXXLIBS  += -L /usr/local/lib/
 CXXFLAGS += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
@@ -29,8 +28,9 @@ RLSFLAGS  = -O2
 
 # Setup objects
 
-VPATH = entities/
-OBJECTS = logic.o level.o scene.o starship.o
+VPATH = $(LIBDIR)/data/
+# VPATH +=  engine/
+# OBJECTS = logic.o renderer.o
 
 # Other stuff
 
@@ -54,7 +54,6 @@ endif
 $(APPNAME) : $(APPNAME).cc $(OBJECTS)
 	make -C $(LIBWINDOW)
 	make -C $(LIBMATH)
-	make -C $(LIBAUDIO)
 	make -C $(LIBDRAW)
 	make -C $(LIBSYSTEM)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(RLSFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $@
@@ -64,7 +63,6 @@ $(APPNAME) : $(APPNAME).cc $(OBJECTS)
 debug : $(APPNAME).cc $(OBJECTS)
 	make debug -C $(LIBWINDOW)
 	make debug -C $(LIBMATH)
-	make debug -C $(LIBAUDIO)
 	make debug -C $(LIBDRAW)
 	make debug -C $(LIBSYSTEM)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(DBGFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $(APPNAME)_$@
@@ -75,17 +73,22 @@ debug : $(APPNAME).cc $(OBJECTS)
 
 -include $(SRCFILES:%.cc=%.d)
 
-# Cleans garbage
+# Cleans garbage (local)
+
+lclean :
+	rm -rf gmon.out		# profiler out
+	rm -rf $(APPNAME) $(APPNAME)_* *.d *.o 
+
+# Cleans garbage (all)
 
 clean :
-	rm -rf gmon.out		# profiler out
+	rm -rf gmon.out
 	rm -rf $(APPNAME) $(APPNAME)_* *.d *.o 
 	make clean -C $(LIBWINDOW)
 	make clean -C $(LIBMATH)
-	make clean -C $(LIBAUDIO)
 	make clean -C $(LIBDRAW)
 	make clean -C $(LIBSYSTEM)
 
 	# Important note: we have 2 include path - root (for including libraries headers
 	# like #include "lib/math/point.h), and current dir (for including game headers
-	# like #include "entities/scene.h" or alternatively #include "src/raiders/config.h")
+	# like #include "engine/renderer.h" or alternatively #include "src/raiders/config.h")

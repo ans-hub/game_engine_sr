@@ -157,14 +157,14 @@ void Logic::PrepareEnemyAttack()
       
       // Define end point of the shot
 
-      Point shot_end;
+      Vector shot_end;
       shot_end.x = rand_toolkit::get_rand(-player.w_*2, player.w_*2);
       shot_end.y = rand_toolkit::get_rand(-player.h_*2, player.h_*2);
       shot_end.z = cfg::kEnemyAttackZ;
 
       // Evaluate velocity vector of the shot
 
-      Point shot_vel;
+      Vector shot_vel;
       shot_vel.z = cfg::kEnemyShotVel;
       float k_dz = std::abs((shot_end.z - ship.pos_.z) / shot_vel.z);
       shot_vel.x = (shot_end.x - ship.pos_.x) / k_dz;
