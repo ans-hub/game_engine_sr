@@ -1,4 +1,5 @@
-# Builds static library libdraw.a (dependicies: libwindow.a)
+# Builds static library libdraw.a
+# Dependicies: libwindow.a, libmath.a, lib/data/ply_loader.o)
 
 LIBNAME = libdraw.a
 SRCDIR = ./
@@ -7,16 +8,22 @@ ROOTDIR = ../../
 # Setup dependicies libs
 
 LIBWINDOW = $(ROOTDIR)lib/window
-LDFLAGS = -lwindow
+LIBMATH = $(ROOTDIR)lib/math
+LDFLAGS = -lwindow -lmath
 
 # Compiler settings
 
 CXX = g++
 CXXFLAGS = -I $(SRCDIR) -ansi -pedantic -Wall -Wextra -std=c++14 
-CXXFLAGS += -L $(LIBWINDOW)
+CXXFLAGS += -L $(LIBWINDOW) -L $(LIBMATH)
 CXXFLAGS += -MP -MMD
 DBGFLAGS = -ggdb3 -DDEBUG -O0 -pg -no-pie
 RLSFLAGS = -O2
+
+# Setup objects
+
+VPATH =  ../data
+OBJECTS = ply_loader.o
 
 # Other stuff
 
@@ -27,9 +34,10 @@ SRCFILES = $(wildcard *.cc)
 
 # Build library (release version)
 
-$(LIBNAME) : $(SRCFILES:%.cc=%.o)
+$(LIBNAME) : $(SRCFILES:%.cc=%.o) $(OBJECTS)
 	make -C $(LIBWINDOW)
-	ar crs $(LIBNAME) $(SRCFILES:%.cc=%.o)
+	make -C $(LIBMATH)
+	ar crs $(LIBNAME) $(SRCFILES:%.cc=%.o) $(OBJECTS)
 	ranlib $(LIBNAME)
 
 %.o : %.cc %.h
@@ -37,9 +45,10 @@ $(LIBNAME) : $(SRCFILES:%.cc=%.o)
 
 # Build library (debug version)
 
-debug	: $(SRCFILES:%.cc=%dbg.o)
+debug	: $(SRCFILES:%.cc=%dbg.o) $(OBJECTS)
 	make debug -C $(LIBWINDOW)
-	ar crs $(LIBNAME) $(SRCFILES:%.cc=%dbg.o)
+	make debug -C $(LIBMATH)	
+	ar crs $(LIBNAME) $(SRCFILES:%.cc=%dbg.o) $(OBJECTS)
 	ranlib $(LIBNAME)
 
 %dbg.o : %.cc %.h
@@ -56,3 +65,4 @@ debug	: $(SRCFILES:%.cc=%dbg.o)
 clean :
 	rm -f *.o *.d $(LIBNAME)
 	make clean -C $(LIBWINDOW)
+	make clean -C $(LIBMATH)

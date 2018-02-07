@@ -29,7 +29,7 @@ void color::SplitARGB(int color, byte& b, byte& g, byte& r, byte& a)
 
 // Increase brightness of rgba color (given in word-order)
 
-int color::IncreaseBrightness(int color, double k)
+int color::IncreaseBrightness(int color, float k)
 {
   unsigned int a = 255;
   unsigned int r = (int)(((color>>8)&0xff)*k);
@@ -42,12 +42,3 @@ int color::IncreaseBrightness(int color, double k)
 }
 
 } // namespace anshub
-
-// Note : all colors are ARGB (word-ordered). This means that on the little-endian
-// architecture all ARGB colors stored in memory right to left - b,g,r,a).
-// But in glDrawPixels opengl function we set type of pixel color as GL_BGRA. This is
-// all right since it is equivalent: ARGB (word-ordered) and BGRA (byte-ordered).
-// glDrawPixels interprets pixel not as 4 byte integer but as sequence of 4 bytes.
-
-// https://en.wikipedia.org/wiki/RGBA_color_space
-// http://www.laurenscorijn.com/articles/colormath-basics

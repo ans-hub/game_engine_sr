@@ -13,8 +13,8 @@ Buffer::Buffer(int w, int h, int color)
   : w_{w}
   , h_{h}
   , clear_color_{color}
-  , format_{GL_BGRA}                // see notes in math/fx_colors.cc
-  , type_{GL_UNSIGNED_INT_8_8_8_8}  // after all code
+  , format_{GL_BGRA}                // see note #3
+  , type_{GL_UNSIGNED_INT_8_8_8_8}         // after code
   , ptr_(w_ * h_, clear_color_)
 {
   // Prepare OpenGl states before using SendDataToFB()
@@ -57,3 +57,22 @@ void Buffer::SendDataToFB()
 // - https://goo.gl/oe9sJc
 // - https://goo.gl/3HAenc
 // - glDrawArray
+
+// Note #3 : we works with little-endian arch (i.e., 1000 is 0x000003e8, stored
+// in memory as "e8 03 00 00" from lsb to msb). In all helpers functions we would
+// work with color stored in unsigned integer as ARGB (where A is lsb, and B is 
+// msb), thus in memory this would be as: b g r a). This is word-ordered format.
+
+// Next, now we should say to opengl which format we will use:
+//  - type - GL_BGRA  (we show which color components we use)
+//  - format - GL_UNSIGNED_INT_8_8_8_8 (how to interpret GL_BGRA per component)
+
+// Note, that bytes interpretation on 4 byte color is ordering from msb to lsb (by
+// convient in opengl).
+
+// Url_1: https://www.khronos.org/opengl/wiki/Pixel_Transfer#Pixel_format
+// Url_2: https://en.wikipedia.org/wiki/RGBA_color_space
+// Url_3: https://en.wikipedia.org/wiki/RGBA_color_space
+// Url_4: http://www.laurenscorijn.com/articles/colormath-basics
+
+// Todo: make format changing with extension ARB_internal_format_query

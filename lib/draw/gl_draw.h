@@ -17,21 +17,33 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 
+#include "../math/vector.h"
 #include "gl_buffer.h"
 #include "fx_colors.h"
+#include "gl_object.h"
 
 namespace anshub {
 
 namespace draw {
 
+  // Algorithms
+
   void DrawPoint(int, int, int, Buffer&);
   void DrawPoint(int, int, int, uint*, int);
   void DrawLineBres(int, int, int, int, int, Buffer&);
   void DrawLine(int, int, int, int, int color, Buffer&);
-  void DrawLine(int, int, int, int, int, double br_1, double br_2, Buffer&);
+  void DrawLine(int, int, int, int, int, float br_1, float br_2, Buffer&);
   void DrawLineWu(int, int, int, int, int, Buffer&);
+  
+  // Helpers
 
-} // namespace draw_helpers
+  void Object(const GlObject&, int w, int h, Buffer&);
+
+  // Iterators
+
+  // void DrawPoints(const std::vector<Vector>&);
+
+} // namespace draw
 
 } // namespace anshub
 

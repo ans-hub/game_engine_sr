@@ -9,25 +9,23 @@
 
 namespace anshub {
 
-namespace draw {
-
 // Draws point using Buffer object
 
-void DrawPoint(int x, int y, int color, Buffer& buf)
+void draw::DrawPoint(int x, int y, int color, Buffer& buf)
 {
   buf[x + y * buf.Width()] = color;
 }
 
 // Draws point using buffer pointer
 
-void DrawPoint(int x, int y, int color, uint* buf, int lpitch)
+void draw::DrawPoint(int x, int y, int color, uint* buf, int lpitch)
 {
   buf[x + y * lpitch] = color;
 }
 
 // Draws the line, using Bresengham algorithm
 
-void DrawLineBres(int x1, int y1, int x2, int y2, int color, Buffer& buf)
+void draw::DrawLineBres(int x1, int y1, int x2, int y2, int color, Buffer& buf)
 {
   int dx = x2 - x1;
   int dy = y2 - y1;
@@ -51,8 +49,6 @@ void DrawLineBres(int x1, int y1, int x2, int y2, int color, Buffer& buf)
   
   // Draws the line
 
-  int x = x1;
-  int y = y1;
   int d_err = 0;
 
   if (dx > dy)                  // line is horisontal oriented
@@ -90,7 +86,7 @@ void DrawLineBres(int x1, int y1, int x2, int y2, int color, Buffer& buf)
 // The extremely fast line algorithm var.E (additional fixed point precalc)
 // Author: Po-Han Lin, http://www.edepot.com
 
-void DrawLine(int x1, int y1, int x2, int y2, int color, Buffer& buf)
+void draw::DrawLine(int x1, int y1, int x2, int y2, int color, Buffer& buf)
 {
   bool y_longer = false;
 	int short_len = y2 - y1;
@@ -143,12 +139,12 @@ void DrawLine(int x1, int y1, int x2, int y2, int color, Buffer& buf)
 // where b_1 - brightness of first point, b_2 - of second point
 // Supposed that b_1 > b_2
 
-void DrawLine(int x1, int y1, int x2, int y2, int color, double b_1, double b_2, Buffer& buf)
+void draw::DrawLine(int x1, int y1, int x2, int y2, int color, float b_1, float b_2, Buffer& buf)
 {
   int dx = std::abs(x2-x1);
   int dy = std::abs(y2-y1);
   int points_cnt = std::max(dx,dy);
-  double bright_step = (b_2 - b_1) / points_cnt;
+  float bright_step = (b_2 - b_1) / points_cnt;
 
   bool y_longer = false;
 	int short_len = y2 - y1;
@@ -166,8 +162,8 @@ void DrawLine(int x1, int y1, int x2, int y2, int color, double b_1, double b_2,
 	else 
     dec_inc = (short_len << 16) / long_len;
   
-  int curr_color;
-  double step_total = 0;
+  int   curr_color;
+  float step_total = 0;
 
 	if (y_longer) {
 		if (long_len > 0) {
@@ -210,12 +206,34 @@ void DrawLine(int x1, int y1, int x2, int y2, int color, double b_1, double b_2,
 }
 
 // Draws the smooth line using Xiaolin Wu algorighm
+// Argument names - x1, y1, x2, y2, color, buf
 
-void DrawLineWu(int x1, int y1, int x2, int y2, int color, Buffer& buf)
+void draw::DrawLineWu(int, int, int, int, int, Buffer&)
 {
   // will be implemented using bresenham algorithm as base 
 }
 
-} // namespace draw
+// Draws object
+
+void draw::Object(const GlObject& obj, int w, int h, Buffer& buf)
+{
+  for (const auto& t : obj.triangles_)
+  {
+    auto p1 = obj.vxs_trans_[t.indicies_[0]];
+    auto p2 = obj.vxs_trans_[t.indicies_[1]];
+    if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
+      draw::DrawLine(p1.x, p1.y, p2.x, p2.y, t.color_, buf);
+      
+    auto p3 = obj.vxs_trans_[t.indicies_[1]];
+    auto p4 = obj.vxs_trans_[t.indicies_[2]];
+    if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
+      draw::DrawLine(p3.x, p3.y, p4.x, p4.y, t.color_, buf);
+
+    auto p5 = obj.vxs_trans_[t.indicies_[2]];
+    auto p6 = obj.vxs_trans_[t.indicies_[0]];
+    if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
+      draw::DrawLine(p5.x, p5.y, p6.x, p6.y, t.color_, buf);
+  }
+}
 
 } // namespace anshub

@@ -20,7 +20,7 @@ using byte  = unsigned char;
 
 int   MakeARGB(byte, byte, byte, byte);
 void  SplitARGB(int color, byte&, byte&, byte&, byte&);
-int   IncreaseBrightness(int, double);
+int   IncreaseBrightness(int, float);
 
 } // namespace color
 

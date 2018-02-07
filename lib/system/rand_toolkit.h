@@ -37,9 +37,9 @@ inline int get_rand(int from, int to)
   return d(global_urng(), parm_t{from, to});
 }
 
-// Returns random double form the range
+// Returns random float form the range
 
-inline double get_rand(double from, double to)
+inline float get_rand(float from, float to)
 {
   static std::uniform_real_distribution<> d{};
   using parm_t = decltype(d)::param_type;
