@@ -27,11 +27,23 @@ using EdgesP    = std::array<Vector,3>;
 
 struct Triangle
 {
-  Triangle(Vertexes&, int, int, int, unsigned int);  // see note #1 after code
+  using uint = unsigned int;
+
+  enum Attrs {
+    SSIDE         = 0,
+    DSIDE         = 1,
+    FLAT_SHAD     = 1 << 1,
+    PHONG_SHAD    = 1 << 2,
+    GOURANG_SHAD  = 1 << 3,
+    HIDDEN        = 1 << 4
+  };
+
+  Triangle(Vertexes&, int, int, int, uint, uint);
   
-  std::vector<Vector>&  vxs_;
-  std::array<int,3>     indicies_;                   // see note #2 after code
+  std::vector<Vector>&  vxs_;           // see note #1 after code
+  std::array<int,3>     indicies_;      // see note #2 after code
   unsigned int          color_;
+  unsigned int          attrs_;
 
 }; // struct Triangle
 
@@ -44,10 +56,12 @@ struct Triangle
 
 struct TriangleFace
 {
-  TriangleFace(const Vector&, const Vector&, const Vector&);
+  TriangleFace(const Vector&, const Vector&, const Vector&, uint, uint);
 
-  std::array<Vector,3> vxs_;
-  std::array<Vector,3> curr_;
+  std::array<Vector,3>  vxs_;
+  std::array<Vector,3>  curr_;
+  unsigned int          color_;
+  unsigned int          attrs_;
 
 }; // struct TriangleFace
 
@@ -57,7 +71,14 @@ struct TriangleFace
 
 //***********************************************************************
 
-// Note #1 : vertexes orientation is prefered as "left-handed" and
+// Note #1 : we use indexes to vertexes but not vertexes itself due
+// to memory economy and flexibility. For example, in this scheme we
+// can make any changes with this polygon and not touch real points.
+// Additional reason - is floating point error, which would be accumulated
+// in object transformation (each vertex may be vertex of not only one
+// polygon)
+
+// Note #2 : vertexes orientation is prefered as "left-handed" and
 // from low index to higher. This is necessary in clipping reasons,
 // when we define is polygon visible or not.
 //
@@ -65,11 +86,6 @@ struct TriangleFace
 //        p1
 //  p0
 //        p2
-// V = p1-p0, P = p2-p0; N = VxN (normal to both V and P)
-
-// Note #2 : we use indexes to vertexes but not vertexes itself due
-// to memory economy and flexibility. For example, in this scheme we
-// can make any changes with this polygon and not touch real points.
-// Additional reason - is floating point error, which would be accumulated
-// in object transformation (each vertex may be vertex of not only one
-// polygon)
+// V = p1-p0, P = p2-p0; N = VxN (cross prod) (normal to V and P).
+// As result N would be directed from camera. Now to decide is surface
+// is visible or not, we make cross (or dot) prod of N and G (surface to cam) 

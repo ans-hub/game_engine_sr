@@ -17,11 +17,11 @@ using Vertexes    = std::vector<Vector>;
 
 namespace coord {
 
-  Vertexes  Local2World(const Vertexes& vxs, const Vector& move);
-  Vertexes  World2Camera(const Vertexes& vxs);
-  Vertexes  Camera2Persp(const Vertexes& vxs, float dov, float ar);
+  Vertexes  Local2World(const Vertexes&, const Vector& move);
   Vertexes  World2Camera(const Vertexes&);
-  Vertexes  Persp2Screen(const Vertexes& vxs, float wov, int scr_w, int scr_h);
+  Vertexes  Camera2Persp(const Vertexes&, float dov, float ar);
+  Vertexes  World2Camera(const Vertexes&, Vector& pos, Vector& dir, TrigTable&);
+  Vertexes  Persp2Screen(const Vertexes&, float wov, int scr_w, int scr_h);
 
 } // namespace coords
 

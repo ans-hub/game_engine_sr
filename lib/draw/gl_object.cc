@@ -17,51 +17,70 @@ GlObject::GlObject()
   , current_vxs_{Coords::LOCAL}
   , triangles_{}
   , id_{}
-  , state_{}
+  , active_{true}
   , world_pos_{0.0f, 0.0f, 0.0f}
   , v_dir_{0.0f, 0.0f, 1.0f}        // +z direction
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
+  , camera_pos_{}
+  , sphere_rad_{0.0f}  
 { }
 
-// Creates object with given vertexes vector and edges array
+// Creates object with vertexes, faces and attrs
 
-// Object::Object(const Matrix2d& vxs, const Matrix2d& faces)
-GlObject::GlObject(const Matrix2d& vxs, const Matrix2d& faces, const Matrix2d& attrs)
+GlObject::GlObject(
+  const Matrix2d& vxs, const Matrix2d& faces, const Matrix2d& attrs)
   : vxs_local_{}
   , vxs_trans_{}
   , current_vxs_{Coords::LOCAL}  
   , triangles_{}
   , id_{}
-  , state_{}
+  , active_{true}
   , world_pos_{0.0f, 0.0f, 0.0f}
   , v_dir_{0.0f, 0.0f, 1.0f}        // +z direction
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
+  , camera_pos_{}
+  , sphere_rad_{0.0f}
 {
-  // Fill vertexes
+  // Fill local vertexes
 
   vxs_local_.reserve(vxs.size());
   for (const auto& vx : vxs)
     vxs_local_.emplace_back(vx[0], vx[1], vx[2]);
   vxs_trans_ = vxs_local_;
   
-  // Fill triangles
-  // First we should understand if we have own attrs or we shoul load regular
-  // Add scale, pos and rot at the load 
+  // Fill triangles (we suppose that we have correct ply file with
+  // custom fields or incorrect with emply fields)
+
   triangles_.reserve(faces.size());
   for (std::size_t i = 0; i < faces.size(); ++i)
   {
+    unsigned int fattr = attrs[i][0];
     unsigned int color = attrs[i][1];
-    // unsigned int color = (255<<24)|(255<<16)|(255<<8)|255;
-    triangles_.emplace_back(
-      // vxs_local_, faces[i][0], faces[i][1], faces[i][2], color  // vxs_curr????
-      vxs_trans_, faces[i][0], faces[i][1], faces[i][2], color  // vxs_curr????
-    );
+    auto x = faces[i][0];
+    auto y = faces[i][1];
+    auto z = faces[i][2];
+    triangles_.emplace_back(vxs_trans_, x, y, z, color, fattr);
+  }
+
+  // Calc bounding sphere radius
+
+  for (const auto& vx : vxs_local_)
+  {
+    float curr {};
+    curr = std::fabs(vx.x);
+    if (curr > sphere_rad_) sphere_rad_ = curr;
+    curr = std::fabs(vx.y);
+    if (curr > sphere_rad_) sphere_rad_ = curr;
+    curr = std::fabs(vx.z);
+    if (curr > sphere_rad_) sphere_rad_ = curr;    
   }
 }
+
+// Copies internal coordinates from source to destination
 
 void GlObject::CopyCoords(Coords src, Coords dest)
 {
@@ -71,40 +90,152 @@ void GlObject::CopyCoords(Coords src, Coords dest)
     vxs_local_ = vxs_trans_;
 }
 
-
 //***************************************************************************
 // HELPERS IMPLEMENTATION
 //***************************************************************************
 
-// Makes object from my own custom fields ply file
+// Makes object from ply file in two ways:
+//  1) custom fields in ply file (attrs and color)
+//  2) any ply contains "vertexes" (x,y,z) and "face" elements
 
 GlObject object::Make(const char* str)
 {
+  using namespace ply;
+
   ply::Loader ply {};
-  try {
-    std::ifstream fss {str};
-    ply.Load(fss);
+  std::ifstream fss {str};
+  ply.Load(fss);
+  
+  // We suppose that this ply file contains elements "vertex" and "face"
 
-    auto vertexes   = ply.GetLine("vertex", {"x", "y", "z"});
-    auto faces      = ply.GetList("face", {"index"});
-    auto faces_add  = ply.GetLine("face", {"attr", "color"});
+  auto header     = ply.GetHeader();
+  auto vertexes   = ply.GetLine("vertex", {"x", "y", "z"});
+  
+  // Try to determine if ply contains list property magically called "ind1983"
+  
+  auto list_props = header["face"].list_props_;   // get list props of face
+  auto prop_index = list_props.find("ind1983");   // search "magic" index
 
-    return GlObject(vertexes, faces, faces_add);
+  // If this "magic" found we suppose ply format with custom fields
+  // Else take first list propery and set default attributes
+  
+  if (prop_index != list_props.end())
+  {
+    auto faces    = ply.GetList("face", {"ind1983"});
+    auto attrs    = ply.GetLine("face", {"attr", "color"});
+    auto obj      = GlObject(vertexes, faces, attrs);
+    object::RecalcBoundingRadius(obj);
+    return obj;    
   }
-  catch (const ply::Except& e) {
-    throw(e);
+  else {
+    auto name     = list_props.begin()->first;    // first list prop in "face" 
+    auto faces    = ply.GetList("face", {name});
+    auto color    = static_cast<double>(color::White);
+    auto attrs    = Vector2d(faces.size(), Vector1d{0, color});
+    auto obj      = GlObject(vertexes, faces, attrs);
+    object::RecalcBoundingRadius(obj);
+    return obj;
   }
 }
 
-// Makes object from own custom fields ply file and scale object
+// Makes object from ply file, then scale it and move to world position
 
 GlObject object::Make(const char* str, const Vector& scale, const Vector& pos)
 {
   auto obj = object::Make(str);
   obj.SetCoords(Coords::LOCAL);
   object::Scale(obj, scale);
-  object::Position(obj, pos);
+  object::SetPosition(obj, pos);
+  object::RecalcBoundingRadius(obj);
   return obj;
+}
+
+// Reset attributes of object and triangles (before each frame)
+
+void object::ResetAttributes(GlObject& obj)
+{
+  for (auto& tri : obj.triangles_)
+  {
+    if (tri.attrs_ & Triangle::HIDDEN) 
+      tri.attrs_ ^= Triangle::HIDDEN; 
+  }
+  obj.active_ = true;
+}
+
+// Cull objects in cameras coordinates. Since we work in camera coordinates,
+// all objects trivially culled by 6 planes of camera. Now all tricky
+// rotation dir of camera is normalized
+
+// Note #1 : culling by x and y planes made by the similarity of triangles,
+// i.e. we in the fact make acsonometric transform and solve 2d task
+
+// Note #2 : also we may cull objects in world coordinates and when cam matrix
+// is known (we just convert obj.world_pos_ with matrix to camera coordinates)
+
+bool object::Cull(GlObject& obj, const GlCameraEuler& cam)
+{
+  // Cull z planes
+
+  if (obj.camera_pos_.z - obj.sphere_rad_ < cam.z_near_)
+    obj.active_ = false;
+  
+  if (obj.camera_pos_.z + obj.sphere_rad_ > cam.z_far_)
+    obj.active_ = false;
+
+  // Cull x planes (project point on the view plane and check)
+
+  float x_lhs = (cam.dov_ * obj.camera_pos_.x / obj.camera_pos_.z) + obj.sphere_rad_;
+  float x_rhs = (cam.dov_ * obj.camera_pos_.x / obj.camera_pos_.z) - obj.sphere_rad_;
+
+  if (x_lhs < -(cam.wov_ / 2))
+    obj.active_ = false;
+  if (x_rhs >  (cam.wov_ / 2))
+    obj.active_ = false;  
+
+  // Cull y planes (project point on the view plane and check)
+
+  float y_dhs = (cam.dov_ * obj.camera_pos_.y / obj.camera_pos_.z) + obj.sphere_rad_;
+  float y_uhs = (cam.dov_ * obj.camera_pos_.y / obj.camera_pos_.z) - obj.sphere_rad_;
+
+  if (y_dhs < -(cam.wov_ / 2))
+    obj.active_ = false;  
+  if (y_uhs > (cam.wov_ / 2))
+    obj.active_ = false;
+
+  return true;
+}
+
+// Removes hidden surfaces in camera coordinates
+
+// This function may be called between world and camera coordinates,
+// or in camera coordinates. The first way is preffered as in this case
+// we may remove many triangles from the pipeline.
+
+// Note #1 : this function not make objects non-transparent, its just
+// helper to reduce amount of rendered triangles
+
+// Note #2 : triangles vertixes indicies should placed convientinally.
+// I.e. in blender at the triangulation step we may choose the way we
+// triangulate the stuff
+
+bool object::RemoveHiddenSurfaces(GlObject& obj, const GlCameraEuler& cam)
+{
+  for (auto& face : obj.triangles_)
+  {
+    auto p0 = obj.vxs_trans_[face.indicies_[0]];
+    auto p1 = obj.vxs_trans_[face.indicies_[1]];
+    auto p2 = obj.vxs_trans_[face.indicies_[2]];
+
+    Vector u {p0, p1};
+    Vector v {p0, p2};
+    Vector n = vector::CrossProduct(u,v);
+    Vector c {p0, cam.pos_};
+
+    auto prod = vector::DotProduct(c,n);
+    if (math::FlessZero(prod))
+      face.attrs_ |= Triangle::HIDDEN;
+  }
+  return true;
 }
 
 // Apply matrix to object
@@ -115,6 +246,8 @@ void object::ApplyMatrix(const Matrix<4,4>& mx, GlObject& obj)
   for (auto& vx : vxs)
     vx = matrix::Multiplie(vx, mx);
 }
+
+// Scale object
 
 void object::Scale(GlObject& obj, const Vector& scale)
 {
@@ -127,9 +260,27 @@ void object::Scale(GlObject& obj, const Vector& scale)
   }
 }
 
-void object::Position(GlObject& obj, const Vector& pos)
+// Set world position of center of object
+
+void object::SetPosition(GlObject& obj, const Vector& pos)
 {
   obj.world_pos_ += pos;
+}
+
+// Calcs bounding sphere radius based on local coordinates of object
+
+void object::RecalcBoundingRadius(GlObject& obj)
+{
+  for (const auto& vx : obj.vxs_local_)
+  {
+    float curr {};
+    curr = std::fabs(vx.x);
+    if (curr > obj.sphere_rad_) obj.sphere_rad_ = curr;
+    curr = std::fabs(vx.y);
+    if (curr > obj.sphere_rad_) obj.sphere_rad_ = curr;
+    curr = std::fabs(vx.z);
+    if (curr > obj.sphere_rad_) obj.sphere_rad_ = curr;    
+  }
 }
 
 } // namespace anshub

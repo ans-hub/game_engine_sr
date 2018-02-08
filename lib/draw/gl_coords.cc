@@ -9,6 +9,8 @@
 
 namespace anshub {
 
+// Convertes given vertexes into the world coordinates
+
 Vertexes coord::Local2World(const Vertexes& vxs, const Vector& move)
 {
   Vertexes res {};
@@ -24,10 +26,55 @@ Vertexes coord::Local2World(const Vertexes& vxs, const Vector& move)
   return res;
 }
 
-Vertexes coord::World2Camera(const Vertexes& vxs)
+// Translate all vertexes into the camera coordinates
+
+Vertexes coord::World2Camera(
+  const Vertexes& vxs, Vector& cam_pos, Vector& cam_dir, TrigTable& trig)
 {
-  return Vertexes();
+  Vertexes res {};
+  res.reserve(vxs.size());
+  for (const auto& vx : vxs)
+  {
+    // Translate position
+
+    float y = vx.y - cam_pos.y;
+    float x = vx.x - cam_pos.x;
+    float z = vx.z - cam_pos.z;
+
+    // Y-axis rotate
+
+    if (math::FNotZero(cam_dir.y))
+    {
+      float sine_y = trig.Sin(-cam_dir.y);
+      float cosine_y = trig.Cos(-cam_dir.y);      
+      x = x * cosine_y + z * sine_y;
+      z = x * -sine_y  + z * cosine_y;
+    }
+
+    // X-axis rotate
+
+    if (math::FNotZero(cam_dir.x))
+    {
+      float sine_x = trig.Sin(-cam_dir.x);      
+      float cosine_x = trig.Cos(-cam_dir.x);  
+      y = y * cosine_x - z * sine_x;
+      z = y * sine_x   + z * cosine_x;
+    }
+
+    // Z-axis rotate
+
+    if (math::FNotZero(cam_dir.z))
+    {
+      float sine_z = trig.Sin(-cam_dir.z);
+      float cosine_z = trig.Cos(-cam_dir.z);
+      x = x * cosine_z - y * sine_z;
+      y = x * sine_z   + y * cosine_z;
+    }
+  }
+  return res;
 }
+
+// Translates all vertexes from camera (world) to perspective
 
 Vertexes coord::Camera2Persp(const Vertexes& vxs, float dov, float ar)
 {

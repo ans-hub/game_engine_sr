@@ -11,17 +11,22 @@ namespace anshub {
 
 // Constructs triangle with given vxs ans edges (reference to vxs)
 
-Triangle::Triangle(Vertexes& vxs, int e1, int e2, int e3, unsigned int color)
+Triangle::Triangle(
+  Vertexes& vxs, int e1, int e2, int e3, uint color, uint attrs)
   : vxs_{vxs}
   , indicies_{e1, e2, e3}
   , color_{color}
+  , attrs_{attrs}
 { }
 
 // Constructs triangle with given vxs ans edges (copy)
 
-TriangleFace::TriangleFace(const Vector& p1, const Vector& p2, const Vector& p3)
+TriangleFace::TriangleFace(
+  const Vector& p1, const Vector& p2, const Vector& p3, uint color, uint attrs)
   : vxs_{p1, p2, p3}
   , curr_{vxs_}
+  , color_{color}
+  , attrs_{attrs}
 { }
 
 }  // namespace anshub

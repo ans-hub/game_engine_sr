@@ -19,15 +19,20 @@
 #include "../data/ply_loader.h"
 #include "fx_colors.h"
 #include "gl_triangle.h"
+#include "gl_camera_euler.h"
 #include "exceptions.h"
 
 namespace anshub {
+
+// Enum to define which coordinates currently used in object
 
 enum class Coords
 {
   LOCAL,    // local coordinates
   TRANS     // transformed coordinates
 };
+
+// Represents drawable object
 
 struct GlObject
 {
@@ -47,22 +52,20 @@ struct GlObject
 
   // Helper data memebers
 
-  int       id_;            // object id
-  int       state_;         // object state
+  int       id_;            // object id  
+  bool      active_;        // object state
   Vector    world_pos_;     // position of obj center in world`s coords
   Vector    v_dir_;         // direction vector
   Vector    v_orient_x_;    // 
   Vector    v_orient_y_;    // orientation vectors  
   Vector    v_orient_z_;    //
+  Vector    camera_pos_;    // object pos in camera coordinates
+  float     sphere_rad_;    // bounding sphere radius
   
   // Constructors
 
   GlObject();
   GlObject(const Matrix2d& vxs, const Matrix2d& faces, const Matrix2d& attrs);
-  GlObject(const Matrix2d& vxs, const Matrix2d& faces);
-
-  // Coordinates manipulation
-
   void  SetCoords(Coords c) { current_vxs_ = c; }
   void  CopyCoords(Coords src, Coords dest);
   auto& GetCoords() {
@@ -76,10 +79,13 @@ namespace object {
 
   GlObject  Make(const char*);
   GlObject  Make(const char*, const Vector&, const Vector&);
-  bool      Cull(GlObject&);
-  void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
+  void      ResetAttributes(GlObject&);
+  bool      Cull(GlObject&, const GlCameraEuler&);
+  bool      RemoveHiddenSurfaces(GlObject&, const GlCameraEuler&);
   void      Scale(GlObject&, const Vector&);
-  void      Position(GlObject&, const Vector&);
+  void      SetPosition(GlObject&, const Vector&);
+  void      RecalcBoundingRadius(GlObject&);
+  void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
 
 } // namespace object
 

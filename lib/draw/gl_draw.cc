@@ -9,20 +9,6 @@
 
 namespace anshub {
 
-// Draws point using Buffer object
-
-void draw::DrawPoint(int x, int y, int color, Buffer& buf)
-{
-  buf[x + y * buf.Width()] = color;
-}
-
-// Draws point using buffer pointer
-
-void draw::DrawPoint(int x, int y, int color, uint* buf, int lpitch)
-{
-  buf[x + y * lpitch] = color;
-}
-
 // Draws the line, using Bresengham algorithm
 
 void draw::DrawLineBres(int x1, int y1, int x2, int y2, int color, Buffer& buf)
@@ -217,23 +203,37 @@ void draw::DrawLineWu(int, int, int, int, int, Buffer&)
 
 void draw::Object(const GlObject& obj, int w, int h, Buffer& buf)
 {
+  if (!obj.active_)
+    return;
+    
+  int culled_total {0};
   for (const auto& t : obj.triangles_)
   {
+    if ((t.attrs_ & Triangle::HIDDEN))
+    {
+      ++culled_total;
+      continue;
+    }
+
     auto p1 = obj.vxs_trans_[t.indicies_[0]];
     auto p2 = obj.vxs_trans_[t.indicies_[1]];
+
     if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
       draw::DrawLine(p1.x, p1.y, p2.x, p2.y, t.color_, buf);
       
     auto p3 = obj.vxs_trans_[t.indicies_[1]];
     auto p4 = obj.vxs_trans_[t.indicies_[2]];
+
     if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
       draw::DrawLine(p3.x, p3.y, p4.x, p4.y, t.color_, buf);
 
     auto p5 = obj.vxs_trans_[t.indicies_[2]];
     auto p6 = obj.vxs_trans_[t.indicies_[0]];
+
     if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
       draw::DrawLine(p5.x, p5.y, p6.x, p6.y, t.color_, buf);
   }
+  // std::cerr << "Faces culled: " << culled_total << '\n';
 }
 
 } // namespace anshub

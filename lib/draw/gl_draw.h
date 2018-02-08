@@ -45,6 +45,24 @@ namespace draw {
 
 } // namespace draw
 
+//****************************************************************************
+// Implementations of inline functions
+//****************************************************************************
+
+// Draws point using Buffer object
+
+inline void draw::DrawPoint(int x, int y, int color, Buffer& buf)
+{
+  buf[x + y * buf.Width()] = color;
+}
+
+// Draws point using buffer pointer
+
+inline void draw::DrawPoint(int x, int y, int color, uint* buf, int lpitch)
+{
+  buf[x + y * lpitch] = color;
+}
+
 } // namespace anshub
 
 #endif  // GL_DRAW_H

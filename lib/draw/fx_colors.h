@@ -16,7 +16,17 @@ namespace anshub {
 
 namespace color {
 
+// Aliases
+
 using byte  = unsigned char;
+using uint  = unsigned int;
+
+// Const colors
+
+constexpr uint White {0xffffffff};
+constexpr uint Black {0x00000000};
+
+// Helpers functions
 
 int   MakeARGB(byte, byte, byte, byte);
 void  SplitARGB(int color, byte&, byte&, byte&, byte&);
