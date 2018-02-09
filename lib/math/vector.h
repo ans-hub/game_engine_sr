@@ -14,7 +14,6 @@
 #include "math.h"
 #include "trig.h"
 #include "exceptions.h"
-#include "segment.h"
 
 namespace anshub {
 
@@ -26,18 +25,12 @@ struct Vector
 {
   Vector() 
     : x{}, y{}, z{}, w{} { }
-  explicit Vector(const Point& p) 
-    : x{p.x}, y{p.y}, z{p.z}, w{1.0} { }
   Vector(const Vector& v1, const Vector& v2)
     : x{v2.x-v1.x}, y{v2.y-v1.y}, z{v2.z-v1.z}, w{1.0} { }
-  Vector(const Point& p1, const Point& p2)
-    : x{p2.x-p1.x}, y{p2.y-p1.y}, z{p2.z-p1.z}, w{1.0} { }
   Vector(float ax, float ay) 
     : x{ax}, y{ay}, z{}, w{1.0} { }
   Vector(float ax, float ay, float az) 
     : x{ax}, y{ay}, z{az}, w{1.0} { }
-  explicit Vector(const Segment& s) 
-    : Vector(s.b - s.a) { }
   
   float x;
   float y;
@@ -104,6 +97,8 @@ struct Vector
   }
 
 }; // struct Vector
+
+using Point = Vector;
 
 //****************************************************************************
 //  DEFINITION OF HELPERS FUNCTIONS FOR VECTOR CLASS

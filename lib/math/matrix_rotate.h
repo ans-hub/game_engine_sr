@@ -29,18 +29,9 @@ inline MatrixRotate::MatrixRotate(
 : Matrix(Type::IDENTITY)
 {
   Matrix<4,4> res (Type::IDENTITY);
-  if (!math::FNotZero(x))
-  {
-    float tsin = t.Sin(x);
-    float tcos = t.Cos(x);
-    Matrix<4,4> xrot = {
-      1.0f,   0.0f,   0.0f,   0.0f,
-      0.0f,   tcos,   tsin,   0.0f, 
-      0.0f,  -tsin,   tcos,   0.0f,
-      0.0f,   0.0f,   0.0f,   1.0f 
-    };
-    res = matrix::Multiplie(res, xrot);
-  }
+  
+  // Convientially sequence of rotation is YXZ
+  
   if (!math::FNotZero(y))
   {
     float tsin = t.Sin(y);
@@ -52,6 +43,18 @@ inline MatrixRotate::MatrixRotate(
       0.0f,   0.0f,   0.0f,   1.0f 
     };
     res = matrix::Multiplie(res, yrot);    
+  }
+  if (!math::FNotZero(x))
+  {
+    float tsin = t.Sin(x);
+    float tcos = t.Cos(x);
+    Matrix<4,4> xrot = {
+      1.0f,   0.0f,   0.0f,   0.0f,
+      0.0f,   tcos,   tsin,   0.0f, 
+      0.0f,  -tsin,   tcos,   0.0f,
+      0.0f,   0.0f,   0.0f,   1.0f 
+    };
+    res = matrix::Multiplie(res, xrot);
   }
   if (!math::FNotZero(z))
   {

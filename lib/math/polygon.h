@@ -10,13 +10,14 @@
 
 #include <vector>
 
-#include "point.h"
+#include "vector.h"
 #include "line.h"
 #include "trig.h"
 #include "helpers.h"
 
 namespace anshub {
 
+using Point = Vector;
 using Vertexes = std::vector<Point>;  // see note #1 after code
 
 namespace polygon2d {

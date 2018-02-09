@@ -9,7 +9,6 @@
 #define GM_MATRIX_VIEWPORT_H
 
 #include "matrix.h"
-#include "point.h"
 #include "vector.h"
 
 namespace anshub {
@@ -31,8 +30,8 @@ inline MatrixViewport::MatrixViewport(float wov, int scr_w, int scr_h)
   {
       kx,           0.0f,         0.0f,   0.0f,
       0.0f,         ky,           0.0f,   0.0f,
-      0.0f,         0.0f,         1.0f,   1.0f,
-      half_wov*kx,  half_wov*ky,  0.0f,   0.0f
+      0.0f,         0.0f,         990.0f,   1.0f,
+      half_wov*kx,  half_wov*ky,  10.0f,   0.0f
   };
   data_ = std::move(tmp);
 } 

@@ -9,28 +9,16 @@
 #define GC_MATRIX_TRANS_H
 
 #include "matrix.h"
-#include "point.h"
 #include "vector.h"
 
 namespace anshub {
 
 struct MatrixTranslate : public Matrix<4,4>
 {
-  MatrixTranslate(const Point&);
   MatrixTranslate(const Vector&);
   MatrixTranslate(float, float, float);
 
 }; // struct MatrixTranslate
-
-inline MatrixTranslate::MatrixTranslate(const Point& dt)
-: Matrix
-    ({
-      1.0f, 0.0f, 0.0f, 0.0f,
-      0.0f, 1.0f, 0.0f, 0.0f,
-      0.0f, 0.0f, 1.0f, 0.0f,
-      dt.x, dt.y, dt.z, 1.0f
-    })
-{ }
 
 inline MatrixTranslate::MatrixTranslate(const Vector& dt)
 : Matrix

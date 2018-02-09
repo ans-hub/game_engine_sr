@@ -55,7 +55,9 @@ Vector vector::Normalize(const Vector& v)
 }
 
 // Returns dot product (scalar) (evaluated by coordinates)
-// If result > 0, then angle between v1 & v2 from 0 to 90 degree
+// If result > 0, then angle between v1 && v2 from 0 to 90 degree
+// If result < 0, then angle between v1 && v2 more than 90 degree
+// 0 - particullary 90
 
 float vector::DotProduct(const Vector& v1, const Vector& v2)
 {

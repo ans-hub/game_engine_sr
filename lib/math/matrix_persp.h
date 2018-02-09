@@ -9,7 +9,6 @@
 #define GM_MATRIX_PERSP_H
 
 #include "matrix.h"
-#include "point.h"
 #include "vector.h"
 
 namespace anshub {
@@ -27,8 +26,8 @@ inline MatrixPerspective::MatrixPerspective(float dov, float ar)
   ({
     dov,  0.0f,   0.0f,   0.0f,
     0.0f, dov*ar, 0.0f,   0.0f,
-    0.0f, 0.0f,   1.0f,   1.0f,
-    0.0f, 0.0f,   0.0f,   0.0f
+    0.0f, 0.0f,   10.0f,   1.0f,
+    0.0f, 0.0f,   -10.1f,   0.0f
   })
 { }
 

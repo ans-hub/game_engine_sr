@@ -15,6 +15,7 @@ namespace anshub {
 struct MatrixScale : public Matrix<4,4>
 {
   MatrixScale(float);
+  MatrixScale(const Vector&);
 
 }; // struct MatrixScale
 
@@ -24,6 +25,16 @@ inline MatrixScale::MatrixScale(float fact)
       fact, 0.0f, 0.0f, 0.0f,
       0.0f, fact, 0.0f, 0.0f,
       0.0f, 0.0f, fact, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f
+  })
+{ }
+
+inline MatrixScale::MatrixScale(const Vector& v)
+: Matrix
+  ({
+      v.x,  0.0f, 0.0f, 0.0f,
+      0.0f, v.y,  0.0f, 0.0f,
+      0.0f, 0.0f, v.z,  0.0f,
       0.0f, 0.0f, 0.0f, 1.0f
   })
 { }

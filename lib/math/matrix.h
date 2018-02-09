@@ -120,7 +120,6 @@ namespace matrix {
   bool    Inverse(const Matrix<3,3>&, Matrix<3,3>&);
   Vector  Multiplie(const Vector&, const Matrix<3,3>&);   // 2d+1 x mx<3,3>
   Vector  Multiplie(const Vector&, const Matrix<4,4>&);   // 3d+1 x mx<4,4>
-  Vector  Multiplie(const Point&, const Matrix<4,4>&);    // 3d+1 x mx<4,4>
 
   // Helper functions to transform matrixes
 

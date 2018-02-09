@@ -8,7 +8,6 @@
 #ifndef GM_LINE_2D_H
 #define GM_LINE_2D_H
 
-#include "point.h"
 #include "vector.h"
 #include "segment.h"
 
@@ -39,9 +38,9 @@ namespace line2d
 {
   // Returns equations of 2d lines by different sources
 
-  Line    Equation(const Point&, const Point&);
-  Line    Equation(const Point&, const Vector&);    // normal vector
-  Line    Equation(const Vector&);                  // radius-vector
+  Line    EquationA(const Point&, const Point&);
+  Line    EquationB(const Point&, const Vector&);    // normal vector
+  Line    EquationC(const Vector&);                  // radius-vector
   Line    Perpendicular(const Line&, const Point&);
 
   // Checks segments intersection and refresh intersection point

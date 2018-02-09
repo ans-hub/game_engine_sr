@@ -11,7 +11,7 @@ namespace anshub {
 
 // Return equation of line by given 2 points
 
-Line line2d::Equation(const Point& p1, const Point& p2)
+Line line2d::EquationA(const Point& p1, const Point& p2)
 {
   // todo: check if p1 == p2;
   Line res {};
@@ -24,7 +24,7 @@ Line line2d::Equation(const Point& p1, const Point& p2)
 // Returns equation of line by given point and perpendicular vector
 // A(x-x0) + B(y-y0) + C = 0 for v(A;B) and p(x0,y0)
 
-Line line2d::Equation(const Point& p, const Vector& v)
+Line line2d::EquationB(const Point& p, const Vector& v)
 {
   Line res {};
   res.a = v.x;
@@ -35,9 +35,9 @@ Line line2d::Equation(const Point& p, const Vector& v)
 
 // Returns equation of line by give radius-vector
 
-Line line2d::Equation(const Vector& v)
+Line line2d::EquationC(const Vector& v)
 {
-  return line2d::Equation(Point(0,0,0), Point(v.x, v.y, 0));
+  return line2d::EquationA(Point(0,0,0), Point(v.x, v.y, 0));
 }
 
 // Returns perpendicular line to given line in given point
@@ -47,13 +47,13 @@ Line line2d::Perpendicular(const Line& l, const Point& p)
   Point p1 {l.GetX(0.0), 0.0};
   Point p2 {0.0, l.GetY(0.0)};
   Vector dirv (p2-p1);
-  return line2d::Equation(p, dirv);
+  return line2d::EquationB(p, dirv);
 }
 
 bool line2d::Intersects(const Segment& l, const Segment& r, Point& res)
 {
-  Vector v1 {l};
-  Vector v2 {r};
+  Vector v1 {l.b - l.a};
+  Vector v2 {r.b - r.a};
   
   float vmul = v1.x*v2.y - v1.y*v2.x;  // vmul as matrix determ
   if (std::fabs(vmul) < kEpsilon)
@@ -83,7 +83,7 @@ bool line2d::Intersects(const Line& l1, const Line& l2, Point& p)
 
 bool line2d::Intersects(const Line& l1, const Segment& s, Point& p)
 {
-  Line l2 = line2d::Equation(s.a, s.b);
+  Line l2 = line2d::EquationA(s.a, s.b);
   if (line2d::Intersects(l1,l2,p))
   {
     float xmax = std::max(s.a.x, s.b.x);

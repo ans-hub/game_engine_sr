@@ -96,11 +96,4 @@ Vector matrix::Multiplie(const Vector& v, const Matrix<4,4>& mx)
   return res;
 }
 
-// Interpret point as 3d vector with ficted w=1 (which is real absent)
-
-Vector matrix::Multiplie(const Point& p, const Matrix<4,4>& mx)
-{
-  return matrix::Multiplie(static_cast<Vector>(p), mx);
-}
-
 } // namespace anshub

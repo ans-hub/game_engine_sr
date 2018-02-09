@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-#include "point.h"
+#include "vector.h"
 
 namespace anshub {
 
@@ -18,8 +18,8 @@ struct Segment
 {
   Segment() : a{}, b{} { }
   Segment(const Point& pa, const Point& pb) : a{pa}, b{pb} { }
-  Point a;
-  Point b;
+  Vector a;
+  Vector b;
 
 }; // struct Segment
 
