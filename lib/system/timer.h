@@ -27,6 +27,7 @@ public:
   slong GetStartTime() const { return start_time_; }
   slong GetEndTime() const   { return end_time_; }
   slong GetCurrentClock() const;
+  void  SetMillisecondsToWait(int ms) { ms_wait_ = ms; }
 
 private:
   int   ms_wait_;
