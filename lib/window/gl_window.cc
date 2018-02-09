@@ -94,6 +94,11 @@ GlWindow::~GlWindow()
   glXDestroyContext(disp_, context_);
 }
 
+void GlWindow::VerticalSync(bool on)
+{
+  io_helpers::ToggleVerticalSync(disp_, self_, on);
+}
+
 void GlWindow::Clear()
 {
   glClearColor(0.5, 0.5, 0.5, 0.0); // todo: set clear color outside

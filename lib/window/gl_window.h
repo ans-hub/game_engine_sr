@@ -35,6 +35,8 @@ public:
   virtual void Redraw() override;
   virtual void Exposed() override;
 
+  void VerticalSync(bool);
+
 private:
   Pair        glxver_;              // glx version used
   FBAttrs     fbattr_;              // gl framebuffer attributes

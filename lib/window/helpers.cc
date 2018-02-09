@@ -222,6 +222,41 @@ GLXPbuffer CreatePBuffer(Display* disp, int w, int h, GLXFBConfig& cfg)
   return glXCreatePbuffer(disp, cfg, attrs);
 }
 
+// Toggles vertical sync
+
+// https://www.khronos.org/opengl/wiki/Swap_Interval#In_Linux_.2F_GLX
+// Note : this is the good example of how to get gl extensions
+// Also we may change it by environment, example: $ vblank_mode=0 glxgears 
+
+bool ToggleVerticalSync(Display* disp, Window drawable, bool status)
+{
+  using PtrExt = PFNGLXSWAPINTERVALEXTPROC;
+  using PtrSgi = PFNGLXSWAPINTERVALSGIPROC;
+
+  // First, we look into glxext.h
+
+  PtrExt glXSwapIntervalEXT = NULL;
+  PtrSgi glXSwapIntervalSGI = NULL;
+
+  // The check if extensions presents
+
+  auto exts = GetAllGlxExtensions(disp);
+	if (IsExtensionSupported(exts, "GLX_EXT_swap_control"))
+  {
+    glXSwapIntervalEXT = (PtrExt)glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
+    glXSwapIntervalEXT(disp, static_cast<GLXDrawable>(drawable), static_cast<int>(status));
+    return true;
+  }
+  else if (IsExtensionSupported(exts, "GLX_SGI_swap_control"))
+  {
+    glXSwapIntervalSGI = (PtrSgi)glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalSGI");
+    glXSwapIntervalSGI(static_cast<int>(status)); // todo: ops, interval shouldn`t be less than 1
+    return true;
+  }
+  else
+    return false;
+}
+
 //*****************************************************************************
 // Window routines
 //*****************************************************************************

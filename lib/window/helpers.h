@@ -5,6 +5,14 @@
 // URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
 
+
+#ifndef IO_HELPERS_H
+#define IO_HELPERS_H
+
+#ifndef GLX_GLXEXT_PROTOTYPES
+#define GLX_GLXEXT_PROTOTYPES
+#endif
+
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>   
@@ -23,8 +31,6 @@
 #include "aliases.h"
 #include "exceptions.h"
 
-#ifndef IO_HELPERS_H
-#define IO_HELPERS_H
 
 namespace anshub {
 
@@ -49,6 +55,7 @@ namespace io_helpers {      // low-level io helpers
   GLXContext  CreateGlContext(Display*, GLXFBConfig&, CTAttrs& attrs);
   GLXContext  CreateGlContext(Display*, Visual*);
   GLXPbuffer  CreatePBuffer(Display*, int, int, GLXFBConfig&);
+  bool        ToggleVerticalSync(Display*, Window, bool);
 
   // Windows routines
 
@@ -65,7 +72,6 @@ namespace io_helpers {      // low-level io helpers
   // void        GetVModeDimension(Display*, Window, int, int*, int*);
   int         FindNearestVideoMode(int, int);
   int         FindVideoMode(int, int);
-
 
   // Other usefull stuff
 
