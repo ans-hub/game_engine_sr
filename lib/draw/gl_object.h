@@ -79,9 +79,10 @@ namespace object {
 
   GlObject  Make(const char*);
   GlObject  Make(const char*, const Vector&, const Vector&);
+
   void      ResetAttributes(GlObject&);
-  bool      Cull(GlObject&, const GlCameraEuler&);
-  bool      RemoveHiddenSurfaces(GlObject&, const GlCameraEuler&);
+  bool      Cull(GlObject&, const GlCameraEuler&, const Matrix<4,4>&);
+  int       RemoveHiddenSurfaces(GlObject&, const GlCameraEuler&);
   void      Scale(GlObject&, const Vector&);
   void      SetPosition(GlObject&, const Vector&);
   void      RecalcBoundingRadius(GlObject&);

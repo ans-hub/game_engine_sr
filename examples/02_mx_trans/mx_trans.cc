@@ -36,10 +36,10 @@ using anshub::matrix::operator<<;
 void HandleCameraRotate(bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
 {
   if (mode)
-    ang.z += mpos_prev.x - mpos.x;
+    ang.z += (mpos_prev.x - mpos.x) / 2;
   else
-    ang.y += mpos_prev.x - mpos.x;
-  ang.x += mpos_prev.y - mpos.y;
+    ang.y += (mpos_prev.x - mpos.x) / 2;
+  ang.x += (mpos_prev.y - mpos.y) / 2;
   mpos_prev = mpos;
 }
 
@@ -61,8 +61,6 @@ void HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
 {
   switch(key)
   {
-  //   case Btn::W :     vel.z =  0.5f; break;
-  //   case Btn::S :     vel.z = -0.5f; break;
     case Btn::UP :    vel.y =  0.5f; break;
     case Btn::DOWN :  vel.y = -0.5f; break;
     case Btn::LEFT :  vel.x = -0.5f; break;
@@ -110,11 +108,13 @@ const char* HandleInput(int argc, const char** argv)
 void PrintInfo(
   GlText& text, const FpsCounter& fps, 
   const Vector& obj_pos, const Vector& obj_rot, 
-  const Vector& cam_pos, const Vector& cam_rot)
+  const Vector& cam_pos, const Vector& cam_rot,
+  int nfo_culled, int nfo_hidden)
 {
   std::ostringstream oss {};
   
-  oss << "FPS: " << std::setw(7) << std::left << fps.ReadPrev();
+  oss << "FPS: " << fps.ReadPrev()
+      << ", culled: " << nfo_culled << ", hidden: " << nfo_hidden;
   text.PrintString(60, 90, oss.str().c_str());
 
   oss.str("");
@@ -173,7 +173,7 @@ int main(int argc, const char** argv)
   Vector  cam_pos {0.0f, 0.0f, 9.0f};
   Vector  cam_dir {0.0f, 0.0f, 0.0f};
   float   near_z  {dov};
-  float   far_z   {80};
+  float   far_z   {500};
   GlCameraEuler cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
 
   // Other stuff
@@ -181,7 +181,9 @@ int main(int argc, const char** argv)
   Buffer  buf (kWidth, kHeight, 0);
   GlText  text {win};
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
-  bool    cam_z_mode {false};
+  bool    cam_z_mode {false};             // to manage mouse manipulation
+  int     nfo_culled;                     // shown how much objects is culled
+  int     nfo_hidden;                     // how much hidden surfaces removed
 
   do {
     timer.Start();
@@ -248,25 +250,14 @@ int main(int argc, const char** argv)
     // Cull hidden surfaces
 
     object::ResetAttributes(obj);
-    object::RemoveHiddenSurfaces(obj, cam);
+    auto culled = object::Cull(obj, cam, mx_cam);
+    nfo_hidden  = object::RemoveHiddenSurfaces(obj, cam);
+    nfo_culled  = static_cast<int>(culled);
 
-    // Go from world coords to camera coords
+    // Go from world coords to camera, and the perspective coords
 
     matrix::MakeIdentity(mx_total);
     mx_total = matrix::Multiplie(mx_total, mx_cam);
-    object::ApplyMatrix(mx_total, obj);
-
-    // Convert world_pos to camera_pos (from world into camera coords)  
-
-    obj.camera_pos_ = matrix::Multiplie(obj.world_pos_, mx_cam);
-
-    // Cull hidden objects
-    
-    object::Cull(obj, cam);
-
-    // Go from camera coords to perspective
-
-    matrix::MakeIdentity(mx_total);
     mx_total = matrix::Multiplie(mx_total, mx_per);
     object::ApplyMatrix(mx_total, obj);
     
@@ -288,7 +279,9 @@ int main(int argc, const char** argv)
 
     // Print fps ans other info
     
-    PrintInfo(text, fps, obj.world_pos_, obj_rot, cam.pos_, cam.dir_);
+    PrintInfo(
+      text, fps, obj.world_pos_, obj_rot, cam.pos_, cam.dir_, nfo_culled, nfo_hidden
+    );
     fps.Count();
 
     win.Render();

@@ -172,20 +172,26 @@ void object::ResetAttributes(GlObject& obj)
 // Note #2 : also we may cull objects in world coordinates and when cam matrix
 // is known (we just convert obj.world_pos_ with matrix to camera coordinates)
 
-bool object::Cull(GlObject& obj, const GlCameraEuler& cam)
+bool object::Cull(GlObject& obj, const GlCameraEuler& cam, const Matrix<4,4>& mx)
 {
+  // Translate world coords to camera for world_pos_ of object. This is necessary
+  // to see how object center would seen when camera would be in 0;0;0 and 0 angles
+  // (i.e. when all objects would be translated in camera coordinates)
+  
+  auto obj_pos = matrix::Multiplie(obj.world_pos_, mx);
+
   // Cull z planes
 
-  if (obj.camera_pos_.z - obj.sphere_rad_ < cam.z_near_)
+  if (obj_pos.z - obj.sphere_rad_ < cam.z_near_)
     obj.active_ = false;
   
-  if (obj.camera_pos_.z + obj.sphere_rad_ > cam.z_far_)
+  if (obj_pos.z + obj.sphere_rad_ > cam.z_far_)
     obj.active_ = false;
 
   // Cull x planes (project point on the view plane and check)
 
-  float x_lhs = (cam.dov_ * obj.camera_pos_.x / obj.camera_pos_.z) + obj.sphere_rad_;
-  float x_rhs = (cam.dov_ * obj.camera_pos_.x / obj.camera_pos_.z) - obj.sphere_rad_;
+  float x_lhs = (cam.dov_ * obj_pos.x / obj_pos.z) + obj.sphere_rad_;
+  float x_rhs = (cam.dov_ * obj_pos.x / obj_pos.z) - obj.sphere_rad_;
 
   if (x_lhs < -(cam.wov_ / 2))
     obj.active_ = false;
@@ -194,15 +200,15 @@ bool object::Cull(GlObject& obj, const GlCameraEuler& cam)
 
   // Cull y planes (project point on the view plane and check)
 
-  float y_dhs = (cam.dov_ * obj.camera_pos_.y / obj.camera_pos_.z) + obj.sphere_rad_;
-  float y_uhs = (cam.dov_ * obj.camera_pos_.y / obj.camera_pos_.z) - obj.sphere_rad_;
+  float y_dhs = (cam.dov_ * obj_pos.y / obj_pos.z) + obj.sphere_rad_;
+  float y_uhs = (cam.dov_ * obj_pos.y / obj_pos.z) - obj.sphere_rad_;
 
   if (y_dhs < -(cam.wov_ / 2))
     obj.active_ = false;  
   if (y_uhs > (cam.wov_ / 2))
     obj.active_ = false;
 
-  return true;
+  return !obj.active_;
 }
 
 // Removes hidden surfaces in camera coordinates
@@ -218,8 +224,9 @@ bool object::Cull(GlObject& obj, const GlCameraEuler& cam)
 // I.e. in blender at the triangulation step we may choose the way we
 // triangulate the stuff
 
-bool object::RemoveHiddenSurfaces(GlObject& obj, const GlCameraEuler& cam)
+int object::RemoveHiddenSurfaces(GlObject& obj, const GlCameraEuler& cam)
 {
+  int cnt {0};
   for (auto& face : obj.triangles_)
   {
     auto p0 = obj.vxs_trans_[face.indicies_[0]];
@@ -233,9 +240,12 @@ bool object::RemoveHiddenSurfaces(GlObject& obj, const GlCameraEuler& cam)
 
     auto prod = vector::DotProduct(c,n);
     if (math::FlessZero(prod))
+    {
       face.attrs_ |= Triangle::HIDDEN;
+      ++cnt;
+    }
   }
-  return true;
+  return cnt;
 }
 
 // Apply matrix to object
