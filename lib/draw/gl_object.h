@@ -14,7 +14,7 @@
 
 #include "fx_colors.h"
 #include "gl_triangle.h"
-#include "gl_camera_euler.h"
+#include "gl_camera.h"
 #include "exceptions.h"
 #include "../data/ply_loader.h"
 #include "../math/segment.h"
@@ -82,8 +82,8 @@ namespace object {
   GlObject  Make(const char*, const Vector&, const Vector&);
 
   void      ResetAttributes(GlObject&);
-  bool      Cull(GlObject&, const GlCameraEuler&, const MatrixCamera&);
-  int       RemoveHiddenSurfaces(GlObject&, const GlCameraEuler&);
+  bool      Cull(GlObject&, const GlCamera&, const MatrixCamera&);
+  int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
   void      Scale(GlObject&, const Vector&);
   void      SetPosition(GlObject&, const Vector&);
   void      RecalcBoundingRadius(GlObject&);

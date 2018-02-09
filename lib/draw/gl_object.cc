@@ -170,7 +170,7 @@ void object::ResetAttributes(GlObject& obj)
 // Note #2 : also we may cull objects in world coordinates and when cam matrix
 // is known (we just convert obj.world_pos_ with matrix to camera coordinates)
 
-bool object::Cull(GlObject& obj, const GlCameraEuler& cam, const MatrixCamera& mx)
+bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
 {
   // Translate world coords to camera for world_pos_ of object. This is necessary
   // to see how object center would seen when camera would be in 0;0;0 and 0 angles
@@ -222,7 +222,7 @@ bool object::Cull(GlObject& obj, const GlCameraEuler& cam, const MatrixCamera& m
 // I.e. in blender at the triangulation step we may choose the way we
 // triangulate the stuff
 
-int object::RemoveHiddenSurfaces(GlObject& obj, const GlCameraEuler& cam)
+int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
 {
   int cnt {0};
   for (auto& face : obj.triangles_)
@@ -234,7 +234,7 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCameraEuler& cam)
     Vector u {p0, p1};
     Vector v {p0, p2};
     Vector n = vector::CrossProduct(u,v);
-    Vector c {p0, cam.pos_};
+    Vector c {p0, cam.vrp_};      // this is not work with uvn camera
 
     auto prod = vector::DotProduct(c,n);
     if (math::FlessZero(prod))

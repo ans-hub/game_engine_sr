@@ -21,7 +21,7 @@
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
 #include "lib/draw/gl_object.h"
-#include "lib/draw/gl_camera.h"
+#include "lib/draw/gl_camera_euler.h"
 #include "lib/math/matrix_rotate.h"
 #include "lib/math/matrix_persp.h"
 #include "lib/math/matrix_trans.h"
@@ -36,10 +36,10 @@ using anshub::matrix::operator<<;
 void HandleCameraRotate(bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
 {
   if (mode)
-    ang.z += (mpos_prev.x - mpos.x) / 2;
+    ang.z += mpos_prev.x - mpos.x;
   else
-    ang.y += (mpos_prev.x - mpos.x) / 2;
-  ang.x += (mpos_prev.y - mpos.y) / 2;
+    ang.y += mpos_prev.x - mpos.x;
+  ang.x += mpos_prev.y - mpos.y;
   mpos_prev = mpos;
 }
 
@@ -61,6 +61,8 @@ void HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
 {
   switch(key)
   {
+  //   case Btn::W :     vel.z =  0.5f; break;
+  //   case Btn::S :     vel.z = -0.5f; break;
     case Btn::UP :    vel.y =  0.5f; break;
     case Btn::DOWN :  vel.y = -0.5f; break;
     case Btn::LEFT :  vel.x = -0.5f; break;
@@ -108,13 +110,11 @@ const char* HandleInput(int argc, const char** argv)
 void PrintInfo(
   GlText& text, const FpsCounter& fps, 
   const Vector& obj_pos, const Vector& obj_rot, 
-  const Vector& cam_pos, const Vector& cam_rot,
-  int nfo_culled, int nfo_hidden)
+  const Vector& cam_pos, const Vector& cam_rot)
 {
   std::ostringstream oss {};
   
-  oss << "FPS: " << fps.ReadPrev()
-      << ", culled: " << nfo_culled << ", hidden: " << nfo_hidden;
+  oss << "FPS: " << std::setw(7) << std::left << fps.ReadPrev();
   text.PrintString(60, 90, oss.str().c_str());
 
   oss.str("");
@@ -162,29 +162,38 @@ int main(int argc, const char** argv)
   // Object
 
   Vector  obj_scale  {1.0f, 1.0f, 1.0f};
-  Vector  obj_pos    {0.0f, 0.0f, 50.0f};
-  Vector  obj_rot    {0.0f, 0.0f, 0.0f};
-  // Vector  obj_rot    {1.0f, 1.0f, 2.0f};
-  GlObject  obj = object::Make(fname, obj_scale, obj_pos);
+  Vector  obj_pos    {0.0f, 0.0f, 15.0f};
+  Vector  obj_rot    {1.0f, 1.0f, 2.0f};
+  GlObject  obj = object::Make(fname, obj_scale, obj_pos);  // master object
 
+  std::vector<GlObject> v {};
+  for (int i = 0; i < 10; ++i)
+    v.push_back(obj);
+
+  for (auto& obj : v)
+  {
+    float x = rand_toolkit::get_rand(-100, 100);
+    float y = rand_toolkit::get_rand(-100, 100);
+    float z = rand_toolkit::get_rand(-100, 100);
+    obj.world_pos_= {x,y,z};
+  }
+  
   // Camera
 
   float   dov     {2};
   float   fov     {60};
-  Vector  cam_pos {0.0f, 0.0f, 0.0f};
+  Vector  cam_pos {0.0f, 0.0f, 9.0f};
   Vector  cam_dir {0.0f, 0.0f, 0.0f};
   float   near_z  {dov};
-  float   far_z   {500};
-  GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
+  float   far_z   {80};
+  GlCameraEuler cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
 
   // Other stuff
 
   Buffer  buf (kWidth, kHeight, 0);
   GlText  text {win};
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
-  bool    cam_z_mode {false};             // to manage mouse manipulation
-  int     nfo_culled;                     // shown how much objects is culled
-  int     nfo_hidden;                     // how much hidden surfaces removed
+  bool    cam_z_mode {false};
 
   do {
     timer.Start();
@@ -200,7 +209,7 @@ int main(int argc, const char** argv)
       cam_z_mode = false;
 
     Vector  obj_vel (0.0f, 0.0f, 0.0f);
-    HandleCameraPosition(kbtn, cam.vrp_);
+    HandleCameraPosition(kbtn, cam.pos_);
     HandleCameraRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
     HandlePause(kbtn, win);
     HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
@@ -216,32 +225,19 @@ int main(int argc, const char** argv)
     MatrixPerspective mx_per {cam.dov_, cam.ar_};
     MatrixScale       mx_scale(obj_scale);
     
-    // Prepare camera matrixes (Euler) 
+    // Prepare camera matrixes 
 
-    // MatrixCamera      mx_cam {};
-    // MatrixTranslate   mx_cam_trans  {cam.pos_ * (-1)};
-    // MatrixRotate      mx_cam_roty   {0.0f, -cam.dir_.y, 0.0f, trig};
-    // MatrixRotate      mx_cam_rotx   {-cam.dir_.x, 0.0f, 0.0f, trig};
-    // MatrixRotate      mx_cam_rotz   {0.0f, 0.0f, -cam.dir_.z, trig};
-    // mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-    // mx_cam = matrix::Multiplie(mx_cam, mx_cam_roty);
-    // mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotx);
-    // mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotz);
+    Matrix<4,4>       mx_cam {};
+    matrix::MakeIdentity(mx_cam);
 
-    // Prepare camera matrixes (UVN)
-
-    MatrixCamera      mx_cam {};
-    MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-    cam.LookAt(obj.world_pos_);
-    Matrix<4,4> mx_uvn {
-      cam.u_.x, cam.v_.x, cam.n_.x, 0.0f,
-      cam.u_.y, cam.v_.y, cam.n_.y, 0.0f,
-      cam.u_.z, cam.v_.z, cam.n_.z, 0.0f,
-      0.0f,     0.0f,     0.0f,     0.0f,
-    };
-    mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-    mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-    mx_cam = matrix::Multiplie(mx_cam, mx_uvn);
+    MatrixTranslate   mx_cam_trans  {cam.pos_ * (-1)};
+    MatrixRotate      mx_cam_roty   {0.0f, -cam.dir_.y, 0.0f, trig};
+    MatrixRotate      mx_cam_rotx   {-cam.dir_.x, 0.0f, 0.0f, trig};
+    MatrixRotate      mx_cam_rotz   {0.0f, 0.0f, -cam.dir_.z, trig};
+    mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans); 
+    mx_cam = matrix::Multiplie(mx_cam, mx_cam_roty); 
+    mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotx); 
+    mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotz); 
 
     // Prepare total matrix
 
@@ -252,7 +248,6 @@ int main(int argc, const char** argv)
 
     obj.SetCoords(Coords::LOCAL);
     object::ApplyMatrix(mx_rot, obj);
-    object::RefreshOrientation(obj, mx_rot);
     obj.CopyCoords(Coords::LOCAL, Coords::TRANS);
 
     // Transform trans coordinates
@@ -265,14 +260,25 @@ int main(int argc, const char** argv)
     // Cull hidden surfaces
 
     object::ResetAttributes(obj);
-    auto culled = object::Cull(obj, cam, mx_cam);
-    nfo_hidden  = object::RemoveHiddenSurfaces(obj, cam);
-    nfo_culled  = static_cast<int>(culled);
+    object::RemoveHiddenSurfaces(obj, cam);
 
-    // Go from world coords to camera, and the perspective coords
+    // Go from world coords to camera coords
 
     matrix::MakeIdentity(mx_total);
     mx_total = matrix::Multiplie(mx_total, mx_cam);
+    object::ApplyMatrix(mx_total, obj);
+
+    // Convert world_pos to camera_pos (from world into camera coords)  
+
+    obj.camera_pos_ = matrix::Multiplie(obj.world_pos_, mx_cam);
+
+    // Cull hidden objects
+    
+    object::Cull(obj, cam);
+
+    // Go from camera coords to perspective
+
+    matrix::MakeIdentity(mx_total);
     mx_total = matrix::Multiplie(mx_total, mx_per);
     object::ApplyMatrix(mx_total, obj);
     
@@ -294,9 +300,7 @@ int main(int argc, const char** argv)
 
     // Print fps ans other info
     
-    PrintInfo(
-      text, fps, obj.world_pos_, obj_rot, cam.vrp_, cam.dir_, nfo_culled, nfo_hidden
-    );
+    PrintInfo(text, fps, obj.world_pos_, obj_rot, cam.pos_, cam.dir_);
     fps.Count();
 
     win.Render();
