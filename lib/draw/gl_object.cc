@@ -19,7 +19,6 @@ GlObject::GlObject()
   , id_{}
   , active_{true}
   , world_pos_{0.0f, 0.0f, 0.0f}
-  , v_dir_{0.0f, 0.0f, 1.0f}        // +z direction
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
@@ -38,7 +37,6 @@ GlObject::GlObject(
   , id_{}
   , active_{true}
   , world_pos_{0.0f, 0.0f, 0.0f}
-  , v_dir_{0.0f, 0.0f, 1.0f}        // +z direction
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
@@ -172,7 +170,7 @@ void object::ResetAttributes(GlObject& obj)
 // Note #2 : also we may cull objects in world coordinates and when cam matrix
 // is known (we just convert obj.world_pos_ with matrix to camera coordinates)
 
-bool object::Cull(GlObject& obj, const GlCameraEuler& cam, const Matrix<4,4>& mx)
+bool object::Cull(GlObject& obj, const GlCameraEuler& cam, const MatrixCamera& mx)
 {
   // Translate world coords to camera for world_pos_ of object. This is necessary
   // to see how object center would seen when camera would be in 0;0;0 and 0 angles
@@ -291,6 +289,16 @@ void object::RecalcBoundingRadius(GlObject& obj)
     curr = std::fabs(vx.z);
     if (curr > obj.sphere_rad_) obj.sphere_rad_ = curr;    
   }
+}
+
+// Refresh object orientation when rotates. This should be used near
+// the apply rotate matrix to all vertexes (or in hand mode)
+
+void object::RefreshOrientation(GlObject& obj, const MatrixRotate& mx)
+{
+  obj.v_orient_x_ = matrix::Multiplie(obj.v_orient_x_, mx);
+  obj.v_orient_y_ = matrix::Multiplie(obj.v_orient_y_, mx);
+  obj.v_orient_z_ = matrix::Multiplie(obj.v_orient_z_, mx);
 }
 
 } // namespace anshub

@@ -12,15 +12,17 @@
 #include <array>
 #include <fstream>
 
-#include "../math/trig.h"
-#include "../math/vector.h"
-#include "../math/matrix.h"
-#include "../math/segment.h"
-#include "../data/ply_loader.h"
 #include "fx_colors.h"
 #include "gl_triangle.h"
 #include "gl_camera_euler.h"
 #include "exceptions.h"
+#include "../data/ply_loader.h"
+#include "../math/segment.h"
+#include "../math/trig.h"
+#include "../math/vector.h"
+#include "../math/matrix.h"
+#include "../math/matrix_rotate.h"
+#include "../math/matrix_camera.h"
 
 namespace anshub {
 
@@ -55,7 +57,6 @@ struct GlObject
   int       id_;            // object id  
   bool      active_;        // object state
   Vector    world_pos_;     // position of obj center in world`s coords
-  Vector    v_dir_;         // direction vector
   Vector    v_orient_x_;    // 
   Vector    v_orient_y_;    // orientation vectors  
   Vector    v_orient_z_;    //
@@ -81,11 +82,12 @@ namespace object {
   GlObject  Make(const char*, const Vector&, const Vector&);
 
   void      ResetAttributes(GlObject&);
-  bool      Cull(GlObject&, const GlCameraEuler&, const Matrix<4,4>&);
+  bool      Cull(GlObject&, const GlCameraEuler&, const MatrixCamera&);
   int       RemoveHiddenSurfaces(GlObject&, const GlCameraEuler&);
   void      Scale(GlObject&, const Vector&);
   void      SetPosition(GlObject&, const Vector&);
   void      RecalcBoundingRadius(GlObject&);
+  void      RefreshOrientation(GlObject&, const MatrixRotate&);
   void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
 
 } // namespace object

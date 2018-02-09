@@ -12,21 +12,59 @@
 
 namespace anshub {
 
+// This is simple identity matrix, used to store combination of
+// camera translations and rotations. Is necessary as some functions
+// need only camera modifications
+
+// Copy constructor and assigment implemented by hands since usually
+// multiply is provided with Matrix<4,4>, not only MatrixCamera 
+
+// Since copy ctor is implemented explicit, implicit move constructor
+// and assigment is deleted by default
+
 struct MatrixCamera : public Matrix<4,4>
 {
-  MatrixCamera(const Vector&);
+  MatrixCamera();
+  MatrixCamera(const Matrix<4,4>&);
+  MatrixCamera(const MatrixCamera&);
+  MatrixCamera& operator=(const Matrix<4,4>&);
+  MatrixCamera& operator=(const MatrixCamera&);
 
-}; // struct MatrixScale
+}; // struct MatrixCamera
 
-inline MatrixCamera::MatrixCamera(const Vector& v)
+inline MatrixCamera::MatrixCamera()
 : Matrix
   ({
       1.0f, 0.0f, 0.0f, 0.0f,
       0.0f, 1.0f, 0.0f, 0.0f,
       0.0f, 0.0f, 1.0f, 0.0f,
-      -v.x, -v.y, -v.z, 1.0f
+      0.0f, 0.0f, 0.0f, 1.0f
   })
 { }
+
+inline MatrixCamera::MatrixCamera(const Matrix<4,4>& old)
+: Matrix<4,4>{}
+{
+  data_ = old.Data();
+}
+
+inline MatrixCamera& MatrixCamera::operator=(const Matrix<4,4>& old)
+{
+  this->data_ = old.Data();
+  return *this;
+}
+
+inline MatrixCamera::MatrixCamera(const MatrixCamera& old)
+: Matrix<4,4>{}
+{
+  data_ = old.Data();
+}
+
+inline MatrixCamera& MatrixCamera::operator=(const MatrixCamera& old)
+{
+  this->data_ = old.Data();
+  return *this;
+}
 
 }  // namespace anshub
 

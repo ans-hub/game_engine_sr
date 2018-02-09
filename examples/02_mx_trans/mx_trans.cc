@@ -217,17 +217,15 @@ int main(int argc, const char** argv)
     
     // Prepare camera matrixes 
 
-    Matrix<4,4>       mx_cam {};
-    matrix::MakeIdentity(mx_cam);
-
+    MatrixCamera      mx_cam {};
     MatrixTranslate   mx_cam_trans  {cam.pos_ * (-1)};
     MatrixRotate      mx_cam_roty   {0.0f, -cam.dir_.y, 0.0f, trig};
     MatrixRotate      mx_cam_rotx   {-cam.dir_.x, 0.0f, 0.0f, trig};
     MatrixRotate      mx_cam_rotz   {0.0f, 0.0f, -cam.dir_.z, trig};
-    mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans); 
-    mx_cam = matrix::Multiplie(mx_cam, mx_cam_roty); 
-    mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotx); 
-    mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotz); 
+    mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
+    mx_cam = matrix::Multiplie(mx_cam, mx_cam_roty);
+    mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotx);
+    mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotz);
 
     // Prepare total matrix
 
@@ -238,6 +236,7 @@ int main(int argc, const char** argv)
 
     obj.SetCoords(Coords::LOCAL);
     object::ApplyMatrix(mx_rot, obj);
+    object::RefreshOrientation(obj, mx_rot);
     obj.CopyCoords(Coords::LOCAL, Coords::TRANS);
 
     // Transform trans coordinates
