@@ -37,18 +37,35 @@ GlCamera::GlCamera
   , target_{}
 { }
 
-// Set look-at point and recalculate uvn vectors
+// Set look-at point and recalculate uvn vectors. In fact, this func
+// make angles implicitly 
 
 void GlCamera::LookAt(const Vector& p)
 {
+  using vector::operator<<;
   target_ = p;
   n_ = Vector{vrp_, target_};         // direction vector from vpr to target
-  v_ = Vector{0.0f, 1.0f, 0.0f};      // suppose that v is up directed
+  if (n_.z >= 0 && n_.x != 0)
+    v_ = Vector{0.0f, 1.0f, 0.0f};      // suppose that v is "up" directed
+  // else
+    // v_ = Vector{0.0f, -1.0f, 0.0f};      // suppose that v is "up" directed  
   u_ = vector::CrossProduct(v_, n_);  // now we have vector directed "right"
+  std::cerr << n_ << ';';
+  std::cerr << v_ << ';';
+  if (u_.SquareLength() == 0)
+  {
+    std::cerr << "sad\n";
+    v_ = {0.0f, 1.0f, 1.0f};           //  thus it is impossible to calc u_
+    u_ = vector::CrossProduct(v_, n_);  // now we have vector directed "right"
+  }                       // if v_ == n_, =>cross == 0 and
+  std::cerr << u_ << '\n';
   v_ = vector::CrossProduct(n_, u_);  // recalc v, since now we have plane by n and u
-  u_.Normalize();
-  v_.Normalize();
-  n_.Normalize();
+  if (u_.SquareLength()) u_.Normalize();
+  if (v_.SquareLength()) v_.Normalize();
+  if (n_.SquareLength()) n_.Normalize();
+  std::cerr << u_.Length();
+  std::cerr << v_.Length();
+  std::cerr << n_.Length() << '\n';
 }
 
 } // namespace anshub

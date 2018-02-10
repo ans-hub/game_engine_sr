@@ -162,15 +162,15 @@ int main(int argc, const char** argv)
   // Object
 
   Vector  obj_scale  {1.0f, 1.0f, 1.0f};
-  Vector  obj_pos    {0.0f, 0.0f, 50.0f};
-  Vector  obj_rot    {0.0f, 0.0f, 0.0f};
+  Vector  obj_pos    {0.0f, 0.0f, 7.0f};
+  Vector  obj_rot    {180.0f, 0.0f, 0.0f};
   // Vector  obj_rot    {1.0f, 1.0f, 2.0f};
-  GlObject  obj = object::Make(fname, obj_scale, obj_pos);
+  GlObject  obj = object::Make(fname, obj_scale, obj_pos, obj_rot);
 
   // Camera
 
   float   dov     {2};
-  float   fov     {60};
+  float   fov     {90};
   Vector  cam_pos {0.0f, 0.0f, 0.0f};
   Vector  cam_dir {0.0f, 0.0f, 0.0f};
   float   near_z  {dov};
@@ -219,7 +219,7 @@ int main(int argc, const char** argv)
     // Prepare camera matrixes (Euler) 
 
     // MatrixCamera      mx_cam {};
-    // MatrixTranslate   mx_cam_trans  {cam.pos_ * (-1)};
+    // MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
     // MatrixRotate      mx_cam_roty   {0.0f, -cam.dir_.y, 0.0f, trig};
     // MatrixRotate      mx_cam_rotx   {-cam.dir_.x, 0.0f, 0.0f, trig};
     // MatrixRotate      mx_cam_rotz   {0.0f, 0.0f, -cam.dir_.z, trig};
@@ -239,7 +239,6 @@ int main(int argc, const char** argv)
       cam.u_.z, cam.v_.z, cam.n_.z, 0.0f,
       0.0f,     0.0f,     0.0f,     0.0f,
     };
-    mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
     mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
     mx_cam = matrix::Multiplie(mx_cam, mx_uvn);
 

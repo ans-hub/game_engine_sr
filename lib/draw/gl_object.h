@@ -85,6 +85,7 @@ namespace object {
   bool      Cull(GlObject&, const GlCamera&, const MatrixCamera&);
   int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
   void      Scale(GlObject&, const Vector&);
+  void      Rotate(GlObject&, const Vector&);
   void      SetPosition(GlObject&, const Vector&);
   void      RecalcBoundingRadius(GlObject&);
   void      RefreshOrientation(GlObject&, const MatrixRotate&);

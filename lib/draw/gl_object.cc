@@ -138,11 +138,13 @@ GlObject object::Make(const char* str)
 
 // Makes object from ply file, then scale it and move to world position
 
-GlObject object::Make(const char* str, const Vector& scale, const Vector& pos)
+GlObject object::Make(
+  const char* str, const Vector& scale, const Vector& pos, const Vector& rot)
 {
   auto obj = object::Make(str);
   obj.SetCoords(Coords::LOCAL);
   object::Scale(obj, scale);
+  object::Rotate(obj, rot)
   object::SetPosition(obj, pos);
   object::RecalcBoundingRadius(obj);
   return obj;
@@ -218,7 +220,7 @@ bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
 // Note #1 : this function not make objects non-transparent, its just
 // helper to reduce amount of rendered triangles
 
-// Note #2 : triangles vertixes indicies should placed convientinally.
+// Note #2 : triangles vertixes indicies should be placed convientinally.
 // I.e. in blender at the triangulation step we may choose the way we
 // triangulate the stuff
 
@@ -266,6 +268,13 @@ void object::Scale(GlObject& obj, const Vector& scale)
     vx.y *= scale.y;
     vx.z *= scale.z;
   }
+}
+
+// Rotate object
+
+void object::Rotate(GlObject& obj, const Vector& v)
+{
+  
 }
 
 // Set world position of center of object
