@@ -41,6 +41,8 @@ The main actions is placed in two classes `Logic` and `Scene`. It should be note
 
 `system` - useful system stuffs, such as timer
 
+`data` - data manipulation classes
+
 ## Important notes
 
 When I started writing `math` library, I did not supposed that I would be use it not only for 2d but for 3d calculations too. In this case I should warn those who will clone this repository - interface of `math` library will be changed.
@@ -75,7 +77,7 @@ P.S.: if something goes wrong while downloading bass audio library, then the bes
 
 ```bash
   $ git clone https://github.com/ans-hub/game_console
-  $ cd games/raiders3d/
+  $ cd examples/01_raiders3d/
   $ make    
 ```
 

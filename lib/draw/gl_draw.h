@@ -21,6 +21,7 @@
 #include "gl_buffer.h"
 #include "fx_colors.h"
 #include "gl_object.h"
+#include "gl_triangle.h"
 
 namespace anshub {
 
@@ -38,6 +39,7 @@ namespace draw {
   // Helpers
 
   void Object(const GlObject&, int w, int h, Buffer&);
+  void TrianglesArray(const Triangles&, int w, int h, Buffer&);
 
   // Iterators
 

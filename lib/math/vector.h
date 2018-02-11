@@ -98,7 +98,13 @@ struct Vector
 
 }; // struct Vector
 
+//****************************************************************************
+//  ALIASES
+//****************************************************************************
+
 using Point = Vector;
+using Vec = Vector;
+using cVector = const Vector;
 
 //****************************************************************************
 //  DEFINITION OF HELPERS FUNCTIONS FOR VECTOR CLASS

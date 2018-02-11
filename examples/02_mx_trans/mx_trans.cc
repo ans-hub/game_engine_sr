@@ -33,6 +33,37 @@ using namespace anshub;
 using anshub::vector::operator<<;
 using anshub::matrix::operator<<;
 
+auto CreateNetField(TrigTable& trig)
+{
+  auto net = object::Make(
+    "data/net.ply", trig,
+    {1.0f, 1.0f, 1.0f},
+    {0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f}
+  );
+  net.SetCoords(Coords::LOCAL);
+  TriangleFaces mesh (80);
+  Vector pos {-19.0f, 0.0f, 19.0f};
+  for (int i = 0; i < 20; ++i)
+  {
+    for (int k = 0; k < 20 ; ++k)
+    {
+      object::Move(net, pos);
+      object::AddToTriangles(net, mesh);
+      pos.x += 1.0f;
+    }
+    pos.z -= 1.0f;
+    pos.x = -19.0f;
+  }
+  return mesh;
+}
+
+void HandleCameraType(Btn kbtn, bool& cam_euler)
+{
+  if (kbtn == Btn::ENTER)
+    cam_euler = !cam_euler;
+}
+
 void HandleCameraRotate(bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
 {
   if (mode)
@@ -161,16 +192,18 @@ int main(int argc, const char** argv)
 
   // Object
 
-  Vector  obj_scale  {1.0f, 1.0f, 1.0f};
-  Vector  obj_pos    {0.0f, 0.0f, 7.0f};
-  Vector  obj_rot    {180.0f, 0.0f, 0.0f};
-  // Vector  obj_rot    {1.0f, 1.0f, 2.0f};
-  GlObject  obj = object::Make(fname, obj_scale, obj_pos, obj_rot);
+  auto obj = object::Make(
+    fname, trig, 
+    {1.0f, 1.0f, 1.0f},   // initial scale
+    {0.0f, 0.0f, 7.0f},   // world pos
+    {180.0f, 0.0f, 0.0f}  // initial rotate
+  );
+  auto net = CreateNetField(trig);
 
   // Camera
 
   float   dov     {2};
-  float   fov     {90};
+  float   fov     {60};
   Vector  cam_pos {0.0f, 0.0f, 0.0f};
   Vector  cam_dir {0.0f, 0.0f, 0.0f};
   float   near_z  {dov};
@@ -181,14 +214,18 @@ int main(int argc, const char** argv)
 
   Buffer  buf (kWidth, kHeight, 0);
   GlText  text {win};
+  Vector  obj_rot    {0.0f, 0.0f, 0.0f};
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
   bool    cam_z_mode {false};             // to manage mouse manipulation
   int     nfo_culled;                     // shown how much objects is culled
   int     nfo_hidden;                     // how much hidden surfaces removed
+  bool    cam_euler {true};               // is euler cam currently used
 
   do {
     timer.Start();
     win.Clear();
+
+    // Handle input
 
     auto    kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     auto    mpos = win.ReadMousePos();
@@ -199,7 +236,11 @@ int main(int argc, const char** argv)
     if (mbtn_rl == Btn::LMB)
       cam_z_mode = false;
 
-    Vector  obj_vel (0.0f, 0.0f, 0.0f);
+    // Controls
+
+    Vector  obj_vel    {0.0f, 0.0f, 0.0f};
+    Vector  obj_scale  {1.0f, 1.0f, 1.0f};
+    HandleCameraType(kbtn, cam_euler);
     HandleCameraPosition(kbtn, cam.vrp_);
     HandleCameraRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
     HandlePause(kbtn, win);
@@ -216,31 +257,35 @@ int main(int argc, const char** argv)
     MatrixPerspective mx_per {cam.dov_, cam.ar_};
     MatrixScale       mx_scale(obj_scale);
     
-    // Prepare camera matrixes (Euler) 
-
-    // MatrixCamera      mx_cam {};
-    // MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-    // MatrixRotate      mx_cam_roty   {0.0f, -cam.dir_.y, 0.0f, trig};
-    // MatrixRotate      mx_cam_rotx   {-cam.dir_.x, 0.0f, 0.0f, trig};
-    // MatrixRotate      mx_cam_rotz   {0.0f, 0.0f, -cam.dir_.z, trig};
-    // mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-    // mx_cam = matrix::Multiplie(mx_cam, mx_cam_roty);
-    // mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotx);
-    // mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotz);
-
-    // Prepare camera matrixes (UVN)
+      // Prepare camera`s matrixes (Euler or uvn) 
 
     MatrixCamera      mx_cam {};
-    MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-    cam.LookAt(obj.world_pos_);
-    Matrix<4,4> mx_uvn {
-      cam.u_.x, cam.v_.x, cam.n_.x, 0.0f,
-      cam.u_.y, cam.v_.y, cam.n_.y, 0.0f,
-      cam.u_.z, cam.v_.z, cam.n_.z, 0.0f,
-      0.0f,     0.0f,     0.0f,     0.0f,
-    };
-    mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-    mx_cam = matrix::Multiplie(mx_cam, mx_uvn);
+
+    if (cam_euler)
+    {
+      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
+      MatrixRotate      mx_cam_roty   {0.0f, -cam.dir_.y, 0.0f, trig};
+      MatrixRotate      mx_cam_rotx   {-cam.dir_.x, 0.0f, 0.0f, trig};
+      MatrixRotate      mx_cam_rotz   {0.0f, 0.0f, -cam.dir_.z, trig};
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_roty);
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotx);
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotz);
+    }
+    else
+    {
+      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
+      cam.LookAt(obj.world_pos_);
+      Matrix<4,4> mx_uvn {
+        cam.u_.x, cam.v_.x, cam.n_.x, 0.0f,
+        cam.u_.y, cam.v_.y, cam.n_.y, 0.0f,
+        cam.u_.z, cam.v_.z, cam.n_.z, 0.0f,
+        0.0f,     0.0f,     0.0f,     0.0f,
+      };
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
+      mx_cam = matrix::Multiplie(mx_cam, mx_uvn);
+
+    }
 
     // Prepare total matrix
 
@@ -268,6 +313,9 @@ int main(int argc, const char** argv)
     nfo_hidden  = object::RemoveHiddenSurfaces(obj, cam);
     nfo_culled  = static_cast<int>(culled);
 
+    triangles::ResetAttributes(net);
+    triangles::Cull(net, cam, mx_cam);
+
     // Go from world coords to camera, and the perspective coords
 
     matrix::MakeIdentity(mx_total);
@@ -275,20 +323,31 @@ int main(int argc, const char** argv)
     mx_total = matrix::Multiplie(mx_total, mx_per);
     object::ApplyMatrix(mx_total, obj);
     
+    // Make the same for the net
+
+    // net.CopyCoords(Coords::LOCAL, Coords::TRANS);
+    // net.SetCoords(Coords::TRANS);
+    triangles::ApplyMatrix(mx_total, net);
+    
     // Since after mx_per we have homogenous coords
 
     for (auto& vx : obj.GetCoords())
+      vector::ConvertFromHomogeneous(vx);
+    for (auto& tri : net)
+      for (auto& vx : tri.vxs_)
       vector::ConvertFromHomogeneous(vx);
 
     // Get screen coordinates
 
     MatrixViewport mx_view {cam.wov_, cam.scr_w_, cam.scr_h_};
     object::ApplyMatrix(mx_view, obj);
+    triangles::ApplyMatrix(mx_view, net);
 
     // Draw triangles (stored in object)
 
     buf.Clear();
     draw::Object(obj, kWidth, kHeight, buf);
+    draw::Triangles(net, kWidth, kHeight, buf);
     buf.SendDataToFB();
 
     // Print fps ans other info

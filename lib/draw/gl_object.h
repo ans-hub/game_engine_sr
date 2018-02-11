@@ -34,25 +34,23 @@ enum class Coords
   TRANS     // transformed coordinates
 };
 
-// Represents drawable object
+//***********************************************************************
+// DRAWABLE OBJECT DEFINITION
+//***********************************************************************
 
 struct GlObject
 {
-  // Aliases
-
   using Vertexes    = std::vector<Vector>;
-  using Edges       = std::vector<std::array<int,3>>;
-  using Triangles   = std::vector<Triangle>;
   using Matrix2d    = std::vector<std::vector<double>>;
 
-  // Coordinates data members
+  // Data members: coordinates
 
   Vertexes  vxs_local_;     // vertexes local coords
   Vertexes  vxs_trans_;     // vertexes current coords
   Coords    current_vxs_;   // chooser between coords type
   Triangles triangles_;     // triangles based on coords above
 
-  // Helper data memebers
+  // Data memebers: helpers
 
   int       id_;            // object id  
   bool      active_;        // object state
@@ -60,36 +58,67 @@ struct GlObject
   Vector    v_orient_x_;    // 
   Vector    v_orient_y_;    // orientation vectors  
   Vector    v_orient_z_;    //
-  Vector    camera_pos_;    // object pos in camera coordinates
   float     sphere_rad_;    // bounding sphere radius
   
   // Constructors
 
   GlObject();
   GlObject(const Matrix2d& vxs, const Matrix2d& faces, const Matrix2d& attrs);
+  
+  // Coordinates routines
+
   void  SetCoords(Coords c) { current_vxs_ = c; }
   void  CopyCoords(Coords src, Coords dest);
-  auto& GetCoords() {
-    return (current_vxs_ == Coords::LOCAL) ? vxs_local_ : vxs_trans_; }
+  auto& GetCoords();
+  auto& GetCoords() const;
   
 }; // struct Object
 
-// Helpers to objects
+//***********************************************************************
+// INLINE IMPLEMENTATION
+//***********************************************************************
+
+  inline auto& GlObject::GetCoords() { 
+    return (current_vxs_ == Coords::LOCAL) ? vxs_local_ : vxs_trans_;
+  }
+  
+  inline auto& GlObject::GetCoords() const {
+    return (current_vxs_ == Coords::LOCAL) ? vxs_local_ : vxs_trans_;
+  }
+
+//***********************************************************************
+// HELPERS FUNCTIONS DECLARATION
+//***********************************************************************
 
 namespace object {
 
-  GlObject  Make(const char*);
-  GlObject  Make(const char*, const Vector&, const Vector&);
+  // Objects creating
 
-  void      ResetAttributes(GlObject&);
+  GlObject  Make(const char*);
+  GlObject  Make(const char*, TrigTable&, cVector&, cVector&, cVector&);
+
+  // Object attributes manipilation
+
   bool      Cull(GlObject&, const GlCamera&, const MatrixCamera&);
   int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
+  void      ResetAttributes(GlObject&);
+  
+  // Object transformation
+
   void      Scale(GlObject&, const Vector&);
-  void      Rotate(GlObject&, const Vector&);
-  void      SetPosition(GlObject&, const Vector&);
-  void      RecalcBoundingRadius(GlObject&);
-  void      RefreshOrientation(GlObject&, const MatrixRotate&);
+  void      Move(GlObject&, const Vector&);
+  void      Rotate(GlObject&, const Vector&, const TrigTable&);
   void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
+  
+  // Object helpers
+
+  float     FindFarthestCoordinate(const GlObject&);
+  void      RefreshOrientation(GlObject&, const MatrixRotate&);
+
+  // Converters
+
+  TriangleFaces ConvertToTriangles(const GlObject&);
+  void      AddToTriangles(const GlObject&, TriangleFaces&);
 
 } // namespace object
 

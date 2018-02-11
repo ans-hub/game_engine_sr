@@ -22,7 +22,6 @@ GlObject::GlObject()
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
-  , camera_pos_{}
   , sphere_rad_{0.0f}  
 { }
 
@@ -40,7 +39,6 @@ GlObject::GlObject(
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
-  , camera_pos_{}
   , sphere_rad_{0.0f}
 {
   // Fill local vertexes
@@ -122,7 +120,7 @@ GlObject object::Make(const char* str)
     auto faces    = ply.GetList("face", {"ind1983"});
     auto attrs    = ply.GetLine("face", {"attr", "color"});
     auto obj      = GlObject(vertexes, faces, attrs);
-    object::RecalcBoundingRadius(obj);
+    obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
     return obj;    
   }
   else {
@@ -131,7 +129,7 @@ GlObject object::Make(const char* str)
     auto color    = static_cast<double>(color::White);
     auto attrs    = Vector2d(faces.size(), Vector1d{0, color});
     auto obj      = GlObject(vertexes, faces, attrs);
-    object::RecalcBoundingRadius(obj);
+    obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
     return obj;
   }
 }
@@ -139,14 +137,13 @@ GlObject object::Make(const char* str)
 // Makes object from ply file, then scale it and move to world position
 
 GlObject object::Make(
-  const char* str, const Vector& scale, const Vector& pos, const Vector& rot)
+  const char* str, TrigTable& t, cVector& scale, cVector& pos, cVector& rot)
 {
   auto obj = object::Make(str);
   obj.SetCoords(Coords::LOCAL);
   object::Scale(obj, scale);
-  object::Rotate(obj, rot)
-  object::SetPosition(obj, pos);
-  object::RecalcBoundingRadius(obj);
+  object::Move(obj, pos);
+  object::Rotate(obj, rot, t);
   return obj;
 }
 
@@ -232,11 +229,11 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
     auto p0 = obj.vxs_trans_[face.indicies_[0]];
     auto p1 = obj.vxs_trans_[face.indicies_[1]];
     auto p2 = obj.vxs_trans_[face.indicies_[2]];
-
+    
     Vector u {p0, p1};
     Vector v {p0, p2};
-    Vector n = vector::CrossProduct(u,v);
-    Vector c {p0, cam.vrp_};      // this is not work with uvn camera
+    Vector n = vector::CrossProduct(u,v);   // normal to u and v
+    Vector c {p0, cam.vrp_};                // view vector
 
     auto prod = vector::DotProduct(c,n);
     if (math::FlessZero(prod))
@@ -257,7 +254,7 @@ void object::ApplyMatrix(const Matrix<4,4>& mx, GlObject& obj)
     vx = matrix::Multiplie(vx, mx);
 }
 
-// Scale object
+// Scale object and recalc bounding radius
 
 void object::Scale(GlObject& obj, const Vector& scale)
 {
@@ -268,36 +265,68 @@ void object::Scale(GlObject& obj, const Vector& scale)
     vx.y *= scale.y;
     vx.z *= scale.z;
   }
-}
-
-// Rotate object
-
-void object::Rotate(GlObject& obj, const Vector& v)
-{
-  
+  obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
 }
 
 // Set world position of center of object
 
-void object::SetPosition(GlObject& obj, const Vector& pos)
+void object::Move(GlObject& obj, const Vector& pos)
 {
   obj.world_pos_ += pos;
 }
 
-// Calcs bounding sphere radius based on local coordinates of object
+// Rotate object in YXZ sequence by rotating each vector relative to
+// the origin
 
-void object::RecalcBoundingRadius(GlObject& obj)
+void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
 {
-  for (const auto& vx : obj.vxs_local_)
+  auto& vxs = obj.GetCoords();
+  if (!math::FNotZero(v.y))
   {
-    float curr {};
-    curr = std::fabs(vx.x);
-    if (curr > obj.sphere_rad_) obj.sphere_rad_ = curr;
-    curr = std::fabs(vx.y);
-    if (curr > obj.sphere_rad_) obj.sphere_rad_ = curr;
-    curr = std::fabs(vx.z);
-    if (curr > obj.sphere_rad_) obj.sphere_rad_ = curr;    
+    float ysin = t.Sin(v.y);
+    float ycos = t.Cos(v.y);
+    for (auto& vx : vxs)
+    {
+      vx.x = (vx.x * ycos) + (vx.z * ysin);
+      vx.z = (vx.z * ycos) - (vx.x * ysin); 
+    }
   }
+  if (!math::FNotZero(v.x))
+  {
+    float xsin = t.Sin(v.x);
+    float xcos = t.Cos(v.x);
+    for (auto& vx : vxs)
+    {
+      vx.y = (vx.y * xcos) - (vx.z * xsin);
+      vx.z = (vx.z * xcos) + (vx.y * xsin); 
+    }
+  }
+  if (!math::FNotZero(v.z))
+  {
+    float zsin = t.Sin(v.z);
+    float zcos = t.Cos(v.z);
+    for (auto& vx : vxs)
+    {
+      vx.x = (vx.x * zcos) - (vx.y * zsin);
+      vx.y = (vx.y * zcos) + (vx.x * zsin); 
+    }
+  }
+}
+
+// Finds farthest absolute value of coordinate (x,y or z) for bounding
+// sphere purposes
+
+float object::FindFarthestCoordinate(const GlObject& obj)
+{
+  float rad {};
+  const auto& vxs = obj.GetCoords();
+  for (const auto& vx : vxs)
+  {
+    rad = std::max(rad, std::fabs(vx.x));
+    rad = std::max(rad, std::fabs(vx.y));
+    rad = std::max(rad, std::fabs(vx.z));
+  }
+  return rad;
 }
 
 // Refresh object orientation when rotates. This should be used near
@@ -308,6 +337,37 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotate& mx)
   obj.v_orient_x_ = matrix::Multiplie(obj.v_orient_x_, mx);
   obj.v_orient_y_ = matrix::Multiplie(obj.v_orient_y_, mx);
   obj.v_orient_z_ = matrix::Multiplie(obj.v_orient_z_, mx);
+}
+
+TriangleFaces object::ConvertToTriangles(const GlObject& obj)
+{
+  auto& vxs = obj.GetCoords();
+  TriangleFaces res {};
+  for (const auto& tri : obj.triangles_)
+  {
+    res.emplace_back(
+      tri.vxs_[tri.indicies_[0]],
+      tri.vxs_[tri.indicies_[1]],
+      tri.vxs_[tri.indicies_[2]],
+      tri.color_,
+      tri.attrs_
+    );
+  }
+  return res;
+}
+
+void object::AddToTriangles(const GlObject& obj, TriangleFaces& cont)
+{
+  for (const auto& tri : obj.triangles_)
+  {
+    cont.emplace_back(
+      tri.vxs_[tri.indicies_[0]],
+      tri.vxs_[tri.indicies_[1]],
+      tri.vxs_[tri.indicies_[2]],
+      tri.color_,
+      tri.attrs_
+    );
+  }
 }
 
 } // namespace anshub

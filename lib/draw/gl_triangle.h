@@ -59,13 +59,22 @@ struct TriangleFace
   TriangleFace(const Vector&, const Vector&, const Vector&, uint, uint);
 
   std::array<Vector,3>  vxs_;
-  std::array<Vector,3>  curr_;
+  // std::array<Vector,3>  curr_;
   unsigned int          color_;
   unsigned int          attrs_;
 
 }; // struct TriangleFace
 
+using Triangles     = std::vector<Triangle>;
+using TriangleFaces = std::vector<TriangleFace>;
+
 }  // namespace anshub
+
+namespace triangles {
+
+  Make()
+
+}
 
 #endif  // GC_GL_TRIANGLE_H
 
