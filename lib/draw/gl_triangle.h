@@ -15,9 +15,13 @@
 
 namespace anshub {
 
+struct Triangle;
+// struct TriangleFace;
 using Vertexes  = std::vector<Vector>;
 using Edges     = std::array<int,  3>;
 using EdgesP    = std::array<Vector,3>;
+using Triangles     = std::vector<Triangle>;
+// using TriangleFaces = std::vector<TriangleFace>;
 
 //***********************************************************************
 // Triangle struct
@@ -39,8 +43,10 @@ struct Triangle
   };
 
   Triangle(Vertexes&, int, int, int, uint, uint);
+  Triangle(const Vector&, const Vector&, const Vector&, uint, uint);
   
-  std::vector<Vector>&  vxs_;           // see note #1 after code
+  // std::vector<Vector>&  vxs_;           // see note #1 after code
+  std::array<Vector, 3> vxs_;
   std::array<int,3>     indicies_;      // see note #2 after code
   unsigned int          color_;
   unsigned int          attrs_;
@@ -54,27 +60,19 @@ struct Triangle
 
 // Represents triange and stores point inside struct
 
-struct TriangleFace
-{
-  TriangleFace(const Vector&, const Vector&, const Vector&, uint, uint);
+// struct TriangleFace
+// {
+//   TriangleFace(const Vector&, const Vector&, const Vector&, uint, uint);
 
-  std::array<Vector,3>  vxs_;
-  // std::array<Vector,3>  curr_;
-  unsigned int          color_;
-  unsigned int          attrs_;
+//   std::array<Vector,3>  vxs_;
+//   // std::array<Vector,3>  curr_;
+//   unsigned int          color_;
+//   unsigned int          attrs_;
 
-}; // struct TriangleFace
-
-using Triangles     = std::vector<Triangle>;
-using TriangleFaces = std::vector<TriangleFace>;
+// }; // struct TriangleFace
 
 }  // namespace anshub
 
-namespace triangles {
-
-  Make()
-
-}
 
 #endif  // GC_GL_TRIANGLE_H
 

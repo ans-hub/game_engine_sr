@@ -42,14 +42,14 @@ auto CreateNetField(TrigTable& trig)
     {0.0f, 0.0f, 0.0f}
   );
   net.SetCoords(Coords::LOCAL);
-  TriangleFaces mesh (80);
+  Triangles mesh (80);
   Vector pos {-19.0f, 0.0f, 19.0f};
   for (int i = 0; i < 20; ++i)
   {
     for (int k = 0; k < 20 ; ++k)
     {
       object::Move(net, pos);
-      object::AddToTriangles(net, mesh);
+      triangles::AddFromObject(net, mesh);
       pos.x += 1.0f;
     }
     pos.z -= 1.0f;
@@ -347,7 +347,7 @@ int main(int argc, const char** argv)
 
     buf.Clear();
     draw::Object(obj, kWidth, kHeight, buf);
-    draw::Triangles(net, kWidth, kHeight, buf);
+    draw::TrianglesArray(net, kWidth, kHeight, buf);
     buf.SendDataToFB();
 
     // Print fps ans other info

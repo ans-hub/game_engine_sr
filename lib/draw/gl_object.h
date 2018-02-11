@@ -115,12 +115,26 @@ namespace object {
   float     FindFarthestCoordinate(const GlObject&);
   void      RefreshOrientation(GlObject&, const MatrixRotate&);
 
-  // Converters
-
-  TriangleFaces ConvertToTriangles(const GlObject&);
-  void      AddToTriangles(const GlObject&, TriangleFaces&);
-
 } // namespace object
+
+namespace triangles {
+
+  // Triangles creating
+
+  Triangles Make(const GlObject&);
+  void      AddFromObject(const GlObject&, Triangles&);
+
+  // Triangles attributes manipilation
+  
+  bool      Cull(Triangles&, const GlCamera&, const MatrixCamera&);
+  int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);  
+  void      ResetAttributes(Triangles&);
+
+  // Triangles transformation
+
+  void      ApplyMatrix(const Matrix<4,4>&, Triangles&);
+
+} // namespace triangles
 
 } // namespace anshub
 

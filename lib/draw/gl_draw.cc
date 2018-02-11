@@ -236,4 +236,11 @@ void draw::Object(const GlObject& obj, int w, int h, Buffer& buf)
   // std::cerr << "Faces culled: " << culled_total << '\n';
 }
 
+// Draws triangles
+
+void draw::TrianglesArray(const Triangles& arr, int w, int h, Buffer& buf)
+{
+
+}
+
 } // namespace anshub

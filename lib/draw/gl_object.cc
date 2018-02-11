@@ -339,16 +339,22 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotate& mx)
   obj.v_orient_z_ = matrix::Multiplie(obj.v_orient_z_, mx);
 }
 
-TriangleFaces object::ConvertToTriangles(const GlObject& obj)
+//*************************************************************************
+// TRIANGLES HELPERS IMPLEMENTATION
+//*************************************************************************
+
+// Makes triangles vector from object
+
+Triangles triangles::Make(const GlObject& obj)
 {
   auto& vxs = obj.GetCoords();
-  TriangleFaces res {};
+  Triangles res {};
   for (const auto& tri : obj.triangles_)
   {
     res.emplace_back(
-      tri.vxs_[tri.indicies_[0]],
-      tri.vxs_[tri.indicies_[1]],
-      tri.vxs_[tri.indicies_[2]],
+      vxs[tri.indicies_[0]],
+      vxs[tri.indicies_[1]],
+      vxs[tri.indicies_[2]],
       tri.color_,
       tri.attrs_
     );
@@ -356,14 +362,15 @@ TriangleFaces object::ConvertToTriangles(const GlObject& obj)
   return res;
 }
 
-void object::AddToTriangles(const GlObject& obj, TriangleFaces& cont)
+void triangles::AddFromObject(const GlObject& obj, Triangles& cont)
 {
+  auto& vxs = obj.GetCoords();  
   for (const auto& tri : obj.triangles_)
   {
     cont.emplace_back(
-      tri.vxs_[tri.indicies_[0]],
-      tri.vxs_[tri.indicies_[1]],
-      tri.vxs_[tri.indicies_[2]],
+      vxs[tri.indicies_[0]],
+      vxs[tri.indicies_[1]],
+      vxs[tri.indicies_[2]],
       tri.color_,
       tri.attrs_
     );
