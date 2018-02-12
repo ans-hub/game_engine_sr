@@ -224,8 +224,13 @@ bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
 int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
 {
   int cnt {0};
+  if (!obj.active_) return cnt;
+
   for (auto& face : obj.triangles_)
   {
+    if (face.attrs_ & Triangle::DSIDE)
+      continue;
+
     auto p0 = obj.vxs_trans_[face.indicies_[0]];
     auto p1 = obj.vxs_trans_[face.indicies_[1]];
     auto p2 = obj.vxs_trans_[face.indicies_[2]];
@@ -273,6 +278,15 @@ void object::Scale(GlObject& obj, const Vector& scale)
 void object::Move(GlObject& obj, const Vector& pos)
 {
   obj.world_pos_ += pos;
+}
+
+// Translates all coordinates of object relative to pos
+
+void object::Translate(GlObject& obj, const Vector& pos)
+{
+  auto& vxs = obj.GetCoords();
+  for (auto& vx : vxs)
+    vx += pos;
 }
 
 // Rotate object in YXZ sequence by rotating each vector relative to
@@ -340,12 +354,53 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotate& mx)
 }
 
 //*************************************************************************
+// OBJECTS HELPERS IMPLEMENTATION
+//*************************************************************************
+
+// All these functions are the same as in ::object namespace but applies
+// changes for each object in container
+
+int objects::Cull(Objects& arr, const GlCamera& cam, const MatrixCamera& mx)
+{
+  int res {0};
+  for (auto& obj : arr)
+  {
+    if (obj.active_ && object::Cull(obj, cam, mx))
+      ++res;
+  }
+  return res;
+}
+
+int objects::RemoveHiddenSurfaces(Objects& arr, const GlCamera& cam)
+{
+  int cnt {0};
+  for (auto& obj : arr)
+  {
+    if (obj.active_)
+      cnt += object::RemoveHiddenSurfaces(obj, cam);
+  }
+  return cnt;
+}
+
+void objects::ApplyMatrix(const Matrix<4,4>& mx, Objects& arr)
+{
+  for (auto& obj : arr)
+    object::ApplyMatrix(mx, obj);
+}
+
+void objects::ResetAttributes(Objects& arr)
+{
+  for (auto& obj : arr)
+    object::ResetAttributes(obj);
+}
+
+//*************************************************************************
 // TRIANGLES HELPERS IMPLEMENTATION
 //*************************************************************************
 
-// Makes triangles vector from object
+// Makes triangles array from object
 
-Triangles triangles::Make(const GlObject& obj)
+Triangles triangles::MakeFromObject(const GlObject& obj)
 {
   auto& vxs = obj.GetCoords();
   Triangles res {};
@@ -362,6 +417,8 @@ Triangles triangles::Make(const GlObject& obj)
   return res;
 }
 
+// Add triangles from object to triangles array
+
 void triangles::AddFromObject(const GlObject& obj, Triangles& cont)
 {
   auto& vxs = obj.GetCoords();  
@@ -375,6 +432,94 @@ void triangles::AddFromObject(const GlObject& obj, Triangles& cont)
       tri.attrs_
     );
   }
+}
+
+// Cull triangles from triangles array. Wors as the same function in
+// ::object namespace
+
+bool triangles::Cull(Triangles&, const GlCamera&, const MatrixCamera&)
+{
+  // Translate world coords to camera for zero vertex of each triangle. This is
+  // necessary to see how triangle vertex would seen when camera would be in 0;0;0
+  // and 0 angles (i.e. when all triangles would be translated in camera coordinates)
+  
+  // auto vx_pos = matrix::Multiplie(obj.world_pos_, mx);
+
+  // // Cull z planes
+
+  // if (obj_pos.z - obj.sphere_rad_ < cam.z_near_)
+  //   obj.active_ = false;
+  
+  // if (obj_pos.z + obj.sphere_rad_ > cam.z_far_)
+  //   obj.active_ = false;
+
+  // // Cull x planes (project point on the view plane and check)
+
+  // float x_lhs = (cam.dov_ * obj_pos.x / obj_pos.z) + obj.sphere_rad_;
+  // float x_rhs = (cam.dov_ * obj_pos.x / obj_pos.z) - obj.sphere_rad_;
+
+  // if (x_lhs < -(cam.wov_ / 2))
+  //   obj.active_ = false;
+  // if (x_rhs >  (cam.wov_ / 2))
+  //   obj.active_ = false;  
+
+  // // Cull y planes (project point on the view plane and check)
+
+  // float y_dhs = (cam.dov_ * obj_pos.y / obj_pos.z) + obj.sphere_rad_;
+  // float y_uhs = (cam.dov_ * obj_pos.y / obj_pos.z) - obj.sphere_rad_;
+
+  // if (y_dhs < -(cam.wov_ / 2))
+  //   obj.active_ = false;  
+  // if (y_uhs > (cam.wov_ / 2))
+  //   obj.active_ = false;
+
+  // return !obj.active_;
+}
+
+// Hides invisible faces to viewpoint. Works as the same function in
+// ::object namespace
+
+int triangles::RemoveHiddenSurfaces(Triangles& arr, const GlCamera& cam)
+{
+  int cnt {0};
+  for (auto& tri : arr)
+  {
+    auto p0 = tri.vxs_[0];
+    auto p1 = tri.vxs_[1];
+    auto p2 = tri.vxs_[2];
+    
+    Vector u {p0, p1};
+    Vector v {p0, p2};
+    Vector n = vector::CrossProduct(u,v);   // normal to u and v
+    Vector c {p0, cam.vrp_};                // view vector
+
+    auto prod = vector::DotProduct(c,n);
+    if (math::FlessZero(prod))
+    {
+      tri.attrs_ |= Triangle::HIDDEN;
+      ++cnt;
+    }
+  }
+  return cnt;  
+}
+
+// Reset attributes of all triangles
+
+void triangles::ResetAttributes(Triangles& arr)
+{
+  for (auto& tri : arr) {
+    if (tri.attrs_ & Triangle::HIDDEN) 
+      tri.attrs_ ^= Triangle::HIDDEN; 
+  }
+}
+
+// Apply matrix to all triangles in array
+
+void triangles::ApplyMatrix(const Matrix<4,4>& mx, Triangles& arr)
+{
+  for (auto& tri : arr)
+    for (auto& vx : tri.vxs_)
+      vx = matrix::Multiplie(vx, mx);
 }
 
 } // namespace anshub

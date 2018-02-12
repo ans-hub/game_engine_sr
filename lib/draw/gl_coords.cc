@@ -11,7 +11,7 @@ namespace anshub {
 
 // Convertes given vertexes into the world coordinates
 
-Vertexes coord::Local2World(const Vertexes& vxs, const Vector& move)
+Vertexes coords::Local2World(const Vertexes& vxs, const Vector& move)
 {
   Vertexes res {};
   res.reserve(vxs.size());
@@ -28,7 +28,7 @@ Vertexes coord::Local2World(const Vertexes& vxs, const Vector& move)
 
 // Translate all vertexes into the camera coordinates
 
-Vertexes coord::World2Camera(
+Vertexes coords::World2Camera(
   const Vertexes& vxs, Vector& cam_pos, Vector& cam_dir, TrigTable& trig)
 {
   Vertexes res {};
@@ -76,7 +76,7 @@ Vertexes coord::World2Camera(
 
 // Translates all vertexes from camera (world) to perspective
 
-Vertexes coord::Camera2Persp(const Vertexes& vxs, float dov, float ar)
+Vertexes coords::Camera2Persp(const Vertexes& vxs, float dov, float ar)
 {
   Vertexes res {};
   res.reserve(vxs.size());
@@ -92,7 +92,7 @@ Vertexes coord::Camera2Persp(const Vertexes& vxs, float dov, float ar)
 
 // Where wov - width of view
 
-Vertexes coord::Persp2Screen(const Vertexes& vxs, float wov, int scr_w, int scr_h)
+Vertexes coords::Persp2Screen(const Vertexes& vxs, float wov, int scr_w, int scr_h)
 {
   // Define proportion koefficients
 

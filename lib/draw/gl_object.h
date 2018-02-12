@@ -87,11 +87,11 @@ struct GlObject
   }
 
 //***********************************************************************
-// HELPERS FUNCTIONS DECLARATION
+// Helper functions for ONE OBJECT
 //***********************************************************************
 
 namespace object {
-
+  
   // Objects creating
 
   GlObject  Make(const char*);
@@ -107,6 +107,7 @@ namespace object {
 
   void      Scale(GlObject&, const Vector&);
   void      Move(GlObject&, const Vector&);
+  void      Translate(GlObject&, const Vector&);
   void      Rotate(GlObject&, const Vector&, const TrigTable&);
   void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
   
@@ -114,20 +115,44 @@ namespace object {
 
   float     FindFarthestCoordinate(const GlObject&);
   void      RefreshOrientation(GlObject&, const MatrixRotate&);
-
+  
 } // namespace object
+
+//***********************************************************************
+// Helper functions for CONTAINER OF OBJECT
+//***********************************************************************
+
+namespace objects {
+
+  using Objects = std::vector<GlObject>;
+
+  // Objects attributes manipilation
+
+  int       Cull(Objects&, const GlCamera&, const MatrixCamera&);
+  int       RemoveHiddenSurfaces(Objects&, const GlCamera&);  
+  void      ResetAttributes(Objects&);
+
+  // Objects transformation
+
+  void      ApplyMatrix(const Matrix<4,4>&, Objects&);
+  
+} // namespace objects
+
+//***********************************************************************
+// Helper functions for CONTAINER OF TRIANGLES
+//***********************************************************************
 
 namespace triangles {
 
   // Triangles creating
 
-  Triangles Make(const GlObject&);
+  Triangles MakeFromObject(const GlObject&);
   void      AddFromObject(const GlObject&, Triangles&);
 
   // Triangles attributes manipilation
   
   bool      Cull(Triangles&, const GlCamera&, const MatrixCamera&);
-  int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);  
+  int       RemoveHiddenSurfaces(Triangles&, const GlCamera&);  
   void      ResetAttributes(Triangles&);
 
   // Triangles transformation

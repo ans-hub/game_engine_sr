@@ -206,14 +206,10 @@ void draw::Object(const GlObject& obj, int w, int h, Buffer& buf)
   if (!obj.active_)
     return;
     
-  int culled_total {0};
   for (const auto& t : obj.triangles_)
   {
     if ((t.attrs_ & Triangle::HIDDEN))
-    {
-      ++culled_total;
       continue;
-    }
 
     auto p1 = obj.vxs_trans_[t.indicies_[0]];
     auto p2 = obj.vxs_trans_[t.indicies_[1]];
@@ -233,14 +229,43 @@ void draw::Object(const GlObject& obj, int w, int h, Buffer& buf)
     if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
       draw::DrawLine(p5.x, p5.y, p6.x, p6.y, t.color_, buf);
   }
-  // std::cerr << "Faces culled: " << culled_total << '\n';
+}
+
+// Draws objects
+
+void draw::Objects(const std::vector<GlObject>& arr, int w, int h, Buffer& buf)
+{
+  for (auto& obj : arr)
+    draw::Object(obj, w, h, buf);
 }
 
 // Draws triangles
 
 void draw::TrianglesArray(const Triangles& arr, int w, int h, Buffer& buf)
 {
+  for (const auto& tri : arr)
+  {
+    if ((tri.attrs_ & Triangle::HIDDEN))
+      continue;
+  
+    auto p1 = tri.vxs_[0];
+    auto p2 = tri.vxs_[1];
 
+    if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
+      draw::DrawLine(p1.x, p1.y, p2.x, p2.y, tri.color_, buf);
+      
+    auto p3 = tri.vxs_[1];
+    auto p4 = tri.vxs_[2];
+
+    if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
+      draw::DrawLine(p3.x, p3.y, p4.x, p4.y, tri.color_, buf);
+
+    auto p5 = tri.vxs_[2];
+    auto p6 = tri.vxs_[0];
+
+    if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
+      draw::DrawLine(p5.x, p5.y, p6.x, p6.y, tri.color_, buf);
+  }
 }
 
 } // namespace anshub

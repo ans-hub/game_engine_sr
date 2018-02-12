@@ -20,6 +20,7 @@
 #include "lib/math/trig.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
+#include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_camera.h"
 #include "lib/math/matrix_rotate.h"
@@ -33,29 +34,34 @@ using namespace anshub;
 using anshub::vector::operator<<;
 using anshub::matrix::operator<<;
 
-auto CreateNetField(TrigTable& trig)
+// Creates array of rectangles (w_cnt * h_cnt size) 
+
+auto CreateGround(int rect_cnt, TrigTable& trig)
 {
-  auto net = object::Make(
-    "data/net.ply", trig,
+  auto master = object::Make("data/floor.ply", trig,
     {1.0f, 1.0f, 1.0f},
     {0.0f, 0.0f, 0.0f},
     {0.0f, 0.0f, 0.0f}
   );
-  net.SetCoords(Coords::LOCAL);
-  Triangles mesh (80);
-  Vector pos {-19.0f, 0.0f, 19.0f};
-  for (int i = 0; i < 20; ++i)
+  float item_size = 0.2f;
+  float gap_size  = 5.0f;
+  float step      = item_size + gap_size;
+  float half_w    = (step) * (rect_cnt / 2);
+  float half_h    = half_w;
+  
+  std::vector<GlObject> ground (rect_cnt * rect_cnt, master);
+  auto it = ground.begin();
+  for (auto z = -half_h; z < half_h; z += step)
   {
-    for (int k = 0; k < 20 ; ++k)
+    for (auto x = -half_w; x < half_w; x += step)
     {
-      object::Move(net, pos);
-      triangles::AddFromObject(net, mesh);
-      pos.x += 1.0f;
+      Vector pos {x, 0.0f, z};
+      it->world_pos_ = pos;
+      object::Scale(*it, {item_size, item_size, item_size});      
+      ++it;
     }
-    pos.z -= 1.0f;
-    pos.x = -19.0f;
   }
-  return mesh;
+  return ground;
 }
 
 void HandleCameraType(Btn kbtn, bool& cam_euler)
@@ -78,11 +84,11 @@ void HandleCameraPosition(Btn kbtn, Vector& pos)
 {
   switch (kbtn)
   {
-    case Btn::W : pos.z += 0.5; break; 
-    case Btn::S : pos.z -= 0.5; break; 
-    case Btn::A : pos.x -= 0.5; break; 
-    case Btn::D : pos.x += 0.5; break; 
-    case Btn::R : pos.y += 0.5; break; 
+    case Btn::W : pos.z += 0.5; break;
+    case Btn::S : pos.z -= 0.5; break;
+    case Btn::A : pos.x -= 0.5; break;
+    case Btn::D : pos.x += 0.5; break;
+    case Btn::R : pos.y += 0.5; break;
     case Btn::F : pos.y -= 0.5; break;
     default     : break;
   }
@@ -198,16 +204,16 @@ int main(int argc, const char** argv)
     {0.0f, 0.0f, 7.0f},   // world pos
     {180.0f, 0.0f, 0.0f}  // initial rotate
   );
-  auto net = CreateNetField(trig);
+  auto ground = CreateGround(20, trig);
 
   // Camera
 
-  float   dov     {2};
-  float   fov     {60};
-  Vector  cam_pos {0.0f, 0.0f, 0.0f};
-  Vector  cam_dir {0.0f, 0.0f, 0.0f};
-  float   near_z  {dov};
-  float   far_z   {500};
+  float    dov     {2};
+  float    fov     {75};
+  Vector   cam_pos {0.0f, 0.0f, 0.0f};
+  Vector   cam_dir {0.0f, 0.0f, 0.0f};
+  float    near_z  {dov};
+  float    far_z   {500};
   GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
 
   // Other stuff
@@ -250,14 +256,14 @@ int main(int argc, const char** argv)
 
     obj.world_pos_ += obj_vel;
 
-    // Prepare transformation matrixes
+    // Prepare transformation matrixes for main object
 
     MatrixRotate      mx_rot {obj_rot, trig};
     MatrixTranslate   mx_trans {obj.world_pos_};
     MatrixPerspective mx_per {cam.dov_, cam.ar_};
     MatrixScale       mx_scale(obj_scale);
     
-      // Prepare camera`s matrixes (Euler or uvn) 
+      // Prepare camera`s matrixes (Euler or uvn) for all objects
 
     MatrixCamera      mx_cam {};
 
@@ -275,16 +281,15 @@ int main(int argc, const char** argv)
     else
     {
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
+      
       cam.LookAt(obj.world_pos_);
       Matrix<4,4> mx_uvn {
         cam.u_.x, cam.v_.x, cam.n_.x, 0.0f,
         cam.u_.y, cam.v_.y, cam.n_.y, 0.0f,
         cam.u_.z, cam.v_.z, cam.n_.z, 0.0f,
-        0.0f,     0.0f,     0.0f,     0.0f,
+        0.0f,     0.0f,     0.0f,     1.0f,
       };
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-      mx_cam = matrix::Multiplie(mx_cam, mx_uvn);
-
+      mx_cam = matrix::Multiplie(mx_cam_trans, mx_uvn);
     }
 
     // Prepare total matrix
@@ -292,19 +297,28 @@ int main(int argc, const char** argv)
     Matrix<4,4>       mx_total {};
     matrix::MakeIdentity(mx_total);
 
-    // Rotate local coordinates
+    // Rotate local coordinates of main object
 
     obj.SetCoords(Coords::LOCAL);
     object::ApplyMatrix(mx_rot, obj);
     object::RefreshOrientation(obj, mx_rot);
     obj.CopyCoords(Coords::LOCAL, Coords::TRANS);
 
-    // Transform trans coordinates
+    // Transform trans coordinates of main object
 
     mx_total = matrix::Multiplie(mx_total, mx_trans);
     mx_total = matrix::Multiplie(mx_total, mx_scale);
     obj.SetCoords(Coords::TRANS);
     object::ApplyMatrix(mx_total, obj);
+
+    // Translate ground
+
+    for (auto& item : ground)
+    {
+      item.CopyCoords(Coords::LOCAL, Coords::TRANS);      
+      item.SetCoords(Coords::TRANS);      
+      object::Translate(item, item.world_pos_);
+    }
  
     // Cull hidden surfaces
 
@@ -312,9 +326,10 @@ int main(int argc, const char** argv)
     auto culled = object::Cull(obj, cam, mx_cam);
     nfo_hidden  = object::RemoveHiddenSurfaces(obj, cam);
     nfo_culled  = static_cast<int>(culled);
-
-    triangles::ResetAttributes(net);
-    triangles::Cull(net, cam, mx_cam);
+    
+    objects::ResetAttributes(ground);
+    nfo_culled += objects::Cull(ground, cam, mx_cam);
+    nfo_hidden += objects::RemoveHiddenSurfaces(ground, cam);
 
     // Go from world coords to camera, and the perspective coords
 
@@ -322,32 +337,27 @@ int main(int argc, const char** argv)
     mx_total = matrix::Multiplie(mx_total, mx_cam);
     mx_total = matrix::Multiplie(mx_total, mx_per);
     object::ApplyMatrix(mx_total, obj);
-    
+        
     // Make the same for the net
-
-    // net.CopyCoords(Coords::LOCAL, Coords::TRANS);
-    // net.SetCoords(Coords::TRANS);
-    triangles::ApplyMatrix(mx_total, net);
     
+    objects::ApplyMatrix(mx_total, ground);
+
     // Since after mx_per we have homogenous coords
 
-    for (auto& vx : obj.GetCoords())
-      vector::ConvertFromHomogeneous(vx);
-    for (auto& tri : net)
-      for (auto& vx : tri.vxs_)
-      vector::ConvertFromHomogeneous(vx);
+    coords::Homogenous2Normal(obj);
+    coords::Homogenous2Normal(ground);
 
     // Get screen coordinates
 
     MatrixViewport mx_view {cam.wov_, cam.scr_w_, cam.scr_h_};
     object::ApplyMatrix(mx_view, obj);
-    triangles::ApplyMatrix(mx_view, net);
+    objects::ApplyMatrix(mx_view, ground);
 
     // Draw triangles (stored in object)
 
     buf.Clear();
     draw::Object(obj, kWidth, kHeight, buf);
-    draw::TrianglesArray(net, kWidth, kHeight, buf);
+    draw::Objects(ground, kWidth, kHeight, buf);
     buf.SendDataToFB();
 
     // Print fps ans other info

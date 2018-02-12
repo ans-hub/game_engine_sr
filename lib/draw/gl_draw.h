@@ -39,6 +39,7 @@ namespace draw {
   // Helpers
 
   void Object(const GlObject&, int w, int h, Buffer&);
+  void Objects(const std::vector<GlObject>&, int w, int h, Buffer&);
   void TrianglesArray(const Triangles&, int w, int h, Buffer&);
 
   // Iterators

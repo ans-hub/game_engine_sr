@@ -8,6 +8,7 @@
 #ifndef GC_GL_CAMERA_H
 #define GC_GL_CAMERA_H
 
+#include "../math/trig.h"
 #include "../math/vector.h"
 #include "../math/matrix.h"
 
