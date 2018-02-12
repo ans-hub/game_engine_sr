@@ -64,24 +64,22 @@ void GlCamera::LookAt(const Vector& p)
   v_.Normalize();
   n_.Normalize();
 
-  using vector::operator<<;
+  // Vector z_plane_norm {0.0f, 0.0f, 1.0f};
+  // float angle_3 = vector::AngleBetween(z_plane_norm, v_, true) - 90;
+  // dir_.x = -angle_3;
 
-  Vector z_plane_norm {0.0f, 0.0f, 1.0f};
-  float angle_3 = vector::AngleBetween(z_plane_norm, v_, true) - 90;
-  dir_.x = -angle_3;
-
-  // Use vector "right" to find angle between xz plane
+  // // Use vector "right" to find angle between xz plane
 
   Vector x_plane_norm {1.0f, 0.0f, 0.0f};
   float angle_2 = vector::AngleBetween(x_plane_norm, n_, true) - 90;
-  dir_.y = -angle_2;
+  // dir_.y = -angle_2;
+  std::cerr << -angle_2 << '\n' ;
 
-  // Now calc angle between y plane (z-rot)
+  // // Now calc angle between y plane (z-rot)
 
-  Vector y_plane_norm {0.0f, 1.0f, 0.0f};
-  float angle = vector::AngleBetween(y_plane_norm, u_, true) - 90;
-  dir_.z = -angle;
-  std::cerr << n_ << '\n';
+  // Vector y_plane_norm {0.0f, 1.0f, 0.0f};
+  // float angle = vector::AngleBetween(y_plane_norm, u_, true) - 90;
+  // dir_.z = -angle;
 }
 
 } // namespace anshub

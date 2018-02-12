@@ -21,7 +21,7 @@
 #include "../math/trig.h"
 #include "../math/vector.h"
 #include "../math/matrix.h"
-#include "../math/matrix_rotate.h"
+#include "../math/matrix_rotate_eul.h"
 #include "../math/matrix_camera.h"
 
 namespace anshub {
@@ -114,7 +114,7 @@ namespace object {
   // Object helpers
 
   float     FindFarthestCoordinate(const GlObject&);
-  void      RefreshOrientation(GlObject&, const MatrixRotate&);
+  void      RefreshOrientation(GlObject&, const MatrixRotateEul&);
   
 } // namespace object
 

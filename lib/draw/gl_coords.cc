@@ -115,4 +115,37 @@ Vertexes coords::Persp2Screen(const Vertexes& vxs, float wov, int scr_w, int scr
   return res;
 }
 
+// Extracts eulers angles from uvn matrix
+
+Vector coords::Uvn2Euler(const MatrixRotateUvn& mx, TrigTable& t)
+{
+  Vector res {};
+
+  // Calculate y rotation angle
+
+  res.y = -std::asin(mx(2,0));
+  res.y = trig::Rad2deg(res.y);
+  float cosine_y = t.Cos(res.y);
+
+  // Calculate x rotation angle
+
+  float xx = mx(2,2) / cosine_y;
+  float xy = -mx(2,1) / cosine_y;
+  res.x = std::atan2(xy, xx);
+  res.x = -trig::Rad2deg(res.x);
+
+  // Calculate z rotation angle
+
+  float zx = mx(0,0) / cosine_y;
+  float zy = -mx(1,0) / cosine_y;
+  res.z = std::atan2(zy, zx);
+  res.z = -trig::Rad2deg(res.z);
+
+  // res.x = math::Clamp(res.x, 0.0f, 360.0f);
+  // res.y = math::Clamp(res.y, 0.0f, 360.0f);
+  // res.z = math::Clamp(res.z, 0.0f, 360.0f);
+
+  return res;
+}
+
 } // namespace anshub

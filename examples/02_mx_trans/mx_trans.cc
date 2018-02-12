@@ -23,7 +23,8 @@
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_camera.h"
-#include "lib/math/matrix_rotate.h"
+#include "lib/math/matrix_rotate_eul.h"
+#include "lib/math/matrix_rotate_uvn.h"
 #include "lib/math/matrix_persp.h"
 #include "lib/math/matrix_trans.h"
 #include "lib/math/matrix_view.h"
@@ -258,7 +259,7 @@ int main(int argc, const char** argv)
 
     // Prepare transformation matrixes for main object
 
-    MatrixRotate      mx_rot {obj_rot, trig};
+    MatrixRotateEul   mx_rot {obj_rot, trig};
     MatrixTranslate   mx_trans {obj.world_pos_};
     MatrixPerspective mx_per {cam.dov_, cam.ar_};
     MatrixScale       mx_scale(obj_scale);
@@ -268,28 +269,20 @@ int main(int argc, const char** argv)
     MatrixCamera      mx_cam {};
 
     if (cam_euler)
-    {
+    { 
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      MatrixRotate      mx_cam_roty   {0.0f, -cam.dir_.y, 0.0f, trig};
-      MatrixRotate      mx_cam_rotx   {-cam.dir_.x, 0.0f, 0.0f, trig};
-      MatrixRotate      mx_cam_rotz   {0.0f, 0.0f, -cam.dir_.z, trig};
+      MatrixRotateEul   mx_cam_rot    {cam.dir_ * (-1), trig};
+      // std::cerr << mx_cam_rot << '\n';      
       mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_roty);
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotx);
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rotz);
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rot);
     }
     else
     {
-      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      
       cam.LookAt(obj.world_pos_);
-      Matrix<4,4> mx_uvn {
-        cam.u_.x, cam.v_.x, cam.n_.x, 0.0f,
-        cam.u_.y, cam.v_.y, cam.n_.y, 0.0f,
-        cam.u_.z, cam.v_.z, cam.n_.z, 0.0f,
-        0.0f,     0.0f,     0.0f,     1.0f,
-      };
-      mx_cam = matrix::Multiplie(mx_cam_trans, mx_uvn);
+      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
+      MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
+      mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
+      cam.dir_ = coords::Uvn2Euler(mx_cam_rot, trig);
     }
 
     // Prepare total matrix

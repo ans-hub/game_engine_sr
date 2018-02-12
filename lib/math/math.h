@@ -22,6 +22,7 @@ namespace math {
   bool  FNotZero(float);
   bool  FlessZero(float);
   bool  Feq(float, float);
+  float Clamp(float, float, float);
 
 } // namespace math
 
@@ -45,6 +46,12 @@ inline bool math::FlessZero(float num)
 inline bool math::Feq(float n1, float n2) 
 { 
   return std::abs(n1-n2) < kEpsilon;
+}
+
+inline float math::Clamp(float d, float min, float max)
+{
+  const float t = d < min ? min : d;
+  return t > max ? max : t;
 }
 
 } // namespace anshub

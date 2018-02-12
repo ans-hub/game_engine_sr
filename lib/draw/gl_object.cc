@@ -346,7 +346,7 @@ float object::FindFarthestCoordinate(const GlObject& obj)
 // Refresh object orientation when rotates. This should be used near
 // the apply rotate matrix to all vertexes (or in hand mode)
 
-void object::RefreshOrientation(GlObject& obj, const MatrixRotate& mx)
+void object::RefreshOrientation(GlObject& obj, const MatrixRotateEul& mx)
 {
   obj.v_orient_x_ = matrix::Multiplie(obj.v_orient_x_, mx);
   obj.v_orient_y_ = matrix::Multiplie(obj.v_orient_y_, mx);
