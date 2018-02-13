@@ -83,12 +83,12 @@ inline float TrigTable::Cos(float theta) const
 
 inline float trig::Deg2rad(float deg)
 { 
-  return deg * kPI / 180.0;
+  return deg * math::kPI / 180.0;
 }
 
 inline float trig::Rad2deg(float rad)
 {
-  return rad * 180.0 / kPI;
+  return rad * 180.0 / math::kPI;
 }
 
 // cos& = adj / hyp

@@ -95,12 +95,31 @@ inline MatrixRotateEul::MatrixRotateEul(const Vector& ang, const TrigTable& t)
   // final matrix is necessary when we try to extract euler angles from
   // this matrix
 
+  // Matrix<4,4> res = {
+  //    yc*zc,  xs*ys*zc+xc*zs, xs*zs-xc*ys*zc, 0,
+  //   -zs*yc,  xc*zc-xs*ys*zs, xc*ys*zs+zc*xs, 0,
+  //    ys,    -xs*yc,          yc*xc,          0,
+  //    0,      0,              0,              1
+  // };
+
   Matrix<4,4> res = {
-     yc*zc,  xs*ys*zc+xc*zs, xs*zs-xc*ys*zc, 0,
-    -zs*yc,  xc*zc-xs*zs,    xc*yc*zs+zc*xs, 0,
-     ys,    -xs*yc,          yc*xc,          0,
-     0,      0,              0,              1
+     yc*zc-xs*ys*zs,  yc*zs+xs*ys*zc, -ys*xc,   0,
+    -zs*xc,           xc*zc,           xs,      0,
+     ys*zc+zs*yc*xs,  ys*zs-zc*yc*xs,  yc*xc,   0,
+     0,               0,               0,       1
   };
+
+  // This matrix is the same but when we use not row based matrixes,
+  // as in opengl. Here is present good explanation, but all matrixes
+  // are not the same as here, thus needs to compute by hands
+  // http://www.songho.ca/opengl/gl_anglestoaxes.html
+
+  // Matrix<4,4> res = {
+  //    yc*zc+ys*xs*zs,    xc*zs,    yc*xs*zs-ys*zc,   0,
+  //    ys*xs*zc-yc*zs,    xc*zc,    ys*zs+yc*xs*zc,   0,
+  //    ys*xc,            -xs,       yc*xc,            0,
+  //    0,                 0,        0,                1
+  // };
 
   data_ = std::move(res.Data());
 

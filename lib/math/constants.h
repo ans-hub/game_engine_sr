@@ -12,12 +12,16 @@
 
 namespace anshub {
 
+namespace math {
+
 constexpr float kEpsilon = std::numeric_limits<float>::epsilon();
 constexpr float kPI = 3.14159265358979323846;
 constexpr float kPI_mul2 = 6.283185307;
 constexpr float kPI_div2 = 1.570796327;
 constexpr float kPI_div4 = 0.785398163;
 constexpr float kPI_inv = 0.318309886;
+
+} // namespace math
 
 } // namespace anshub
 

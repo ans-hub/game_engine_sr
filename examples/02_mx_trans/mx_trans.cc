@@ -74,10 +74,10 @@ void HandleCameraType(Btn kbtn, bool& cam_euler)
 void HandleCameraRotate(bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
 {
   if (mode)
-    ang.z += (mpos_prev.x - mpos.x) / 2;
+    ang.z -= (mpos_prev.x - mpos.x) / 2;
   else
-    ang.y += (mpos_prev.x - mpos.x) / 2;
-  ang.x += (mpos_prev.y - mpos.y) / 2;
+    ang.y -= (mpos_prev.x - mpos.x) / 2;
+  ang.x -= (mpos_prev.y - mpos.y) / 2;  // todo: prevent gimbal lock
   mpos_prev = mpos;
 }
 
@@ -272,17 +272,16 @@ int main(int argc, const char** argv)
     { 
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
       MatrixRotateEul   mx_cam_rot    {cam.dir_ * (-1), trig};
-      // std::cerr << mx_cam_rot << '\n';      
       mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rot);
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rot);      
     }
     else
     {
       cam.LookAt(obj.world_pos_);
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
       MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
-      mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
       cam.dir_ = coords::Uvn2Euler(mx_cam_rot, trig);
+      mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
     }
 
     // Prepare total matrix

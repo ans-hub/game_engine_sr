@@ -5,6 +5,10 @@
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
+// Cameras conventions:
+//  - all rotations in YXZ sequence
+//  - dir_ is vector contains x (pitch), y (yaw), z (roll)
+
 #ifndef GC_GL_CAMERA_H
 #define GC_GL_CAMERA_H
 
@@ -32,11 +36,12 @@ struct GlCamera
   
   // Euler specific
 
-  Vector  dir_;       // cam direction angles (for Euler model)
+  Vector  dir_;       // cam direction angles (for Euler model, see note above)
   
   // UVN specific
 
-  void    LookAt(const Vector&);
+  void    LookAt(const Vector&, float roll_hint = 0.0f);
+
   Vector  u_;         //
   Vector  v_;         // camera basis (as x,y,z) 
   Vector  n_;         // 

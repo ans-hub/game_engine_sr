@@ -25,7 +25,7 @@ This buffer can be easily reduced to 16 bit or 8 bit color space manually.
 
 ## Game console examples
 
-Directory `games` contains games (games) based on the game console. Currently there are placed game called `Raiders 3D` which is my implementation of the game originally written by Andre Lamothe.
+Directory `examples` contains examples based on the game console. Currently there are placed game called `Raiders 3D` which is my implementation of the game originally written by Andre Lamothe.
 
 The main actions is placed in two classes `Logic` and `Scene`. It should be noted that this is an educational implementation, and thus most of the functions which is responsible for the behavior of objects are located in these two classes (`Logic` and `Scene`). Although in a real game it would be better to arrange some of the functions which is responsible for the behavior of objects in the implementation of these objects themselves.
 
@@ -77,8 +77,6 @@ P.S.: if something goes wrong while downloading bass audio library, then the bes
 
 ```bash
   $ git clone https://github.com/ans-hub/game_console
-  $ cd examples/01_raiders3d/
-  $ make    
 ```
 
 ## Notes about installation under cygwin:

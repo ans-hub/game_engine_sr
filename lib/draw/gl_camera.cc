@@ -38,31 +38,34 @@ GlCamera::GlCamera
 { }
 
 // Set look-at point and recalculate vectors of uvn type camera
-// When we use uvn camera, rotateing of camera is automated. But we alredy
-// calc euler`s angles since we want to switch to Euler cam type without gaps
+// When we use uvn camera, rotating of camera is automated. 
+// We should manually refresh directions
 
-void GlCamera::LookAt(const Vector& p)
+void GlCamera::LookAt(const Vector& p, float roll_hint) // hint in degrees
 {
   target_ = p;
   n_ = Vector{vrp_, target_};           // direction vector
   
-  // Now suppose that v_ is vector "up". Special case when vector
-  // n_ and v_ is collinear (i.e. we above the object in point 0;y;z<0)
+  // Now suppose that v_ is vector "up". Roll_hint fixes z_rot axis. If hint
+  // is 0.0f, then v is true directed up. In this case we would have true
+  // "right" vector. If hint is != 0, then v is up and just left or right.
+  // Now we would have roll by given hint
 
-  if (n_.z >= 0 && n_.x != 0)
-    v_ = Vector{0.0f, 1.0f, 0.0f};
-  // else
-    // v_ = Vector{0.0f, -1.0f, 0.0f};  // suppose that v is "up" directed  
-  u_ = vector::CrossProduct(v_, n_);    // vector directed "right"
-  if (u_.SquareLength() == 0)           // if n_ and u_ are collinear, then
-  {                                     // then suppose u_ just another dir
+  v_ = Vector{roll_hint/90.0f, 1.0f, 0.0f};   // suppose vector "up"
+  u_ = vector::CrossProduct(v_, n_);          // vector directed "right"
+  
+  if (u_.SquareLength() == 0)                 // if n_ and u_ are collinear, then
+  {                                           // then suppose u_ just another dir
     v_ = {0.0f, 1.0f, 1.0f};
     u_ = vector::CrossProduct(v_, n_); 
   }
-  v_ = vector::CrossProduct(n_, u_);    // recalc v
+  v_ = vector::CrossProduct(n_, u_);          // recalc v
   u_.Normalize();
   v_.Normalize();
   n_.Normalize();
+
+  // Here I was trying to extract euler angles from uvn vectors 
+  // by defining anlge between plane and vector
 
   // Vector z_plane_norm {0.0f, 0.0f, 1.0f};
   // float angle_3 = vector::AngleBetween(z_plane_norm, v_, true) - 90;
@@ -70,10 +73,9 @@ void GlCamera::LookAt(const Vector& p)
 
   // // Use vector "right" to find angle between xz plane
 
-  Vector x_plane_norm {1.0f, 0.0f, 0.0f};
-  float angle_2 = vector::AngleBetween(x_plane_norm, n_, true) - 90;
+  // Vector x_plane_norm {1.0f, 0.0f, 0.0f};
+  // float angle_2 = vector::AngleBetween(x_plane_norm, n_, true) - 90;
   // dir_.y = -angle_2;
-  std::cerr << -angle_2 << '\n' ;
 
   // // Now calc angle between y plane (z-rot)
 

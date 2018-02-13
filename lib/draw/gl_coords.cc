@@ -115,37 +115,51 @@ Vertexes coords::Persp2Screen(const Vertexes& vxs, float wov, int scr_w, int scr
   return res;
 }
 
-// Extracts eulers angles from uvn matrix
+// Extracts eulers angles from uvn matrix. As examplem but in another
+// matrixes (row based) - https://goo.gl/AjhkFN
 
-Vector coords::Uvn2Euler(const MatrixRotateUvn& mx, TrigTable& t)
+Vector coords::Uvn2Euler(const Matrix<4,4>& mx, TrigTable& t)
 {
-  Vector res {};
+  float yaw {};     // y
+  float pitch {};   // x
+  float roll {};    // z
 
-  // Calculate y rotation angle
+  // In depends of gimbal locked or not we have several ways
 
-  res.y = -std::asin(mx(2,0));
-  res.y = trig::Rad2deg(res.y);
-  float cosine_y = t.Cos(res.y);
+  float sin_x = mx(1,2);
 
-  // Calculate x rotation angle
+  // a. If gimbal not locked
+  
+  if (sin_x > -1.0f && sin_x < 1.0f)
+  {
+    pitch = std::asin(mx(1,2));             // +sin_x
+    yaw   = std::atan2(-mx(0,2), mx(2,2));  // -cos_x*sin_y / cos_x*cos_y
+    roll  = std::atan2(-mx(1,0), mx(1,1));  // -cos_x*sin_z / cos_x*cos_z
+  }
 
-  float xx = mx(2,2) / cosine_y;
-  float xy = -mx(2,1) / cosine_y;
-  res.x = std::atan2(xy, xx);
-  res.x = -trig::Rad2deg(res.x);
+  // b. If gimbal is locked and look up
 
-  // Calculate z rotation angle
+  else if (sin_x <= -1.0f) {
+    pitch = +math::kPI * 0.5f;              // +90 (if in degrees)
+    yaw   = -std::atan2(mx(0,1), -mx(2,1));
+    roll  = 0.0f;
+  }
+  
+  // c. If gimbal is locked and look down
 
-  float zx = mx(0,0) / cosine_y;
-  float zy = -mx(1,0) / cosine_y;
-  res.z = std::atan2(zy, zx);
-  res.z = -trig::Rad2deg(res.z);
+  else if (sin_x >= +1.0f) {
+    pitch = -math::kPI * 0.5f;              // -90 (if in degrees)
+    yaw   = +std::atan2(mx(0,1), -mx(2,1));
+    roll  = 0.0f;
+  }
 
-  // res.x = math::Clamp(res.x, 0.0f, 360.0f);
-  // res.y = math::Clamp(res.y, 0.0f, 360.0f);
-  // res.z = math::Clamp(res.z, 0.0f, 360.0f);
+  // Finally, convert to degrees and clamp to range 0..360 degrees
 
-  return res;
+  pitch = -trig::Rad2deg(pitch);
+  yaw   = -trig::Rad2deg(yaw);
+  roll  = -trig::Rad2deg(roll);
+
+  return {pitch, yaw, roll};
 }
 
 } // namespace anshub

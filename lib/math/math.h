@@ -48,10 +48,11 @@ inline bool math::Feq(float n1, float n2)
   return std::abs(n1-n2) < kEpsilon;
 }
 
-inline float math::Clamp(float d, float min, float max)
+inline float math::Clamp(float val, float min, float max)
 {
-  const float t = d < min ? min : d;
-  return t > max ? max : t;
+  float rem = std::fmod(val, max);
+  std::cerr << "val, rem: " << val << ' ' << rem << '\n';
+  return rem < 0.0f ? max + rem : min + rem;
 }
 
 } // namespace anshub

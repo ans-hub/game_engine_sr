@@ -56,7 +56,7 @@ bool line2d::Intersects(const Segment& l, const Segment& r, Point& res)
   Vector v2 {r.b - r.a};
   
   float vmul = v1.x*v2.y - v1.y*v2.x;  // vmul as matrix determ
-  if (std::fabs(vmul) < kEpsilon)
+  if (std::fabs(vmul) < math::kEpsilon)
     return false;
   
   float t1 = ( v2.x*(l.a.y - r.a.y) - v2.y*(l.a.x - r.a.x) ) / vmul;
@@ -74,7 +74,7 @@ bool line2d::Intersects(const Segment& l, const Segment& r, Point& res)
 bool line2d::Intersects(const Line& l1, const Line& l2, Point& p)
 {
   float det = l1.a*l2.b - l1.b*l2.a;
-  if (std::fabs(det) < kEpsilon)
+  if (std::fabs(det) < math::kEpsilon)
     return false;
   p.x = -(l1.c*l2.b - l2.c*l1.b) / det;
   p.y = -(l1.a*l2.c - l2.a*l1.c) / det;

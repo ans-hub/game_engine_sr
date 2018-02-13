@@ -26,7 +26,7 @@ namespace coords {
   Vertexes  Persp2Screen(const Vertexes&, float wov, int scr_w, int scr_h);
   void      Homogenous2Normal(GlObject&);
   void      Homogenous2Normal(std::vector<GlObject>&);
-  Vector    Uvn2Euler(const MatrixRotateUvn&, TrigTable&);
+  Vector    Uvn2Euler(const Matrix<4,4>&, TrigTable&);
   
 } // namespace coords
 
