@@ -115,10 +115,10 @@ Vertexes coords::Persp2Screen(const Vertexes& vxs, float wov, int scr_w, int scr
   return res;
 }
 
-// Extracts eulers angles from uvn matrix. As examplem but in another
+// Extracts eulers angles from yxz rotation matrix. As example, but in another
 // matrixes (row based) - https://goo.gl/AjhkFN
 
-Vector coords::Uvn2Euler(const Matrix<4,4>& mx, TrigTable& t)
+Vector coords::RotationMatrix2Euler(const MatrixRotateUvn& mx)
 {
   float yaw {};     // y
   float pitch {};   // x

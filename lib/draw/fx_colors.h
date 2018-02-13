@@ -12,14 +12,11 @@
 #include <unistd.h>
 #include <time.h>
 
+#include "gl_aliases.h"
+
 namespace anshub {
 
 namespace color {
-
-// Aliases
-
-using byte  = unsigned char;
-using uint  = unsigned int;
 
 // Const colors
 

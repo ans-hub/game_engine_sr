@@ -280,7 +280,7 @@ int main(int argc, const char** argv)
       cam.LookAt(obj.world_pos_);
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
       MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
-      cam.dir_ = coords::Uvn2Euler(mx_cam_rot, trig);
+      cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
       mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
     }
 

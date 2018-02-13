@@ -439,41 +439,8 @@ void triangles::AddFromObject(const GlObject& obj, Triangles& cont)
 
 bool triangles::Cull(Triangles&, const GlCamera&, const MatrixCamera&)
 {
-  // Translate world coords to camera for zero vertex of each triangle. This is
-  // necessary to see how triangle vertex would seen when camera would be in 0;0;0
-  // and 0 angles (i.e. when all triangles would be translated in camera coordinates)
-  
-  // auto vx_pos = matrix::Multiplie(obj.world_pos_, mx);
-
-  // // Cull z planes
-
-  // if (obj_pos.z - obj.sphere_rad_ < cam.z_near_)
-  //   obj.active_ = false;
-  
-  // if (obj_pos.z + obj.sphere_rad_ > cam.z_far_)
-  //   obj.active_ = false;
-
-  // // Cull x planes (project point on the view plane and check)
-
-  // float x_lhs = (cam.dov_ * obj_pos.x / obj_pos.z) + obj.sphere_rad_;
-  // float x_rhs = (cam.dov_ * obj_pos.x / obj_pos.z) - obj.sphere_rad_;
-
-  // if (x_lhs < -(cam.wov_ / 2))
-  //   obj.active_ = false;
-  // if (x_rhs >  (cam.wov_ / 2))
-  //   obj.active_ = false;  
-
-  // // Cull y planes (project point on the view plane and check)
-
-  // float y_dhs = (cam.dov_ * obj_pos.y / obj_pos.z) + obj.sphere_rad_;
-  // float y_uhs = (cam.dov_ * obj_pos.y / obj_pos.z) - obj.sphere_rad_;
-
-  // if (y_dhs < -(cam.wov_ / 2))
-  //   obj.active_ = false;  
-  // if (y_uhs > (cam.wov_ / 2))
-  //   obj.active_ = false;
-
-  // return !obj.active_;
+  // todo
+  return true;
 }
 
 // Hides invisible faces to viewpoint. Works as the same function in

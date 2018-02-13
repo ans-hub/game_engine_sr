@@ -13,15 +13,13 @@
 #endif
 
 #include <vector>
-#include "string.h"
-
+#include <string.h>             // memset
 #include <GL/gl.h>
 #include <GL/glext.h>
 
-namespace anshub {
+#include "gl_aliases.h"
 
-using uint = unsigned int;
-using Vuint = std::vector<uint>;
+namespace anshub {
 
 class Buffer
 {

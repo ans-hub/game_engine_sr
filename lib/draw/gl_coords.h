@@ -9,13 +9,12 @@
 #define GC_GL_COORDS_H
 
 #include "gl_object.h"
+#include "gl_aliases.h"
 #include "../math/trig.h"
 #include "../math/vector.h"
 #include "../math/matrix_rotate_uvn.h"
 
 namespace anshub {
-
-using Vertexes    = std::vector<Vector>;
 
 namespace coords {
 
@@ -26,7 +25,7 @@ namespace coords {
   Vertexes  Persp2Screen(const Vertexes&, float wov, int scr_w, int scr_h);
   void      Homogenous2Normal(GlObject&);
   void      Homogenous2Normal(std::vector<GlObject>&);
-  Vector    Uvn2Euler(const Matrix<4,4>&, TrigTable&);
+  Vector    RotationMatrix2Euler(const MatrixRotateUvn&);
   
 } // namespace coords
 

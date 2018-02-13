@@ -12,9 +12,10 @@
 #include <array>
 #include <fstream>
 
-#include "fx_colors.h"
+#include "gl_aliases.h"
 #include "gl_triangle.h"
 #include "gl_camera.h"
+#include "fx_colors.h"
 #include "exceptions.h"
 #include "../data/ply_loader.h"
 #include "../math/segment.h"
@@ -40,9 +41,6 @@ enum class Coords
 
 struct GlObject
 {
-  using Vertexes    = std::vector<Vector>;
-  using Matrix2d    = std::vector<std::vector<double>>;
-
   // Data members: coordinates
 
   Vertexes  vxs_local_;     // vertexes local coords
@@ -123,8 +121,6 @@ namespace object {
 //***********************************************************************
 
 namespace objects {
-
-  using Objects = std::vector<GlObject>;
 
   // Objects attributes manipilation
 

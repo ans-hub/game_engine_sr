@@ -42,10 +42,6 @@ namespace draw {
   void Objects(const std::vector<GlObject>&, int w, int h, Buffer&);
   void TrianglesArray(const Triangles&, int w, int h, Buffer&);
 
-  // Iterators
-
-  // void DrawPoints(const std::vector<Vector>&);
-
 } // namespace draw
 
 //****************************************************************************
