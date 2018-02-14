@@ -65,10 +65,15 @@ auto CreateGround(int rect_cnt, TrigTable& trig)
   return ground;
 }
 
-void HandleCameraType(Btn kbtn, bool& cam_euler)
+void HandleCameraType(Btn kbtn, GlCamera& cam)
 {
   if (kbtn == Btn::ENTER)
-    cam_euler = !cam_euler;
+  {
+    if (cam.type_ == GlCamera::Type::EULER)
+      cam.SwitchType(GlCamera::Type::UVN);
+    else if (cam.type_ == GlCamera::Type::UVN)
+      cam.SwitchType(GlCamera::Type::EULER);
+  }
 }
 
 void HandleCameraRotate(bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
@@ -211,7 +216,7 @@ int main(int argc, const char** argv)
 
   float    dov     {2};
   float    fov     {75};
-  Vector   cam_pos {10.0f, 50.0f, 40.0f};
+  Vector   cam_pos {-2.0f, 3.0f, 0.0f};
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {500};
@@ -247,7 +252,7 @@ int main(int argc, const char** argv)
 
     Vector  obj_vel    {0.0f, 0.0f, 0.0f};
     Vector  obj_scale  {1.0f, 1.0f, 1.0f};
-    HandleCameraType(kbtn, cam_euler);
+    HandleCameraType(kbtn, cam);
     HandleCameraPosition(kbtn, cam.vrp_);
     HandleCameraRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
     HandlePause(kbtn, win);
@@ -263,26 +268,6 @@ int main(int argc, const char** argv)
     MatrixTranslate   mx_trans {obj.world_pos_};
     MatrixPerspective mx_per {cam.dov_, cam.ar_};
     MatrixScale       mx_scale(obj_scale);
-    
-      // Prepare camera`s matrixes (Euler or uvn) for all objects
-
-    MatrixCamera      mx_cam {};
-
-    if (cam_euler)
-    { 
-      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      MatrixRotateEul   mx_cam_rot    {cam.dir_ * (-1), trig};
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rot);      
-    }
-    else
-    {
-      cam.LookAt(obj.world_pos_);
-      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
-      cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
-      mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
-    }
 
     // Prepare total matrix
 
@@ -302,6 +287,25 @@ int main(int argc, const char** argv)
     mx_total = matrix::Multiplie(mx_total, mx_scale);
     obj.SetCoords(Coords::TRANS);
     object::ApplyMatrix(mx_total, obj);
+    
+    // Prepare camera`s matrixes (Euler or uvn) for all objects
+
+    MatrixCamera      mx_cam {};
+    if (cam.type_ == GlCamera::Type::EULER)
+    {
+      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
+      MatrixRotateEul   mx_cam_rot    {cam.dir_ * (-1), trig};
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
+      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rot);
+    }
+    else
+    {
+      cam.LookAt(obj.world_pos_);
+      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
+      MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
+      mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
+      cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
+    }
 
     // Translate ground
 

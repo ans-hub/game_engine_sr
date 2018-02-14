@@ -7,7 +7,8 @@
 
 // Cameras conventions:
 //  - all rotations in YXZ sequence
-//  - dir_ is vector contains x (pitch), y (yaw), z (roll)
+//  - dir_ is vector contains Euler`s x (pitch), y (yaw), z (roll)
+//  - view_ direction vector
 
 #ifndef GC_GL_CAMERA_H
 #define GC_GL_CAMERA_H
@@ -15,41 +16,72 @@
 #include "../math/trig.h"
 #include "../math/vector.h"
 #include "../math/matrix.h"
+#include "../math/matrix_rotate_eul.h"
 
 namespace anshub {
 
 struct GlCamera
 {
+
+  // HELPER STRUCTS
+
+  struct Gimbal
+  {
+    Gimbal()
+    : steps_{1}, target_{}, velocity_{}, speed_{1} { }
+    int     steps_;
+    Vector  target_;
+    Vector  velocity_;
+    int     speed_;
+
+  }; // struct Gimbal
+
+  enum class Type {
+    EULER,
+    UVN
+  };
+
+  // MEMBER DEFINITIONS
+
   GlCamera(
     float, float, int, int, const Vector&, const Vector&, float, float);
 
+  void  SwitchType(Type);
+  void  RefreshViewVector();
+  
   TrigTable trig_;
-  float   fov_;       // firld of view
-  float   dov_;       // distance of view
-  float   wov_;       // width of view plane
-  float   z_near_;    // near z plane
-  float   z_far_;     // far z plane
-  int     scr_w_;     // screen width
-  int     scr_h_;     // screen height
-  float   ar_;        // aspect ratio
-  Vector  vrp_;       // view reference point (world pos)
+  Type      type_;      // camera type    
+  float     fov_;       // firld of view
+  float     dov_;       // distance of view
+  float     wov_;       // width of view plane
+  float     z_near_;    // near z plane
+  float     z_far_;     // far z plane
+  int       scr_w_;     // screen width
+  int       scr_h_;     // screen height
+  float     ar_;        // aspect ratio
+  Vector    vrp_;       // view reference point (world pos)
   
   // Euler specific
 
-  Vector  dir_;       // cam direction angles (for Euler model, see note above)
+  Vector  dir_;       // cam direction angles (for Euler model)
+  Vector  view_;       // cam view vector (corresponds to dir_ vector)
   
   // UVN specific
 
   void    LookAt(const Vector&, float roll_hint = 0.0f);
 
-  Vector  u_;         //
-  Vector  v_;         // camera basis (as x,y,z) 
-  Vector  n_;         // 
-  Vector  target_;    // target point, look-at point
+  Vector  u_;           //
+  Vector  v_;           // camera basis (as x,y,z) 
+  Vector  n_;           // 
+  Gimbal  gimbal_;      // target point, look-at point
   
 }; // struct GlCamera
 
 }  // namespace anshub
+
+namespace camera {
+  constexpr int kDefaultGimbalSpeed = 15;
+}
 
 #endif  // GC_GL_CAMERA_H
 
