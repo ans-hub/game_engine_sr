@@ -57,10 +57,20 @@ void GlCamera::SwitchType(Type type)
 
 void GlCamera::RefreshViewVector()
 {
-  MatrixRotateEul mx_yaw   (0.0f, dir_.y, 0.0f, trig_);
-  MatrixRotateEul mx_pitch (dir_.x, 0.0f, 0.0f, trig_);
-  Matrix<4,4> tot = matrix::Multiplie(mx_yaw, mx_pitch);
-  view_ = matrix::Multiplie(Vector{0.0f, 0.0f, 1.0f} , tot);
+  // Build reverse order rotation matrix (zxy, not yxz). I don`t understand
+  // why when I use matrix in reverse rotate order, I get right results. Really,
+  // I should think about it.
+
+  MatrixRotateEul mx_x {dir_.x, 0.0f, 0.0f, trig_};
+  MatrixRotateEul mx_y {0.0f, dir_.y, 0.0f, trig_};
+  MatrixRotateEul mx_z {0.0f, 0.0f, dir_.z, trig_};
+  Matrix<4,4> mx {};
+  mx = matrix::Multiplie(mx_z, mx_x);
+  mx = matrix::Multiplie(mx, mx_y);
+  
+  // Find view camera vector
+
+  view_ = matrix::Multiplie(Vector{0.0f, 0.0f, 1.0f} , mx);
   view_.Normalize();
 }
 

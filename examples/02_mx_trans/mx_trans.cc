@@ -312,7 +312,7 @@ int main(int argc, const char** argv)
     for (auto& item : ground)
     {
       item.CopyCoords(Coords::LOCAL, Coords::TRANS);      
-      item.SetCoords(Coords::TRANS);      
+      item.SetCoords(Coords::TRANS);
       object::Translate(item, item.world_pos_);
     }
  
