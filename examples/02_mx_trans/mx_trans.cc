@@ -86,16 +86,23 @@ void HandleCameraRotate(bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
   mpos_prev = mpos;
 }
 
-void HandleCameraPosition(Btn kbtn, Vector& pos)
+void HandleCameraPosition(Btn kbtn, GlCamera& cam)
 {
+  float cam_vel = 0.5f;
   switch (kbtn)
   {
-    case Btn::W : pos.z += 0.5; break;
-    case Btn::S : pos.z -= 0.5; break;
-    case Btn::A : pos.x -= 0.5; break;
-    case Btn::D : pos.x += 0.5; break;
-    case Btn::R : pos.y += 0.5; break;
-    case Btn::F : pos.y -= 0.5; break;
+    case Btn::W : 
+      cam.vrp_.z += cam_vel * cam.trig_.Cos(cam.dir_.y);
+      cam.vrp_.x += cam_vel * cam.trig_.Sin(cam.dir_.y);
+      break;
+    case Btn::S :
+      cam.vrp_.z -= cam_vel * cam.trig_.Cos(cam.dir_.y);
+      cam.vrp_.x -= cam_vel * cam.trig_.Sin(cam.dir_.y);
+      break;
+    case Btn::A : cam.vrp_.x -= cam_vel; break;
+    case Btn::D : cam.vrp_.x += cam_vel; break;
+    case Btn::R : cam.vrp_.y += cam_vel; break;
+    case Btn::F : cam.vrp_.y -= cam_vel; break;
     default     : break;
   }
 }
@@ -126,13 +133,13 @@ void HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
 
 void HandlePause(Btn key, GlWindow& win)
 {
-  if (key == Btn::SPACE)
+  if (key == Btn::P)
   {
     Timer timer {};
     timer.SetMillisecondsToWait(100);
     while (true)
     {
-      if (win.ReadKeyboardBtn(BtnType::KB_DOWN) == Btn::SPACE)
+      if (win.ReadKeyboardBtn(BtnType::KB_DOWN) == Btn::P)
         break;
       else
         timer.Wait();
@@ -231,7 +238,6 @@ int main(int argc, const char** argv)
   bool    cam_z_mode {false};             // to manage mouse manipulation
   int     nfo_culled;                     // shown how much objects is culled
   int     nfo_hidden;                     // how much hidden surfaces removed
-  bool    cam_euler {true};               // is euler cam currently used
 
   do {
     timer.Start();
@@ -253,7 +259,7 @@ int main(int argc, const char** argv)
     Vector  obj_vel    {0.0f, 0.0f, 0.0f};
     Vector  obj_scale  {1.0f, 1.0f, 1.0f};
     HandleCameraType(kbtn, cam);
-    HandleCameraPosition(kbtn, cam.vrp_);
+    HandleCameraPosition(kbtn, cam);
     HandleCameraRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
     HandlePause(kbtn, win);
     HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
