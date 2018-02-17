@@ -25,12 +25,12 @@ namespace anshub {
 struct Triangle
 {
   enum Attrs {
-    SSIDE         = 0,
-    DSIDE         = 1,
-    FLAT_SHAD     = 1 << 1,
-    PHONG_SHAD    = 1 << 2,
-    GOURANG_SHAD  = 1 << 3,
-    HIDDEN        = 1 << 4
+    SSIDE             = 0,
+    DSIDE             = 1,
+    HIDDEN            = 1 << 1,
+    CONST_SHADING     = 1 << 2,
+    FLAT_SHADING      = 1 << 3,
+    GOURANG_SHADING   = 1 << 4
   };
 
   Triangle(Vertexes&, int, int, int, uint, uint);
@@ -38,7 +38,7 @@ struct Triangle
   
   std::array<Vector, 3> vxs_;
   std::array<int,3>     indicies_;      // see note #1 after code
-  unsigned int          color_;
+  std::array<int,3>     colors_;
   unsigned int          attrs_;
 
 }; // struct Triangle

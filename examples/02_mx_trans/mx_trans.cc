@@ -91,18 +91,34 @@ void HandleCameraPosition(Btn kbtn, GlCamera& cam)
   float cam_vel = 0.5f;
   switch (kbtn)
   {
-    case Btn::W : 
-      cam.vrp_.z += cam_vel * cam.trig_.Cos(cam.dir_.y);
-      cam.vrp_.x += cam_vel * cam.trig_.Sin(cam.dir_.y);
+    case Btn::W :
+    {
+      if (cam.type_ == GlCamera::Type::EULER)
+      {
+        cam.vrp_.z += cam_vel * cam.trig_.Cos(cam.dir_.y);
+        cam.vrp_.x += cam_vel * cam.trig_.Sin(cam.dir_.y);
+      }
+      else
+        cam.vrp_.z += cam_vel;
+    }
       break;
     case Btn::S :
-      cam.vrp_.z -= cam_vel * cam.trig_.Cos(cam.dir_.y);
-      cam.vrp_.x -= cam_vel * cam.trig_.Sin(cam.dir_.y);
+    {
+      if (cam.type_ == GlCamera::Type::EULER)
+      {
+        cam.vrp_.z -= cam_vel * cam.trig_.Cos(cam.dir_.y);
+        cam.vrp_.x -= cam_vel * cam.trig_.Sin(cam.dir_.y);
+      }
+      else
+        cam.vrp_.z -= cam_vel;
+    }
       break;
     case Btn::A : cam.vrp_.x -= cam_vel; break;
     case Btn::D : cam.vrp_.x += cam_vel; break;
     case Btn::R : cam.vrp_.y += cam_vel; break;
     case Btn::F : cam.vrp_.y -= cam_vel; break;
+    case Btn::NUM9 : cam.ChangeFov(cam.fov_-1); break;
+    case Btn::NUM0 : cam.ChangeFov(cam.fov_+1); break;
     default     : break;
   }
 }

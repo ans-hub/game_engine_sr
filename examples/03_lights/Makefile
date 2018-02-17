@@ -1,6 +1,6 @@
 # Builds main app
 
-APPNAME = bus_station
+APPNAME = lights
 ROOTDIR = ../../
 
 # Setup libraries pathes and flags

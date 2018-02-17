@@ -47,6 +47,7 @@ struct GlCamera
     float, float, int, int, const Vector&, const Vector&, float, float);
 
   void  SwitchType(Type);
+  void  ChangeFov(int);
   void  RefreshViewVector();
   
   TrigTable trig_;
@@ -74,14 +75,32 @@ struct GlCamera
   Vector  v_;           // camera basis (as x,y,z) 
   Vector  n_;           // 
   Gimbal  gimbal_;      // target point, look-at point
-  
+
 }; // struct GlCamera
 
-}  // namespace anshub
+//***************************************************************************
+// HELPERS DECLARATION
+//***************************************************************************
 
 namespace camera {
+
   constexpr int kDefaultGimbalSpeed = 15;
+  constexpr int kMinFov = 45;
+  constexpr int kMaxFov = 120;
+
+}  // namespace camera
+
+//***************************************************************************
+// INLINE IMPLEMENTATION
+//***************************************************************************
+
+inline void GlCamera::ChangeFov(int fov)
+{ 
+  fov_ = std::min(camera::kMaxFov, std::max(camera::kMinFov, fov));
+  wov_ = 2 * trig::CalcOppositeCatet(dov_, fov_/2, trig_);
 }
+
+}  // namespace anshub
 
 #endif  // GC_GL_CAMERA_H
 

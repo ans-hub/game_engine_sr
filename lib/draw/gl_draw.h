@@ -27,16 +27,18 @@ namespace anshub {
 
 namespace draw {
 
-  // Algorithms
+  // Primitives
 
-  void DrawPoint(int, int, int, Buffer&);
-  void DrawPoint(int, int, int, uint*, int);
-  void DrawLineBres(int, int, int, int, int, Buffer&);
-  void DrawLine(int, int, int, int, int color, Buffer&);
-  void DrawLine(int, int, int, int, int, float br_1, float br_2, Buffer&);
-  void DrawLineWu(int, int, int, int, int, Buffer&);
+  void Point(int, int, int, Buffer&);
+  void Point(int, int, int, uint*, int);
+  void LineBres(int, int, int, int, int, Buffer&);
+  void Line(int, int, int, int, int color, Buffer&);
+  void Line(int, int, int, int, int, float br_1, float br_2, Buffer&);
+  void LineWu(int, int, int, int, int, Buffer&);
+  void SolidTriangle(Triangle&, Buffer&);
+  void GourangTriangle(Triangle&, Buffer&);
   
-  // Helpers
+  // Complex
 
   void Object(const GlObject&, int w, int h, Buffer&);
   void Objects(const std::vector<GlObject>&, int w, int h, Buffer&);
@@ -50,14 +52,14 @@ namespace draw {
 
 // Draws point using Buffer object
 
-inline void draw::DrawPoint(int x, int y, int color, Buffer& buf)
+inline void draw::Point(int x, int y, int color, Buffer& buf)
 {
   buf[x + y * buf.Width()] = color;
 }
 
 // Draws point using buffer pointer
 
-inline void draw::DrawPoint(int x, int y, int color, uint* buf, int lpitch)
+inline void draw::Point(int x, int y, int color, uint* buf, int lpitch)
 {
   buf[x + y * lpitch] = color;
 }

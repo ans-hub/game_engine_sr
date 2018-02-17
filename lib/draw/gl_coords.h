@@ -18,14 +18,19 @@ namespace anshub {
 
 namespace coords {
 
-  Vertexes  Local2World(const Vertexes&, const Vector& move);
-  Vertexes  World2Camera(const Vertexes&);
-  Vertexes  Camera2Persp(const Vertexes&, float dov, float ar);
-  Vertexes  World2Camera(const Vertexes&, Vector& pos, Vector& dir, TrigTable&);
-  Vertexes  Persp2Screen(const Vertexes&, float wov, int scr_w, int scr_h);
-  void      Homogenous2Normal(GlObject&);
-  void      Homogenous2Normal(std::vector<GlObject>&);
-  Vector    RotationMatrix2Euler(const MatrixRotateUvn&);
+  void  Local2World(Vertexes&, const Vector& move);
+  void  World2Camera(Vertexes&);
+  void  Camera2Persp(Vertexes&, float dov, float ar);
+  void  World2Camera(Vertexes&, Vector& pos, Vector& dir, TrigTable&);
+  void  Persp2Screen(Vertexes&, float wov, int scr_w, int scr_h);
+
+  void  RotateYaw(Vertexes&, float deg, TrigTable&);
+  void  RotatePitch(Vertexes&, float deg, TrigTable&);
+  void  RotateRoll(Vertexes&, float deg, TrigTable&);
+
+  void  Homogenous2Normal(GlObject&);
+  void  Homogenous2Normal(std::vector<GlObject>&);
+  Vector  RotationMatrix2Euler(const MatrixRotateUvn&);
   
 } // namespace coords
 
