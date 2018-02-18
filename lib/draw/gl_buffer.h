@@ -48,3 +48,5 @@ private:
 }  // namespace anshub
 
 #endif  // GL_BUFFER_H
+
+// Important note : 0,0 is the left-bottom corner

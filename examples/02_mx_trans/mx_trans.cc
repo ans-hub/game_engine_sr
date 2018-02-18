@@ -230,7 +230,7 @@ int main(int argc, const char** argv)
   auto obj = object::Make(
     fname, trig, 
     {1.0f, 1.0f, 1.0f},   // initial scale
-    {0.0f, 0.0f, 7.0f},   // world pos
+    {0.0f, 0.0f, 10.0f},   // world pos
     {180.0f, 0.0f, 0.0f}  // initial rotate
   );
   auto ground = CreateGround(20, trig);
@@ -239,7 +239,7 @@ int main(int argc, const char** argv)
 
   float    dov     {2};
   float    fov     {75};
-  Vector   cam_pos {-2.0f, 3.0f, 0.0f};
+  Vector   cam_pos {0.0f, 0.0f, 0.0f};
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {500};
@@ -374,8 +374,8 @@ int main(int argc, const char** argv)
     // Draw triangles (stored in object)
 
     buf.Clear();
-    draw::Object(obj, kWidth, kHeight, buf);
-    draw::Objects(ground, kWidth, kHeight, buf);
+    draw::SolidObject(obj, kWidth, kHeight, buf);
+    draw::WiredObjects(ground, kWidth, kHeight, buf);
     buf.SendDataToFB();
 
     // Print fps ans other info

@@ -13,15 +13,21 @@
 namespace anshub {
 
   struct Vector;
+  struct Color;
   struct GlObject;
   struct Triangle;
 
   using uint  = unsigned int;
+  using uchar = unsigned char;
   using Vuint = std::vector<uint>;
+  using Vuchar = std::vector<uchar>;
   using byte  = unsigned char;
+  using cColor = const Color;
+  using Colors = std::vector<Color>;
   using Vertexes  = std::vector<Vector>;
   using Objects   = std::vector<GlObject>;
   using Matrix2d  = std::vector<std::vector<double>>;
+  using cMatrix2d = const Matrix2d;
   using Triangles     = std::vector<Triangle>;
 
 } // namespace anshub

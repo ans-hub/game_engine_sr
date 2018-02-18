@@ -5,7 +5,7 @@
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
-#include "gl_light.cc"
+#include "gl_light.h"
 
 namespace anshub {
 

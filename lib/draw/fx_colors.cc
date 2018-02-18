@@ -9,14 +9,6 @@
 
 namespace anshub {
 
-// Returns color in word-order ARGB format (little-endian) where the most
-// signification byte is b, and less is a
-
-int color::MakeARGB(byte a, byte r, byte g, byte b)
-{
-  return (b << 24) | (g << 16) | (r << 8) | a;
-}
-
 // Split ARGB byte-ordered little-endian into r,g,b,a components
 
 void color::SplitARGB(int color, byte& b, byte& g, byte& r, byte& a)

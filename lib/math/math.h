@@ -35,7 +35,7 @@ inline bool math::Fzero(float num)
 
 inline bool math::FNotZero(float num)
 {
-  return std::abs(num) < kEpsilon;
+  return !(std::abs(num) < kEpsilon);
 }
 
 inline bool math::FlessZero(float num)

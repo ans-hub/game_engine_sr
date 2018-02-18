@@ -33,7 +33,7 @@ inline MatrixRotateEul::MatrixRotateEul(
 {
   Matrix<4,4> res (Type::IDENTITY);
   
-  if (!math::FNotZero(y))     // see note #1 in the end of func
+  if (math::FNotZero(y))     // see note #1 in the end of func
   {
     float tsin = t.Sin(y);
     float tcos = t.Cos(y);
@@ -45,7 +45,7 @@ inline MatrixRotateEul::MatrixRotateEul(
     };
     res = matrix::Multiplie(res, yrot);    
   }
-  if (!math::FNotZero(x))
+  if (math::FNotZero(x))
   {
     float tsin = t.Sin(x);
     float tcos = t.Cos(x);
@@ -57,7 +57,7 @@ inline MatrixRotateEul::MatrixRotateEul(
     };
     res = matrix::Multiplie(res, xrot);
   }
-  if (!math::FNotZero(z))
+  if (math::FNotZero(z))
   {
     float tsin = t.Sin(z);
     float tcos = t.Cos(z);

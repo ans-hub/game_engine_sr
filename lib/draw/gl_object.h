@@ -41,10 +41,12 @@ enum class Coords
 
 struct GlObject
 {
-  // Data members: coordinates
+  // Data members: coordinates and colors
 
   Vertexes  vxs_local_;     // vertexes local coords
   Vertexes  vxs_trans_;     // vertexes current coords
+  Colors    colors_local_;  // local vertexes colors
+  Colors    colors_trans_;  // transformed vertexes colors
   Coords    current_vxs_;   // chooser between coords type
   Triangles triangles_;     // triangles based on coords above
 
@@ -61,7 +63,7 @@ struct GlObject
   // Constructors
 
   GlObject();
-  GlObject(const Matrix2d& vxs, const Matrix2d& faces, const Matrix2d& attrs);
+  GlObject(cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs);
   
   // Coordinates routines
 

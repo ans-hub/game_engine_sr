@@ -9,24 +9,25 @@
 
 namespace anshub {
 
-// Constructs triangle with given vxs ans edges (reference to vxs)
+// Constructs triangle just with indicies && attributes
 
-Triangle::Triangle(
-  Vertexes& vxs, int e1, int e2, int e3, uint color, uint attrs)
+Triangle::Triangle(int v1, int v2, int v3, uint attrs)
   : vxs_{}
-  , indicies_{e1, e2, e3}
-  , color_{color}
+  , colors_{}
+  , indicies_{v1, v2, v3}
   , attrs_{attrs}
 { }
 
-// Constructs triangle with given vxs ans edges (copy)
+// Constructs triangle with self contained vertexes and colors
 
 Triangle::Triangle(
-  const Vector& p1, const Vector& p2, const Vector& p3, uint color, uint attrs)
-  : vxs_{p1, p2, p3}
-  , indicies_{0, 1, 2}
-  , color_{color}
+  cVector& v1, cVector& v2, cVector& v3, cColor& c1, cColor& c2, cColor& c3,
+  uint attrs)
+  : vxs_{v1, v2, v3}
+  , colors_{c1, c2, c3}
+  , indicies_{}
   , attrs_{attrs}
 { }
+
 
 }  // namespace anshub

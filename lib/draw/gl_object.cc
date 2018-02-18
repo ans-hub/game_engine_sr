@@ -14,6 +14,8 @@ namespace anshub {
 GlObject::GlObject()
   : vxs_local_{}
   , vxs_trans_{}
+  , colors_local_{}
+  , colors_trans_{}
   , current_vxs_{Coords::LOCAL}
   , triangles_{}
   , id_{}
@@ -28,9 +30,11 @@ GlObject::GlObject()
 // Creates object with vertexes, faces and attrs
 
 GlObject::GlObject(
-  const Matrix2d& vxs, const Matrix2d& faces, const Matrix2d& attrs)
+  cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs)
   : vxs_local_{}
   , vxs_trans_{}
+  , colors_local_{}
+  , colors_trans_{}
   , current_vxs_{Coords::LOCAL}  
   , triangles_{}
   , id_{}
@@ -47,6 +51,13 @@ GlObject::GlObject(
   for (const auto& vx : vxs)
     vxs_local_.emplace_back(vx[0], vx[1], vx[2]);
   vxs_trans_ = vxs_local_;
+
+  // Fill local colors
+
+  colors_local_.reserve(colors.size());
+  for (const auto& c : colors)
+    colors_local_.emplace_back(c[0], c[1], c[2]);
+  colors_trans_ = colors_local_;
   
   // Fill triangles (we suppose that we have correct ply file with
   // custom fields or incorrect with emply fields)
@@ -55,11 +66,10 @@ GlObject::GlObject(
   for (std::size_t i = 0; i < faces.size(); ++i)
   {
     unsigned int fattr = attrs[i][0];
-    unsigned int color = attrs[i][1];
     auto x = faces[i][0];
     auto y = faces[i][1];
     auto z = faces[i][2];
-    triangles_.emplace_back(vxs_trans_, x, y, z, color, fattr);
+    triangles_.emplace_back(x, y, z, fattr);
   }
 
   // Calc bounding sphere radius
@@ -91,8 +101,9 @@ void GlObject::CopyCoords(Coords src, Coords dest)
 //***************************************************************************
 
 // Makes object from ply file in two ways:
-//  1) custom fields in ply file (attrs and color)
-//  2) any ply contains "vertexes" (x,y,z) and "face" elements
+//  1) custom fields in ply file (with attrs)
+//  2) ply file, exported from Blender and contains at least "vertexes" with
+//  properties "x", "y", "z" and "face" elements
 
 GlObject object::Make(const char* str)
 {
@@ -102,33 +113,32 @@ GlObject object::Make(const char* str)
   std::ifstream fss {str};
   ply.Load(fss);
   
-  // We suppose that this ply file contains elements "vertex" and "face"
-
+  // Try to determine if ply contains list property "magic" sign called "ind_ply_v2"
+  
   auto header     = ply.GetHeader();
-  auto vertexes   = ply.GetLine("vertex", {"x", "y", "z"});
-  
-  // Try to determine if ply contains list property magically called "ind1983"
-  
-  auto list_props = header["face"].list_props_;   // get list props of face
-  auto prop_index = list_props.find("ind1983");   // search "magic" index
+  auto list_props = header["face"].list_props_;     // get list props of face
+  auto prop_index = list_props.find("ind_ply_v2");  // search "magic" index
 
-  // If this "magic" found we suppose ply format with custom fields
+  // If this "magic" "ind_ply_v2" is found we suppose ply format with custom fields
   // Else take first list propery and set default attributes
   
   if (prop_index != list_props.end())
   {
-    auto faces    = ply.GetList("face", {"ind1983"});
-    auto attrs    = ply.GetLine("face", {"attr", "color"});
-    auto obj      = GlObject(vertexes, faces, attrs);
+    auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});
+    auto colors = ply.GetLine("vertex", {"red", "green", "blue"});
+    auto faces  = ply.GetList("face", {"ind_ply_v2"});
+    auto attrs  = ply.GetLine("face", {"attr"});
+    auto obj    = GlObject(vxs, colors, faces, attrs);
     obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
     return obj;    
   }
   else {
-    auto name     = list_props.begin()->first;    // first list prop in "face" 
-    auto faces    = ply.GetList("face", {name});
-    auto color    = static_cast<double>(color::White);
-    auto attrs    = Vector2d(faces.size(), Vector1d{0, color});
-    auto obj      = GlObject(vertexes, faces, attrs);
+    auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});  
+    auto colors = Vector2d(vxs.size(), Vector1d{255, 255, 255});
+    auto name   = list_props.begin()->first;    // first list property in "face" 
+    auto faces  = ply.GetList("face", {name});
+    auto attrs  = Vector2d(faces.size(), Vector1d{Triangle::Attrs::VISIBLE});
+    auto obj    = GlObject(vxs, colors, faces, attrs);
     obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
     return obj;
   }
@@ -228,9 +238,6 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
 
   for (auto& face : obj.triangles_)
   {
-    if (face.attrs_ & Triangle::DSIDE)
-      continue;
-
     auto p0 = obj.vxs_trans_[face.indicies_[0]];
     auto p1 = obj.vxs_trans_[face.indicies_[1]];
     auto p2 = obj.vxs_trans_[face.indicies_[2]];
@@ -295,7 +302,7 @@ void object::Translate(GlObject& obj, const Vector& pos)
 void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
 {
   auto& vxs = obj.GetCoords();
-  if (!math::FNotZero(v.y))
+  if (math::FNotZero(v.y))
   {
     float ysin = t.Sin(v.y);
     float ycos = t.Cos(v.y);
@@ -305,7 +312,7 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
       vx.z = (vx.z * ycos) - (vx.x * ysin); 
     }
   }
-  if (!math::FNotZero(v.x))
+  if (math::FNotZero(v.x))
   {
     float xsin = t.Sin(v.x);
     float xcos = t.Cos(v.x);
@@ -315,7 +322,7 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
       vx.z = (vx.z * xcos) + (vx.y * xsin); 
     }
   }
-  if (!math::FNotZero(v.z))
+  if (math::FNotZero(v.z))
   {
     float zsin = t.Sin(v.z);
     float zcos = t.Cos(v.z);
@@ -410,7 +417,9 @@ Triangles triangles::MakeFromObject(const GlObject& obj)
       vxs[tri.indicies_[0]],
       vxs[tri.indicies_[1]],
       vxs[tri.indicies_[2]],
-      tri.color_,
+      obj.colors_trans_[tri.indicies_[0]],
+      obj.colors_trans_[tri.indicies_[1]],
+      obj.colors_trans_[tri.indicies_[2]],
       tri.attrs_
     );
   }
@@ -421,14 +430,16 @@ Triangles triangles::MakeFromObject(const GlObject& obj)
 
 void triangles::AddFromObject(const GlObject& obj, Triangles& cont)
 {
-  auto& vxs = obj.GetCoords();  
+  auto& vxs = obj.GetCoords();
   for (const auto& tri : obj.triangles_)
   {
     cont.emplace_back(
       vxs[tri.indicies_[0]],
       vxs[tri.indicies_[1]],
       vxs[tri.indicies_[2]],
-      tri.color_,
+      obj.colors_trans_[tri.indicies_[0]],
+      obj.colors_trans_[tri.indicies_[1]],
+      obj.colors_trans_[tri.indicies_[2]],
       tri.attrs_
     );
   }

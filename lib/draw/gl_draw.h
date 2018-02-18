@@ -30,19 +30,20 @@ namespace draw {
   // Primitives
 
   void Point(int, int, int, Buffer&);
-  void Point(int, int, int, uint*, int);
+  void Point(int, int, int, uint*, int);  // ???? ***
+  void HorizontalLine(int y, int x1, int x2, uint color, Buffer&);
   void LineBres(int, int, int, int, int, Buffer&);
   void Line(int, int, int, int, int color, Buffer&);
   void Line(int, int, int, int, int, float br_1, float br_2, Buffer&);
   void LineWu(int, int, int, int, int, Buffer&);
-  void SolidTriangle(Triangle&, Buffer&);
-  void GourangTriangle(Triangle&, Buffer&);
+  void SolidTriangle(int, int, int, int, int, int, uint color, Buffer&);
   
   // Complex
 
-  void Object(const GlObject&, int w, int h, Buffer&);
-  void Objects(const std::vector<GlObject>&, int w, int h, Buffer&);
-  void TrianglesArray(const Triangles&, int w, int h, Buffer&);
+  void WiredObject(const GlObject&, int w, int h, Buffer&);
+  void SolidObject(const GlObject&, int w, int h, Buffer&);
+  void WiredObjects(const std::vector<GlObject>&, int w, int h, Buffer&);
+  void WiredTriangles(const Triangles&, int w, int h, Buffer&);
 
 } // namespace draw
 
@@ -62,6 +63,12 @@ inline void draw::Point(int x, int y, int color, Buffer& buf)
 inline void draw::Point(int x, int y, int color, uint* buf, int lpitch)
 {
   buf[x + y * lpitch] = color;
+}
+
+inline void draw::HorizontalLine(int y, int x1, int x2, uint color, Buffer& buf)
+{
+  auto* ptr = buf.GetPointer();
+  memset(ptr + x1 + y * buf.Width(), (int)color, (x2-x1)*sizeof(*ptr));
 }
 
 } // namespace anshub

@@ -1,6 +1,6 @@
 //***********************************************************************
 // File:    gl_triangle.h
-// Descr:   triangle (drawable) struct for renderer
+// Descr:   drawable triangle struct for renderer
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 //***********************************************************************
@@ -12,6 +12,7 @@
 #include <array>
 
 #include "gl_aliases.h"
+#include "fx_colors.h"
 #include "../math/vector.h"
 
 namespace anshub {
@@ -20,31 +21,38 @@ namespace anshub {
 // Triangle struct
 //***********************************************************************
 
-// Represents triangle
+// Represents drawable triangle
 
 struct Triangle
 {
   enum Attrs {
-    SSIDE             = 0,
-    DSIDE             = 1,
-    HIDDEN            = 1 << 1,
-    CONST_SHADING     = 1 << 2,
-    FLAT_SHADING      = 1 << 3,
-    GOURANG_SHADING   = 1 << 4
+    VISIBLE           = 0,
+    HIDDEN            = 1,
+    CONST_SHADING     = 1 << 1,
+    FLAT_SHADING      = 1 << 2,
+    GOURANG_SHADING   = 1 << 3,
+    PHONG_SHADING     = 1 << 4
   };
 
-  Triangle(Vertexes&, int, int, int, uint, uint);
-  Triangle(const Vector&, const Vector&, const Vector&, uint, uint);
+  // Constructs triangle just with indicies && attributes
+
+  Triangle(int v1, int v2, int v3, uint attrs);
   
-  std::array<Vector, 3> vxs_;
-  std::array<int,3>     indicies_;      // see note #1 after code
-  std::array<int,3>     colors_;
+  // Constructs triangle with self contained vertexes and colors
+
+  Triangle(
+    cVector& v1, cVector& v2, cVector& v3, cColor& c1, cColor& c2, cColor& c3,
+    uint attrs
+  );
+
+  std::array<Vector,3>  vxs_;       // independent vertexes 
+  std::array<Color,3>   colors_;    // independent colors 
+  std::array<int,3>     indicies_;  // indexed to vertexes in GlObject
   unsigned int          attrs_;
 
 }; // struct Triangle
 
 }  // namespace anshub
-
 
 #endif  // GC_GL_TRIANGLE_H
 

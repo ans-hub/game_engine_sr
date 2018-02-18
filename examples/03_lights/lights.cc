@@ -1,6 +1,6 @@
 // *************************************************************
-// File:    bus_station
-// Descr:   bus station demo
+// File:    obj_station
+// Descr:   obj station demo
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -53,19 +53,19 @@ int main(int argc, const char** argv)
 
   // Object
 
-  auto bus = object::Make(
-    "data/bus.ply", trig, 
+  auto obj = object::Make(
+    "data/tri.ply", trig, 
     {1.0f, 1.0f, 1.0f},   // initial scale
     {0.0f, 0.0f, 7.0f},   // world pos
-    {180.0f, 0.0f, 0.0f}   // initial rotate
+    // {0.0f, 0.0f, 35.0f}   // initial rotate
+    {0.0f, 0.0f, 2.0f}   // initial rotate
   );
-  Vector  bus_rot  {0.0f, 0.0f, 0.0f};
   
   // Camera
 
   float    dov     {2};
   float    fov     {90};
-  Vector   cam_pos {3.0f, -4.0f, 0.0f};
+  Vector   cam_pos {2.0f, -2.0f, 0.0f};
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {500};
@@ -81,23 +81,38 @@ int main(int argc, const char** argv)
     timer.Start();
     win.Clear();
 
+    Vector  obj_rot  {0.0f, 0.0f, 0.0f};
+    auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
+    if (kbtn == Btn::Z)
+      obj_rot.z = -1.0f;
+    else if (kbtn == Btn::X)
+      obj_rot.z = +1.0f;
+    if (kbtn == Btn::C)
+      obj_rot.y = -1.0f;
+    else if (kbtn == Btn::V)
+      obj_rot.y = +1.0f;
+    if (kbtn == Btn::B)
+      obj_rot.x = -1.0f;
+    else if (kbtn == Btn::N)
+      obj_rot.x = +1.0f;
+      
     // Prepare transformation matrixes for main object
 
-    MatrixRotateEul   mx_rot {bus_rot, trig};
-    MatrixTranslate   mx_trans {bus.world_pos_};
+    MatrixRotateEul   mx_rot {obj_rot, trig};
+    MatrixTranslate   mx_trans {obj.world_pos_};
     MatrixPerspective mx_per {cam.dov_, cam.ar_};
 
     // Rotate local coordinates of main object
 
-    bus.SetCoords(Coords::LOCAL);
-    object::ApplyMatrix(mx_rot, bus);
-    object::RefreshOrientation(bus, mx_rot);
-    bus.CopyCoords(Coords::LOCAL, Coords::TRANS);
+    obj.SetCoords(Coords::LOCAL);
+    object::ApplyMatrix(mx_rot, obj);
+    object::RefreshOrientation(obj, mx_rot);
+    obj.CopyCoords(Coords::LOCAL, Coords::TRANS);
 
     // Transform trans coordinates of main object
 
-    bus.SetCoords(Coords::TRANS);
-    object::ApplyMatrix(mx_trans, bus);
+    obj.SetCoords(Coords::TRANS);
+    object::ApplyMatrix(mx_trans, obj);
     
     // Prepare camera`s matrixes (Euler or uvn) for all objects
 
@@ -111,7 +126,7 @@ int main(int argc, const char** argv)
     }
     else
     {
-      cam.LookAt(bus.world_pos_);
+      cam.LookAt(obj.world_pos_);
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
       MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
       mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
@@ -120,9 +135,9 @@ int main(int argc, const char** argv)
 
     // Cull hidden surfaces
 
-    object::ResetAttributes(bus);
-    object::Cull(bus, cam, mx_cam);
-    object::RemoveHiddenSurfaces(bus, cam);
+    object::ResetAttributes(obj);
+    object::Cull(obj, cam, mx_cam);
+    object::RemoveHiddenSurfaces(obj, cam);
     
     // Go from world coords to camera, and the perspective coords
 
@@ -130,25 +145,25 @@ int main(int argc, const char** argv)
     matrix::MakeIdentity(mx_total);
     mx_total = matrix::Multiplie(mx_total, mx_cam);
     mx_total = matrix::Multiplie(mx_total, mx_per);
-    object::ApplyMatrix(mx_total, bus);
+    object::ApplyMatrix(mx_total, obj);
 
     // Since after mx_per we have homogenous coords
 
-    coords::Homogenous2Normal(bus);
+    coords::Homogenous2Normal(obj);
 
     // Get screen coordinates
 
     MatrixViewport mx_view {cam.wov_, cam.scr_w_, cam.scr_h_};
-    object::ApplyMatrix(mx_view, bus);
+    object::ApplyMatrix(mx_view, obj);
 
     // Draw triangles (stored in object)
 
     buf.Clear();
-    draw::Object(bus, kWidth, kHeight, buf);
+    draw::SolidObject(obj, kWidth, kHeight, buf);
     buf.SendDataToFB();
 
     win.Render();
-    timer.Wait();
+    timer.Wait();    
 
   } while (!win.Closed());
 
