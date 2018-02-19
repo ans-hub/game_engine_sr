@@ -39,6 +39,8 @@ namespace draw {
   void LineWu(int, int, int, int, int, Buffer&);
   void SolidTriangle(
     float, float, float, float, float, float, uint color, Buffer&);
+  void GourangTriangle(
+    float, float, float, float, float, float, uint, uint, uint, Buffer&);
   
   // Complex
 

@@ -197,8 +197,8 @@ bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
 
   // Cull x planes (project point on the view plane and check)
 
-  float x_lhs = (cam.dov_ * obj_pos.x / obj_pos.z) + obj.sphere_rad_;
-  float x_rhs = (cam.dov_ * obj_pos.x / obj_pos.z) - obj.sphere_rad_;
+  float x_lhs = (cam.dov_ * (obj_pos.x + obj.sphere_rad_) / obj_pos.z);
+  float x_rhs = (cam.dov_ * (obj_pos.x - obj.sphere_rad_) / obj_pos.z);
 
   if (x_lhs < -(cam.wov_ / 2))
     obj.active_ = false;
@@ -206,9 +206,10 @@ bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
     obj.active_ = false;  
 
   // Cull y planes (project point on the view plane and check)
+  //  todo : here I forgot to use ar
 
-  float y_dhs = (cam.dov_ * obj_pos.y / obj_pos.z) + obj.sphere_rad_;
-  float y_uhs = (cam.dov_ * obj_pos.y / obj_pos.z) - obj.sphere_rad_;
+  float y_dhs = (cam.dov_ * (obj_pos.y + obj.sphere_rad_) / obj_pos.z);
+  float y_uhs = (cam.dov_ * (obj_pos.y - obj.sphere_rad_) / obj_pos.z);
 
   if (y_dhs < -(cam.wov_ / 2))
     obj.active_ = false;  
