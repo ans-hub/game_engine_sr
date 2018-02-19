@@ -13,6 +13,7 @@
 #define GL_DRAW_H
 
 #include <cmath>
+#include <algorithm>
 
 #include <GL/gl.h>
 #include <GL/glext.h>
@@ -31,12 +32,13 @@ namespace draw {
 
   void Point(int, int, int, Buffer&);
   void Point(int, int, int, uint*, int);  // ???? ***
-  void HorizontalLine(int y, int x1, int x2, uint color, Buffer&);
+  void HorizontalLine(int y, int x1, int x2, int color, Buffer&);
   void LineBres(int, int, int, int, int, Buffer&);
   void Line(int, int, int, int, int color, Buffer&);
   void Line(int, int, int, int, int, float br_1, float br_2, Buffer&);
   void LineWu(int, int, int, int, int, Buffer&);
-  void SolidTriangle(int, int, int, int, int, int, uint color, Buffer&);
+  void SolidTriangle(
+    float, float, float, float, float, float, uint color, Buffer&);
   
   // Complex
 
@@ -65,10 +67,10 @@ inline void draw::Point(int x, int y, int color, uint* buf, int lpitch)
   buf[x + y * lpitch] = color;
 }
 
-inline void draw::HorizontalLine(int y, int x1, int x2, uint color, Buffer& buf)
+inline void draw::HorizontalLine(int y, int x1, int x2, int color, Buffer& buf)
 {
   auto* ptr = buf.GetPointer();
-  memset(ptr + x1 + y * buf.Width(), (int)color, (x2-x1)*sizeof(*ptr));
+  std::fill_n(ptr + x1 + y * buf.Width(), x2-x1, color);
 }
 
 } // namespace anshub

@@ -41,7 +41,7 @@ int main(int argc, const char** argv)
 
   // Timers
 
-  constexpr int kFpsWait = 250;
+  constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
 
   // Window
@@ -54,7 +54,7 @@ int main(int argc, const char** argv)
   // Object
 
   auto obj = object::Make(
-    "data/tri.ply", trig, 
+    "data/cube.ply", trig, 
     {1.0f, 1.0f, 1.0f},   // initial scale
     {0.0f, 0.0f, 7.0f},   // world pos
     // {0.0f, 0.0f, 35.0f}   // initial rotate

@@ -202,8 +202,15 @@ void draw::LineWu(int, int, int, int, int, Buffer&)
 // Draws solid triangle
 
 void draw::SolidTriangle(
-  int x1, int y1, int x2, int y2, int x3, int y3, uint color, Buffer& buf)
+  float px1, float py1, float px2, float py2, float px3, float py3, uint color, Buffer& buf)
 {
+  int x1 = std::floor(px1);
+  int x2 = std::floor(px2);
+  int x3 = std::floor(px3);
+  int y1 = std::floor(py1);
+  int y2 = std::floor(py2);
+  int y3 = std::floor(py3);
+
   // Make top y1 point and bottom y3 point, y2 is middle
 
   if (y2 < y3) {
@@ -221,16 +228,22 @@ void draw::SolidTriangle(
     std::swap(y3, y2);
   }
 
-  // If polygon is flat top, then swap vertexes
+  // If polygon is flat top
 
   if (math::Feq(y2, y3) && x2 > x3) {
     std::swap(x2, x3);
-    std::swap(y2, y3);
+    // std::swap(y2, y3);
+    std::cerr << "dsa\n";
+    // draw::HorizontalLine(y3, std::ceil(px2), std::ceil(px3), color, buf);    
   }
+
+  // If polygon is flat bottom
 
   if (math::Feq(y1, y2) && y1 > y2) {
     std::swap(x1, x2);
-    std::swap(y1, y2);
+    // draw::HorizontalLine(y1, std::ceil(x1), std::ceil(x2), color, buf);        
+    std::cerr << "dsb\n";
+    // std::swap(y1, y2);
   } 
 
   // Part 1 : draw top part of triangle
@@ -254,14 +267,12 @@ void draw::SolidTriangle(
 
   float x_lhs {(float)x1};
   float x_rhs {(float)x1};
-  draw::Point(x1, y1, color, buf);
-  
-  for (int y = y1-1; y > y2; --y) {
+
+  for (int y = y1; y >= y2; --y) {
+    draw::HorizontalLine(y, std::floor(x_lhs), std::ceil(x_rhs), color, buf);
     x_lhs += dx_lhs;
     x_rhs += dx_rhs;
-    draw::HorizontalLine(y, x_lhs, x_rhs, color, buf);
   }
-  draw::HorizontalLine(y2, x_lhs, x_rhs, color, buf);
 
   // Part 2 : draw bottom side of triangle
 
@@ -275,12 +286,11 @@ void draw::SolidTriangle(
     
   x_lhs = (float)x3;
   x_rhs = (float)x3;
-  draw::Point(x3, y3, color, buf);
   
   for (int y = y3+1; y < y2; ++y) {
     x_lhs += dx_lhs;
     x_rhs += dx_rhs;
-    draw::HorizontalLine(y, x_lhs, x_rhs, color, buf);
+    draw::HorizontalLine(y, std::floor(x_lhs), std::ceil(x_rhs), color, buf);
   }
 }
 
@@ -339,9 +349,9 @@ void draw::SolidObject(const GlObject& obj, int w, int h, Buffer& buf)
     auto p3 = obj.vxs_trans_[t.indicies_[2]];
     auto color = obj.colors_trans_[t.indicies_[0]].GetARGB();
     draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
-    draw::Line(p1.x, p1.y, p2.x, p2.y, (255<<24|255<<16|255<<8), buf);
-    draw::Line(p2.x, p2.y, p3.x, p3.y, (255<<24|255<<16|255<<8), buf);
-    draw::Line(p3.x, p3.y, p1.x, p1.y, (255<<24|255<<16|255<<8), buf);
+    // draw::Line(p1.x, p1.y, p2.x, p2.y, color, buf);
+    // draw::Line(p2.x, p2.y, p3.x, p3.y, color, buf);
+    // draw::Line(p3.x, p3.y, p1.x, p1.y, color, buf);
   }
 }
 

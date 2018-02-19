@@ -20,8 +20,8 @@ namespace anshub {
 
 struct Color
 {
-  Color() : r{}, g{}, b{}, a{} { }
-  Color(uchar cr, uchar cg, uchar cb) : r{cr}, g{cg}, b{cb}, a{} { }
+  Color() : r{}, g{}, b{}, a{255} { }
+  Color(uchar cr, uchar cg, uchar cb) : r{cr}, g{cg}, b{cb}, a{255} { }
   uint GetARGB() const { return (b << 24) | (g << 16) | (r << 8) | a; }
   uchar r;
   uchar g;
