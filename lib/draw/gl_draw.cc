@@ -228,25 +228,17 @@ void draw::SolidTriangle(
     std::swap(y3, y2);
   }
 
-  // If polygon is flat top
-
-  if (math::Feq(y2, y3) && x2 > x3) {
-    std::swap(x2, x3);
-    // std::swap(y2, y3);
-    std::cerr << "dsa\n";
-    // draw::HorizontalLine(y3, std::ceil(px2), std::ceil(px3), color, buf);    
-  }
-
   // If polygon is flat bottom
 
-  if (math::Feq(y1, y2) && y1 > y2) {
-    std::swap(x1, x2);
-    // draw::HorizontalLine(y1, std::ceil(x1), std::ceil(x2), color, buf);        
-    std::cerr << "dsb\n";
-    // std::swap(y1, y2);
-  } 
+  if (math::Feq(y2, y3) && x2 > x3)
+    std::swap(x2, x3);
 
-  // Part 1 : draw top part of triangle
+  // If polygon is flat top
+
+  if (math::Feq(y1, y2) && x1 > x2)
+    std::swap(x1, x2);
+
+  // Part 1 : draw top part of triangle (from top to middle)
 
   // Define step of right and left side (if perpendicular, then step = 0)
 
@@ -265,32 +257,73 @@ void draw::SolidTriangle(
   
   // Draw triangle from top to middle
 
-  float x_lhs {(float)x1};
-  float x_rhs {(float)x1};
+  float x_lhs {(float)x1};                // float x coord left
+  float x_rhs {(float)x1};                // float x coord right
 
-  for (int y = y1; y >= y2; --y) {
-    draw::HorizontalLine(y, std::floor(x_lhs), std::ceil(x_rhs), color, buf);
+  // Clip top and bottom
+
+  if (y1 < 0 || y3 >= buf.Height())
+    return;
+
+  int y_top_clip = y1 - buf.Height();     // how much pixels is clipped 
+  y_top_clip = std::max(0, y_top_clip);   // from the top of screen
+
+  x_lhs += dx_lhs * y_top_clip;           // forward x left and right offsets
+  x_rhs += dx_rhs * y_top_clip;
+
+  int y_top = y1 - y_top_clip;            // define new drawable top
+  int y_bot = std::max(0, y2);            // and bottom
+
+  // Draw
+  
+  for (int y = y_top; y >= y_bot; --y)
+  {
+    int xl = std::floor(x_lhs);
+    int xr = std::ceil(x_rhs);
+    xl = std::max(0, xl);                 // clip left and right lines
+    xr = std::min(buf.Width() - 1, xr);
+    draw::HorizontalLine(y, xl, xr, color, buf);
     x_lhs += dx_lhs;
     x_rhs += dx_rhs;
   }
 
-  // Part 2 : draw bottom side of triangle
+  // Part 2 : draw bottom side of triangle (from bottom to middle)
+
+  // Calc step of left and right side
 
   if (math::FNotZero(y1-y3)) 
     dx_lhs = (float)(x1-x3) / std::abs((float)(y1-y3));
   if (math::FNotZero(y2-y3))
     dx_rhs = (float)(x2-x3) / std::abs((float)(y2-y3));
 
+  // Determine which is left step and which is right
+
   if (dx_lhs > dx_rhs)
     std::swap(dx_lhs, dx_rhs);
     
+  // Draw traingle from middle to bottom
+
   x_lhs = (float)x3;
   x_rhs = (float)x3;
   
-  for (int y = y3+1; y < y2; ++y) {
+  int y_bot_clip {0};
+  if (y3+1 < 0)
+    y_bot_clip = std::abs(y3+1);
+  
+  x_lhs += dx_lhs * y_bot_clip;
+  x_rhs += dx_rhs * y_bot_clip;
+
+  y_bot = std::max(0, y3+1);
+  y_top = std::min(y2, buf.Height()-1);
+
+  for (int y = y_bot; y < y_top; ++y) {
     x_lhs += dx_lhs;
     x_rhs += dx_rhs;
-    draw::HorizontalLine(y, std::floor(x_lhs), std::ceil(x_rhs), color, buf);
+    int xl = std::floor(x_lhs);
+    int xr = std::ceil(x_rhs);
+    xl = std::max(0, xl);
+    xr = std::min(buf.Width()-1, xr);
+    draw::HorizontalLine(y, xl, xr, color, buf);
   }
 }
 
@@ -349,9 +382,9 @@ void draw::SolidObject(const GlObject& obj, int w, int h, Buffer& buf)
     auto p3 = obj.vxs_trans_[t.indicies_[2]];
     auto color = obj.colors_trans_[t.indicies_[0]].GetARGB();
     draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
-    // draw::Line(p1.x, p1.y, p2.x, p2.y, color, buf);
-    // draw::Line(p2.x, p2.y, p3.x, p3.y, color, buf);
-    // draw::Line(p3.x, p3.y, p1.x, p1.y, color, buf);
+    // draw::Line(p1.x, p1.y, p2.x, p2.y, color::Black, buf);
+    // draw::Line(p2.x, p2.y, p3.x, p3.y, color::Black, buf);
+    // draw::Line(p3.x, p3.y, p1.x, p1.y, color::Black, buf);
   }
 }
 
