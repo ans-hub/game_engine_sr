@@ -30,8 +30,8 @@ struct Triangle
     HIDDEN            = 1,
     CONST_SHADING     = 1 << 1,
     FLAT_SHADING      = 1 << 2,
-    GOURANG_SHADING   = 1 << 3,
-    PHONG_SHADING     = 1 << 4
+    PHONG_SHADING     = 1 << 3,
+    GOURANG_SHADING   = 1 << 4
   };
 
   // Constructs triangle just with indicies && attributes

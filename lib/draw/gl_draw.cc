@@ -199,11 +199,15 @@ void draw::LineWu(int, int, int, int, int, Buffer&)
   // will be implemented using bresenham algorithm as base 
 }
 
-// Draws solid triangle
+// Draws solid triangle. First, we should guarantee that y1 is most top, and
+// y3 is most bottom points. Then we draw top triangle from top to middle,
+// and then draw from bottom to the middle
 
 void draw::SolidTriangle(
   float px1, float py1, float px2, float py2, float px3, float py3, uint color, Buffer& buf)
 {
+  // Convert float to int
+
   int x1 = std::floor(px1);
   int x2 = std::floor(px2);
   int x3 = std::floor(px3);
@@ -211,7 +215,7 @@ void draw::SolidTriangle(
   int y2 = std::floor(py2);
   int y3 = std::floor(py3);
 
-  // Make top y1 point and bottom y3 point, y2 is middle
+  // Make y1 as top point and y3 as bottom point, y2 is middle
 
   if (y2 < y3) {
     std::swap(x2, x3);
@@ -228,19 +232,21 @@ void draw::SolidTriangle(
     std::swap(y3, y2);
   }
 
-  // If polygon is flat bottom
+  // If polygon is flat bottom, sort left to right
 
   if (math::Feq(y2, y3) && x2 > x3)
     std::swap(x2, x3);
 
-  // If polygon is flat top
+  // If polygon is flat top, sort left to right
 
   if (math::Feq(y1, y2) && x1 > x2)
     std::swap(x1, x2);
 
   // Part 1 : draw top part of triangle (from top to middle)
+  // Note that 0;0 point is placed in left-bottom corner
 
-  // Define step of right and left side (if perpendicular, then step = 0)
+  // Define step of left and right side (if perpendicular, then step = 0)
+  // Here we just suppose where left and right side
 
   float dx_lhs {0.0f};
   float dx_rhs {0.0f};
@@ -250,31 +256,31 @@ void draw::SolidTriangle(
   if (math::FNotZero(y3-y1))
     dx_rhs = (float)(x3-x1) / std::abs((float)(y3-y1));
 
-  // Check what of this is left and right step
+  // Now choose, where really placed left and right side step
 
   if (dx_lhs > dx_rhs)
     std::swap(dx_lhs, dx_rhs);
   
-  // Draw triangle from top to middle
+  // Now we should draw triangle from top to middle (y1-y2)
 
-  float x_lhs {(float)x1};                // float x coord left
-  float x_rhs {(float)x1};                // float x coord right
+  float x_lhs {(float)x1};                // float curr x coord left
+  float x_rhs {(float)x1};                // float curr x coord right
 
   // Clip top and bottom
 
-  if (y1 < 0 || y3 >= buf.Height())
+  if (y1 < 0 || y3 >= buf.Height())       // if triangle is full out of screen
     return;
 
   int y_top_clip = y1 - buf.Height();     // how much pixels is clipped 
-  y_top_clip = std::max(0, y_top_clip);   // from the top of screen
+  y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
 
-  x_lhs += dx_lhs * y_top_clip;           // forward x left and right offsets
-  x_rhs += dx_rhs * y_top_clip;
+  x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
+  x_rhs += dx_rhs * y_top_clip;           //  coords if y1 is out of screen
 
   int y_top = y1 - y_top_clip;            // define new drawable top
-  int y_bot = std::max(0, y2);            // and bottom
+  int y_bot = std::max(0, y2);            //  and bottom
 
-  // Draw
+  // Draw top triangle
   
   for (int y = y_top; y >= y_bot; --y)
   {
@@ -288,35 +294,42 @@ void draw::SolidTriangle(
   }
 
   // Part 2 : draw bottom side of triangle (from bottom to middle)
+  // Note that 0;0 point is placed in left-bottom corner
 
-  // Calc step of left and right side
+  // Define step of left and right side (if perpendicular, then step = 0)
+  // Here we just suppose where left and right side
 
   if (math::FNotZero(y1-y3)) 
     dx_lhs = (float)(x1-x3) / std::abs((float)(y1-y3));
   if (math::FNotZero(y2-y3))
     dx_rhs = (float)(x2-x3) / std::abs((float)(y2-y3));
 
-  // Determine which is left step and which is right
+  // Determine which is really left step and really is right step
 
   if (dx_lhs > dx_rhs)
     std::swap(dx_lhs, dx_rhs);
     
-  // Draw traingle from middle to bottom
+  // Now we should draw traingle from bottom to middle (y3-y2)
 
   x_lhs = (float)x3;
   x_rhs = (float)x3;
   
-  int y_bot_clip {0};
-  if (y3+1 < 0)
+  // Clip top and bottom
+
+  int y_bot_clip {0};                   // here we calc how mush pixels
+  if (y3+1 < 0)                         //  is out of screen from bottom
     y_bot_clip = std::abs(y3+1);
   
-  x_lhs += dx_lhs * y_bot_clip;
+  x_lhs += dx_lhs * y_bot_clip;         // expand left and right curr coords
   x_rhs += dx_rhs * y_bot_clip;
 
-  y_bot = std::max(0, y3+1);
+  y_bot = std::max(0, y3+1);            // new drawable top and bottom
   y_top = std::min(y2, buf.Height()-1);
 
-  for (int y = y_bot; y < y_top; ++y) {
+  // Draw bottom triangle
+
+  for (int y = y_bot; y < y_top; ++y)
+  {
     x_lhs += dx_lhs;
     x_rhs += dx_rhs;
     int xl = std::floor(x_lhs);
@@ -325,6 +338,184 @@ void draw::SolidTriangle(
     xr = std::min(buf.Width()-1, xr);
     draw::HorizontalLine(y, xl, xr, color, buf);
   }
+}
+
+// Draws gourang solid triangle. The proccess of drawing is similar
+// to the draw::SolidTriangle, but here we interpolate vertexes colors
+// (gradient)
+
+void draw::GourangTriangle(
+  float px1, float py1, float px2, float py2, float px3, float py3,
+  uint c1, uint c2, uint c3, Buffer& buf)
+{
+  // Convert float to int
+
+  int x1 = std::floor(px1);
+  int x2 = std::floor(px2);
+  int x3 = std::floor(px3);
+  int y1 = std::floor(py1);
+  int y2 = std::floor(py2);
+  int y3 = std::floor(py3);
+
+  // Make y1 as top point and y3 as bottom point, y2 is middle
+
+  if (y2 < y3) {
+    std::swap(x2, x3);
+    std::swap(y2, y3);
+    std::swap(c2, c3);
+  }
+  if ((y1 < y2) && (y1 > y3)) {
+    std::swap(x1, x2);
+    std::swap(y1, y2);
+    std::swap(c1, c2);
+  }
+  else if ((y1 < y2) && (y1 <= y3)) {
+    std::swap(x1, x2);
+    std::swap(y1, y2);
+    std::swap(c1, c2);
+    std::swap(x3, x2);
+    std::swap(y3, y2);
+    std::swap(c3, c2);
+  }
+
+  // If polygon is flat bottom, sort left to right
+
+  if (math::Feq(y2, y3) && x2 > x3)
+  {
+    std::swap(x2, x3);
+    std::swap(c2, c3);
+  }
+
+  // If polygon is flat top, sort left to right
+
+  if (math::Feq(y1, y2) && x1 > x2)
+  {
+    std::swap(x1, x2);
+    std::swap(c1, c2);
+  }
+
+  // Part 1 : draw top part of triangle (from top to middle)
+  // Note that 0;0 point is placed in left-bottom corner
+
+  // Define step of left and right side (if perpendicular, then step = 0)
+  // Here we just suppose where left and right side
+
+  float dx_lhs {0.0f};
+  float dx_rhs {0.0f};
+
+  if (math::FNotZero(y2-y1)) 
+    dx_lhs = (float)(x2-x1) / std::abs((float)(y2-y1));
+  if (math::FNotZero(y3-y1))
+    dx_rhs = (float)(x3-x1) / std::abs((float)(y3-y1));
+
+  // Calc side colors differential
+
+  Color<float> dx_lc {c3 - c1};
+  Color<float> dx_rc {c2 - c1};
+  dx_lc /= (y1 - y3);
+  dx_rc /= (y1 - y2);
+  
+  // Now choose, where really placed left and right side step
+
+  if (dx_lhs > dx_rhs)
+  {
+    std::swap(dx_lhs, dx_rhs);
+    // std::swap(dx_lc, dx_rc);
+  }
+
+  // Now we should draw triangle from top to middle (y1-y2)
+
+  float x_lhs {(float)x1};                // float curr x coord left
+  float x_rhs {(float)x1};                // float curr x coord right
+  // uint  x_lc {};                          // curr left edge color intense 
+  // uint  x_rc {};                          // curr left edge color intense 
+
+  // Clip top and bottom
+
+  if (y1 < 0 || y3 >= buf.Height())       // if triangle is full out of screen
+    return;
+
+  int y_top_clip = y1 - buf.Height();     // how much pixels is clipped 
+  y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
+
+  x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
+  x_rhs += dx_rhs * y_top_clip;           //  coords if y1 is out of screen
+
+  int y_top = y1 - y_top_clip;            // define new drawable top
+  int y_bot = std::max(0, y2);            //  and bottom
+
+  // Draw top triangle
+  
+  for (int y = y_top; y >= y_bot; --y)
+  {
+    int dy = y_top - y;
+    Color<float> x_lc = dy * dx_lc;
+    Color<float> x_rc = dy * dx_rc;
+    int xl = std::floor(x_lhs);
+    int xr = std::ceil(x_rhs);
+    xl = std::max(0, xl);                 // clip left and right lines
+    xr = std::min(buf.Width() - 1, xr);
+    
+    for (int x = xl; x <= xr; ++x)
+    {
+      int dx = xr - xl;
+      uint color {};
+      if (dx != 0)
+        color = dy * ((x_rc - x_lc) / (xr - xl));
+      else
+        color = c1;
+      draw::Point(x, y, color, buf);
+    }
+    
+    x_lhs += dx_lhs;
+    x_rhs += dx_rhs;
+  }
+
+  // // Part 2 : draw bottom side of triangle (from bottom to middle)
+  // // Note that 0;0 point is placed in left-bottom corner
+
+  // // Define step of left and right side (if perpendicular, then step = 0)
+  // // Here we just suppose where left and right side
+
+  // if (math::FNotZero(y1-y3)) 
+  //   dx_lhs = (float)(x1-x3) / std::abs((float)(y1-y3));
+  // if (math::FNotZero(y2-y3))
+  //   dx_rhs = (float)(x2-x3) / std::abs((float)(y2-y3));
+
+  // // Determine which is really left step and really is right step
+
+  // if (dx_lhs > dx_rhs)
+  //   std::swap(dx_lhs, dx_rhs);
+    
+  // // Now we should draw traingle from bottom to middle (y3-y2)
+
+  // x_lhs = (float)x3;
+  // x_rhs = (float)x3;
+  
+  // // Clip top and bottom
+
+  // int y_bot_clip {0};                   // here we calc how mush pixels
+  // if (y3+1 < 0)                         //  is out of screen from bottom
+  //   y_bot_clip = std::abs(y3+1);
+  
+  // x_lhs += dx_lhs * y_bot_clip;         // expand left and right curr coords
+  // x_rhs += dx_rhs * y_bot_clip;
+
+  // y_bot = std::max(0, y3+1);            // new drawable top and bottom
+  // y_top = std::min(y2, buf.Height()-1);
+
+  // // Draw bottom triangle
+
+  // for (int y = y_bot; y < y_top; ++y)
+  // {
+  //   x_lhs += dx_lhs;
+  //   x_rhs += dx_rhs;
+  //   int xl = std::floor(x_lhs);
+  //   int xr = std::ceil(x_rhs);
+  //   xl = std::max(0, xl);
+  //   xr = std::min(buf.Width()-1, xr);
+  //   draw::HorizontalLine(y, xl, xr, color, buf);
+  // }
 }
 
 // Draws wired object
@@ -380,11 +571,14 @@ void draw::SolidObject(const GlObject& obj, int w, int h, Buffer& buf)
     auto p1 = obj.vxs_trans_[t.indicies_[0]];
     auto p2 = obj.vxs_trans_[t.indicies_[1]];
     auto p3 = obj.vxs_trans_[t.indicies_[2]];
-    auto color = obj.colors_trans_[t.indicies_[0]].GetARGB();
-    draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
-    // draw::Line(p1.x, p1.y, p2.x, p2.y, color::Black, buf);
-    // draw::Line(p2.x, p2.y, p3.x, p3.y, color::Black, buf);
-    // draw::Line(p3.x, p3.y, p1.x, p1.y, color::Black, buf);
+    auto c1 = obj.colors_trans_[t.indicies_[0]].GetARGB();
+    auto c2 = obj.colors_trans_[t.indicies_[1]].GetARGB();
+    auto c3 = obj.colors_trans_[t.indicies_[2]].GetARGB();
+    std::cerr << t.attrs_ << ' ' << Triangle::GOURANG_SHADING << '\n';
+    if (t.attrs_ & Triangle::GOURANG_SHADING)
+      draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
+    else 
+      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, buf);
   }
 }
 
