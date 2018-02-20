@@ -616,7 +616,6 @@ void draw::SolidObject(const GlObject& obj, Buffer& buf)
     auto c1 = obj.colors_trans_[t.indicies_[0]].GetARGB();
     auto c2 = obj.colors_trans_[t.indicies_[1]].GetARGB();
     auto c3 = obj.colors_trans_[t.indicies_[2]].GetARGB();
-    std::cerr << t.attrs_ << ' ' << Triangle::GOURANG_SHADING << '\n';
     if (t.attrs_ & Triangle::GOURANG_SHADING)
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     else 
@@ -624,49 +623,65 @@ void draw::SolidObject(const GlObject& obj, Buffer& buf)
   }
 }
 
-// Draws wired objects
-
-void draw::WiredObjects(const std::vector<GlObject>& arr, Buffer& buf)
-{
-  for (auto& obj : arr)
-    draw::WiredObject(obj, buf);
-}
-
 // Draws triangles
 
-void draw::WiredTriangles(const Triangles& arr, Buffer& buf)
+void draw::WiredTriangles(const TrianglesRef& arr, Buffer& buf)
 {
-  int w = buf.Width();
-  int h = buf.Height();
+  // int w = buf.Width();
+  // int h = buf.Height();
 
+  // for (const auto& tri : arr)
+  // {
+  //   if ((tri.attrs_ & Triangle::HIDDEN))
+  //     continue;
+
+  //   // As we haven`t filling we get first vertexes color
+
+  //   auto color = tri.colors_[0].GetARGB();
+  
+  //   // Now get pairs of vectors on the triangle face and draw lines
+  
+  //   auto p1 = tri.vxs_[0];
+  //   auto p2 = tri.vxs_[1];
+
+  //   if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
+  //     draw::Line(p1.x, p1.y, p2.x, p2.y, color, buf);
+      
+  //   auto p3 = tri.vxs_[1];
+  //   auto p4 = tri.vxs_[2];
+
+  //   if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
+  //     draw::Line(p3.x, p3.y, p4.x, p4.y, color, buf);
+
+  //   auto p5 = tri.vxs_[2];
+  //   auto p6 = tri.vxs_[0];
+
+  //   if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
+  //     draw::Line(p5.x, p5.y, p6.x, p6.y, color, buf);
+  // }
+}
+
+// Draws solid triangles
+
+void draw::SolidTriangles(const TrianglesRef& arr, Buffer& buf)
+{
   for (const auto& tri : arr)
   {
-    if ((tri.attrs_ & Triangle::HIDDEN))
+    auto& t = tri.get();
+
+    if ((t.attrs_ & Triangle::HIDDEN))
       continue;
 
-    // As we haven`t filling we get first vertexes color
-
-    auto color = tri.colors_[0].GetARGB();
-  
-    // Now get pairs of vectors on the triangle face and draw lines
-  
-    auto p1 = tri.vxs_[0];
-    auto p2 = tri.vxs_[1];
-
-    if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
-      draw::Line(p1.x, p1.y, p2.x, p2.y, color, buf);
-      
-    auto p3 = tri.vxs_[1];
-    auto p4 = tri.vxs_[2];
-
-    if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
-      draw::Line(p3.x, p3.y, p4.x, p4.y, color, buf);
-
-    auto p5 = tri.vxs_[2];
-    auto p6 = tri.vxs_[0];
-
-    if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
-      draw::Line(p5.x, p5.y, p6.x, p6.y, color, buf);
+    auto p1 = t.vxs_[0];
+    auto p2 = t.vxs_[1];
+    auto p3 = t.vxs_[2];
+    auto c1 = t.colors_[0].GetARGB();
+    auto c2 = t.colors_[1].GetARGB();
+    auto c3 = t.colors_[2].GetARGB();
+    if (t.attrs_ & Triangle::GOURANG_SHADING)
+      draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
+    else 
+      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, buf);
   }
 }
 

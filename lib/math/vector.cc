@@ -126,14 +126,6 @@ float vector::AngleBetween(const Vector& v1, const Vector& v2, bool norm)
   return trig::Rad2deg( std::acos(cosine) );
 }
 
-// Simplie divides all components by w
-
-void vector::ConvertFromHomogeneous(Vector& v)
-{
-  v /= v.w;
-  v.w = 1.0f;
-}
-
 // Checks if two vectors are collinear (type A)
 
 //   Based on formulas below:  a*b = |a|*|b|*cos(a;b)

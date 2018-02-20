@@ -45,6 +45,11 @@ struct Triangle
     uint attrs
   );
 
+  // Vector& v1;  // reference to vertexes
+  // Vector& v2;
+  // Vector& v3;
+  // Color&  c1;  // reference to colors_
+  
   std::array<Vector,3>  vxs_;       // independent vertexes 
   std::array<Color<>,3> colors_;    // independent colors 
   std::array<int,3>     indicies_;  // indexed to vertexes in GlObject

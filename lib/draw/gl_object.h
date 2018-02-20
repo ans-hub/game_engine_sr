@@ -16,6 +16,7 @@
 #include "gl_triangle.h"
 #include "gl_camera.h"
 #include "fx_colors.h"
+#include "gl_coords.h"
 #include "exceptions.h"
 #include "../data/ply_loader.h"
 #include "../math/segment.h"
@@ -100,6 +101,7 @@ namespace object {
   // Object attributes manipilation
 
   bool      Cull(GlObject&, const GlCamera&, const MatrixCamera&);
+  bool      Cull(GlObject&, const GlCamera&);  
   int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
   void      ResetAttributes(GlObject&);
   
@@ -111,6 +113,13 @@ namespace object {
   void      Rotate(GlObject&, const Vector&, const TrigTable&);
   void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
   
+  // Object coords helpers
+
+  void      World2Camera(GlObject&, const GlCamera&);
+  void      Camera2Persp(GlObject&, const GlCamera&);
+  void      Persp2Screen(GlObject&, const GlCamera&);
+  void      Homogenous2Normal(GlObject&);
+
   // Object helpers
 
   float     FindFarthestCoordinate(const GlObject&);
@@ -127,12 +136,29 @@ namespace objects {
   // Objects attributes manipilation
 
   int       Cull(Objects&, const GlCamera&, const MatrixCamera&);
+  int       Cull(Objects&, const GlCamera&);
   int       RemoveHiddenSurfaces(Objects&, const GlCamera&);  
   void      ResetAttributes(Objects&);
 
   // Objects transformation
 
+  void      Translate(Objects&, const Vector&);
+  void      Rotate(Objects&, const Vector&, const TrigTable&);
+  void      Rotate(Objects&, const std::vector<Vector>&, const TrigTable&);
   void      ApplyMatrix(const Matrix<4,4>&, Objects&);
+  
+  // Objects coords helpers
+
+  void      World2Camera(Objects&, const GlCamera&);
+  void      Camera2Persp(Objects&, const GlCamera&);
+  void      Persp2Screen(Objects&, const GlCamera&);
+  void      Homogenous2Normal(Objects&);
+
+  // Objects helpers
+
+  void      SetCoords(Objects&, Coords);
+  void      CopyCoords(Objects&, Coords, Coords);
+  void      SortZ(Objects&);
   
 } // namespace objects
 
@@ -142,22 +168,53 @@ namespace objects {
 
 namespace triangles {
 
-  // Triangles creating
+  // Triangles array filling
 
-  Triangles MakeFromObject(const GlObject&);
-  void      AddFromObject(const GlObject&, Triangles&);
+  Triangles CopyFromObject(const GlObject&);
+  Triangles MoveFromObject(GlObject&);
+  void      CopyFromObject(const GlObject&, Triangles&);
+  void      MoveFromObject(GlObject&, Triangles&);
 
-  // Triangles attributes manipilation
+  // Triangles array attributes manipilation
   
   bool      Cull(Triangles&, const GlCamera&, const MatrixCamera&);
   int       RemoveHiddenSurfaces(Triangles&, const GlCamera&);  
   void      ResetAttributes(Triangles&);
 
-  // Triangles transformation
+  // Triangles array transformation
 
   void      ApplyMatrix(const Matrix<4,4>&, Triangles&);
 
+  // Triangles helpers
+
+  void      SortZ(TrianglesRef&);
+
 } // namespace triangles
+
+//**************************************************************************
+// Inline functions implementation
+//**************************************************************************
+
+// Converts homogenous coordinates (w != 1) to normal 3d
+
+inline void object::Homogenous2Normal(GlObject& obj)
+{
+  auto& vxs = obj.GetCoords();
+  for (auto& vx : vxs)
+    vector::ConvertFromHomogeneous(vx);
+}
+
+// The same function as above but for array of objects
+
+inline void objects::Homogenous2Normal(std::vector<GlObject>& arr)
+{
+  for (auto& obj : arr)
+  {
+    auto& vxs = obj.GetCoords();
+    for (auto& vx : vxs)
+      vector::ConvertFromHomogeneous(vx);
+  }
+}
 
 } // namespace anshub
 

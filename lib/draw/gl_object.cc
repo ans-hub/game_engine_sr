@@ -219,6 +219,50 @@ bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
   return !obj.active_;
 }
 
+// Same as above but not matrixes
+
+bool object::Cull(GlObject& obj, const GlCamera& cam)
+{
+  // Translate world coords to camera for world_pos_ of object. This is necessary
+  // to see how object center would seen when camera would be in 0;0;0 and 0 angles
+  // (i.e. when all objects would be translated in camera coordinates)
+  
+  Vertexes world_pos {obj.world_pos_};
+  coords::World2Camera(world_pos, cam.vrp_, cam.dir_, cam.trig_);
+  Vector obj_pos {world_pos.back()};
+
+  // Cull z planes
+
+  if (obj_pos.z - obj.sphere_rad_ < cam.z_near_)
+    obj.active_ = false;
+  
+  if (obj_pos.z + obj.sphere_rad_ > cam.z_far_)
+    obj.active_ = false;
+
+  // Cull x planes (project point on the view plane and check)
+
+  float x_lhs = (cam.dov_ * (obj_pos.x + obj.sphere_rad_) / obj_pos.z);
+  float x_rhs = (cam.dov_ * (obj_pos.x - obj.sphere_rad_) / obj_pos.z);
+
+  if (x_lhs < -(cam.wov_ / 2))
+    obj.active_ = false;
+  if (x_rhs >  (cam.wov_ / 2))
+    obj.active_ = false;  
+
+  // Cull y planes (project point on the view plane and check)
+  //  todo : here I forgot to use ar
+
+  float y_dhs = (cam.dov_ * (obj_pos.y + obj.sphere_rad_) / obj_pos.z);
+  float y_uhs = (cam.dov_ * (obj_pos.y - obj.sphere_rad_) / obj_pos.z);
+
+  if (y_dhs < -(cam.wov_ / 2))
+    obj.active_ = false;  
+  if (y_uhs > (cam.wov_ / 2))
+    obj.active_ = false;
+
+  return !obj.active_;
+}
+
 // Removes hidden surfaces in camera coordinates
 
 // This function may be called between world and camera coordinates,
@@ -267,6 +311,24 @@ void object::ApplyMatrix(const Matrix<4,4>& mx, GlObject& obj)
     vx = matrix::Multiplie(vx, mx);
 }
 
+void object::World2Camera(GlObject& obj, const GlCamera& cam)
+{
+  auto& vxs = obj.GetCoords();
+  coords::World2Camera(vxs, cam.vrp_, cam.dir_, cam.trig_);
+}
+
+void object::Camera2Persp(GlObject& obj, const GlCamera& cam)
+{
+  auto& vxs = obj.GetCoords();
+  coords::Camera2Persp(vxs, cam.dov_, cam.ar_);
+}
+
+void object::Persp2Screen(GlObject& obj, const GlCamera& cam)
+{
+  auto& vxs {obj.GetCoords()};
+  coords::Persp2Screen(vxs, cam.wov_, cam.scr_w_, cam.scr_h_);
+}
+
 // Scale object and recalc bounding radius
 
 void object::Scale(GlObject& obj, const Vector& scale)
@@ -309,8 +371,9 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
     float ycos = t.Cos(v.y);
     for (auto& vx : vxs)
     {
+      float vx_old {vx.x};
       vx.x = (vx.x * ycos) + (vx.z * ysin);
-      vx.z = (vx.z * ycos) - (vx.x * ysin); 
+      vx.z = (vx.z * ycos) - (vx_old * ysin); 
     }
   }
   if (math::FNotZero(v.x))
@@ -319,8 +382,9 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
     float xcos = t.Cos(v.x);
     for (auto& vx : vxs)
     {
+      float vy_old {vx.y}; 
       vx.y = (vx.y * xcos) - (vx.z * xsin);
-      vx.z = (vx.z * xcos) + (vx.y * xsin); 
+      vx.z = (vx.z * xcos) + (vy_old * xsin); 
     }
   }
   if (math::FNotZero(v.z))
@@ -329,8 +393,9 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
     float zcos = t.Cos(v.z);
     for (auto& vx : vxs)
     {
+      float vx_old {vx.x};
       vx.x = (vx.x * zcos) - (vx.y * zsin);
-      vx.y = (vx.y * zcos) + (vx.x * zsin); 
+      vx.y = (vx.y * zcos) + (vx_old * zsin);
     }
   }
 }
@@ -379,6 +444,19 @@ int objects::Cull(Objects& arr, const GlCamera& cam, const MatrixCamera& mx)
   return res;
 }
 
+int objects::Cull(Objects& arr, const GlCamera& cam)
+{
+  int res {0};
+  for (auto& obj : arr)
+  {
+    if (obj.active_ && object::Cull(obj, cam))
+      ++res;
+  }
+  return res;
+}
+
+// Removes hidden surfaces in each object
+
 int objects::RemoveHiddenSurfaces(Objects& arr, const GlCamera& cam)
 {
   int cnt {0};
@@ -390,11 +468,73 @@ int objects::RemoveHiddenSurfaces(Objects& arr, const GlCamera& cam)
   return cnt;
 }
 
+// Translates all objects by given vector
+
+void objects::Translate(Objects& arr, const Vector& pos)
+{
+  for (auto& obj : arr)
+    object::Translate(obj, pos);
+}
+
+// Rotates objects using one rotate vector
+
+void objects::Rotate(Objects& arr, const Vector& v, const TrigTable& trig)
+{
+  for (auto& obj : arr)
+    object::Rotate(obj, v, trig);
+}
+
+// Rotates objects using vector for each object
+
+void objects::Rotate(
+  Objects& arr, const std::vector<Vector>& rot, const TrigTable& trig)
+{
+  // todo: add assertion (arr.size() == vecs.size())
+  
+  for (std::size_t i = 0; i < arr.size(); ++i)
+  {
+    auto& obj = arr[i];
+    auto& vec = rot[i];
+    object::Rotate(obj, vec, trig);
+  }
+}
+
+// Apply givemn matrixes to onbjects
+
 void objects::ApplyMatrix(const Matrix<4,4>& mx, Objects& arr)
 {
   for (auto& obj : arr)
     object::ApplyMatrix(mx, obj);
 }
+
+void objects::World2Camera(Objects& arr, const GlCamera& cam)
+{
+  for (auto& obj : arr)
+  {
+    auto& vxs = obj.GetCoords();
+    coords::World2Camera(vxs, cam.vrp_, cam.dir_, cam.trig_);
+  }
+}
+
+void objects::Camera2Persp(Objects& arr, const GlCamera& cam)
+{
+  for (auto& obj : arr)
+  {
+    auto& vxs = obj.GetCoords();
+    coords::Camera2Persp(vxs, cam.dov_, cam.ar_);
+  }
+}
+
+void objects::Persp2Screen(Objects& arr, const GlCamera& cam)
+{
+  for (auto& obj : arr)
+  {
+    auto& vxs {obj.GetCoords()};
+    coords::Persp2Screen(vxs, cam.wov_, cam.scr_w_, cam.scr_h_);
+  }
+}
+
+// Reset all attributes in each object
 
 void objects::ResetAttributes(Objects& arr)
 {
@@ -402,48 +542,95 @@ void objects::ResetAttributes(Objects& arr)
     object::ResetAttributes(obj);
 }
 
+void objects::SetCoords(Objects& arr, Coords c)
+{
+  for (auto& obj : arr)
+    obj.SetCoords(c);
+}
+
+void objects::CopyCoords(Objects& arr, Coords src, Coords dest)
+{
+  for (auto& obj : arr)
+    obj.CopyCoords(src, dest);
+}
+
+// Simple z sort based on z world coordinate
+
+void objects::SortZ(Objects& arr)
+{
+  std::sort(arr.begin(), arr.end(), [](const GlObject& a, const GlObject b)
+  {
+    return a.world_pos_.z > b.world_pos_.z; 
+  });  
+}
+
 //*************************************************************************
 // TRIANGLES HELPERS IMPLEMENTATION
 //*************************************************************************
 
-// Makes triangles array from object
+// Makes new triangles array and add there triangles from object by copying
+// data
 
-Triangles triangles::MakeFromObject(const GlObject& obj)
+Triangles triangles::CopyFromObject(const GlObject& obj)
 {
-  auto& vxs = obj.GetCoords();
-  Triangles res {};
-  for (const auto& tri : obj.triangles_)
-  {
-    res.emplace_back(
-      vxs[tri.indicies_[0]],
-      vxs[tri.indicies_[1]],
-      vxs[tri.indicies_[2]],
-      obj.colors_trans_[tri.indicies_[0]],
-      obj.colors_trans_[tri.indicies_[1]],
-      obj.colors_trans_[tri.indicies_[2]],
-      tri.attrs_
-    );
-  }
-  return res;
+  // auto& vxs = obj.GetCoords();
+  // Triangles res {};
+  // for (const auto& tri : obj.triangles_)
+  // {
+  //   res.emplace_back(
+  //     vxs[tri.indicies_[0]],
+  //     vxs[tri.indicies_[1]],
+  //     vxs[tri.indicies_[2]],
+  //     obj.colors_trans_[tri.indicies_[0]],
+  //     obj.colors_trans_[tri.indicies_[1]],
+  //     obj.colors_trans_[tri.indicies_[2]],
+  //     tri.attrs_
+  //   );
+  // }
+  // return res;
 }
 
-// Add triangles from object to triangles array
+// Makes new triangles array and add there triangles from object by
+// moving object data. Be aware, that after it we shouldn`t use parent
+// object
 
-void triangles::AddFromObject(const GlObject& obj, Triangles& cont)
+Triangles triangles::MoveFromObject(GlObject& obj)
 {
-  auto& vxs = obj.GetCoords();
-  for (const auto& tri : obj.triangles_)
-  {
-    cont.emplace_back(
-      vxs[tri.indicies_[0]],
-      vxs[tri.indicies_[1]],
-      vxs[tri.indicies_[2]],
-      obj.colors_trans_[tri.indicies_[0]],
-      obj.colors_trans_[tri.indicies_[1]],
-      obj.colors_trans_[tri.indicies_[2]],
-      tri.attrs_
-    );
-  }
+  // auto& vxs = obj.GetCoords();
+  // Triangles res {};
+  // for (const auto& tri : obj.triangles_)
+  // {
+  //   res.emplace_back(
+  //     vxs[tri.indicies_[0]],
+  //     vxs[tri.indicies_[1]],
+  //     vxs[tri.indicies_[2]],
+  //     obj.colors_trans_[tri.indicies_[0]],
+  //     obj.colors_trans_[tri.indicies_[1]],
+  //     obj.colors_trans_[tri.indicies_[2]],
+  //     tri.attrs_
+  //   );
+  // }
+  // return res;
+}
+
+// Add triangles from object to triangles array by copying
+
+void triangles::CopyFromObject(const GlObject& obj, Triangles& cont)
+{
+  
+  // auto& vxs = obj.GetCoords();
+  // for (const auto& tri : obj.triangles_)
+  // {
+  //   cont.emplace_back(
+  //     vxs[tri.indicies_[0]],
+  //     vxs[tri.indicies_[1]],
+  //     vxs[tri.indicies_[2]],
+  //     obj.colors_trans_[tri.indicies_[0]],
+  //     obj.colors_trans_[tri.indicies_[1]],
+  //     obj.colors_trans_[tri.indicies_[2]],
+  //     tri.attrs_
+  //   );
+  // }
 }
 
 // Cull triangles from triangles array. Wors as the same function in
@@ -460,45 +647,53 @@ bool triangles::Cull(Triangles&, const GlCamera&, const MatrixCamera&)
 
 int triangles::RemoveHiddenSurfaces(Triangles& arr, const GlCamera& cam)
 {
-  int cnt {0};
-  for (auto& tri : arr)
-  {
-    auto p0 = tri.vxs_[0];
-    auto p1 = tri.vxs_[1];
-    auto p2 = tri.vxs_[2];
+//   int cnt {0};
+//   for (auto& tri : arr)
+//   {
+//     auto p0 = tri.vxs_[0];
+//     auto p1 = tri.vxs_[1];
+//     auto p2 = tri.vxs_[2];
     
-    Vector u {p0, p1};
-    Vector v {p0, p2};
-    Vector n = vector::CrossProduct(u,v);   // normal to u and v
-    Vector c {p0, cam.vrp_};                // view vector
+//     Vector u {p0, p1};
+//     Vector v {p0, p2};
+//     Vector n = vector::CrossProduct(u,v);   // normal to u and v
+//     Vector c {p0, cam.vrp_};                // view vector
 
-    auto prod = vector::DotProduct(c,n);
-    if (math::FlessZero(prod))
-    {
-      tri.attrs_ |= Triangle::HIDDEN;
-      ++cnt;
-    }
-  }
-  return cnt;  
+//     auto prod = vector::DotProduct(c,n);
+//     if (math::FlessZero(prod))
+//     {
+//       tri.attrs_ |= Triangle::HIDDEN;
+//       ++cnt;
+//     }
+//   }
+//   return cnt;  
 }
 
 // Reset attributes of all triangles
 
 void triangles::ResetAttributes(Triangles& arr)
 {
-  for (auto& tri : arr) {
-    if (tri.attrs_ & Triangle::HIDDEN) 
-      tri.attrs_ ^= Triangle::HIDDEN; 
-  }
+  // for (auto& tri : arr) {
+  //   if (tri.attrs_ & Triangle::HIDDEN) 
+  //     tri.attrs_ ^= Triangle::HIDDEN; 
+  // }
 }
 
 // Apply matrix to all triangles in array
 
 void triangles::ApplyMatrix(const Matrix<4,4>& mx, Triangles& arr)
 {
-  for (auto& tri : arr)
-    for (auto& vx : tri.vxs_)
-      vx = matrix::Multiplie(vx, mx);
+  // for (auto& tri : arr)
+  //   for (auto& vx : tri.vxs_)
+  //     vx = matrix::Multiplie(vx, mx);
+}
+
+void triangles::SortZ(TrianglesRef& arr)
+{
+  std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
+  {
+    return t1.get().vxs_[0].z > t2.get().vxs_[0].z;
+  });
 }
 
 } // namespace anshub

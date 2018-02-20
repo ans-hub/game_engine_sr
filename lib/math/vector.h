@@ -169,6 +169,18 @@ inline void Vector::Normalize()
   z *= p;
 }
 
+//****************************************************************************
+// INLINE HELPER FUNCTIONS IMPLEMENTATION
+//****************************************************************************
+
+// Simplie divides all components by w
+
+inline void vector::ConvertFromHomogeneous(Vector& v)
+{
+  v /= v.w;
+  v.w = 1.0f;
+}
+
 } // namespace anshub
 
 #endif  // GM_VECTOR_H

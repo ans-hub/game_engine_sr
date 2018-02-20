@@ -46,8 +46,8 @@ namespace draw {
 
   void WiredObject(const GlObject&, Buffer&);
   void SolidObject(const GlObject&, Buffer&);
-  void WiredObjects(const std::vector<GlObject>&, Buffer&);
-  void WiredTriangles(const Triangles&, Buffer&);
+  void WiredTriangles(const TrianglesRef&, Buffer&);
+  void SolidTriangles(const TrianglesRef&, Buffer&);
 
 } // namespace draw
 

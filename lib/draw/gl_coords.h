@@ -8,7 +8,6 @@
 #ifndef GC_GL_COORDS_H
 #define GC_GL_COORDS_H
 
-#include "gl_object.h"
 #include "gl_aliases.h"
 #include "../math/trig.h"
 #include "../math/vector.h"
@@ -19,41 +18,17 @@ namespace anshub {
 namespace coords {
 
   void  Local2World(Vertexes&, const Vector& move);
-  void  World2Camera(Vertexes&);
   void  Camera2Persp(Vertexes&, float dov, float ar);
-  void  World2Camera(Vertexes&, Vector& pos, Vector& dir, TrigTable&);
+  void  World2Camera(Vertexes&, cVector& pos, cVector& dir, const TrigTable&);
   void  Persp2Screen(Vertexes&, float wov, int scr_w, int scr_h);
 
   void  RotateYaw(Vertexes&, float deg, TrigTable&);
   void  RotatePitch(Vertexes&, float deg, TrigTable&);
   void  RotateRoll(Vertexes&, float deg, TrigTable&);
 
-  void  Homogenous2Normal(GlObject&);
-  void  Homogenous2Normal(std::vector<GlObject>&);
-  Vector  RotationMatrix2Euler(const MatrixRotateUvn&);
+  Vector RotationMatrix2Euler(const MatrixRotateUvn&);
   
 } // namespace coords
-
-//*****************************************************************************
-// Inline implementation
-//*****************************************************************************
-
-// Converts homogenous coordinates (w != 1) to normal 3d
-
-inline void coords::Homogenous2Normal(GlObject& obj)
-{
-  for (auto& vx : obj.GetCoords())
-    vector::ConvertFromHomogeneous(vx);
-}
-
-// The same function as above but for array of objects
-
-inline void coords::Homogenous2Normal(std::vector<GlObject>& arr)
-{
-  for (auto& obj : arr)
-    for (auto& vx : obj.GetCoords())
-      vector::ConvertFromHomogeneous(vx);
-}
 
 } // namespace anshub
 

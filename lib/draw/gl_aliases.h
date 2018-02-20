@@ -9,6 +9,7 @@
 #define GC_DRAW_ALIASES_H
 
 #include <vector>
+#include <functional>
 
 namespace anshub {
 
@@ -30,7 +31,8 @@ namespace anshub {
   using Objects   = std::vector<GlObject>;
   using Matrix2d  = std::vector<std::vector<double>>;
   using cMatrix2d = const Matrix2d;
-  using Triangles     = std::vector<Triangle>;
+  using Triangles = std::vector<Triangle>;
+  using TrianglesRef = std::vector<std::reference_wrapper<Triangle>>;
 
 } // namespace anshub
 

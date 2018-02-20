@@ -24,8 +24,15 @@ void coords::Local2World(Vertexes& vxs, const Vector& move)
 // Translate all vertexes into the camera coordinates (by YXZ sequence)
 
 void coords::World2Camera(
-  Vertexes& vxs, Vector& cam_pos, Vector& cam_dir, TrigTable& trig)
+  Vertexes& vxs, cVector& cam_pos, cVector& cam_dir, const TrigTable& trig)
 {
+  float ysin = trig.Sin(-cam_dir.y);
+  float ycos = trig.Cos(-cam_dir.y);
+  float xsin = trig.Sin(-cam_dir.x);
+  float xcos = trig.Cos(-cam_dir.x);
+  float zsin = trig.Sin(-cam_dir.z);
+  float zcos = trig.Cos(-cam_dir.z);
+  
   for (auto& vx : vxs)
   {
     // Translate position
@@ -38,30 +45,27 @@ void coords::World2Camera(
 
     if (math::FNotZero(cam_dir.y))
     {
-      float sine_y = trig.Sin(-cam_dir.y);
-      float cosine_y = trig.Cos(-cam_dir.y);      
-      vx.x = vx.x * cosine_y + vx.z * sine_y;
-      vx.z = vx.x * -sine_y  + vx.z * cosine_y;
+      float vx_old {vx.x};
+      vx.x = (vx.x * ycos) + (vx.z * ysin);
+      vx.z = (vx.z * ycos) - (vx_old * ysin); 
     }
 
     // X-axis rotate (pitch)
 
     if (math::FNotZero(cam_dir.x))
     {
-      float sine_x = trig.Sin(-cam_dir.x);      
-      float cosine_x = trig.Cos(-cam_dir.x);  
-      vx.y = vx.y * cosine_x - vx.z * sine_x;
-      vx.z = vx.y * sine_x   + vx.z * cosine_x;
+      float vy_old {vx.y}; 
+      vx.y = (vx.y * xcos) - (vx.z * xsin);
+      vx.z = (vx.z * xcos) + (vy_old * xsin); 
     }
 
     // Z-axis rotate (roll)
 
     if (math::FNotZero(cam_dir.z))
     {
-      float sine_z = trig.Sin(-cam_dir.z);
-      float cosine_z = trig.Cos(-cam_dir.z);
-      vx.x = vx.x * cosine_z - vx.y * sine_z;
-      vx.y = vx.x * sine_z   + vx.y * cosine_z;
+      float vx_old {vx.x};
+      vx.x = (vx.x * zcos) - (vx.y * zsin);
+      vx.y = (vx.y * zcos) + (vx_old * zsin);
     }
   }
 }
