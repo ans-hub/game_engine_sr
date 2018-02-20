@@ -55,17 +55,17 @@ int main(int argc, const char** argv)
 
   auto obj = object::Make(
     "data/tri_gourang.ply", trig, 
-    {1.0f, 1.0f, 1.0f},   // initial scale
+    {2.0f, 2.0f, 2.0f},   // initial scale
     {0.0f, 0.0f, 7.0f},   // world pos
     // {0.0f, 0.0f, 35.0f}   // initial rotate
-    {0.0f, 0.0f, 2.0f}   // initial rotate
+    {0.0f, 0.0f, 5.0f}   // initial rotate
   );
   
   // Camera
 
   float    dov     {2};
   float    fov     {90};
-  Vector   cam_pos {2.0f, -2.0f, 0.0f};
+  Vector   cam_pos {0.0f, 0.0f, 0.0f};
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {500};
@@ -95,7 +95,27 @@ int main(int argc, const char** argv)
       obj_rot.x = -1.0f;
     else if (kbtn == Btn::N)
       obj_rot.x = +1.0f;
-      
+    if (kbtn == Btn::LEFT)
+      obj.world_pos_.x -= 0.5f;
+    if (kbtn == Btn::RIGHT)
+      obj.world_pos_.x += 0.5f;
+    if (kbtn == Btn::UP)
+      obj.world_pos_.y += 0.5f;
+    if (kbtn == Btn::DOWN)
+      obj.world_pos_.y -= 0.5f;
+    if (kbtn == Btn::ENTER)
+    {
+      obj.colors_trans_[0].r = rand_toolkit::get_rand(0, 255);
+      obj.colors_trans_[0].g = rand_toolkit::get_rand(0, 255);
+      obj.colors_trans_[0].b = rand_toolkit::get_rand(0, 255);
+      obj.colors_trans_[1].r = rand_toolkit::get_rand(0, 255);
+      obj.colors_trans_[1].g = rand_toolkit::get_rand(0, 255);
+      obj.colors_trans_[1].b = rand_toolkit::get_rand(0, 255);
+      obj.colors_trans_[2].r = rand_toolkit::get_rand(0, 255);
+      obj.colors_trans_[2].g = rand_toolkit::get_rand(0, 255);
+      obj.colors_trans_[2].b = rand_toolkit::get_rand(0, 255);
+    }
+
     // Prepare transformation matrixes for main object
 
     MatrixRotateEul   mx_rot {obj_rot, trig};
@@ -159,7 +179,7 @@ int main(int argc, const char** argv)
     // Draw triangles (stored in object)
 
     buf.Clear();
-    draw::SolidObject(obj, kWidth, kHeight, buf);
+    draw::SolidObject(obj, buf);
     buf.SendDataToFB();
 
     win.Render();

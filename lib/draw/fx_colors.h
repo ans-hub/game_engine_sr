@@ -8,6 +8,7 @@
 #ifndef GL_FXCOLORS_H
 #define GL_FXCOLORS_H
 
+#include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
@@ -24,7 +25,7 @@ struct Color
   Color() 
     : r{}, g{}, b{}, a{255} { }
   explicit Color(unsigned int c) 
-    : r{c >> 24}, g{c >> 16 & 0xff}, b{ c >> 8 & 0xff}, a{c & 0xff} { }
+    : r{c >> 24}, g{c >> 16 & 0xff}, b{c >> 8 & 0xff}, a{c & 0xff} { }
   Color(T cr, T cg, T cb)
     : r{cr}, g{cg}, b{cb}, a{255} { }
   
@@ -33,13 +34,16 @@ struct Color
   T b;
   T a;
   
-  uint GetARGB() const { return (b << 24) | (g << 16) | (r << 8) | a; }
+  uint GetARGB() const {
+    return ((int)b << 24) | ((int)g << 16) | ((int)r << 8) | (int)a;
+  }
   
   Color& operator/=(T scalar) {
     this->r /= scalar;
     this->g /= scalar;
     this->b /= scalar;
     this->a /= scalar;
+    return *this;
   }
 
   // todo : decide what to do with overflow
@@ -49,6 +53,7 @@ struct Color
     this->g *= scalar;
     this->b *= scalar;
     this->a *= scalar;
+    return *this;
   }
 
   Color& operator-=(const Color& rhs) {
@@ -56,6 +61,15 @@ struct Color
     this->g -= rhs.g;
     this->b -= rhs.b;
     this->a -= rhs.a;
+    return *this;
+  }
+
+  Color& operator+=(const Color& rhs) {
+    this->r += rhs.r;
+    this->g += rhs.g;
+    this->b += rhs.b;
+    this->a += rhs.a;
+    return *this;
   }
 
   friend inline Color operator/(Color lhs, T scalar) {
@@ -73,20 +87,32 @@ struct Color
     return lhs;
   }
 
+  friend inline Color operator+(Color lhs, const Color& rhs) {
+    lhs += rhs;
+    return lhs;
+  }
+
 }; // struct Color
 
 namespace color {
 
-// Const colors
+  // Const colors
 
-constexpr uint White {0xffffffff};
-constexpr uint Black {0x00000000};
+  constexpr uint White {0xffffffff};
+  constexpr uint Black {0x00000000};
 
-// Helpers functions
+  // Helpers functions
 
-int   MakeARGB(byte a, byte r, byte g, byte b);
-void  SplitARGB(int color, byte& b, byte& g, byte& r, byte& a);
-int   IncreaseBrightness(int color, float k);
+  int   MakeARGB(byte a, byte r, byte g, byte b);
+  void  SplitARGB(int color, byte& b, byte& g, byte& r, byte& a);
+  int   IncreaseBrightness(int color, float k);
+
+  template<class T>
+  std::ostream& operator<<(std::ostream& oss, const Color<T>& c)
+  {
+    oss << c.r << ';' << c.g << ';' << c.b << ';' << c.a;
+    return oss;
+  }
 
 } // namespace color
 

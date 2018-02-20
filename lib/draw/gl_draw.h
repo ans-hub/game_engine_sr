@@ -44,10 +44,10 @@ namespace draw {
   
   // Complex
 
-  void WiredObject(const GlObject&, int w, int h, Buffer&);
-  void SolidObject(const GlObject&, int w, int h, Buffer&);
-  void WiredObjects(const std::vector<GlObject>&, int w, int h, Buffer&);
-  void WiredTriangles(const Triangles&, int w, int h, Buffer&);
+  void WiredObject(const GlObject&, Buffer&);
+  void SolidObject(const GlObject&, Buffer&);
+  void WiredObjects(const std::vector<GlObject>&, Buffer&);
+  void WiredTriangles(const Triangles&, Buffer&);
 
 } // namespace draw
 

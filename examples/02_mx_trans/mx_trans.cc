@@ -374,8 +374,8 @@ int main(int argc, const char** argv)
     // Draw triangles (stored in object)
 
     buf.Clear();
-    draw::SolidObject(obj, kWidth, kHeight, buf);
-    draw::WiredObjects(ground, kWidth, kHeight, buf);
+    draw::SolidObject(obj, buf);
+    draw::WiredObjects(ground, buf);
     buf.SendDataToFB();
 
     // Print fps ans other info

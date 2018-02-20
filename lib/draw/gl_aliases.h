@@ -13,7 +13,7 @@
 namespace anshub {
 
   struct Vector;
-  struct Color;
+  template<class T> struct Color;
   struct GlObject;
   struct Triangle;
 
@@ -22,8 +22,10 @@ namespace anshub {
   using Vuint = std::vector<uint>;
   using Vuchar = std::vector<uchar>;
   using byte  = unsigned char;
-  using cColor = const Color;
-  using Colors = std::vector<Color>;
+  using FColor = Color<float>;
+  using cFColor = const Color<float>;
+  using cColor = const Color<uchar>;
+  using Colors = std::vector<Color<uchar>>;
   using Vertexes  = std::vector<Vector>;
   using Objects   = std::vector<GlObject>;
   using Matrix2d  = std::vector<std::vector<double>>;

@@ -46,7 +46,7 @@ struct Triangle
   );
 
   std::array<Vector,3>  vxs_;       // independent vertexes 
-  std::array<Color,3>   colors_;    // independent colors 
+  std::array<Color<>,3> colors_;    // independent colors 
   std::array<int,3>     indicies_;  // indexed to vertexes in GlObject
   unsigned int          attrs_;
 
