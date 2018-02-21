@@ -67,6 +67,21 @@ int main(int argc, const char** argv)
   constexpr float kWorldSize {30};
   Objects cubes {kCubesCount, obj};
 
+  // Here we change all references to vertexes inside triangles
+
+  for (auto& cube : cubes)
+  {
+    for (auto& tri : cube.triangles_)
+    {
+      tri.v1_ = std::ref(cube.vxs_trans_[tri.f1_]);
+      tri.v2_ = std::ref(cube.vxs_trans_[tri.f2_]);
+      tri.v3_ = std::ref(cube.vxs_trans_[tri.f3_]);
+      tri.c1_ = std::ref(cube.colors_trans_[tri.f1_]);
+      tri.c2_ = std::ref(cube.colors_trans_[tri.f2_]);
+      tri.c3_ = std::ref(cube.colors_trans_[tri.f3_]);
+    }
+  }
+
   for (auto& cube : cubes)
   {
     cube.world_pos_.x = rand_toolkit::get_rand(-kWorldSize, kWorldSize);
@@ -130,6 +145,12 @@ int main(int argc, const char** argv)
     objects::Cull(cubes, cam);
     objects::RemoveHiddenSurfaces(cubes, cam);
     
+    // Make triangles from objects
+
+    auto tri_arr = triangles::MakeContainer();
+    triangles::AddFromObjects(cubes, tri_arr);
+    triangles::SortZ(tri_arr);
+
     // Finally
 
     objects::World2Camera(cubes, cam);
@@ -137,21 +158,10 @@ int main(int argc, const char** argv)
     objects::Homogenous2Normal(cubes);
     objects::Persp2Screen(cubes, cam);
 
-    // Make triangles from objects
-
-    TrianglesRef arr {};
-    for (auto& cube : cubes)
-    {
-      if (cube.active_)
-        for (auto& tri : cube.triangles_)
-          arr.emplace_back(std::ref(tri));
-    }
-
     // Draw triangles
 
     buf.Clear();
-    triangles::SortZ(arr);
-    draw::SolidTriangles(arr, buf);
+    draw::SolidTriangles(tri_arr, buf);
     buf.SendDataToFB();
 
     win.Render();

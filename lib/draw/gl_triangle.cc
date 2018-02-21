@@ -11,23 +11,35 @@ namespace anshub {
 
 // Constructs triangle just with indicies && attributes
 
-Triangle::Triangle(int v1, int v2, int v3, uint attrs)
-  : vxs_{}
-  , colors_{}
-  , indicies_{v1, v2, v3}
+Triangle::Triangle(Vertexes& vxs, Colors& c, int f1, int f2, int f3, uint attrs)
+  : v1_{vxs[f1]} 
+  , v2_{vxs[f2]} 
+  , v3_{vxs[f3]} 
+  , c1_{c[f1]} 
+  , c2_{c[f2]} 
+  , c3_{c[f3]} 
+  // , colors_{}
+  , f1_{f1}
+  , f2_{f2}
+  , f3_{f3}
+  // , indicies_{f1, f2, f3}
   , attrs_{attrs}
 { }
 
-// Constructs triangle with self contained vertexes and colors
+// // Constructs triangle with self contained vertexes and colors
 
-Triangle::Triangle(
-  cVector& v1, cVector& v2, cVector& v3, cColor& c1, cColor& c2, cColor& c3,
-  uint attrs)
-  : vxs_{v1, v2, v3}
-  , colors_{c1, c2, c3}
-  , indicies_{}
-  , attrs_{attrs}
-{ }
-
+// Triangle::Triangle(
+//   cVector& v1, cVector& v2, cVector& v3, cColor& c1, cColor& c2, cColor& c3,
+//   uint attrs)
+//   : v1_{v1}
+//   , v2_{v2}
+//   , v3_{v3}
+//   , c1_{c1}
+//   , c2_{c2}
+//   , c3_{c3}
+//   , colors_{}
+//   , indicies_{}
+//   , attrs_{attrs}
+// { }
 
 }  // namespace anshub

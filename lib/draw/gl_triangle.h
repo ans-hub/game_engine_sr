@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <array>
+#include <functional>
 
 #include "gl_aliases.h"
 #include "fx_colors.h"
@@ -25,6 +26,9 @@ namespace anshub {
 
 struct Triangle
 {
+  using VectorRef = std::reference_wrapper<Vector>;
+  using ColorRef = std::reference_wrapper<Color<>>;
+  
   enum Attrs {
     VISIBLE           = 0,
     HIDDEN            = 1,
@@ -36,23 +40,29 @@ struct Triangle
 
   // Constructs triangle just with indicies && attributes
 
-  Triangle(int v1, int v2, int v3, uint attrs);
+  Triangle(Vertexes&, Colors&, int f1, int f2, int f3, uint attrs);
   
   // Constructs triangle with self contained vertexes and colors
 
-  Triangle(
-    cVector& v1, cVector& v2, cVector& v3, cColor& c1, cColor& c2, cColor& c3,
-    uint attrs
-  );
+  // Triangle(
+  //   cVector& v1, cVector& v2, cVector& v3, cColor& c1, cColor& c2, cColor& c3,
+  //   uint attrs
+  // );
 
-  // Vector& v1;  // reference to vertexes
-  // Vector& v2;
-  // Vector& v3;
-  // Color&  c1;  // reference to colors_
+  VectorRef v1_;
+  VectorRef v2_;
+  VectorRef v3_;
+  ColorRef  c1_;
+  ColorRef  c2_;
+  ColorRef  c3_;
+  int       f1_;
+  int       f2_;
+  int       f3_;
   
-  std::array<Vector,3>  vxs_;       // independent vertexes 
-  std::array<Color<>,3> colors_;    // independent colors 
-  std::array<int,3>     indicies_;  // indexed to vertexes in GlObject
+  
+  // std::array<Vector,3>  vxs_;       // independent vertexes 
+  // std::array<Color<>,3> colors_;    // independent colors 
+  // std::array<int,3>     indicies_;  // indexed to vertexes in GlObject
   unsigned int          attrs_;
 
 }; // struct Triangle
