@@ -14,14 +14,16 @@ namespace anshub {
 
 struct FpsCounter
 {
-  FpsCounter() : timer_{}, curr_{}, prev_{}, time_passed_{} { } 
+  FpsCounter() : timer_{}, curr_{}, prev_{}, data_ready_{}, time_passed_{} { } 
   void Count();
-  long ReadPrev() const { return prev_; }
+  long ReadPrev() { data_ready_ = false; return prev_; }
+  bool Ready() { return data_ready_; }
 
 private:
   Timer timer_;
   int   curr_;
   int   prev_;
+  bool  data_ready_;
   long  time_passed_;
   
 }; // struct FpsCounter

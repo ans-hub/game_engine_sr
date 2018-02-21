@@ -574,24 +574,24 @@ void draw::WiredObject(const GlObject& obj, Buffer& buf)
 
     // As we haven`t filling we get first vertexes color
 
-    auto color = obj.colors_trans_[t.indicies_[0]].GetARGB();
+    auto color = obj.colors_trans_[t.f1_].GetARGB();
 
     // Now get pairs of vectors on the triangle face and draw lines
 
-    auto p1 = obj.vxs_trans_[t.indicies_[0]];
-    auto p2 = obj.vxs_trans_[t.indicies_[1]];
+    auto p1 = obj.vxs_trans_[t.f1_];
+    auto p2 = obj.vxs_trans_[t.f2_];
 
     if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
       draw::Line(p1.x, p1.y, p2.x, p2.y, color, buf);
       
-    auto p3 = obj.vxs_trans_[t.indicies_[1]];
-    auto p4 = obj.vxs_trans_[t.indicies_[2]];
+    auto p3 = obj.vxs_trans_[t.f2_];
+    auto p4 = obj.vxs_trans_[t.f3_];
 
     if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
       draw::Line(p3.x, p3.y, p4.x, p4.y, color, buf);
 
-    auto p5 = obj.vxs_trans_[t.indicies_[2]];
-    auto p6 = obj.vxs_trans_[t.indicies_[0]];
+    auto p5 = obj.vxs_trans_[t.f3_];
+    auto p6 = obj.vxs_trans_[t.f1_];
 
     if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
       draw::Line(p5.x, p5.y, p6.x, p6.y, color, buf);
@@ -610,12 +610,12 @@ void draw::SolidObject(const GlObject& obj, Buffer& buf)
     if ((t.attrs_ & Triangle::HIDDEN))
       continue;
 
-    auto p1 = obj.vxs_trans_[t.indicies_[0]];
-    auto p2 = obj.vxs_trans_[t.indicies_[1]];
-    auto p3 = obj.vxs_trans_[t.indicies_[2]];
-    auto c1 = obj.colors_trans_[t.indicies_[0]].GetARGB();
-    auto c2 = obj.colors_trans_[t.indicies_[1]].GetARGB();
-    auto c3 = obj.colors_trans_[t.indicies_[2]].GetARGB();
+    auto p1 = obj.vxs_trans_[t.f1_];
+    auto p2 = obj.vxs_trans_[t.f2_];
+    auto p3 = obj.vxs_trans_[t.f3_];
+    auto c1 = obj.colors_trans_[t.f1_].GetARGB();
+    auto c2 = obj.colors_trans_[t.f2_].GetARGB();
+    auto c3 = obj.colors_trans_[t.f3_].GetARGB();
     if (t.attrs_ & Triangle::GOURANG_SHADING)
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     else 
@@ -672,12 +672,12 @@ void draw::SolidTriangles(const TrianglesRef& arr, Buffer& buf)
     if ((t.attrs_ & Triangle::HIDDEN))
       continue;
 
-    auto p1 = t.vxs_[0];
-    auto p2 = t.vxs_[1];
-    auto p3 = t.vxs_[2];
-    auto c1 = t.colors_[0].GetARGB();
-    auto c2 = t.colors_[1].GetARGB();
-    auto c3 = t.colors_[2].GetARGB();
+    auto p1 = t.v1_;
+    auto p2 = t.v2_;
+    auto p3 = t.v3_;
+    auto c1 = t.c1_.GetARGB();
+    auto c2 = t.c2_.GetARGB();
+    auto c3 = t.c3_.GetARGB();
     if (t.attrs_ & Triangle::GOURANG_SHADING)
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     else 

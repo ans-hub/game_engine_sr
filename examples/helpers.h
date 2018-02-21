@@ -39,4 +39,20 @@ void HandleCamMovement(Btn kbtn, GlCamera& cam)
     cam.vrp_.x += 0.5f;
 }
 
+void HandlePause(Btn key, GlWindow& win)
+{
+  if (key == Btn::P)
+  {
+    Timer timer {};
+    timer.SetMillisecondsToWait(100);
+    while (true)
+    {
+      if (win.ReadKeyboardBtn(BtnType::KB_DOWN) == Btn::P)
+        break;
+      else
+        timer.Wait();
+    }
+  }
+}
+
 } // namespace helpers

@@ -18,6 +18,7 @@ void FpsCounter::Count()
     time_passed_ = 0;
     prev_ = curr_;
     curr_ = 0;
+    data_ready_ = true;
   }
   timer_.Start(); 
 }

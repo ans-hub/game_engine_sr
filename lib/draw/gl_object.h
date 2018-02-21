@@ -65,6 +65,7 @@ struct GlObject
 
   GlObject();
   GlObject(cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs);
+  // GlObject(const GlObject&) =delete;
   
   // Coordinates routines
 
@@ -170,20 +171,25 @@ namespace triangles {
 
   // Triangles array filling
 
-  Triangles CopyFromObject(const GlObject&);
-  Triangles MoveFromObject(GlObject&);
-  void      CopyFromObject(const GlObject&, Triangles&);
-  void      MoveFromObject(GlObject&, Triangles&);
+  TrianglesRef MakeContainer();
+  void      AddFromObject(GlObject&, TrianglesRef&);
+  void      AddFromObjects(Objects&, TrianglesRef&);
 
   // Triangles array attributes manipilation
   
-  bool      Cull(Triangles&, const GlCamera&, const MatrixCamera&);
-  int       RemoveHiddenSurfaces(Triangles&, const GlCamera&);  
-  void      ResetAttributes(Triangles&);
+  int       RemoveHiddenSurfaces(TrianglesRef&, const GlCamera&);  
+  void      ResetAttributes(TrianglesRef&);
 
   // Triangles array transformation
 
-  void      ApplyMatrix(const Matrix<4,4>&, Triangles&);
+  void      ApplyMatrix(const Matrix<4,4>&, TrianglesRef&);
+
+  // Triangles coords helpers
+
+  void      World2Camera(TrianglesRef&, const GlCamera&);
+  void      Camera2Persp(TrianglesRef&, const GlCamera&);
+  void      Persp2Screen(TrianglesRef&, const GlCamera&);
+  void      Homogenous2Normal(TrianglesRef&);
 
   // Triangles helpers
 
@@ -206,7 +212,7 @@ inline void object::Homogenous2Normal(GlObject& obj)
 
 // The same function as above but for array of objects
 
-inline void objects::Homogenous2Normal(std::vector<GlObject>& arr)
+inline void objects::Homogenous2Normal(Objects& arr)
 {
   for (auto& obj : arr)
   {

@@ -69,7 +69,7 @@ GlObject::GlObject(
     auto x = faces[i][0];
     auto y = faces[i][1];
     auto z = faces[i][2];
-    triangles_.emplace_back(x, y, z, fattr);
+    triangles_.emplace_back(vxs_trans_, colors_trans_, x, y, z, fattr);
   }
 
   // Calc bounding sphere radius
@@ -283,9 +283,9 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
 
   for (auto& face : obj.triangles_)
   {
-    auto p0 = obj.vxs_trans_[face.indicies_[0]];
-    auto p1 = obj.vxs_trans_[face.indicies_[1]];
-    auto p2 = obj.vxs_trans_[face.indicies_[2]];
+    auto p0 = obj.vxs_trans_[face.f1_];
+    auto p1 = obj.vxs_trans_[face.f2_];
+    auto p2 = obj.vxs_trans_[face.f3_];
     
     Vector u {p0, p1};
     Vector v {p0, p2};
@@ -558,7 +558,7 @@ void objects::CopyCoords(Objects& arr, Coords src, Coords dest)
 
 void objects::SortZ(Objects& arr)
 {
-  std::sort(arr.begin(), arr.end(), [](const GlObject& a, const GlObject b)
+  std::sort(arr.begin(), arr.end(), [](const GlObject& a, const GlObject& b)
   {
     return a.world_pos_.z > b.world_pos_.z; 
   });  
@@ -568,131 +568,169 @@ void objects::SortZ(Objects& arr)
 // TRIANGLES HELPERS IMPLEMENTATION
 //*************************************************************************
 
-// Makes new triangles array and add there triangles from object by copying
-// data
+// Makes container of triangles references array. This is simple array of
+// references.
 
-Triangles triangles::CopyFromObject(const GlObject& obj)
+TrianglesRef triangles::MakeContainer()
 {
-  // auto& vxs = obj.GetCoords();
-  // Triangles res {};
-  // for (const auto& tri : obj.triangles_)
-  // {
-  //   res.emplace_back(
-  //     vxs[tri.indicies_[0]],
-  //     vxs[tri.indicies_[1]],
-  //     vxs[tri.indicies_[2]],
-  //     obj.colors_trans_[tri.indicies_[0]],
-  //     obj.colors_trans_[tri.indicies_[1]],
-  //     obj.colors_trans_[tri.indicies_[2]],
-  //     tri.attrs_
-  //   );
-  // }
-  // return res;
+  return TrianglesRef {};
 }
 
-// Makes new triangles array and add there triangles from object by
-// moving object data. Be aware, that after it we shouldn`t use parent
-// object
+// Add references to triangles from objects to triangles container
 
-Triangles triangles::MoveFromObject(GlObject& obj)
+void triangles::AddFromObject(GlObject& obj, TrianglesRef& triangles)
 {
-  // auto& vxs = obj.GetCoords();
-  // Triangles res {};
-  // for (const auto& tri : obj.triangles_)
-  // {
-  //   res.emplace_back(
-  //     vxs[tri.indicies_[0]],
-  //     vxs[tri.indicies_[1]],
-  //     vxs[tri.indicies_[2]],
-  //     obj.colors_trans_[tri.indicies_[0]],
-  //     obj.colors_trans_[tri.indicies_[1]],
-  //     obj.colors_trans_[tri.indicies_[2]],
-  //     tri.attrs_
-  //   );
-  // }
-  // return res;
+  if (obj.active_)
+  {
+    // Now we place here references to triangles and fill them
+
+    for (auto& tri : obj.triangles_)
+    {
+      tri.v1_ = obj.vxs_trans_[tri.f1_];
+      tri.v2_ = obj.vxs_trans_[tri.f2_];
+      tri.v3_ = obj.vxs_trans_[tri.f3_];
+      tri.c1_ = obj.colors_trans_[tri.f1_];
+      tri.c2_ = obj.colors_trans_[tri.f2_];
+      tri.c3_ = obj.colors_trans_[tri.f3_];
+      triangles.emplace_back(std::ref(tri));
+    }
+  }
 }
 
-// Add triangles from object to triangles array by copying
+// Add references to triangles from objects to triangles container
 
-void triangles::CopyFromObject(const GlObject& obj, Triangles& cont)
+void triangles::AddFromObjects(Objects& arr, TrianglesRef& triangles)
 {
-  
-  // auto& vxs = obj.GetCoords();
-  // for (const auto& tri : obj.triangles_)
-  // {
-  //   cont.emplace_back(
-  //     vxs[tri.indicies_[0]],
-  //     vxs[tri.indicies_[1]],
-  //     vxs[tri.indicies_[2]],
-  //     obj.colors_trans_[tri.indicies_[0]],
-  //     obj.colors_trans_[tri.indicies_[1]],
-  //     obj.colors_trans_[tri.indicies_[2]],
-  //     tri.attrs_
-  //   );
-  // }
-}
+  for (auto& obj : arr)
+  {
+    if (!obj.active_)
+      continue;
+    
+    // Now we place here references to triangles and fill them
 
-// Cull triangles from triangles array. Wors as the same function in
-// ::object namespace
-
-bool triangles::Cull(Triangles&, const GlCamera&, const MatrixCamera&)
-{
-  // todo
-  return true;
+    for (auto& tri : obj.triangles_)
+    {
+      tri.v1_ = obj.vxs_trans_[tri.f1_];
+      tri.v2_ = obj.vxs_trans_[tri.f2_];
+      tri.v3_ = obj.vxs_trans_[tri.f3_];
+      tri.c1_ = obj.colors_trans_[tri.f1_];
+      tri.c2_ = obj.colors_trans_[tri.f2_];
+      tri.c3_ = obj.colors_trans_[tri.f3_];
+      triangles.emplace_back(std::ref(tri));
+    }
+  }
 }
 
 // Hides invisible faces to viewpoint. Works as the same function in
 // ::object namespace
 
-int triangles::RemoveHiddenSurfaces(Triangles& arr, const GlCamera& cam)
+int triangles::RemoveHiddenSurfaces(TrianglesRef& arr, const GlCamera& cam)
 {
-//   int cnt {0};
-//   for (auto& tri : arr)
-//   {
-//     auto p0 = tri.vxs_[0];
-//     auto p1 = tri.vxs_[1];
-//     auto p2 = tri.vxs_[2];
-    
-//     Vector u {p0, p1};
-//     Vector v {p0, p2};
-//     Vector n = vector::CrossProduct(u,v);   // normal to u and v
-//     Vector c {p0, cam.vrp_};                // view vector
+  int cnt {0};
+  for (auto& tri_ref : arr)
+  {
+    auto& tri = tri_ref.get();
+      
+    Vector u {tri.v1_, tri.v2_};
+    Vector v {tri.v1_, tri.v3_};
+    Vector n = vector::CrossProduct(u,v);   // normal to u and v
+    Vector c {tri.v1_, cam.vrp_};           // view vector
 
-//     auto prod = vector::DotProduct(c,n);
-//     if (math::FlessZero(prod))
-//     {
-//       tri.attrs_ |= Triangle::HIDDEN;
-//       ++cnt;
-//     }
-//   }
-//   return cnt;  
+    auto prod = vector::DotProduct(c,n);
+    if (math::FlessZero(prod))
+    {
+      tri.attrs_ |= Triangle::HIDDEN;
+      ++cnt;
+    }
+  }
+  return cnt;  
 }
 
 // Reset attributes of all triangles
+// todo : test it
 
-void triangles::ResetAttributes(Triangles& arr)
+void triangles::ResetAttributes(TrianglesRef& arr)
 {
-  // for (auto& tri : arr) {
-  //   if (tri.attrs_ & Triangle::HIDDEN) 
-  //     tri.attrs_ ^= Triangle::HIDDEN; 
-  // }
+  for (auto& tri : arr) {
+    if (tri.get().attrs_ & Triangle::HIDDEN) 
+      tri.get().attrs_ ^= Triangle::HIDDEN; 
+  }
 }
 
 // Apply matrix to all triangles in array
+// todo : test it
 
-void triangles::ApplyMatrix(const Matrix<4,4>& mx, Triangles& arr)
+void triangles::ApplyMatrix(const Matrix<4,4>& mx, TrianglesRef& arr)
 {
-  // for (auto& tri : arr)
-  //   for (auto& vx : tri.vxs_)
-  //     vx = matrix::Multiplie(vx, mx);
+  for (auto& tri_ref : arr)
+  {
+    auto tri = tri_ref.get();
+    auto v1 = matrix::Multiplie(tri.v1_, mx);
+    auto v2 = matrix::Multiplie(tri.v2_, mx);
+    auto v3 = matrix::Multiplie(tri.v3_, mx);
+    tri.v1_ = v1;
+    tri.v2_ = v2;
+    tri.v3_ = v3;
+  }
 }
+
+void triangles::World2Camera(TrianglesRef& arr, const GlCamera& cam)
+{
+  for (auto& tri_ref : arr)
+  {
+    auto& tri = tri_ref.get();
+    Vertexes vxs {tri.v1_, tri.v2_, tri.v3_};
+    coords::World2Camera(vxs, cam.vrp_, cam.dir_, cam.trig_);
+    tri.v1_ = vxs[0];
+    tri.v2_ = vxs[1];
+    tri.v3_ = vxs[2];
+  }
+}
+
+void triangles::Camera2Persp(TrianglesRef& arr, const GlCamera& cam)
+{
+  for (auto& tri_ref : arr)
+  {
+    auto& tri = tri_ref.get();
+    Vertexes vxs {tri.v1_, tri.v2_, tri.v3_};
+    coords::Camera2Persp(vxs, cam.dov_, cam.ar_);
+    tri.v1_ = vxs[0];
+    tri.v2_ = vxs[1];
+    tri.v3_ = vxs[2];
+  }
+}
+
+void triangles::Homogenous2Normal(TrianglesRef& arr)
+{
+  for (auto& tri_ref : arr)
+  {
+    auto& tri = tri_ref.get();
+    vector::ConvertFromHomogeneous(tri.v1_);
+    vector::ConvertFromHomogeneous(tri.v2_);
+    vector::ConvertFromHomogeneous(tri.v3_);
+  }
+}
+
+void triangles::Persp2Screen(TrianglesRef& arr, const GlCamera& cam)
+{
+  for (auto& tri_ref : arr)
+  {
+    auto& tri = tri_ref.get();
+    Vertexes vxs {tri.v1_, tri.v2_, tri.v3_};
+    coords::Persp2Screen(vxs, cam.wov_, cam.scr_w_, cam.scr_h_);
+    tri.v1_ = vxs[0];
+    tri.v2_ = vxs[1];
+    tri.v3_ = vxs[2];
+  }
+}
+
+// We should do this before acsonometric projection
 
 void triangles::SortZ(TrianglesRef& arr)
 {
   std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
   {
-    return t1.get().vxs_[0].z > t2.get().vxs_[0].z;
+    return t1.get().v1_.z > t2.get().v1_.z;
   });
 }
 

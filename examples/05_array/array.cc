@@ -28,7 +28,7 @@
 #include "lib/math/matrix_scale.h"
 #include "lib/math/matrix_camera.h"
 
-#include "helpers.h"
+#include "../helpers.h"
 
 using namespace anshub;
 
@@ -41,6 +41,7 @@ int main(int argc, const char** argv)
 
   // Timers
 
+  FpsCounter fps {};
   constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
 
@@ -66,6 +67,21 @@ int main(int argc, const char** argv)
   constexpr int kCubesCount {30};
   constexpr float kWorldSize {30};
   Objects cubes {kCubesCount, obj};
+
+  // Here we change all references to vertexes inside triangles
+
+  for (auto& cube : cubes)
+  {
+    for (auto& tri : cube.triangles_)
+    {
+      tri.v1_ = std::ref(cube.vxs_trans_[tri.f1_]);
+      tri.v2_ = std::ref(cube.vxs_trans_[tri.f2_]);
+      tri.v3_ = std::ref(cube.vxs_trans_[tri.f3_]);
+      tri.c1_ = std::ref(cube.colors_trans_[tri.f1_]);
+      tri.c2_ = std::ref(cube.colors_trans_[tri.f2_]);
+      tri.c3_ = std::ref(cube.colors_trans_[tri.f3_]);
+    }
+  }
 
   for (auto& cube : cubes)
   {
@@ -111,6 +127,7 @@ int main(int argc, const char** argv)
 
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandleCamMovement(kbtn, cam);
+    helpers::HandlePause(kbtn, win);    
 
     // Rotate cubes
 
@@ -127,35 +144,36 @@ int main(int argc, const char** argv)
     // Cull hidden surfaces
 
     objects::ResetAttributes(cubes);
-    objects::Cull(cubes, cam);
-    objects::RemoveHiddenSurfaces(cubes, cam);
+    auto culled = objects::Cull(cubes, cam);
     
+    // Make triangles from objects. Now all changes go through this array
+
+    auto tri_arr = triangles::MakeContainer();
+    triangles::AddFromObjects(cubes, tri_arr);
+    auto hidden = triangles::RemoveHiddenSurfaces(tri_arr, cam);
+    triangles::SortZ(tri_arr);
+
     // Finally
 
-    objects::World2Camera(cubes, cam);
-    objects::Camera2Persp(cubes, cam);
-    objects::Homogenous2Normal(cubes);
-    objects::Persp2Screen(cubes, cam);
-
-    // Make triangles from objects
-
-    TrianglesRef arr {};
-    for (auto& cube : cubes)
-    {
-      if (cube.active_)
-        for (auto& tri : cube.triangles_)
-          arr.emplace_back(std::ref(tri));
-    }
-
-    // Draw triangles
+    triangles::World2Camera(tri_arr, cam);
+    triangles::Camera2Persp(tri_arr, cam);
+    triangles::Homogenous2Normal(tri_arr);
+    triangles::Persp2Screen(tri_arr, cam);
 
     buf.Clear();
-    triangles::SortZ(arr);
-    draw::SolidTriangles(arr, buf);
+    draw::SolidTriangles(tri_arr, buf);
     buf.SendDataToFB();
+    fps.Count();
 
     win.Render();
-    timer.Wait();    
+    timer.Wait();
+    
+    if (fps.Ready())
+    {
+      std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
+      std::cerr << "Objects culled: " << culled << '\n';
+      std::cerr << "Hidden surface: " << hidden << "\n\n";
+    }
 
   } while (!win.Closed());
 

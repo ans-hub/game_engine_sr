@@ -28,7 +28,7 @@
 #include "lib/math/matrix_scale.h"
 #include "lib/math/matrix_camera.h"
 
-#include "helpers.h"
+#include "../helpers.h"
 
 using namespace anshub;
 
@@ -41,6 +41,7 @@ int main(int argc, const char** argv)
 
   // Timers
 
+  FpsCounter fps {};
   constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
 
@@ -111,6 +112,7 @@ int main(int argc, const char** argv)
 
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandleCamMovement(kbtn, cam);
+    helpers::HandlePause(kbtn, win);
 
     // Rotate cubes
 
@@ -127,8 +129,8 @@ int main(int argc, const char** argv)
     // Cull hidden surfaces
 
     objects::ResetAttributes(cubes);
-    objects::Cull(cubes, cam);
-    objects::RemoveHiddenSurfaces(cubes, cam);
+    auto culled = objects::Cull(cubes, cam);
+    auto hidden = objects::RemoveHiddenSurfaces(cubes, cam);
     
     // Finally
 
@@ -144,9 +146,17 @@ int main(int argc, const char** argv)
     for (auto& cube : cubes)
       draw::SolidObject(cube, buf);
     buf.SendDataToFB();
+    fps.Count();
 
     win.Render();
     timer.Wait();    
+
+    if (fps.Ready())
+    {
+      std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
+      std::cerr << "Objects culled: " << culled << '\n';
+      std::cerr << "Hidden surface: " << hidden << "\n\n";
+    }
 
   } while (!win.Closed());
 
