@@ -113,7 +113,8 @@ namespace object {
   void      Translate(GlObject&, const Vector&);
   void      Rotate(GlObject&, const Vector&, const TrigTable&);
   void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
-  
+  void      Light(GlObject&, Lights&);
+
   // Object coords helpers
 
   void      World2Camera(GlObject&, const GlCamera&);
@@ -147,6 +148,7 @@ namespace objects {
   void      Rotate(Objects&, const Vector&, const TrigTable&);
   void      Rotate(Objects&, const std::vector<Vector>&, const TrigTable&);
   void      ApplyMatrix(const Matrix<4,4>&, Objects&);
+  void      Light(Objects&, Lights&);
   
   // Objects coords helpers
 

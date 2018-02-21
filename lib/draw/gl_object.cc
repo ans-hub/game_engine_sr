@@ -311,6 +311,14 @@ void object::ApplyMatrix(const Matrix<4,4>& mx, GlObject& obj)
     vx = matrix::Multiplie(vx, mx);
 }
 
+void object::Light(GlObject& arr, Lights& lights)
+{
+  for (const auto& light : lights)
+  {
+    
+  }
+}
+
 void object::World2Camera(GlObject& obj, const GlCamera& cam)
 {
   auto& vxs = obj.GetCoords();
@@ -505,6 +513,12 @@ void objects::ApplyMatrix(const Matrix<4,4>& mx, Objects& arr)
 {
   for (auto& obj : arr)
     object::ApplyMatrix(mx, obj);
+}
+
+void objects::Light(Objects& arr, Lights& l)
+{
+ for (auto& obj : arr)
+  object::Light(obj, l);
 }
 
 void objects::World2Camera(Objects& arr, const GlCamera& cam)
