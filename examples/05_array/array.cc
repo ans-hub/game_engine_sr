@@ -66,7 +66,7 @@ int main(int argc, const char** argv)
 
   constexpr int kCubesCount {30};
   constexpr float kWorldSize {30};
-  Objects cubes {kCubesCount, obj};
+  GlObjects cubes {kCubesCount, obj};
 
   // Here we change all references to vertexes inside triangles
 

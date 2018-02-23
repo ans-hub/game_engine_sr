@@ -11,7 +11,7 @@ namespace anshub {
 
 // Constructs triangle just with indicies && attributes
 
-Triangle::Triangle(Vertexes& vxs, Colors& c, int f1, int f2, int f3, uint attrs)
+Triangle::Triangle(Vertexes& vxs, FColors& c, int f1, int f2, int f3, uint attrs)
   : v1_{vxs[f1]} 
   , v2_{vxs[f2]} 
   , v3_{vxs[f3]} 

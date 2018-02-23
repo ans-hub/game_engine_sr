@@ -94,7 +94,25 @@ void GlObject::CopyCoords(Coords src, Coords dest)
     vxs_trans_ = vxs_local_;
   else if (src == Coords::TRANS && dest == Coords::LOCAL)
     vxs_local_ = vxs_trans_;
+  if (src == Coords::LOCAL && dest == Coords::TRANS)
+    colors_trans_ = colors_local_;
+  else if (src == Coords::TRANS && dest == Coords::LOCAL)
+    colors_local_ = colors_trans_;
 }
+
+// // Copies internal coordinates from source to destination
+
+// void GlObject::CopyColors(Coords src, Coords dest)
+// {
+
+//   using color::operator<<;
+//   std::cerr << "1" << '\n';
+//   for (const auto& c : colors_local_)
+//     std::cerr << c << '\n';
+//   std::cerr << "2" << '\n';
+//   for (const auto& c : colors_trans_)
+//     std::cerr << c << '\n';
+// }
 
 //***************************************************************************
 // HELPERS IMPLEMENTATION
@@ -291,7 +309,8 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
     Vector v {p0, p2};
     Vector n = vector::CrossProduct(u,v);   // normal to u and v
     Vector c {p0, cam.vrp_};                // view vector
-
+    n.Normalize();
+    c.Normalize();
     auto prod = vector::DotProduct(c,n);
     if (math::FlessZero(prod))
     {
@@ -309,14 +328,6 @@ void object::ApplyMatrix(const Matrix<4,4>& mx, GlObject& obj)
   auto& vxs = obj.GetCoords();
   for (auto& vx : vxs)
     vx = matrix::Multiplie(vx, mx);
-}
-
-void object::Light(GlObject& arr, Lights& lights)
-{
-  for (const auto& light : lights)
-  {
-    
-  }
 }
 
 void object::World2Camera(GlObject& obj, const GlCamera& cam)
@@ -441,7 +452,7 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotateEul& mx)
 // All these functions are the same as in ::object namespace but applies
 // changes for each object in container
 
-int objects::Cull(Objects& arr, const GlCamera& cam, const MatrixCamera& mx)
+int objects::Cull(GlObjects& arr, const GlCamera& cam, const MatrixCamera& mx)
 {
   int res {0};
   for (auto& obj : arr)
@@ -452,7 +463,7 @@ int objects::Cull(Objects& arr, const GlCamera& cam, const MatrixCamera& mx)
   return res;
 }
 
-int objects::Cull(Objects& arr, const GlCamera& cam)
+int objects::Cull(GlObjects& arr, const GlCamera& cam)
 {
   int res {0};
   for (auto& obj : arr)
@@ -465,7 +476,7 @@ int objects::Cull(Objects& arr, const GlCamera& cam)
 
 // Removes hidden surfaces in each object
 
-int objects::RemoveHiddenSurfaces(Objects& arr, const GlCamera& cam)
+int objects::RemoveHiddenSurfaces(GlObjects& arr, const GlCamera& cam)
 {
   int cnt {0};
   for (auto& obj : arr)
@@ -478,7 +489,7 @@ int objects::RemoveHiddenSurfaces(Objects& arr, const GlCamera& cam)
 
 // Translates all objects by given vector
 
-void objects::Translate(Objects& arr, const Vector& pos)
+void objects::Translate(GlObjects& arr, const Vector& pos)
 {
   for (auto& obj : arr)
     object::Translate(obj, pos);
@@ -486,7 +497,7 @@ void objects::Translate(Objects& arr, const Vector& pos)
 
 // Rotates objects using one rotate vector
 
-void objects::Rotate(Objects& arr, const Vector& v, const TrigTable& trig)
+void objects::Rotate(GlObjects& arr, const Vector& v, const TrigTable& trig)
 {
   for (auto& obj : arr)
     object::Rotate(obj, v, trig);
@@ -495,7 +506,7 @@ void objects::Rotate(Objects& arr, const Vector& v, const TrigTable& trig)
 // Rotates objects using vector for each object
 
 void objects::Rotate(
-  Objects& arr, const std::vector<Vector>& rot, const TrigTable& trig)
+  GlObjects& arr, const std::vector<Vector>& rot, const TrigTable& trig)
 {
   // todo: add assertion (arr.size() == vecs.size())
   
@@ -509,19 +520,13 @@ void objects::Rotate(
 
 // Apply givemn matrixes to onbjects
 
-void objects::ApplyMatrix(const Matrix<4,4>& mx, Objects& arr)
+void objects::ApplyMatrix(const Matrix<4,4>& mx, GlObjects& arr)
 {
   for (auto& obj : arr)
     object::ApplyMatrix(mx, obj);
 }
 
-void objects::Light(Objects& arr, Lights& l)
-{
- for (auto& obj : arr)
-  object::Light(obj, l);
-}
-
-void objects::World2Camera(Objects& arr, const GlCamera& cam)
+void objects::World2Camera(GlObjects& arr, const GlCamera& cam)
 {
   for (auto& obj : arr)
   {
@@ -530,7 +535,7 @@ void objects::World2Camera(Objects& arr, const GlCamera& cam)
   }
 }
 
-void objects::Camera2Persp(Objects& arr, const GlCamera& cam)
+void objects::Camera2Persp(GlObjects& arr, const GlCamera& cam)
 {
   for (auto& obj : arr)
   {
@@ -539,7 +544,7 @@ void objects::Camera2Persp(Objects& arr, const GlCamera& cam)
   }
 }
 
-void objects::Persp2Screen(Objects& arr, const GlCamera& cam)
+void objects::Persp2Screen(GlObjects& arr, const GlCamera& cam)
 {
   for (auto& obj : arr)
   {
@@ -550,27 +555,29 @@ void objects::Persp2Screen(Objects& arr, const GlCamera& cam)
 
 // Reset all attributes in each object
 
-void objects::ResetAttributes(Objects& arr)
+void objects::ResetAttributes(GlObjects& arr)
 {
   for (auto& obj : arr)
     object::ResetAttributes(obj);
 }
 
-void objects::SetCoords(Objects& arr, Coords c)
+void objects::SetCoords(GlObjects& arr, Coords c)
 {
   for (auto& obj : arr)
     obj.SetCoords(c);
 }
 
-void objects::CopyCoords(Objects& arr, Coords src, Coords dest)
+void objects::CopyCoords(GlObjects& arr, Coords src, Coords dest)
 {
   for (auto& obj : arr)
+  {
     obj.CopyCoords(src, dest);
+  }
 }
 
 // Simple z sort based on z world coordinate
 
-void objects::SortZ(Objects& arr)
+void objects::SortZ(GlObjects& arr)
 {
   std::sort(arr.begin(), arr.end(), [](const GlObject& a, const GlObject& b)
   {
@@ -613,7 +620,7 @@ void triangles::AddFromObject(GlObject& obj, TrianglesRef& triangles)
 
 // Add references to triangles from objects to triangles container
 
-void triangles::AddFromObjects(Objects& arr, TrianglesRef& triangles)
+void triangles::AddFromObjects(GlObjects& arr, TrianglesRef& triangles)
 {
   for (auto& obj : arr)
   {

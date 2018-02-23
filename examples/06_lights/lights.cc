@@ -16,6 +16,8 @@
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 #include "lib/draw/gl_draw.h"
+#include "lib/draw/gl_text.h"
+#include "lib/draw/gl_lights.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_camera.h"
 #include "lib/math/matrix_rotate_eul.h"
@@ -64,7 +66,7 @@ int main(int argc, const char** argv)
 
   constexpr int kCubesCount {30};
   constexpr float kWorldSize {30};
-  Objects cubes {kCubesCount, obj};
+  GlObjects cubes {kCubesCount, obj};
 
   for (auto& cube : cubes)
   {
@@ -81,16 +83,11 @@ int main(int argc, const char** argv)
   for (int i = 0; i < kCubesCount; ++i)
   {
     cubes_rot.emplace_back(
-      rand_toolkit::get_rand(-4.0f, 4.0f),
-      rand_toolkit::get_rand(-4.0f, 4.0f),
-      rand_toolkit::get_rand(-4.0f, 4.0f)
+      rand_toolkit::get_rand(-1.0f, 1.0f),
+      rand_toolkit::get_rand(-1.0f, 1.0f),
+      rand_toolkit::get_rand(-1.0f, 1.0f)
     );
   }
-
-  // Prepare lights sources
-
-  using s
-  std::vector
 
   // Camera
 
@@ -101,6 +98,13 @@ int main(int argc, const char** argv)
   float    near_z  {dov};
   float    far_z   {300};
   GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
+
+  // Prepare lights sources
+  
+  Lights lights {};
+  lights.ambient_.emplace_back(FColor{255.0f, 255.0f, 255.0f}, 0.2f);
+  lights.infinite_.emplace_back(FColor{255.0f, 255.0f, 0.0f}, 0.6f, Vector{-1.0f, -1.0f, 0.0f});
+  lights.infinite_.emplace_back(FColor{0.0f, 255.0f, 0.0f}, 0.5f, Vector{1.0f, -1.0f, 0.0f});
 
   // Other stuff
 
@@ -138,7 +142,7 @@ int main(int argc, const char** argv)
     // Finally
 
     objects::World2Camera(cubes, cam);
-    objects::Light(cubes);
+    light::Objects(cubes, lights);
     objects::Camera2Persp(cubes, cam);
     objects::Homogenous2Normal(cubes);
     objects::Persp2Screen(cubes, cam);

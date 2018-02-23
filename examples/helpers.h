@@ -55,4 +55,28 @@ void HandlePause(Btn key, GlWindow& win)
   }
 }
 
+void HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
+{
+  switch(key)
+  {
+    case Btn::UP :    vel.y =  0.5f; break;
+    case Btn::DOWN :  vel.y = -0.5f; break;
+    case Btn::LEFT :  vel.x = -0.5f; break;
+    case Btn::RIGHT : vel.x =  0.5f; break;
+    case Btn::Z :     rot.x -= 0.5f; break;
+    case Btn::X :     rot.x += 0.5f; break;
+    case Btn::C :     rot.y -= 0.5f; break;
+    case Btn::V :     rot.y += 0.5f; break;
+    case Btn::B :     rot.z -= 0.5f; break;
+    case Btn::N :     rot.z += 0.5f; break;
+    case Btn::NUM1 :  scale.x += 0.02;
+                      scale.y += 0.02;
+                      scale.z += 0.02; break;
+    case Btn::NUM2 :  scale.x -= 0.02;
+                      scale.y -= 0.02;
+                      scale.z -= 0.02; break;
+    default : break;
+  }
+}
+
 } // namespace helpers

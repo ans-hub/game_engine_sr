@@ -46,8 +46,8 @@ struct GlObject
 
   Vertexes  vxs_local_;     // vertexes local coords
   Vertexes  vxs_trans_;     // vertexes current coords
-  Colors    colors_local_;  // local vertexes colors
-  Colors    colors_trans_;  // transformed vertexes colors
+  FColors   colors_local_;  // local vertexes colors
+  FColors   colors_trans_;  // transformed vertexes colors
   Coords    current_vxs_;   // chooser between coords type
   Triangles triangles_;     // triangles based on coords above
 
@@ -71,8 +71,11 @@ struct GlObject
 
   void  SetCoords(Coords c) { current_vxs_ = c; }
   void  CopyCoords(Coords src, Coords dest);
+  // void  CopyColors(Coords src, Coords dest);
   auto& GetCoords();
   auto& GetCoords() const;
+  auto& GetColors();
+  auto& GetColors() const;
   
 }; // struct Object
 
@@ -88,13 +91,21 @@ struct GlObject
     return (current_vxs_ == Coords::LOCAL) ? vxs_local_ : vxs_trans_;
   }
 
+  inline auto& GlObject::GetColors() { 
+    return (current_vxs_ == Coords::LOCAL) ? colors_local_ : colors_trans_;
+  }
+  
+  inline auto& GlObject::GetColors() const {
+    return (current_vxs_ == Coords::LOCAL) ? colors_local_ : colors_trans_;
+  }
+
 //***********************************************************************
 // Helper functions for ONE OBJECT
 //***********************************************************************
 
 namespace object {
   
-  // Objects creating
+  // GlObjects creating
 
   GlObject  Make(const char*);
   GlObject  Make(const char*, TrigTable&, cVector&, cVector&, cVector&);
@@ -113,7 +124,6 @@ namespace object {
   void      Translate(GlObject&, const Vector&);
   void      Rotate(GlObject&, const Vector&, const TrigTable&);
   void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
-  void      Light(GlObject&, Lights&);
 
   // Object coords helpers
 
@@ -135,33 +145,32 @@ namespace object {
 
 namespace objects {
 
-  // Objects attributes manipilation
+  // GlObjects attributes manipilation
 
-  int       Cull(Objects&, const GlCamera&, const MatrixCamera&);
-  int       Cull(Objects&, const GlCamera&);
-  int       RemoveHiddenSurfaces(Objects&, const GlCamera&);  
-  void      ResetAttributes(Objects&);
+  int       Cull(GlObjects&, const GlCamera&, const MatrixCamera&);
+  int       Cull(GlObjects&, const GlCamera&);
+  int       RemoveHiddenSurfaces(GlObjects&, const GlCamera&);  
+  void      ResetAttributes(GlObjects&);
 
-  // Objects transformation
+  // GlObjects transformation
 
-  void      Translate(Objects&, const Vector&);
-  void      Rotate(Objects&, const Vector&, const TrigTable&);
-  void      Rotate(Objects&, const std::vector<Vector>&, const TrigTable&);
-  void      ApplyMatrix(const Matrix<4,4>&, Objects&);
-  void      Light(Objects&, Lights&);
+  void      Translate(GlObjects&, const Vector&);
+  void      Rotate(GlObjects&, const Vector&, const TrigTable&);
+  void      Rotate(GlObjects&, const std::vector<Vector>&, const TrigTable&);
+  void      ApplyMatrix(const Matrix<4,4>&, GlObjects&);
   
-  // Objects coords helpers
+  // GlObjects coords helpers
 
-  void      World2Camera(Objects&, const GlCamera&);
-  void      Camera2Persp(Objects&, const GlCamera&);
-  void      Persp2Screen(Objects&, const GlCamera&);
-  void      Homogenous2Normal(Objects&);
+  void      World2Camera(GlObjects&, const GlCamera&);
+  void      Camera2Persp(GlObjects&, const GlCamera&);
+  void      Persp2Screen(GlObjects&, const GlCamera&);
+  void      Homogenous2Normal(GlObjects&);
 
-  // Objects helpers
+  // GlObjects helpers
 
-  void      SetCoords(Objects&, Coords);
-  void      CopyCoords(Objects&, Coords, Coords);
-  void      SortZ(Objects&);
+  void      SetCoords(GlObjects&, Coords);
+  void      CopyCoords(GlObjects&, Coords, Coords);
+  void      SortZ(GlObjects&);
   
 } // namespace objects
 
@@ -175,7 +184,7 @@ namespace triangles {
 
   TrianglesRef MakeContainer();
   void      AddFromObject(GlObject&, TrianglesRef&);
-  void      AddFromObjects(Objects&, TrianglesRef&);
+  void      AddFromObjects(GlObjects&, TrianglesRef&);
 
   // Triangles array attributes manipilation
   
@@ -214,7 +223,7 @@ inline void object::Homogenous2Normal(GlObject& obj)
 
 // The same function as above but for array of objects
 
-inline void objects::Homogenous2Normal(Objects& arr)
+inline void objects::Homogenous2Normal(GlObjects& arr)
 {
   for (auto& obj : arr)
   {

@@ -40,7 +40,7 @@ inline bool math::FNotZero(float num)
 
 inline bool math::FlessZero(float num)
 {
-  return num < kEpsilon;
+  return num < -kEpsilon;
 }
 
 inline bool math::Feq(float n1, float n2) 
@@ -51,7 +51,6 @@ inline bool math::Feq(float n1, float n2)
 inline float math::Clamp(float val, float min, float max)
 {
   float rem = std::fmod(val, max);
-  std::cerr << "val, rem: " << val << ' ' << rem << '\n';
   return rem < 0.0f ? max + rem : min + rem;
 }
 

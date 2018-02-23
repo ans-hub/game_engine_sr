@@ -40,7 +40,7 @@ struct Triangle
 
   // Constructs triangle just with indicies && attributes
 
-  Triangle(Vertexes&, Colors&, int f1, int f2, int f3, uint attrs);
+  Triangle(Vertexes&, FColors&, int f1, int f2, int f3, uint attrs);
   
   // Constructs triangle with self contained vertexes and colors
 
@@ -49,12 +49,17 @@ struct Triangle
   //   uint attrs
   // );
 
+  // This fields used only inside ::triangles namespace
+
   Vector  v1_;
   Vector  v2_;
   Vector  v3_;
-  Color<> c1_;
-  Color<> c2_;
-  Color<> c3_;
+  FColor  c1_;
+  FColor  c2_;
+  FColor  c3_;
+
+  // This fields used before triangulation objects
+
   int     f1_;
   int     f2_;
   int     f3_;

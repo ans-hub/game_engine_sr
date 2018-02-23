@@ -605,18 +605,20 @@ void draw::SolidObject(const GlObject& obj, Buffer& buf)
   if (!obj.active_)
     return;
     
-  for (const auto& t : obj.triangles_)
+  for (const auto& face : obj.triangles_)
   {
-    if ((t.attrs_ & Triangle::HIDDEN))
+    if ((face.attrs_ & Triangle::HIDDEN))
       continue;
 
-    auto p1 = obj.vxs_trans_[t.f1_];
-    auto p2 = obj.vxs_trans_[t.f2_];
-    auto p3 = obj.vxs_trans_[t.f3_];
-    auto c1 = obj.colors_trans_[t.f1_].GetARGB();
-    auto c2 = obj.colors_trans_[t.f2_].GetARGB();
-    auto c3 = obj.colors_trans_[t.f3_].GetARGB();
-    if (t.attrs_ & Triangle::GOURANG_SHADING)
+    auto p1 = obj.vxs_trans_[face.f1_];
+    auto p2 = obj.vxs_trans_[face.f2_];
+    auto p3 = obj.vxs_trans_[face.f3_];
+    auto c1 = face.c1_.GetARGB();
+    auto c2 = face.c2_.GetARGB();
+    auto c3 = face.c3_.GetARGB();
+    // auto c2 = obj.colors_trans_[t.f2_].GetARGB();
+    // auto c3 = obj.colors_trans_[t.f3_].GetARGB();
+    if (face.attrs_ & Triangle::GOURANG_SHADING)
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     else 
       draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, buf);

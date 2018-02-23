@@ -9,6 +9,8 @@
 #define GL_FXCOLORS_H
 
 #include <iostream>
+#include <cmath>
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
@@ -35,7 +37,19 @@ struct Color
   T a;
   
   uint GetARGB() const {
-    return ((int)b << 24) | ((int)g << 16) | ((int)r << 8) | (int)a;
+    return ((int)b << 24) | ((int)g << 16) | ((int)r << 8) | 255;
+  }
+  void Normalize() { 
+    r = std::fmod(r, 256.0f); 
+    g = std::fmod(g, 256.0f);
+    b = std::fmod(b, 256.0f);
+    a = 255.0f;
+  }
+  void Clamp() {
+    r = std::min(255.0f, r);
+    g = std::min(255.0f, g);
+    b = std::min(255.0f, b);
+    a = std::min(255.0f, a);
   }
   
   Color& operator/=(T scalar) {
@@ -53,6 +67,14 @@ struct Color
     this->g *= scalar;
     this->b *= scalar;
     this->a *= scalar;
+    return *this;
+  }
+
+  Color& operator*=(const Color& rhs) {
+    this->r *= rhs.r;
+    this->g *= rhs.g;
+    this->b *= rhs.b;
+    this->a *= rhs.a;
     return *this;
   }
 
@@ -79,6 +101,11 @@ struct Color
 
   friend inline Color operator*(Color lhs, T scalar) {
     lhs *= scalar;
+    return lhs;
+  }
+  
+  friend inline Color operator*(Color lhs, const Color& rhs) {
+    lhs *= rhs;
     return lhs;
   }
 

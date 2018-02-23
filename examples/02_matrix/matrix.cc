@@ -20,6 +20,7 @@
 #include "lib/math/trig.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
+#include "lib/draw/gl_lights.cc"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_camera.h"
@@ -172,7 +173,7 @@ const char* HandleInput(int argc, const char** argv)
 }
 
 void PrintInfo(
-  GlText& text, const FpsCounter& fps, 
+  GlText& text, FpsCounter& fps, 
   const Vector& obj_pos, const Vector& obj_rot, 
   const Vector& cam_pos, const Vector& cam_rot,
   int nfo_culled, int nfo_hidden)
@@ -245,11 +246,17 @@ int main(int argc, const char** argv)
   float    far_z   {500};
   GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
 
+  // Prepare lights sources
+ 
+  Lights lights {};
+  lights.ambient_.emplace_back(FColor{255.0f, 255.0f, 255.0f}, 0.2f);
+  lights.infinite_.emplace_back(FColor{255.0f, 255.0f, 0.0f}, 0.6f, Vector{-1.0f, -1.0f, 0.0f});
+ 
   // Other stuff
 
   Buffer  buf (kWidth, kHeight, 0);
   GlText  text {win};
-  Vector  obj_rot    {-0.5f, 1.5f, 0.5f};
+  Vector  obj_rot    {0.0f, 0.0f, 0.0f};
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
   bool    cam_z_mode {false};             // to manage mouse manipulation
   int     nfo_culled;                     // shown how much objects is culled
@@ -344,6 +351,7 @@ int main(int argc, const char** argv)
     auto culled = object::Cull(obj, cam, mx_cam);
     nfo_hidden  = object::RemoveHiddenSurfaces(obj, cam);
     nfo_culled  = static_cast<int>(culled);
+    light::Object(obj, lights);
     
     objects::ResetAttributes(ground);
     nfo_culled += objects::Cull(ground, cam, mx_cam);
@@ -355,7 +363,7 @@ int main(int argc, const char** argv)
     mx_total = matrix::Multiplie(mx_total, mx_cam);
     mx_total = matrix::Multiplie(mx_total, mx_per);
     object::ApplyMatrix(mx_total, obj);
-        
+
     // Make the same for the net
     
     objects::ApplyMatrix(mx_total, ground);
@@ -371,12 +379,13 @@ int main(int argc, const char** argv)
     object::ApplyMatrix(mx_view, obj);
     objects::ApplyMatrix(mx_view, ground);
 
+
     // Draw triangles (stored in object)
 
     buf.Clear();
-    draw::WiredObject(obj, buf);
     for (const auto& it : ground)
       draw::WiredObject(it, buf);
+    draw::SolidObject(obj, buf);
     buf.SendDataToFB();
 
     // Print fps ans other info
