@@ -26,10 +26,8 @@ namespace anshub {
 
 struct Triangle
 {
-  // using VectorRef = std::reference_wrapper<Vector>;
-  // using ColorRef = std::reference_wrapper<Color<>>;
-  
-  enum Attrs {
+  enum Attrs
+  {
     VISIBLE           = 0,
     HIDDEN            = 1,
     CONST_SHADING     = 1 << 1,
@@ -42,13 +40,9 @@ struct Triangle
 
   Triangle(Vertexes&, FColors&, int f1, int f2, int f3, uint attrs);
   
-  // Constructs triangle with self contained vertexes and colors
-
-  // Triangle(
-  //   cVector& v1, cVector& v2, cVector& v3, cColor& c1, cColor& c2, cColor& c3,
-  //   uint attrs
-  // );
-
+  Vertexes& vxs_;
+  FColors&  colors_;
+  
   // This fields used only inside ::triangles namespace
 
   Vector  v1_;
@@ -64,17 +58,24 @@ struct Triangle
   int     f2_;
   int     f3_;
   
-  
-  // std::array<Vector,3>  vxs_;       // independent vertexes 
-  // std::array<Color<>,3> colors_;    // independent colors 
-  // std::array<int,3>     indicies_;  // indexed to vertexes in GlObject
-  unsigned int          attrs_;
+  // Other usefull stuff
+
+  Vector  face_normal_;
+  uint    attrs_;
 
 }; // struct Triangle
 
-}  // namespace anshub
+namespace triangle {
+
+  void CalcFaceNormal(Triangle&, const Vertexes&);
+  void CalcVertexNormal(Triangle&, const Vertexes&);
+
+} // namespace triangle
+
+} // namespace anshub
 
 #endif  // GC_GL_TRIANGLE_H
+
 
 //***********************************************************************
 

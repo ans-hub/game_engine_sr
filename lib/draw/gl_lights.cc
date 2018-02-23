@@ -24,52 +24,34 @@ void light::Object(GlObject& obj, Lights& lights)
     if (tri.attrs_ & Triangle::HIDDEN)
       continue;
 
-    // Copy color information into triangle struct
+    if (tri.attrs_ & Triangle::CONST_SHADING)
+    {
+      light::ConstShading(tri, colors);
+      continue;
+    }
 
+    // Reset total lighting of current triangle
+    
     tri.c1_ = FColor{0.0f, 0.0f, 0.0f};
     tri.c2_ = FColor{0.0f, 0.0f, 0.0f};
     tri.c3_ = FColor{0.0f, 0.0f, 0.0f};
+
+    // Remember source color of triangle
+
     auto& bc1 = colors[tri.f1_];
     auto& bc2 = colors[tri.f1_];
     auto& bc3 = colors[tri.f1_];
 
-    // Calc ambient lighting (preffered only 1 source of ambient light)
-
-    for (const auto& l : lights.ambient_)
+    if (tri.attrs_ & Triangle::FLAT_SHADING)
     {
-      auto amb1 = (bc1 * l.color_ * l.intense_) / 256.0f;
-      auto amb2 = (bc2 * l.color_ * l.intense_) / 256.0f;
-      auto amb3 = (bc3 * l.color_ * l.intense_) / 256.0f;
-      tri.c1_ += amb1;
-      tri.c2_ += amb2;
-      tri.c3_ += amb3;
+      tri.face_normal_.Normalize();
+      light::AmbientFlatShading(tri, bc1, bc2, bc3, lights.ambient_);
+      light::InfiniteFlatShading(tri, bc1, bc2, bc3, lights.infinite_);
     }
-
-    // Calc infinite lighting
-
-    // Calc normal to the face
-
-    auto p0 = vxs[tri.f1_];
-    auto p1 = vxs[tri.f2_];
-    auto p2 = vxs[tri.f3_];
-    Vector u {p0, p1};
-    Vector v {p0, p2};
-    Vector n = vector::CrossProduct(u, v);
-    n.Normalize();
-
-    for (const auto& l : lights.infinite_)
+    else if (tri.attrs_ & Triangle::GOURANG_SHADING)
     {
-      Vector dir = l.direction_ * (-1);    
-      auto prod = vector::DotProduct(dir, n);
-      if (prod < 0) prod = 0;
-      auto inf1 = (bc1 * l.color_ * l.intense_ * prod) / 256.0f;
-      auto inf2 = (bc2 * l.color_ * l.intense_ * prod) / 256.0f;
-      auto inf3 = (bc3 * l.color_ * l.intense_ * prod) / 256.0f;
-      tri.c1_ += inf1;
-      tri.c2_ += inf2;
-      tri.c3_ += inf3;
+      
     }
-
     // Normalize colors
 
     tri.c1_.Clamp();
@@ -81,8 +63,45 @@ void light::Object(GlObject& obj, Lights& lights)
 void light::Objects(GlObjects& arr, Lights& lights)
 {
   for (auto& obj : arr)
+    light::Object(obj, lights);
+}
+
+void light::ConstShading(Triangle& tri, FColors& colors)
+{
+  tri.c1_ = colors[tri.f1_];
+  tri.c2_ = colors[tri.f2_];
+  tri.c3_ = colors[tri.f3_];
+}
+
+void light::AmbientFlatShading(
+  Triangle& tri, cFColor& bc1, cFColor& bc2, cFColor& bc3, LightsAmbient& lights)
+{
+  for (const auto& l : lights)
   {
-    light::Object(obj, lights); 
+    auto amb1 = (bc1 * l.color_ * l.intense_) / 256.0f;
+    auto amb2 = (bc2 * l.color_ * l.intense_) / 256.0f;
+    auto amb3 = (bc3 * l.color_ * l.intense_) / 256.0f;
+    tri.c1_ += amb1;
+    tri.c2_ += amb2;
+    tri.c3_ += amb3;
+  }
+}
+
+void light::InfiniteFlatShading(
+  Triangle& tri, cFColor& bc1, cFColor& bc2, cFColor& bc3, LightsInfinite& lights)
+{
+  for (const auto& l : lights)
+  {
+    auto dir = l.direction_ * (-1);
+    auto prod = vector::DotProduct(dir, tri.face_normal_); 
+    if (prod < 0) prod = 0;
+
+    auto inf1 = (bc1 * l.color_ * l.intense_ * prod) / 256.0f;
+    auto inf2 = (bc2 * l.color_ * l.intense_ * prod) / 256.0f;
+    auto inf3 = (bc3 * l.color_ * l.intense_ * prod) / 256.0f;
+    tri.c1_ += inf1;
+    tri.c2_ += inf2;
+    tri.c3_ += inf3;
   }
 }
 

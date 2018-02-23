@@ -73,6 +73,11 @@ namespace light {
   
   void Object(GlObject&, Lights&);
   void Objects(GlObjects&, Lights&);
+  void ConstShading(Triangle&, FColors&);
+  void AmbientFlatShading(
+    Triangle&, cFColor&, cFColor&, cFColor&, LightsAmbient&);
+  void InfiniteFlatShading(
+    Triangle&, cFColor&, cFColor&, cFColor&, LightsInfinite&);
   
 }
 

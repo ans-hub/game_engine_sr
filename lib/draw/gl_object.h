@@ -46,12 +46,13 @@ struct GlObject
 
   Vertexes  vxs_local_;     // vertexes local coords
   Vertexes  vxs_trans_;     // vertexes current coords
+  Vectors   vxs_normals_;   // vertexes normals
   FColors   colors_local_;  // local vertexes colors
   FColors   colors_trans_;  // transformed vertexes colors
   Coords    current_vxs_;   // chooser between coords type
   Triangles triangles_;     // triangles based on coords above
 
-  // Data memebers: helpers
+  // Data members: helpers
 
   int       id_;            // object id  
   bool      active_;        // object state
@@ -116,7 +117,9 @@ namespace object {
   bool      Cull(GlObject&, const GlCamera&);  
   int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
   void      ResetAttributes(GlObject&);
-  
+  void      RefreshFaceNormals(GlObject&);
+  void      RefreshVertexNormals(GlObject&);
+ 
   // Object transformation
 
   void      Scale(GlObject&, const Vector&);
@@ -151,6 +154,8 @@ namespace objects {
   int       Cull(GlObjects&, const GlCamera&);
   int       RemoveHiddenSurfaces(GlObjects&, const GlCamera&);  
   void      ResetAttributes(GlObjects&);
+  void      RefreshFaceNormals(GlObjects&);
+  void      RefreshVertexNormals(GlObjects&);
 
   // GlObjects transformation
 

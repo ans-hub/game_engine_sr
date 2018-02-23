@@ -104,7 +104,6 @@ int main(int argc, const char** argv)
   Lights lights {};
   lights.ambient_.emplace_back(FColor{255.0f, 255.0f, 255.0f}, 0.2f);
   lights.infinite_.emplace_back(FColor{255.0f, 255.0f, 0.0f}, 0.6f, Vector{-1.0f, -1.0f, 0.0f});
-  lights.infinite_.emplace_back(FColor{0.0f, 255.0f, 0.0f}, 0.5f, Vector{1.0f, -1.0f, 0.0f});
 
   // Other stuff
 
@@ -142,6 +141,8 @@ int main(int argc, const char** argv)
     // Finally
 
     objects::World2Camera(cubes, cam);
+    objects::RefreshFaceNormals(cubes);
+    objects::RefreshVertexNormals(cubes);
     light::Objects(cubes, lights);
     objects::Camera2Persp(cubes, cam);
     objects::Homogenous2Normal(cubes);

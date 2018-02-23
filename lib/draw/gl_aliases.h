@@ -35,6 +35,7 @@ namespace anshub {
   using FColors = std::vector<Color<float>>;
   using cFColors = const std::vector<Color<float>>;
   using Vertexes  = std::vector<Vector>;
+  using Vectors  = std::vector<Vector>;
   using GlObjects   = std::vector<GlObject>;
   using Matrix2d  = std::vector<std::vector<double>>;
   using cMatrix2d = const Matrix2d;

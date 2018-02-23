@@ -84,6 +84,8 @@ GlObject::GlObject(
     curr = std::fabs(vx.z);
     if (curr > sphere_rad_) sphere_rad_ = curr;    
   }
+
+  object::RefreshVertexNormals(*this);
 }
 
 // Copies internal coordinates from source to destination
@@ -155,7 +157,8 @@ GlObject object::Make(const char* str)
     auto colors = Vector2d(vxs.size(), Vector1d{255, 255, 255});
     auto name   = list_props.begin()->first;    // first list property in "face" 
     auto faces  = ply.GetList("face", {name});
-    auto attrs  = Vector2d(faces.size(), Vector1d{Triangle::Attrs::VISIBLE});
+    auto attrs  = Vector2d(faces.size(), 
+      Vector1d{Triangle::VISIBLE | Triangle::FLAT_SHADING});
     auto obj    = GlObject(vxs, colors, faces, attrs);
     obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
     return obj;
@@ -185,6 +188,32 @@ void object::ResetAttributes(GlObject& obj)
       tri.attrs_ ^= Triangle::HIDDEN; 
   }
   obj.active_ = true;
+}
+
+// Refresh face normals (for lighting purposes we should call this function
+// in world coordinates)
+
+void object::RefreshFaceNormals(GlObject& obj)
+{
+  auto& vxs = obj.GetCoords();
+
+  for (auto& tri : obj.triangles_)
+  {
+    auto p1 = vxs[tri.f1_];
+    auto p2 = vxs[tri.f2_];
+    auto p3 = vxs[tri.f3_];
+    Vector u {p1, p2};
+    Vector v {p1, p3};
+    tri.face_normal_ = vector::CrossProduct(u, v);
+  }
+}
+
+// Refresh vertex normals (for lighting purposes we should call this function
+// in world coordinates) 
+
+void object::RefreshVertexNormals(GlObject& obj)
+{
+  for (auto& )
 }
 
 // Cull objects in cameras coordinates. Since we work in camera coordinates,
@@ -448,6 +477,24 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotateEul& mx)
 //*************************************************************************
 // OBJECTS HELPERS IMPLEMENTATION
 //*************************************************************************
+
+// Refresh face normals (for lighting purposes we should call this function
+// in world coordinates)
+
+void objects::RefreshFaceNormals(GlObjects& arr)
+{
+  for (auto& obj : arr)
+    object::RefreshFaceNormals(obj);
+}
+
+// Refresh vertex normals (for lighting purposes we should call this function
+// in world coordinates)
+
+void objects::RefreshVertexNormals(GlObjects& arr)
+{
+  for (auto& obj : arr)
+    object::RefreshVertexNormals(obj);
+}
 
 // All these functions are the same as in ::object namespace but applies
 // changes for each object in container

@@ -249,9 +249,15 @@ int main(int argc, const char** argv)
   // Prepare lights sources
  
   Lights lights {};
-  lights.ambient_.emplace_back(FColor{255.0f, 255.0f, 255.0f}, 0.2f);
-  lights.infinite_.emplace_back(FColor{255.0f, 255.0f, 0.0f}, 0.6f, Vector{-1.0f, -1.0f, 0.0f});
- 
+  FColor white  {255.0f, 255.0f, 255.0f};
+  FColor yellow {255.0f, 255.0f, 0.0f};
+  FColor blue   {0.0f, 0.0f, 255.0f};
+
+  lights.ambient_.emplace_back(white, 0.2f);
+  lights.infinite_.emplace_back(yellow, 0.6f, Vector{-1.0f, -1.0f, 0.0f});
+  // lights.point_.emplace_back(blue, 1.0f, Vector{-1.0f, -1.0f, 0.0f});
+  
+
   // Other stuff
 
   Buffer  buf (kWidth, kHeight, 0);
