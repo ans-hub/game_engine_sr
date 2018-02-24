@@ -616,8 +616,6 @@ void draw::SolidObject(const GlObject& obj, Buffer& buf)
     auto c1 = face.c1_.GetARGB();
     auto c2 = face.c2_.GetARGB();
     auto c3 = face.c3_.GetARGB();
-    // auto c2 = obj.colors_trans_[t.f2_].GetARGB();
-    // auto c3 = obj.colors_trans_[t.f3_].GetARGB();
     if (face.attrs_ & Triangle::GOURANG_SHADING)
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     else 

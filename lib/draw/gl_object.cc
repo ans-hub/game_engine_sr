@@ -14,6 +14,7 @@ namespace anshub {
 GlObject::GlObject()
   : vxs_local_{}
   , vxs_trans_{}
+  , vxs_normals_{}
   , colors_local_{}
   , colors_trans_{}
   , current_vxs_{Coords::LOCAL}
@@ -33,6 +34,7 @@ GlObject::GlObject(
   cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs)
   : vxs_local_{}
   , vxs_trans_{}
+  , vxs_normals_{}
   , colors_local_{}
   , colors_trans_{}
   , current_vxs_{Coords::LOCAL}  
@@ -85,7 +87,10 @@ GlObject::GlObject(
     if (curr > sphere_rad_) sphere_rad_ = curr;    
   }
 
-  object::RefreshVertexNormals(*this);
+  // Reserve place for normals
+
+  vxs_normals_.resize(vxs.size());
+  // object::RefreshVertexNormals(*this);
 }
 
 // Copies internal coordinates from source to destination
@@ -152,7 +157,8 @@ GlObject object::Make(const char* str)
     obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
     return obj;    
   }
-  else {
+  else
+  {
     auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});  
     auto colors = Vector2d(vxs.size(), Vector1d{255, 255, 255});
     auto name   = list_props.begin()->first;    // first list property in "face" 
@@ -209,11 +215,32 @@ void object::RefreshFaceNormals(GlObject& obj)
 }
 
 // Refresh vertex normals (for lighting purposes we should call this function
-// in world coordinates) 
+// in world coordinates)
 
 void object::RefreshVertexNormals(GlObject& obj)
 {
-  for (auto& )
+  object::RefreshFaceNormals(obj);
+  obj.vxs_normals_.clear();
+  obj.vxs_normals_.resize(obj.vxs_trans_.size());
+  std::vector<uint> cnt (obj.vxs_trans_.size());
+
+  for (auto& tri : obj.triangles_)
+  {
+    obj.vxs_normals_[tri.f1_] += tri.face_normal_;
+    obj.vxs_normals_[tri.f2_] += tri.face_normal_;
+    obj.vxs_normals_[tri.f3_] += tri.face_normal_;
+    ++cnt[tri.f1_];
+    ++cnt[tri.f2_];
+    ++cnt[tri.f3_];
+  }
+  using vector::operator<<;
+  for (std::size_t i = 0; i < obj.vxs_normals_.size(); ++i)
+  {
+    obj.vxs_normals_[i] /= cnt[i];
+    obj.vxs_normals_[i].Normalize();
+    // std::cerr << obj.vxs_normals_[i] << '\n';
+  }
+  // std::cerr << std::endl;
 }
 
 // Cull objects in cameras coordinates. Since we work in camera coordinates,

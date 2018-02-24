@@ -254,8 +254,8 @@ int main(int argc, const char** argv)
   FColor blue   {0.0f, 0.0f, 255.0f};
 
   lights.ambient_.emplace_back(white, 0.2f);
-  lights.infinite_.emplace_back(yellow, 0.6f, Vector{-1.0f, -1.0f, 0.0f});
-  // lights.point_.emplace_back(blue, 1.0f, Vector{-1.0f, -1.0f, 0.0f});
+  lights.infinite_.emplace_back(yellow, 0.6f, Vector{0.0f, -1.0f, 0.0f});
+  // lights.point_.emplace_back(blue, 1.0f, Vector{0.0f, 100.0f, 100.0f});
   
 
   // Other stuff
@@ -357,11 +357,16 @@ int main(int argc, const char** argv)
     auto culled = object::Cull(obj, cam, mx_cam);
     nfo_hidden  = object::RemoveHiddenSurfaces(obj, cam);
     nfo_culled  = static_cast<int>(culled);
-    light::Object(obj, lights);
     
     objects::ResetAttributes(ground);
     nfo_culled += objects::Cull(ground, cam, mx_cam);
     nfo_hidden += objects::RemoveHiddenSurfaces(ground, cam);
+
+    // Light object
+
+    object::RefreshFaceNormals(obj);
+    object::RefreshVertexNormals(obj);
+    light::Object(obj, lights);
 
     // Go from world coords to camera, and the perspective coords
 
@@ -384,7 +389,6 @@ int main(int argc, const char** argv)
     MatrixViewport mx_view {cam.wov_, cam.scr_w_, cam.scr_h_};
     object::ApplyMatrix(mx_view, obj);
     objects::ApplyMatrix(mx_view, ground);
-
 
     // Draw triangles (stored in object)
 

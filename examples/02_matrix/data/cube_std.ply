@@ -21,7 +21,7 @@ property uchar red
 property uchar green
 property uchar blue
 element face 12
-property list uchar uint ind_ply_v2
+property list uchar uint fa
 property uint attr
 end_header
 1.000000 -1.000000 -1.000000 214 42 12

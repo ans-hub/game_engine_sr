@@ -27,7 +27,7 @@ struct Color
   Color() 
     : r{}, g{}, b{}, a{255} { }
   explicit Color(unsigned int c) 
-    : r{c >> 24}, g{c >> 16 & 0xff}, b{c >> 8 & 0xff}, a{c & 0xff} { }
+    : b{(c >> 24) & 0xff}, g{(c >> 16) & 0xff}, r{(c >> 8) & 0xff}, a{c & 0xff} { }
   Color(T cr, T cg, T cb)
     : r{cr}, g{cg}, b{cb}, a{255} { }
   
@@ -49,7 +49,7 @@ struct Color
     r = std::min(255.0f, r);
     g = std::min(255.0f, g);
     b = std::min(255.0f, b);
-    a = std::min(255.0f, a);
+    a = 255.0f;
   }
   
   Color& operator/=(T scalar) {

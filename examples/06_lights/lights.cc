@@ -138,12 +138,15 @@ int main(int argc, const char** argv)
     auto culled = objects::Cull(cubes, cam);
     auto hidden = objects::RemoveHiddenSurfaces(cubes, cam);
     
-    // Finally
-
-    objects::World2Camera(cubes, cam);
+    // Light objects
+    
     objects::RefreshFaceNormals(cubes);
     objects::RefreshVertexNormals(cubes);
     light::Objects(cubes, lights);
+    
+    // Finally
+
+    objects::World2Camera(cubes, cam);
     objects::Camera2Persp(cubes, cam);
     objects::Homogenous2Normal(cubes);
     objects::Persp2Screen(cubes, cam);
