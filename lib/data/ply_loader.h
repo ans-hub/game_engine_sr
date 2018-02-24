@@ -50,6 +50,7 @@ namespace ply {
   // Loader aliases
 
   using Vector1s  = std::vector<std::string>;
+  using cVector1s = const Vector1s;
   using Vector1i  = std::vector<int>;
   using Vector2c  = std::vector<std::vector<char>>;
   using Vector1d  = std::vector<double>;
@@ -70,10 +71,14 @@ namespace ply {
     bool        Load(std::istream&);  // add arg for name or some sort if id??
     void        LoadHeader(std::istream&);
     cMHeader&   GetHeader() const { return head_; }
-    Vector2d    GetLine(const std::string&, const Vector1s&);
+    Vector2d    GetLine(const std::string&, cVector1s&);
     Vector2d    GetList(const std::string&, const std::string&);
     cVector4d&  GetRawData() const { return data_; }
     cVector3d&  GetRawData(const std::string&);
+    
+    bool IsElementPresent(const std::string&);
+    bool IsSinglePropertyPresent(const std::string&, const std::string&);
+    bool IsListPropertyPresent(const std::string&, const std::string&);
 
   private:
     void LoadData(std::istream&);
@@ -105,9 +110,14 @@ struct Except : std::runtime_error
 
 namespace helpers {
 
-  void      RewindStream(std::istream&);
-  void      ThrowLoadDataError(int, int);
+  void RewindStream(std::istream&);
+  void ThrowLoadDataError(int, int);
+  bool IsSinglePropertiesPresent(Loader&, const std::string&, cVector1s&);
+  bool IsListPropertiesPresent(Loader&, const std::string&, cVector1s&);
 
+  std::ostream& operator<<(std::ostream& , const Header&);
+  std::ostream& operator<<(std::ostream& , const MHeader&);
+  
   template<class T> // map
   bool IsKeyAbsentInMap(const std::string& str, const T& map)
   {
@@ -117,8 +127,6 @@ namespace helpers {
       return false;
   }
 
-  std::ostream& operator<<(std::ostream& , const Header&);
-  std::ostream& operator<<(std::ostream& , const MHeader&);
 
 } // namespace helpers
 

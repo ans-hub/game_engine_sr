@@ -286,6 +286,22 @@ void Loader::ClearData()
   filter_.clear();
 }
 
+bool Loader::IsElementPresent(const std::string& elem)
+{
+  return !helpers::IsKeyAbsentInMap(elem, order_);
+} 
+
+bool Loader::IsSinglePropertyPresent(
+  const std::string& elem, const std::string& prop)
+{
+  return !helpers::IsKeyAbsentInMap(prop, head_[elem].single_props_);
+}
+
+bool Loader::IsListPropertyPresent(const std::string& elem, const std::string& prop)
+{
+  return !helpers::IsKeyAbsentInMap(prop, head_[elem].list_props_);
+}
+
 //************************************************************************
 // Helper functions inplementation
 //************************************************************************
@@ -307,6 +323,28 @@ void helpers::ThrowLoadDataError(int elem_type, int item_num)
       << "elem " << elem_type << ' ' 
       << "item " << item_num;
   throw Except(oss.str().c_str());
+}
+
+// Returns true if ALL of single properties is present
+
+bool helpers::IsSinglePropertiesPresent(
+  Loader& ply, const std::string& elem, const Vector1s& props)
+{
+  for (const auto& prop : props)
+    if (!ply.IsSinglePropertyPresent(elem, prop))
+      return false;
+  return true;
+}
+
+// Returns true if ALL of list properties is present
+
+bool helpers::IsListPropertiesPresent(
+  Loader& ply, const std::string& elem, const Vector1s& props)
+{
+  for (const auto& prop : props)
+    if (!ply.IsListPropertyPresent(elem, prop))
+      return false;
+  return true;
 }
 
 // Out map of headers

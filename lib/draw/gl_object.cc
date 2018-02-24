@@ -61,17 +61,22 @@ GlObject::GlObject(
     colors_local_.emplace_back(c[0], c[1], c[2]);
   colors_trans_ = colors_local_;
   
+  // Now we prepare all attributes of object
+
+  unsigned int fattrs {0};
+  for (auto& attr : attrs)
+    fattrs |= static_cast<unsigned int>(attr[0]);
+
   // Fill triangles (we suppose that we have correct ply file with
   // custom fields or incorrect with emply fields)
 
   triangles_.reserve(faces.size());
   for (std::size_t i = 0; i < faces.size(); ++i)
   {
-    unsigned int fattr = attrs[i][0];
     auto x = faces[i][0];
     auto y = faces[i][1];
     auto z = faces[i][2];
-    triangles_.emplace_back(vxs_trans_, colors_trans_, x, y, z, fattr);
+    triangles_.emplace_back(vxs_trans_, colors_trans_, x, y, z, fattrs);
   }
 
   // Calc bounding sphere radius
@@ -138,37 +143,78 @@ GlObject object::Make(const char* str)
   std::ifstream fss {str};
   ply.Load(fss);
   
-  // Try to determine if ply contains element called "globals_ply_2", which is
+  // Try to determine if ply contains element called "globals_ply_v2", which is
   // sign of using custom ply file
   
   auto header     = ply.GetHeader();
-  auto globals    = header.find("globals_ply_v2");
 
-  // If we found element called" is found we suppose ply format with custom fields
-  // Else take first list propery and set default attributes
+  // Try to load attributes of object
+
+  ply::Vector2d attrs {};
   
-  if (globals != header.end())
+  if (ply.IsElementPresent("globals_ply_v2"))
   {
-    auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});
-    auto colors = ply.GetLine("vertex", {"red", "green", "blue"});
-    auto faces  = ply.GetList("face", {"ind_ply_v2"});
-    auto attrs  = ply.GetLine("face", {"attr"});
-    auto obj    = GlObject(vxs, colors, faces, attrs);
-    obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
-    return obj;    
+    if (ply.IsSinglePropertyPresent("globals_ply_v2", "shading"))
+      attrs = ply.GetLine("globals_ply_v2", {"shading"});
   }
   else
-  {
-    auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});  
-    auto colors = Vector2d(vxs.size(), Vector1d{255, 255, 255});
-    auto name   = list_props.begin()->first;    // first list property in "face" 
-    auto faces  = ply.GetList("face", {name});
-    auto attrs  = Vector2d(faces.size(), 
-      Vector1d{Triangle::VISIBLE | Triangle::FLAT_SHADING});
-    auto obj    = GlObject(vxs, colors, faces, attrs);
-    obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
-    return obj;
+    attrs = Vector2d(1, Vector1d{Triangle::FLAT_SHADING});
+  
+  // Try to load vertex coordinates
+
+  if (!ply.IsElementPresent("vertex"))
+    throw DrawExcept("Ply file haven't vertexes element");
+  if (!ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"x", "y", "z"}))
+    throw DrawExcept("Ply file haven't properties x, y and z");
+
+  ply::Vector2d vxs = ply.GetLine("vertex", {"x", "y", "z"});
+
+  // Try load vertex colors
+
+  ply::Vector2d colors {};
+  if (ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"red", "green", "blue"}))
+    colors = ply.GetLine("vertex", {"red", "green", "blue"});
+  else
+    colors = Vector2d(vxs.size(), Vector1d{255, 255, 255});
+
+  // Try to load faces
+
+  if (!ply.IsElementPresent("face"))
+    throw DrawExcept("Ply file haven't face element");
+ 
+  ply::Vector2d faces {};
+
+  if (ply.IsListPropertyPresent("face", "vertex_indicies"))
+     faces = ply.GetList("face", {"vertex_indicies"});
+  else {
+    auto name   = header["face"].list_props_.begin()->first; 
+    faces  = ply.GetList("face", {name});
   }
+
+  // Create object
+
+  auto obj    = GlObject(vxs, colors, faces, attrs);
+  obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
+  return obj;
+
+  // if (globals != header.end())
+  // {
+  //   auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});
+  //   auto colors = ply.GetLine("vertex", {"red", "green", "blue"});
+  //   auto faces  = ply.GetList("face", {"vertex_indicies"});
+  //   auto attrs  = ply.GetLine("face", {"attr"});
+  //   obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
+  //   return obj;    
+  // }
+  // else
+  // {
+  //   auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});  
+  //   auto colors = Vector2d(vxs.size(), Vector1d{255, 255, 255});
+  //   auto attrs  = Vector2d(faces.size(), 
+  //     Vector1d{Triangle::VISIBLE | Triangle::FLAT_SHADING});
+  //   auto obj    = GlObject(vxs, colors, faces, attrs);
+  //   return obj;
+  // }
 }
 
 // Makes object from ply file, then scale it and move to world position
