@@ -26,7 +26,7 @@ void light::Object(GlObject& obj, Lights& lights)
 
     if (tri.attrs_ & Triangle::CONST_SHADING)
     {
-      light::ConstShading(tri, colors);
+      light::Emission(tri, colors);
       continue;
     }
 
@@ -45,19 +45,14 @@ void light::Object(GlObject& obj, Lights& lights)
     if (tri.attrs_ & Triangle::FLAT_SHADING)
     {
       tri.face_normal_.Normalize();
-      light::AmbientShading(
-        tri, bc1, bc2, bc3, lights.ambient_);
-      light::InfiniteFlatShading(
-        tri, bc1, bc2, bc3, lights.infinite_);
-      // light::PointFlatShading(
-        // tri, bc1, bc2, bc3, lights.point_);
+      light::Ambient(tri, bc1, bc2, bc3, lights);
+      light::flat::Infinite(tri, bc1, bc2, bc3, lights);
+      light::flat::Point(tri, bc1, bc2, bc3, lights);
     }
     else if (tri.attrs_ & Triangle::GOURANG_SHADING)
     {
-      light::AmbientShading(
-        tri, bc1, bc2, bc3, lights.ambient_);
-      light::InfiniteGourangShading(
-        tri, obj.vxs_normals_, bc1, bc2, bc3, lights.infinite_);
+      light::Ambient(tri, bc1, bc2, bc3, lights);
+      light::gourang::Infinite(tri, obj.vxs_normals_, bc1, bc2, bc3, lights);
     }
 
     // Normalize colors
@@ -74,17 +69,17 @@ void light::Objects(GlObjects& arr, Lights& lights)
     light::Object(obj, lights);
 }
 
-void light::ConstShading(Triangle& tri, FColors& colors)
+void light::Emission(Triangle& tri, FColors& colors)
 {
   tri.c1_ = colors[tri.f1_];
   tri.c2_ = colors[tri.f2_];
   tri.c3_ = colors[tri.f3_];
 }
 
-void light::AmbientShading(
-  Triangle& tri, cFColor& bc1, cFColor& bc2, cFColor& bc3, LightsAmbient& lights)
+void light::Ambient(
+  Triangle& tri, cFColor& bc1, cFColor& bc2, cFColor& bc3, Lights& lights)
 {
-  for (const auto& l : lights)
+  for (const auto& l : lights.ambient_)
   {
     auto amb1 = (bc1 * l.color_ * l.intense_) / 256.0f;
     auto amb2 = (bc2 * l.color_ * l.intense_) / 256.0f;
@@ -95,10 +90,10 @@ void light::AmbientShading(
   }
 }
 
-void light::InfiniteFlatShading(
-  Triangle& tri, cFColor& bc1, cFColor& bc2, cFColor& bc3, LightsInfinite& lights)
+void light::flat::Infinite(
+  Triangle& tri, cFColor& bc1, cFColor& bc2, cFColor& bc3, Lights& lights)
 {
-  for (const auto& l : lights)
+  for (const auto& l : lights.infinite_)
   {
     auto dir = l.direction_ * (-1);
     auto prod = vector::DotProduct(dir, tri.face_normal_); 
@@ -113,10 +108,10 @@ void light::InfiniteFlatShading(
   }
 }
 
-void light::PointFlatShading(
-  Triangle& tri, cFColor& bc1, cFColor& bc2, cFColor& bc3, LightsInfinite& lights)
+void light::flat::Point(
+  Triangle& tri, cFColor& bc1, cFColor& bc2, cFColor& bc3, Lights& lights)
 {
-  for (const auto& l : lights)
+  for (const auto& l : lights.point_)
   {
     // auto dir = l.direction_ * (-1);
     // auto prod = vector::DotProduct(dir, tri.face_normal_); 
@@ -131,11 +126,11 @@ void light::PointFlatShading(
   }
 }
 
-void light::InfiniteGourangShading(
+void light::gourang::Infinite(
   Triangle& tri, Vectors& norms, cFColor& bc1, cFColor& bc2, cFColor& bc3,
-  LightsInfinite& lights)
+  Lights& lights)
 {
-  for (const auto& l : lights)
+  for (const auto& l : lights.infinite_)
   {
     auto dir = l.direction_ * (-1);
 

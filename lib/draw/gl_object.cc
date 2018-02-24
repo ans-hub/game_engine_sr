@@ -138,16 +138,16 @@ GlObject object::Make(const char* str)
   std::ifstream fss {str};
   ply.Load(fss);
   
-  // Try to determine if ply contains list property "magic" sign called "ind_ply_v2"
+  // Try to determine if ply contains element called "globals_ply_2", which is
+  // sign of using custom ply file
   
   auto header     = ply.GetHeader();
-  auto list_props = header["face"].list_props_;     // get list props of face
-  auto prop_index = list_props.find("ind_ply_v2");  // search "magic" index
+  auto globals    = header.find("globals_ply_v2");
 
-  // If this "magic" "ind_ply_v2" is found we suppose ply format with custom fields
+  // If we found element called" is found we suppose ply format with custom fields
   // Else take first list propery and set default attributes
   
-  if (prop_index != list_props.end())
+  if (globals != header.end())
   {
     auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});
     auto colors = ply.GetLine("vertex", {"red", "green", "blue"});

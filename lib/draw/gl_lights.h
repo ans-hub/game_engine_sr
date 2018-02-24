@@ -13,105 +13,55 @@
 #include "gl_object.h"
 #include "gl_triangle.h"
 #include "../math/vector.h"
+#include "gl_light_amb.h"
+#include "gl_light_inf.h"
+#include "gl_light_point.h"
+#include "gl_light_spot.h"
 
 namespace anshub {
 
-struct LightAmbient
-{
-  LightAmbient(FColor& c, float i)
-  : color_{c}
-  , intense_{i}
-  {
-    math::Clamp(intense_, 0.0f, 1.0f);      
-  }
-  LightAmbient(FColor&& c, float i)
-  : color_{c}
-  , intense_{i}
-  {
-    math::Clamp(intense_, 0.0f, 1.0f);      
-  }
-  FColor  color_;
-  float   intense_; 
-
-}; // struct LightsAmbient
-
-struct LightInfinite
-{
-  LightInfinite(cFColor& c, float i, cVector& dir)
-  : color_{c}
-  , intense_{i}
-  , direction_{dir}
-  { 
-    direction_.Normalize();
-    math::Clamp(intense_, 0.0f, 1.0f);  
-  }
-  LightInfinite(cFColor&& c, float i, cVector&& dir)
-  : color_{c}
-  , intense_{i}
-  , direction_{dir}
-  { 
-    direction_.Normalize();
-    math::Clamp(intense_, 0.0f, 1.0f);  
-  }
-  
-  FColor  color_;
-  float   intense_;
-  Vector  direction_;
-
-}; // struct LightInfinite
-
-
-struct LightPoint
-{
-  LightPoint(cFColor& c, float i, cVector& pos)
-  : color_{c}
-  , intense_{i}
-  , position_{pos}
-  { 
-    math::Clamp(intense_, 0.0f, 1.0f);  
-  }
-  LightPoint(cFColor&& c, float i, cVector&& pos)
-  : color_{c}
-  , intense_{i}
-  , position_{pos}
-  { 
-    math::Clamp(intense_, 0.0f, 1.0f);  
-  }
-  
-  FColor  color_;
-  float   intense_;
-  Vector  position_;
-  float   ka;
-  float   kb;
-  float   kc;
-
-}; // struct LightPoint
+// General lighting structure, in the fact - simple container
+// of light sources
 
 struct Lights
 {
   LightsAmbient   ambient_;
   LightsInfinite  infinite_;
   LightsPoint     point_;
-  // LightsSpot      spot_;
+  LightsSpot      spot_;
 
 }; // struct Lights
 
 namespace light {
   
+  // General lighting functions
+
   void Object(GlObject&, Lights&);
   void Objects(GlObjects&, Lights&);
-  void ConstShading(Triangle&, FColors&);
-  void AmbientShading(
-    Triangle&, cFColor&, cFColor&, cFColor&, LightsAmbient&);
-  void InfiniteFlatShading(
-    Triangle&, cFColor&, cFColor&, cFColor&, LightsInfinite&);
-  void PointFlatShading(
-    Triangle&, cFColor&, cFColor&, cFColor&, LightsInfinite&);
-  void InfiniteGourangShading(
-    Triangle&, Vectors&, cFColor&, cFColor&, cFColor&, LightsInfinite&);
-  
-}
+  void Emission(Triangle&, FColors&);
+  void Ambient(Triangle&, cFColor&, cFColor&, cFColor&, Lights&);
 
+  // Specific shading functions for gourang shading
+
+  namespace gourang {
+
+    void Infinite(Triangle&, Vectors&, cFColor&, cFColor&, cFColor&, Lights&);
+    void Point(Triangle&, Vectors&, cFColor&, cFColor&, cFColor&, Lights&);
+
+  } // namespace gourang
+
+  // Specific shading functions for flat shading
+
+  namespace flat {
+
+    void Infinite(Triangle&, cFColor&, cFColor&, cFColor&, Lights&);
+    void Point(Triangle&, cFColor&, cFColor&, cFColor&, Lights&);
+    
+  } // namespace flat
+
+
+} // namespace light
+  
 }  // namespace anshub
 
 #endif  // GL_LIGHTS_H
