@@ -14,10 +14,10 @@ void light::Object(GlObject& obj, Lights& lights)
   if (!obj.active_)
     return;
   
-  auto& vxs = obj.GetCoords();
   auto& colors = obj.GetColors();
 
-  // Apply lighting to each triangle
+  // Iterate over each triangle, check if it visible. And if not, then
+  // drop colors to 0
 
   for (auto& tri : obj.triangles_)
   {
@@ -38,9 +38,9 @@ void light::Object(GlObject& obj, Lights& lights)
 
     // Remember source color of triangle
 
-    auto& bc1 = colors[tri.f1_];
-    auto& bc2 = colors[tri.f1_];
-    auto& bc3 = colors[tri.f1_];
+    auto bc1 = colors[tri.f1_];
+    auto bc2 = colors[tri.f2_];
+    auto bc3 = colors[tri.f3_];
 
     if (tri.attrs_ & Triangle::FLAT_SHADING)
     {

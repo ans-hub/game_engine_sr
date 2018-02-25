@@ -2,6 +2,13 @@ ply
 format ascii 1.0
 comment https://archive3d.net/?a=download&id=00801faa
 comment Created by Blender 2.79 (sub 0) - www.blender.org, source file: ''
+comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: ''
+comment   0x2  = const shading
+comment   0x4  = flat shading
+comment   0x8  = phong shading
+comment   0x10 = gourang shading
+element globals_ply_v2 1
+property uint shading
 element vertex 1013
 property float x
 property float y
@@ -12,6 +19,7 @@ property float nz
 element face 2026
 property list uchar uint index
 end_header
+4
 1.014677 -0.052239 0.000000 -0.700400 0.035524 -0.712851
 1.010749 -0.103797 0.000000 -0.697714 0.070925 -0.712821
 1.014677 -0.052239 0.660400 -0.938078 0.047578 0.343089

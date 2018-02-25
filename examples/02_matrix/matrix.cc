@@ -32,15 +32,26 @@
 #include "lib/math/matrix_scale.h"
 #include "lib/math/matrix_camera.h"
 
+#include "../helpers.h"
+
 using namespace anshub;
+using namespace helpers;
 using anshub::vector::operator<<;
 using anshub::matrix::operator<<;
+
+const char* HandleInput(int argc, const char** argv)
+{
+  if (argc != 2)
+    return NULL;
+  else
+    return argv[1];
+}
 
 // Creates array of rectangles (w_cnt * h_cnt size) 
 
 auto CreateGround(int rect_cnt, TrigTable& trig)
 {
-  auto master = object::Make("data/floor.ply", trig,
+  auto master = object::Make("../00_data/floor.ply", trig,
     {1.0f, 1.0f, 1.0f},
     {0.0f, 0.0f, 0.0f},
     {0.0f, 0.0f, 0.0f}
@@ -64,112 +75,6 @@ auto CreateGround(int rect_cnt, TrigTable& trig)
     }
   }
   return ground;
-}
-
-void HandleCameraType(Btn kbtn, GlCamera& cam)
-{
-  if (kbtn == Btn::ENTER)
-  {
-    if (cam.type_ == GlCamera::Type::EULER)
-      cam.SwitchType(GlCamera::Type::UVN);
-    else if (cam.type_ == GlCamera::Type::UVN)
-      cam.SwitchType(GlCamera::Type::EULER);
-  }
-}
-
-void HandleCameraRotate(bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
-{
-  if (mode)
-    ang.z -= (mpos_prev.x - mpos.x) / 2;
-  else
-    ang.y -= (mpos_prev.x - mpos.x) / 2;
-  ang.x -= (mpos_prev.y - mpos.y) / 2;  // todo: prevent gimbal lock
-  mpos_prev = mpos;
-}
-
-void HandleCameraPosition(Btn kbtn, GlCamera& cam)
-{
-  float cam_vel = 0.5f;
-  switch (kbtn)
-  {
-    case Btn::W :
-    {
-      if (cam.type_ == GlCamera::Type::EULER)
-      {
-        cam.vrp_.z += cam_vel * cam.trig_.Cos(cam.dir_.y);
-        cam.vrp_.x += cam_vel * cam.trig_.Sin(cam.dir_.y);
-      }
-      else
-        cam.vrp_.z += cam_vel;
-    }
-      break;
-    case Btn::S :
-    {
-      if (cam.type_ == GlCamera::Type::EULER)
-      {
-        cam.vrp_.z -= cam_vel * cam.trig_.Cos(cam.dir_.y);
-        cam.vrp_.x -= cam_vel * cam.trig_.Sin(cam.dir_.y);
-      }
-      else
-        cam.vrp_.z -= cam_vel;
-    }
-      break;
-    case Btn::A : cam.vrp_.x -= cam_vel; break;
-    case Btn::D : cam.vrp_.x += cam_vel; break;
-    case Btn::R : cam.vrp_.y += cam_vel; break;
-    case Btn::F : cam.vrp_.y -= cam_vel; break;
-    case Btn::NUM9 : cam.ChangeFov(cam.fov_-1); break;
-    case Btn::NUM0 : cam.ChangeFov(cam.fov_+1); break;
-    default     : break;
-  }
-}
-
-void HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
-{
-  switch(key)
-  {
-    case Btn::UP :    vel.y =  0.5f; break;
-    case Btn::DOWN :  vel.y = -0.5f; break;
-    case Btn::LEFT :  vel.x = -0.5f; break;
-    case Btn::RIGHT : vel.x =  0.5f; break;
-    case Btn::Z :     rot.x -= 0.5f; break;
-    case Btn::X :     rot.x += 0.5f; break;
-    case Btn::C :     rot.y -= 0.5f; break;
-    case Btn::V :     rot.y += 0.5f; break;
-    case Btn::B :     rot.z -= 0.5f; break;
-    case Btn::N :     rot.z += 0.5f; break;
-    case Btn::NUM1 :  scale.x += 0.02;
-                      scale.y += 0.02;
-                      scale.z += 0.02; break;
-    case Btn::NUM2 :  scale.x -= 0.02;
-                      scale.y -= 0.02;
-                      scale.z -= 0.02; break;
-    default : break;
-  }
-}
-
-void HandlePause(Btn key, GlWindow& win)
-{
-  if (key == Btn::P)
-  {
-    Timer timer {};
-    timer.SetMillisecondsToWait(100);
-    while (true)
-    {
-      if (win.ReadKeyboardBtn(BtnType::KB_DOWN) == Btn::P)
-        break;
-      else
-        timer.Wait();
-    }
-  }
-}
-
-const char* HandleInput(int argc, const char** argv)
-{
-  if (argc != 2)
-    return NULL;
-  else
-    return argv[1];
 }
 
 void PrintInfo(
@@ -287,9 +192,9 @@ int main(int argc, const char** argv)
 
     Vector  obj_vel    {0.0f, 0.0f, 0.0f};
     Vector  obj_scale  {1.0f, 1.0f, 1.0f};
-    HandleCameraType(kbtn, cam);
-    HandleCameraPosition(kbtn, cam);
-    HandleCameraRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
+    HandleCamType(kbtn, cam);
+    HandleCamMovement(kbtn, cam);
+    HandleCamRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
     HandlePause(kbtn, win);
     HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
 

@@ -28,6 +28,8 @@
 #include "lib/math/matrix_scale.h"
 #include "lib/math/matrix_camera.h"
 
+#include "../helpers.h"
+
 using namespace anshub;
 
 int main(int argc, const char** argv)
@@ -52,10 +54,10 @@ int main(int argc, const char** argv)
   // Object
 
   auto obj = object::Make(
-    "data/tri_gourang.ply", trig, 
+    "../00_data/tri_gourang.ply", trig, 
     {2.0f, 2.0f, 2.0f},   // initial scale
     {0.0f, 0.0f, 7.0f},   // world pos
-    {0.0f, 0.0f, 5.0f}   // initial rotate
+    {0.0f, 0.0f, 5.0f}    // initial rotate
   );
   
   // Camera
@@ -78,39 +80,23 @@ int main(int argc, const char** argv)
     timer.Start();
     win.Clear();
 
-    Vector  obj_rot  {0.0f, 0.0f, 0.0f};
+    // Handle input
+
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    if (kbtn == Btn::Z)
-      obj_rot.z = -1.0f;
-    else if (kbtn == Btn::X)
-      obj_rot.z = +1.0f;
-    if (kbtn == Btn::C)
-      obj_rot.y = -1.0f;
-    else if (kbtn == Btn::V)
-      obj_rot.y = +1.0f;
-    if (kbtn == Btn::B)
-      obj_rot.x = -1.0f;
-    else if (kbtn == Btn::N)
-      obj_rot.x = +1.0f;
-    if (kbtn == Btn::LEFT)
-      obj.world_pos_.x -= 0.5f;
-    if (kbtn == Btn::RIGHT)
-      obj.world_pos_.x += 0.5f;
-    if (kbtn == Btn::UP)
-      obj.world_pos_.y += 0.5f;
-    if (kbtn == Btn::DOWN)
-      obj.world_pos_.y -= 0.5f;
+    Vector  obj_rot  {0.0f, 0.0f, 0.0f};
+    helpers::HandleRotateObject(kbtn, obj_rot);
+
     if (kbtn == Btn::ENTER)
     {
-      obj.colors_trans_[0].r = rand_toolkit::get_rand(0, 255);
-      obj.colors_trans_[0].g = rand_toolkit::get_rand(0, 255);
-      obj.colors_trans_[0].b = rand_toolkit::get_rand(0, 255);
-      obj.colors_trans_[1].r = rand_toolkit::get_rand(0, 255);
-      obj.colors_trans_[1].g = rand_toolkit::get_rand(0, 255);
-      obj.colors_trans_[1].b = rand_toolkit::get_rand(0, 255);
-      obj.colors_trans_[2].r = rand_toolkit::get_rand(0, 255);
-      obj.colors_trans_[2].g = rand_toolkit::get_rand(0, 255);
-      obj.colors_trans_[2].b = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[0].r = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[0].g = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[0].b = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[1].r = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[1].g = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[1].b = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[2].r = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[2].g = rand_toolkit::get_rand(0, 255);
+      obj.colors_local_[2].b = rand_toolkit::get_rand(0, 255);
     }
 
     // Prepare transformation matrixes for main object

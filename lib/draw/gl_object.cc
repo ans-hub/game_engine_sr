@@ -141,6 +141,8 @@ GlObject object::Make(const char* str)
 
   ply::Loader ply {};
   std::ifstream fss {str};
+  if (!fss)
+    std::cerr << str << '\n';
   ply.Load(fss);
   
   // Try to determine if ply contains element called "globals_ply_v2", which is
@@ -196,25 +198,6 @@ GlObject object::Make(const char* str)
   auto obj    = GlObject(vxs, colors, faces, attrs);
   obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
   return obj;
-
-  // if (globals != header.end())
-  // {
-  //   auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});
-  //   auto colors = ply.GetLine("vertex", {"red", "green", "blue"});
-  //   auto faces  = ply.GetList("face", {"vertex_indicies"});
-  //   auto attrs  = ply.GetLine("face", {"attr"});
-  //   obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
-  //   return obj;    
-  // }
-  // else
-  // {
-  //   auto vxs    = ply.GetLine("vertex", {"x", "y", "z"});  
-  //   auto colors = Vector2d(vxs.size(), Vector1d{255, 255, 255});
-  //   auto attrs  = Vector2d(faces.size(), 
-  //     Vector1d{Triangle::VISIBLE | Triangle::FLAT_SHADING});
-  //   auto obj    = GlObject(vxs, colors, faces, attrs);
-  //   return obj;
-  // }
 }
 
 // Makes object from ply file, then scale it and move to world position
