@@ -17,11 +17,11 @@ namespace anshub {
   template<class T> struct Color;
   struct GlObject;
   struct Triangle;
-  struct GlLight;
-  struct LightAmbient;
-  struct LightInfinite;
-  struct LightPoint;
-  struct LightSpot;
+  // struct GlLight;
+  // struct LightAmbient;
+  // struct LightInfinite;
+  // struct LightPoint;
+  // struct LightSpot;
 
   using uint  = unsigned int;
   using uchar = unsigned char;
@@ -41,10 +41,10 @@ namespace anshub {
   using cMatrix2d = const Matrix2d;
   using Triangles = std::vector<Triangle>;
   using TrianglesRef = std::vector<std::reference_wrapper<Triangle>>;
-  using LightsAmbient = std::vector<LightAmbient>;
-  using LightsInfinite = std::vector<LightInfinite>;
-  using LightsPoint = std::vector<LightPoint>;
-  using LightsSpot = std::vector<LightSpot>;
+  // using LightsAmbient = std::vector<LightAmbient>;
+  // using LightsInfinite = std::vector<LightInfinite>;
+  // using LightsPoint = std::vector<LightPoint>;
+  // using LightsSpot = std::vector<LightSpot>;
 
 } // namespace anshub
 

@@ -12,11 +12,11 @@
 #include "gl_aliases.h"
 #include "gl_object.h"
 #include "gl_triangle.h"
-#include "../math/vector.h"
 #include "gl_light_amb.h"
 #include "gl_light_inf.h"
 #include "gl_light_point.h"
 #include "gl_light_spot.h"
+#include "../math/vector.h"
 
 namespace anshub {
 
@@ -25,10 +25,10 @@ namespace anshub {
 
 struct Lights
 {
-  LightsAmbient   ambient_;
-  LightsInfinite  infinite_;
-  LightsPoint     point_;
-  LightsSpot      spot_;
+  std::vector<LightAmbient>   ambient_;
+  std::vector<LightInfinite>  infinite_;
+  std::vector<LightPoint>     point_;
+  std::vector<LightSpot>      spot_;
 
 }; // struct Lights
 
@@ -38,30 +38,9 @@ namespace light {
 
   void Object(GlObject&, Lights&);
   void Objects(GlObjects&, Lights&);
-  void Emission(Triangle&, FColors&);
-  void Ambient(Triangle&, cFColor&, cFColor&, cFColor&, Lights&);
-
-  // Specific shading functions for gourang shading
-
-  namespace gourang {
-
-    void Infinite(Triangle&, Vectors&, cFColor&, cFColor&, cFColor&, Lights&);
-    void Point(Triangle&, Vectors&, cFColor&, cFColor&, cFColor&, Lights&);
-
-  } // namespace gourang
-
-  // Specific shading functions for flat shading
-
-  namespace flat {
-
-    void Infinite(Triangle&, cFColor&, cFColor&, cFColor&, Lights&);
-    void Point(Triangle&, cFColor&, cFColor&, cFColor&, Lights&);
-    
-  } // namespace flat
-
 
 } // namespace light
   
-}  // namespace anshub
+} // namespace anshub
 
 #endif  // GL_LIGHTS_H

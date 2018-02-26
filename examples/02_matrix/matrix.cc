@@ -135,9 +135,9 @@ int main(int argc, const char** argv)
 
   auto obj = object::Make(
     fname, trig, 
-    {1.0f, 1.0f, 1.0f},   // initial scale
-    {0.0f, 0.0f, 10.0f},   // world pos
-    {180.0f, 0.0f, 0.0f}  // initial rotate
+    {1.0f, 1.0f, 1.0f},     // initial scale
+    {0.0f, 0.0f, 10.0f},    // world pos
+    {180.0f, 0.0f, 0.0f}    // initial rotate
   );
   auto ground = CreateGround(20, trig);
 
@@ -160,8 +160,8 @@ int main(int argc, const char** argv)
 
   lights.ambient_.emplace_back(white, 0.2f);
   lights.infinite_.emplace_back(yellow, 0.6f, Vector{0.0f, -1.0f, 0.0f});
-  // lights.point_.emplace_back(blue, 1.0f, Vector{0.0f, 100.0f, 100.0f});
-  
+  lights.point_.emplace_back(yellow, 0.6f, 
+    Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
 
   // Other stuff
 
@@ -301,6 +301,7 @@ int main(int argc, const char** argv)
     for (const auto& it : ground)
       draw::WiredObject(it, buf);
     draw::SolidObject(obj, buf);
+    draw::ObjectVxsNormals(obj, 15, color::Blue, buf);
     buf.SendDataToFB();
 
     // Print fps ans other info

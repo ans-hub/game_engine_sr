@@ -66,13 +66,11 @@ struct GlObject
 
   GlObject();
   GlObject(cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs);
-  // GlObject(const GlObject&) =delete;
   
   // Coordinates routines
 
   void  SetCoords(Coords c) { current_vxs_ = c; }
   void  CopyCoords(Coords src, Coords dest);
-  // void  CopyColors(Coords src, Coords dest);
   auto& GetCoords();
   auto& GetCoords() const;
   auto& GetColors();

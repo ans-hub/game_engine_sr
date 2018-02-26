@@ -1,5 +1,5 @@
 // *************************************************************
-// File:    gl_light)inf.h
+// File:    gl_light_inf.h
 // Descr:   represents infinite light source
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
@@ -18,23 +18,12 @@ namespace anshub {
 
 struct LightInfinite
 {
-  LightInfinite(cFColor& c, float i, cVector& dir)
-  : color_{c}
-  , intense_{i}
-  , direction_{dir}
-  { 
-    direction_.Normalize();
-    math::Clamp(intense_, 0.0f, 1.0f);  
-  }
-  LightInfinite(cFColor&& c, float i, cVector&& dir)
-  : color_{c}
-  , intense_{i}
-  , direction_{dir}
-  { 
-    direction_.Normalize();
-    math::Clamp(intense_, 0.0f, 1.0f);  
-  }
-  
+  LightInfinite(cFColor& c, float i, cVector& dir);
+  LightInfinite(cFColor&& c, float i, cVector&& dir);
+
+  FColor Illuminate(cFColor& base_color, cVector& normal);
+
+private:
   FColor  color_;
   float   intense_;
   Vector  direction_;

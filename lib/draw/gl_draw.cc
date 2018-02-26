@@ -600,10 +600,12 @@ void draw::WiredObject(const GlObject& obj, Buffer& buf)
 
 // Draws solid object
 
-void draw::SolidObject(const GlObject& obj, Buffer& buf)
+int draw::SolidObject(const GlObject& obj, Buffer& buf)
 {
+  int total {0};
+  
   if (!obj.active_)
-    return;
+    return total;
     
   for (const auto& face : obj.triangles_)
   {
@@ -613,14 +615,21 @@ void draw::SolidObject(const GlObject& obj, Buffer& buf)
     auto p1 = obj.vxs_trans_[face.f1_];
     auto p2 = obj.vxs_trans_[face.f2_];
     auto p3 = obj.vxs_trans_[face.f3_];
-    auto c1 = face.c1_.GetARGB();
-    auto c2 = face.c2_.GetARGB();
-    auto c3 = face.c3_.GetARGB();
+    
     if (face.attrs_ & Triangle::GOURANG_SHADING)
+    {
+      auto c1 = obj.colors_trans_[face.f1_].GetARGB();
+      auto c2 = obj.colors_trans_[face.f2_].GetARGB();
+      auto c3 = obj.colors_trans_[face.f3_].GetARGB();
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
-    else 
-      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, buf);
+    }
+    else {
+      auto color = face.c1_.GetARGB();
+      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
+    }
+    ++total;
   }
+  return total;
 }
 
 // Draws triangles
@@ -663,8 +672,9 @@ void draw::WiredTriangles(const TrianglesRef& arr, Buffer& buf)
 
 // Draws solid triangles
 
-void draw::SolidTriangles(const TrianglesRef& arr, Buffer& buf)
+int draw::SolidTriangles(const TrianglesRef& arr, Buffer& buf)
 {
+  int total {0};
   for (const auto& tri : arr)
   {
     auto& t = tri.get();
@@ -682,7 +692,22 @@ void draw::SolidTriangles(const TrianglesRef& arr, Buffer& buf)
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     else 
       draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, buf);
+    ++total;
+  }
+  return total;
+}
+
+void draw::ObjectVxsNormals(const GlObject& obj, int mp, uint color, Buffer& buf)
+{
+  for (std::size_t i = 0; i < obj.vxs_trans_.size(); ++i)
+  {
+    Vector start = obj.vxs_trans_[i] + (obj.vxs_normals_[i] * mp);
+    Vector end   = obj.vxs_trans_[i];
+    if (segment2d::Clip(
+      0, 0, buf.Width()-1, buf.Height()-1, start.x, start.y, end.x, end.y))
+        draw::Line(start.x, start.y, end.x, end.y, color, buf);
   }
 }
+
 
 } // namespace anshub

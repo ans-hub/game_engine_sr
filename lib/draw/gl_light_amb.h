@@ -23,12 +23,19 @@ struct LightAmbient
   {
     math::Clamp(intense_, 0.0f, 1.0f);      
   }
+
   LightAmbient(FColor&& c, float i)
   : color_{c}
   , intense_{i}
   {
     math::Clamp(intense_, 0.0f, 1.0f);      
   }
+  
+  FColor Illuminate(cFColor& base_color)
+  {
+    return (base_color * color_ * intense_) / 256.0f;
+  }
+
   FColor  color_;
   float   intense_; 
 

@@ -45,9 +45,10 @@ namespace draw {
   // Complex
 
   void WiredObject(const GlObject&, Buffer&);
-  void SolidObject(const GlObject&, Buffer&);
+  int  SolidObject(const GlObject&, Buffer&);
   void WiredTriangles(const TrianglesRef&, Buffer&);
-  void SolidTriangles(const TrianglesRef&, Buffer&);
+  int  SolidTriangles(const TrianglesRef&, Buffer&);
+  void ObjectVxsNormals(const GlObject&, int mp, uint color, Buffer&);
 
 } // namespace draw
 

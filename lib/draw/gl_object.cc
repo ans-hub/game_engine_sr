@@ -189,13 +189,13 @@ GlObject object::Make(const char* str)
   if (ply.IsListPropertyPresent("face", "vertex_indicies"))
      faces = ply.GetList("face", {"vertex_indicies"});
   else {
-    auto name   = header["face"].list_props_.begin()->first; 
-    faces  = ply.GetList("face", {name});
+    auto name = header["face"].list_props_.begin()->first;
+    faces = ply.GetList("face", {name});
   }
 
   // Create object
 
-  auto obj    = GlObject(vxs, colors, faces, attrs);
+  auto obj = GlObject(vxs, colors, faces, attrs);
   obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
   return obj;
 }

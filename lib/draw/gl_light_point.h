@@ -16,27 +16,19 @@ namespace anshub {
 
 struct LightPoint
 {
-  LightPoint(cFColor& c, float i, cVector& pos)
-  : color_{c}
-  , intense_{i}
-  , position_{pos}
-  { 
-    math::Clamp(intense_, 0.0f, 1.0f);  
-  }
-  LightPoint(cFColor&& c, float i, cVector&& pos)
-  : color_{c}
-  , intense_{i}
-  , position_{pos}
-  { 
-    math::Clamp(intense_, 0.0f, 1.0f);  
-  }
-  
+  LightPoint(cFColor& c, float i, cVector& pos, cVector& dir);
+  LightPoint(cFColor&& c, float i, cVector&& pos, cVector& dir);
+
+  FColor Illuminate(cFColor& base_color, cVector& normal, cVector& dest);
+
+private:
   FColor  color_;
   float   intense_;
   Vector  position_;
-  float   ka;
-  float   kb;
-  float   kc;
+  Vector  direction_;
+  float   kc_;
+  float   kl_;
+  float   kq_;
 
 }; // struct LightPoint
 

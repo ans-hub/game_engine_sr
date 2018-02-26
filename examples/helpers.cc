@@ -47,8 +47,28 @@ void helpers::HandleCamMovement(Btn kbtn, GlCamera& cam)
         cam.vrp_.z -= cam_vel;
     }
       break;
-    case Btn::A : cam.vrp_.x -= cam_vel; break;
-    case Btn::D : cam.vrp_.x += cam_vel; break;
+    case Btn::A :
+    {
+      if (cam.type_ == GlCamera::Type::EULER)
+      {
+        cam.vrp_.x -= cam_vel * cam.trig_.Cos(cam.dir_.y);
+        cam.vrp_.z += cam_vel * cam.trig_.Sin(cam.dir_.y);
+      }
+      else
+        cam.vrp_.x -= cam_vel;
+    }
+      break;
+    case Btn::D :
+    {
+      if (cam.type_ == GlCamera::Type::EULER)
+      {
+        cam.vrp_.x += cam_vel * cam.trig_.Cos(cam.dir_.y);
+        cam.vrp_.z -= cam_vel * cam.trig_.Sin(cam.dir_.y);
+      }
+      else
+        cam.vrp_.x += cam_vel;
+    }
+      break;
     case Btn::R : cam.vrp_.y += cam_vel; break;
     case Btn::F : cam.vrp_.y -= cam_vel; break;
     case Btn::NUM9 : cam.ChangeFov(cam.fov_-1); break;

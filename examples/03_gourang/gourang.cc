@@ -32,7 +32,7 @@
 
 using namespace anshub;
 
-int main(int argc, const char** argv)
+int main()
 {
   // Math processor
   

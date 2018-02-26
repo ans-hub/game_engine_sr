@@ -31,9 +31,24 @@
 #include "../helpers.h"
 
 using namespace anshub;
+using namespace helpers;
+
+const char* HandleInput(int argc, const char** argv)
+{
+  if (argc != 2)
+    return NULL;
+  else
+    return argv[1];
+}
 
 int main(int argc, const char** argv)
 {
+  const char* fname = HandleInput(argc, argv);
+  if (!fname) {
+    std::cerr << "Incorrect file name\n";
+    return 1;
+  }
+
   // Math processor
   
   TrigTable trig {};
@@ -55,7 +70,7 @@ int main(int argc, const char** argv)
   // Ethalon object
 
   auto obj = object::Make(
-    "data/cube.ply", trig, 
+    fname, trig, 
     {1.0f, 1.0f, 1.0f},   // initial scale
     {0.0f, 0.0f, 0.0f},   // world pos
     {0.0f, 0.0f, 0.0f}    // initial rotate
@@ -161,7 +176,7 @@ int main(int argc, const char** argv)
     triangles::Persp2Screen(tri_arr, cam);
 
     buf.Clear();
-    draw::SolidTriangles(tri_arr, buf);
+    auto total = draw::SolidTriangles(tri_arr, buf);
     buf.SendDataToFB();
     fps.Count();
 
@@ -172,7 +187,8 @@ int main(int argc, const char** argv)
     {
       std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
       std::cerr << "Objects culled: " << culled << '\n';
-      std::cerr << "Hidden surface: " << hidden << "\n\n";
+      std::cerr << "Total surfaces: " << total << "\n";
+      std::cerr << "Hidden surfaces: " << hidden << "\n\n";
     }
 
   } while (!win.Closed());

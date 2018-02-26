@@ -29,8 +29,8 @@ RLSFLAGS  = -O2
 # Setup objects
 
 VPATH = $(LIBDIR)/data/
-# VPATH +=  engine/
-# OBJECTS = logic.o renderer.o
+VPATH +=  ../
+OBJECTS = helpers.o
 
 # Other stuff
 

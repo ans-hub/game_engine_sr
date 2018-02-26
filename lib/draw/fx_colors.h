@@ -26,8 +26,11 @@ struct Color
 {
   Color() 
     : r{}, g{}, b{}, a{255} { }
-  explicit Color(unsigned int c) 
-    : b{(c >> 24) & 0xff}, g{(c >> 16) & 0xff}, r{(c >> 8) & 0xff}, a{c & 0xff} { }
+  explicit Color(unsigned int c)
+    : r {static_cast<T>((c >> 8) & 0xff)}
+    , g {static_cast<T>((c >> 16) & 0xff)}
+    , b {static_cast<T>((c >> 24) & 0xff)}
+    , a {static_cast<T>(c & 0xff)} { }
   Color(T cr, T cg, T cb)
     : r{cr}, g{cg}, b{cb}, a{255} { }
   
@@ -126,6 +129,7 @@ namespace color {
   // Const colors
 
   constexpr uint White {0xffffffff};
+  constexpr uint Blue  {0xff000000};
   constexpr uint Black {0x00000000};
 
   // Helpers functions
