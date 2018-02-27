@@ -115,8 +115,9 @@ namespace object {
   bool      Cull(GlObject&, const GlCamera&);  
   int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
   void      ResetAttributes(GlObject&);
-  void      RefreshFaceNormals(GlObject&);
-  void      RefreshVertexNormals(GlObject&);
+  void      ComputeFaceNormals(GlObject&);
+  void      ComputeVertexNormalsV1(GlObject&);
+  void      ComputeVertexNormalsV2(GlObject&);
  
   // Object transformation
 
@@ -137,6 +138,10 @@ namespace object {
 
   float     FindFarthestCoordinate(const GlObject&);
   void      RefreshOrientation(GlObject&, const MatrixRotateEul&);
+
+  // Debug purposes
+
+  Vertexes  ComputeDrawableVxsNormals(const GlObject&, float scale);
   
 } // namespace object
 
@@ -152,8 +157,9 @@ namespace objects {
   int       Cull(GlObjects&, const GlCamera&);
   int       RemoveHiddenSurfaces(GlObjects&, const GlCamera&);  
   void      ResetAttributes(GlObjects&);
-  void      RefreshFaceNormals(GlObjects&);
-  void      RefreshVertexNormals(GlObjects&);
+  void      ComputeFaceNormals(GlObjects&);
+  void      ComputeVertexNormalsV1(GlObjects&);
+  void      ComputeVertexNormalsV2(GlObjects&);
 
   // GlObjects transformation
 

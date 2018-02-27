@@ -40,9 +40,6 @@ struct Triangle
 
   Triangle(Vertexes&, FColors&, int f1, int f2, int f3, uint attrs);
   
-  Vertexes& vxs_;
-  FColors&  colors_;
-  
   // This fields used only inside ::triangles namespace
 
   Vector  v1_;
@@ -58,19 +55,19 @@ struct Triangle
   int     f2_;
   int     f3_;
   
+  // Angles between edges (used in vxs normals computation)
+
+  float   a1_;
+  float   a2_;
+  float   a3_;
+
   // Other usefull stuff
 
   Vector  face_normal_;
+  FColor  face_color_;
   uint    attrs_;
 
 }; // struct Triangle
-
-namespace triangle {
-
-  void CalcFaceNormal(Triangle&, const Vertexes&);
-  void CalcVertexNormal(Triangle&, const Vertexes&);
-
-} // namespace triangle
 
 } // namespace anshub
 

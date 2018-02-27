@@ -177,7 +177,7 @@ GlObject object::Make(const char* str)
   if (ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"red", "green", "blue"}))
     colors = ply.GetLine("vertex", {"red", "green", "blue"});
   else
-    colors = Vector2d(vxs.size(), Vector1d{255, 255, 255});
+    colors = Vector2d(vxs.size(), Vector1d{255.0f, 255.0f, 255.0f});
 
   // Try to load faces
 
@@ -228,7 +228,7 @@ void object::ResetAttributes(GlObject& obj)
 // Refresh face normals (for lighting purposes we should call this function
 // in world coordinates)
 
-void object::RefreshFaceNormals(GlObject& obj)
+void object::ComputeFaceNormals(GlObject& obj)
 {
   auto& vxs = obj.GetCoords();
 
@@ -243,15 +243,22 @@ void object::RefreshFaceNormals(GlObject& obj)
   }
 }
 
-// Refresh vertex normals (for lighting purposes we should call this function
-// in world coordinates)
+// Compute vertexes normals, using quick method (sometimes innacurate, since
+// doesn`t respects to similar faces, like in the case with cube). Computing
+// process: compute non-normalized face normals, lenghts of this normals would
+// be a weight factor (since length of face normal is 2x square of triangle). 
 
-void object::RefreshVertexNormals(GlObject& obj)
+void object::ComputeVertexNormalsV1(GlObject& obj)
 {
-  object::RefreshFaceNormals(obj);
-  obj.vxs_normals_.clear();
-  obj.vxs_normals_.resize(obj.vxs_trans_.size());
+  object::ComputeFaceNormals(obj);
+
+  // Clear current normals
+
+  for (auto& norm : obj.vxs_normals_)
+    norm = {0.0f, 0.0f, 0.0f};
   std::vector<uint> cnt (obj.vxs_trans_.size());
+
+  // Accumulate normals
 
   for (auto& tri : obj.triangles_)
   {
@@ -262,14 +269,40 @@ void object::RefreshVertexNormals(GlObject& obj)
     ++cnt[tri.f2_];
     ++cnt[tri.f3_];
   }
-  using vector::operator<<;
+
+  // Normalize
+
   for (std::size_t i = 0; i < obj.vxs_normals_.size(); ++i)
   {
     obj.vxs_normals_[i] /= cnt[i];
     obj.vxs_normals_[i].Normalize();
-    // std::cerr << obj.vxs_normals_[i] << '\n';
   }
-  // std::cerr << std::endl;
+}
+
+// Compute vertexes normals, using more complex method, where as weighted factor 
+// would be used angles between edges of triangle. This method is really low
+// perfomance since requires compute acos and lengths vectors
+
+void object::ComputeVertexNormalsV2(GlObject& obj)
+{
+  object::ComputeFaceNormals(obj);
+
+  // Clear current normals
+
+  for (auto& norm : obj.vxs_normals_)
+    norm = {0.0f, 0.0f, 0.0f};
+
+  // Accumulate normals
+
+  for (auto& tri : obj.triangles_)
+  {
+    tri.face_normal_.Normalize();
+    obj.vxs_normals_[tri.f1_] += tri.face_normal_ * tri.a1_;
+    obj.vxs_normals_[tri.f2_] += tri.face_normal_ * tri.a2_;
+    obj.vxs_normals_[tri.f3_] += tri.face_normal_ * tri.a3_;
+  }
+  for (auto& normal : obj.vxs_normals_)
+    normal.Normalize();
 }
 
 // Cull objects in cameras coordinates. Since we work in camera coordinates,
@@ -530,6 +563,21 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotateEul& mx)
   obj.v_orient_z_ = matrix::Multiplie(obj.v_orient_z_, mx);
 }
 
+// Computes drawable vertexes normals in world coordinates relative to vertex
+// of object
+
+Vertexes object::ComputeDrawableVxsNormals(const GlObject& obj, float scale)
+{
+  Vertexes norms {};
+  auto& vxs = obj.GetCoords();
+  for (std::size_t i = 0; i < vxs.size(); ++i)
+  {
+    Vector end = vxs[i] + (obj.vxs_normals_[i] * scale);
+    norms.push_back(end);
+  }
+  return norms;
+}
+
 //*************************************************************************
 // OBJECTS HELPERS IMPLEMENTATION
 //*************************************************************************
@@ -537,19 +585,27 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotateEul& mx)
 // Refresh face normals (for lighting purposes we should call this function
 // in world coordinates)
 
-void objects::RefreshFaceNormals(GlObjects& arr)
+void objects::ComputeFaceNormals(GlObjects& arr)
 {
   for (auto& obj : arr)
-    object::RefreshFaceNormals(obj);
+    object::ComputeFaceNormals(obj);
 }
 
 // Refresh vertex normals (for lighting purposes we should call this function
 // in world coordinates)
 
-void objects::RefreshVertexNormals(GlObjects& arr)
+void objects::ComputeVertexNormalsV1(GlObjects& arr)
 {
   for (auto& obj : arr)
-    object::RefreshVertexNormals(obj);
+    object::ComputeVertexNormalsV1(obj);
+}
+
+// Similar as above but uses second type of vertex computation function
+
+void objects::ComputeVertexNormalsV2(GlObjects& arr)
+{
+  for (auto& obj : arr)
+    object::ComputeVertexNormalsV2(obj);
 }
 
 // All these functions are the same as in ::object namespace but applies

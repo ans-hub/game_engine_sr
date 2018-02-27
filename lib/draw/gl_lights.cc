@@ -39,7 +39,7 @@ void light::Object(GlObject& obj, Lights& lights)
     if (tri.attrs_ & Triangle::FLAT_SHADING)
     {
       auto  bc = colors[tri.f1_];
-      auto& cc = tri.c1_;
+      auto& cc = tri.face_color_;
       cc = {0.0f, 0.0f, 0.0f};
 
       auto normalized = math::Fzero(tri.face_normal_.SquareLength() - 1.0f);

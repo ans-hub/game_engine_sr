@@ -398,11 +398,6 @@ void draw::GourangTriangle(
     std::swap(c1, c2);
   }
 
-  // // Swap colors to ensure that we interpolate from left to right
-
-  // if (x2 > x3)
-  //   std::swap(c2, c3);
-
   // Part 1 : draw top part of triangle (from top to middle)
   // Note that 0;0 point is placed in left-bottom corner
 
@@ -412,7 +407,7 @@ void draw::GourangTriangle(
   float dx_lhs {0.0f};
   float dx_rhs {0.0f};
 
-  if (math::FNotZero(y2-y1)) 
+  if (math::FNotZero(y2-y1))
     dx_lhs = (float)(x2-x1) / std::abs((float)(y2-y1));
   if (math::FNotZero(y3-y1))
     dx_rhs = (float)(x3-x1) / std::abs((float)(y3-y1));
@@ -471,7 +466,7 @@ void draw::GourangTriangle(
       dx_currx_c = c1;
 
     FColor curr_c {};
-    for (int x = xl; x <= xr; ++x)        // for each pixel interpolate color
+    for (int x = xl; x < xr; ++x)        // for each pixel interpolate color
     {
       int dx = x-xl;
       curr_c = x_lc + (dx_currx_c * dx);
@@ -548,7 +543,7 @@ void draw::GourangTriangle(
       dx_currx_c = c3;
     
     FColor curr_c {};
-    for (int x = xl; x <= xr; ++x)        // for each pixel interpolate color
+    for (int x = xl; x < xr; ++x)        // for each pixel interpolate color
     {
       int dx = x-xl;
       curr_c = x_lc + (dx_currx_c * dx);
@@ -603,7 +598,7 @@ void draw::WiredObject(const GlObject& obj, Buffer& buf)
 int draw::SolidObject(const GlObject& obj, Buffer& buf)
 {
   int total {0};
-  
+
   if (!obj.active_)
     return total;
     
@@ -624,7 +619,7 @@ int draw::SolidObject(const GlObject& obj, Buffer& buf)
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     }
     else {
-      auto color = face.c1_.GetARGB();
+      auto color = face.face_color_.GetARGB();
       draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
     }
     ++total;
@@ -697,12 +692,16 @@ int draw::SolidTriangles(const TrianglesRef& arr, Buffer& buf)
   return total;
 }
 
-void draw::ObjectVxsNormals(const GlObject& obj, int mp, uint color, Buffer& buf)
+// Here we build segments of normals like: obj.vx[i] is start, ends.vx[i] is end
+
+void draw::ObjectNormals(
+  const GlObject& obj, const Vertexes& ends, uint color, Buffer& buf)
 {
-  for (std::size_t i = 0; i < obj.vxs_trans_.size(); ++i)
+  auto& vxs = obj.GetCoords();
+  for (std::size_t i = 0; i < vxs.size(); ++i)
   {
-    Vector start = obj.vxs_trans_[i] + (obj.vxs_normals_[i] * mp);
-    Vector end   = obj.vxs_trans_[i];
+    auto start = vxs[i];
+    auto end = ends[i];
     if (segment2d::Clip(
       0, 0, buf.Width()-1, buf.Height()-1, start.x, start.y, end.x, end.y))
         draw::Line(start.x, start.y, end.x, end.y, color, buf);
