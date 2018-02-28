@@ -105,6 +105,20 @@ int main(int argc, const char** argv)
     cube.world_pos_.z = rand_toolkit::get_rand(-kWorldSize, kWorldSize);
   }
 
+  // Make random colors to the cubes faces
+  
+  for (auto& cube : cubes)
+  {
+    for (auto& color : cube.colors_local_)
+      color = {
+        rand_toolkit::get_rand(0.0f, 255.0f),
+        rand_toolkit::get_rand(0.0f, 255.0f),
+        rand_toolkit::get_rand(0.0f, 255.0f)
+      };
+    for (auto& tri : cube.triangles_)
+      tri.face_color_ = cube.colors_local_[tri.f1_];
+  }
+
   // Prepare vectors for rotating each cube in loop
 
   std::vector<Vector> cubes_rot {};

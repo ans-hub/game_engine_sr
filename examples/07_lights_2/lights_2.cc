@@ -20,6 +20,7 @@
 #include "lib/math/trig.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
+#include "lib/draw/gl_lights.cc"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_camera.h"
@@ -150,6 +151,18 @@ int main(int argc, const char** argv)
   float    far_z   {500};
   GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
 
+  // Prepare lights sources
+ 
+  Lights lights {};
+  FColor white  {255.0f, 255.0f, 255.0f};
+  FColor yellow {255.0f, 255.0f, 0.0f};
+  FColor blue   {0.0f, 0.0f, 255.0f};
+
+  lights.ambient_.emplace_back(white, 0.2f);
+  lights.infinite_.emplace_back(yellow, 0.6f, Vector{0.0f, -1.0f, 0.0f});
+  // lights.point_.emplace_back(yellow, 0.6f, 
+  //   Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
+
   // Other stuff
 
   Buffer  buf (kWidth, kHeight, 0);
@@ -254,6 +267,12 @@ int main(int argc, const char** argv)
     nfo_culled += objects::Cull(ground, cam, mx_cam);
     nfo_hidden += objects::RemoveHiddenSurfaces(ground, cam);
 
+    // Light object
+
+    object::ComputeFaceNormals(obj);
+    object::ComputeVertexNormalsV2(obj);
+    light::Object(obj, lights);
+
     // Prepare drawing normals
     
     auto norms = object::ComputeDrawableVxsNormals(obj, 0.4f);
@@ -288,8 +307,9 @@ int main(int argc, const char** argv)
     buf.Clear();
     for (const auto& it : ground)
       draw::WiredObject(it, buf);
-    draw::WiredObject(obj, buf);
-    
+    draw::SolidObject(obj, buf);
+    // draw::ObjectNormals(obj, norms, color::Blue, buf);
+
     buf.SendDataToFB();
 
     // Print fps ans other info
