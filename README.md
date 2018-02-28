@@ -1,4 +1,4 @@
-# Game console
+# Software renderer and game console
 
 This repository contains implementation of `game console` suggested by Andre Lamothe in the book [Advanced 3D Graphics and Rasterization](http://a.co/6XNNYrD). The main idea of suggested game console was to study different algorithms (graphics, games, etc), using vurtual linear addressed video buffer. This means that all the manipulations with the graphics (math, transformation, rasterisation, etc.) you must perform manually. And only then you will send data to the video memory.
 
@@ -28,6 +28,10 @@ This buffer can be easily reduced to 16 bit or 8 bit color space manually.
 Directory `examples` contains examples based on the game console. Currently there are placed game called `Raiders 3D` which is my implementation of the game originally written by Andre Lamothe.
 
 The main actions is placed in two classes `Logic` and `Scene`. It should be noted that this is an educational implementation, and thus most of the functions which is responsible for the behavior of objects are located in these two classes (`Logic` and `Scene`). Although in a real game it would be better to arrange some of the functions which is responsible for the behavior of objects in the implementation of these objects themselves.
+
+<div style="text-align: center;" markdown="1" />
+<img src="screenshot.png" style="width: 600px;" />
+</div>
 
 ## Libraries used in game console
 
