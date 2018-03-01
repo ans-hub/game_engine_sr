@@ -562,34 +562,34 @@ void draw::WiredObject(const GlObject& obj, Buffer& buf)
   int w = buf.Width();
   int h = buf.Height();
     
-  for (const auto& t : obj.triangles_)
+  for (const auto& t : obj.faces_)
   {
-    if ((t.attrs_ & Triangle::HIDDEN))
+    if (!t.active_)
       continue;
 
-    // As we haven`t filling we get first vertexes color
+    // As we haven`t filling, we get first vertexes color
 
-    auto color = obj.colors_trans_[t.f1_].GetARGB();
+    auto color = t.color_.GetARGB();
 
     // Now get pairs of vectors on the triangle face and draw lines
 
-    auto p1 = obj.vxs_trans_[t.f1_];
-    auto p2 = obj.vxs_trans_[t.f2_];
+    auto p1 = obj.vxs_trans_[t[0]];
+    auto p2 = obj.vxs_trans_[t[1]];
 
-    if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
-      draw::Line(p1.x, p1.y, p2.x, p2.y, color, buf);
+    if (segment2d::Clip(0, 0, w-1, h-1, p1.pos_.x, p1.pos_.y, p2.pos_.x, p2.pos_.y))
+      draw::Line(p1.pos_.x, p1.pos_.y, p2.pos_.x, p2.pos_.y, color, buf);
       
-    auto p3 = obj.vxs_trans_[t.f2_];
-    auto p4 = obj.vxs_trans_[t.f3_];
+    auto p3 = obj.vxs_trans_[t[1]];
+    auto p4 = obj.vxs_trans_[t[2]];
 
-    if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
-      draw::Line(p3.x, p3.y, p4.x, p4.y, color, buf);
+    if (segment2d::Clip(0, 0, w-1, h-1, p3.pos_.x, p3.pos_.y, p4.pos_.x, p4.pos_.y))
+      draw::Line(p3.pos_.x, p3.pos_.y, p4.pos_.x, p4.pos_.y, color, buf);
 
-    auto p5 = obj.vxs_trans_[t.f3_];
-    auto p6 = obj.vxs_trans_[t.f1_];
+    auto p5 = obj.vxs_trans_[t[2]];
+    auto p6 = obj.vxs_trans_[t[0]];
 
-    if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
-      draw::Line(p5.x, p5.y, p6.x, p6.y, color, buf);
+    if (segment2d::Clip(0, 0, w-1, h-1, p5.pos_.x, p5.pos_.y, p6.pos_.x, p6.pos_.y))
+      draw::Line(p5.pos_.x, p5.pos_.y, p6.pos_.x, p6.pos_.y, color, buf);
   }
 }
 
@@ -598,29 +598,34 @@ void draw::WiredObject(const GlObject& obj, Buffer& buf)
 int draw::SolidObject(const GlObject& obj, Buffer& buf)
 {
   int total {0};
+  auto& vxs = obj.GetCoords();
 
   if (!obj.active_)
     return total;
-    
-  for (const auto& face : obj.triangles_)
+  
+  for (const auto& face : obj.faces_)
   {
-    if ((face.attrs_ & Triangle::HIDDEN))
+    if (!face.active_)
       continue;
 
-    auto p1 = obj.vxs_trans_[face.f1_];
-    auto p2 = obj.vxs_trans_[face.f2_];
-    auto p3 = obj.vxs_trans_[face.f3_];
+    auto p1 = vxs[face[0]];
+    auto p2 = vxs[face[1]];
+    auto p3 = vxs[face[2]];
     
-    if (face.attrs_ & Triangle::GOURANG_SHADING)
+    if (obj.shading_ == Shading::GOURANG)
     {
-      auto c1 = obj.colors_trans_[face.f1_].GetARGB();
-      auto c2 = obj.colors_trans_[face.f2_].GetARGB();
-      auto c3 = obj.colors_trans_[face.f3_].GetARGB();
-      draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
+      auto c1 = vxs[face[0]].color_.GetARGB();
+      auto c2 = vxs[face[1]].color_.GetARGB();
+      auto c3 = vxs[face[2]].color_.GetARGB();
+      draw::GourangTriangle(
+        p1.pos_.x, p1.pos_.y, p2.pos_.x, p2.pos_.y, p3.pos_.x, p3.pos_.y,
+        c1, c2, c3, buf);
     }
     else {
-      auto color = face.face_color_.GetARGB();
-      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
+      auto color = face.color_.GetARGB();
+      draw::SolidTriangle(
+        p1.pos_.x, p1.pos_.y, p2.pos_.x, p2.pos_.y, p3.pos_.x, p3.pos_.y,
+        color, buf);
     }
     ++total;
   }
@@ -629,7 +634,7 @@ int draw::SolidObject(const GlObject& obj, Buffer& buf)
 
 // Draws triangles
 
-void draw::WiredTriangles(const TrianglesRef& arr, Buffer& buf)
+void draw::WiredTriangles(const V_Triangle& arr, Buffer& buf)
 {
   // int w = buf.Width();
   // int h = buf.Height();
@@ -667,23 +672,21 @@ void draw::WiredTriangles(const TrianglesRef& arr, Buffer& buf)
 
 // Draws solid triangles
 
-int draw::SolidTriangles(const TrianglesRef& arr, Buffer& buf)
+int draw::SolidTriangles(const V_Triangle& arr, Buffer& buf)
 {
   int total {0};
-  for (const auto& tri : arr)
+  for (const auto& t : arr)
   {
-    auto& t = tri.get();
-
-    if ((t.attrs_ & Triangle::HIDDEN))
+    if (!t.active_)
       continue;
 
-    auto p1 = t.v1_;
-    auto p2 = t.v2_;
-    auto p3 = t.v3_;
-    auto c1 = t.c1_.GetARGB();
-    auto c2 = t.c2_.GetARGB();
-    auto c3 = t.c3_.GetARGB();
-    if (t.attrs_ & Triangle::GOURANG_SHADING)
+    auto p1 = t[0].pos_;
+    auto p2 = t[1].pos_;
+    auto p3 = t[2].pos_;
+    auto c1 = t[0].color_.GetARGB();
+    auto c2 = t[1].color_.GetARGB();
+    auto c3 = t[2].color_.GetARGB();
+    if (t.shading_ == Shading::GOURANG)
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     else 
       draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, buf);
@@ -695,7 +698,7 @@ int draw::SolidTriangles(const TrianglesRef& arr, Buffer& buf)
 // Here we build segments of normals like: obj.vx[i] is start, ends.vx[i] is end
 
 void draw::ObjectNormals(
-  const GlObject& obj, const Vertexes& ends, uint color, Buffer& buf)
+  const GlObject& obj, const V_Vector& ends, uint color, Buffer& buf)
 {
   auto& vxs = obj.GetCoords();
   for (std::size_t i = 0; i < vxs.size(); ++i)
@@ -703,8 +706,8 @@ void draw::ObjectNormals(
     auto start = vxs[i];
     auto end = ends[i];
     if (segment2d::Clip(
-      0, 0, buf.Width()-1, buf.Height()-1, start.x, start.y, end.x, end.y))
-        draw::Line(start.x, start.y, end.x, end.y, color, buf);
+      0, 0, buf.Width()-1, buf.Height()-1, start.pos_.x, start.pos_.y, end.x, end.y))
+        draw::Line(start.pos_.x, start.pos_.y, end.x, end.y, color, buf);
   }
 }
 

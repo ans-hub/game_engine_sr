@@ -14,13 +14,11 @@ namespace anshub {
 GlObject::GlObject()
   : vxs_local_{}
   , vxs_trans_{}
-  , vxs_normals_{}
-  , colors_local_{}
-  , colors_trans_{}
   , current_vxs_{Coords::LOCAL}
-  , triangles_{}
+  , faces_{}
   , id_{}
   , active_{true}
+  , shading_{Shading::CONST}
   , world_pos_{0.0f, 0.0f, 0.0f}
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
@@ -31,52 +29,53 @@ GlObject::GlObject()
 // Creates object with vertexes, faces and attrs
 
 GlObject::GlObject(
-  cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs)
+  cMatrix2d& pos, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs)
   : vxs_local_{}
   , vxs_trans_{}
-  , vxs_normals_{}
-  , colors_local_{}
-  , colors_trans_{}
   , current_vxs_{Coords::LOCAL}  
-  , triangles_{}
+  , faces_{}
   , id_{}
   , active_{true}
+  , shading_{}  
   , world_pos_{0.0f, 0.0f, 0.0f}
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
   , sphere_rad_{0.0f}
 {
-  // Fill local vertexes
+  // Fill local vertexes with position and color
 
-  vxs_local_.reserve(vxs.size());
-  for (const auto& vx : vxs)
-    vxs_local_.emplace_back(vx[0], vx[1], vx[2]);
+  vxs_local_.reserve(pos.size());
+  for (std::size_t i = 0; i < pos.size(); ++i)
+  {
+    vxs_local_.emplace_back(
+      pos[i][0], pos[i][1], pos[i][2],
+      colors[i][0], colors[i][1], colors[i][2]
+    );
+  }
   vxs_trans_ = vxs_local_;
-
-  // Fill local colors
-
-  colors_local_.reserve(colors.size());
-  for (const auto& c : colors)
-    colors_local_.emplace_back(c[0], c[1], c[2]);
-  colors_trans_ = colors_local_;
   
-  // Now we prepare all attributes of object
+  // Now we prepare shading of object
 
-  unsigned int fattrs {0};
-  for (auto& attr : attrs)
-    fattrs |= static_cast<unsigned int>(attr[0]);
+  shading_ = static_cast<Shading>(attrs[0][0]);
 
   // Fill triangles (we suppose that we have correct ply file with
   // custom fields or incorrect with emply fields)
 
-  triangles_.reserve(faces.size());
+  faces_.reserve(faces.size());
   for (std::size_t i = 0; i < faces.size(); ++i)
   {
-    auto x = faces[i][0];
-    auto y = faces[i][1];
-    auto z = faces[i][2];
-    triangles_.emplace_back(vxs_trans_, colors_trans_, x, y, z, fattrs);
+    auto f1 = faces[i][0];
+    auto f2 = faces[i][1];
+    auto f3 = faces[i][2];
+    faces_.emplace_back(vxs_local_, f1, f2, f3);
+  }
+
+  // Fill face colors
+
+  for (std::size_t i = 0; i < faces.size(); ++i)
+  {
+    faces_[i].color_ = vxs_local_[faces_[i][0]].color_;
   }
 
   // Calc bounding sphere radius
@@ -84,18 +83,13 @@ GlObject::GlObject(
   for (const auto& vx : vxs_local_)
   {
     float curr {};
-    curr = std::fabs(vx.x);
+    curr = std::fabs(vx.pos_.x);
     if (curr > sphere_rad_) sphere_rad_ = curr;
-    curr = std::fabs(vx.y);
+    curr = std::fabs(vx.pos_.y);
     if (curr > sphere_rad_) sphere_rad_ = curr;
-    curr = std::fabs(vx.z);
+    curr = std::fabs(vx.pos_.z);
     if (curr > sphere_rad_) sphere_rad_ = curr;    
   }
-
-  // Reserve place for normals
-
-  vxs_normals_.resize(vxs.size());
-  // object::RefreshVertexNormals(*this);
 }
 
 // Copies internal coordinates from source to destination
@@ -106,25 +100,7 @@ void GlObject::CopyCoords(Coords src, Coords dest)
     vxs_trans_ = vxs_local_;
   else if (src == Coords::TRANS && dest == Coords::LOCAL)
     vxs_local_ = vxs_trans_;
-  if (src == Coords::LOCAL && dest == Coords::TRANS)
-    colors_trans_ = colors_local_;
-  else if (src == Coords::TRANS && dest == Coords::LOCAL)
-    colors_local_ = colors_trans_;
 }
-
-// // Copies internal coordinates from source to destination
-
-// void GlObject::CopyColors(Coords src, Coords dest)
-// {
-
-//   using color::operator<<;
-//   std::cerr << "1" << '\n';
-//   for (const auto& c : colors_local_)
-//     std::cerr << c << '\n';
-//   std::cerr << "2" << '\n';
-//   for (const auto& c : colors_trans_)
-//     std::cerr << c << '\n';
-// }
 
 //***************************************************************************
 // HELPERS IMPLEMENTATION
@@ -141,8 +117,6 @@ GlObject object::Make(const char* str)
 
   ply::Loader ply {};
   std::ifstream fss {str};
-  if (!fss)
-    std::cerr << str << '\n';
   ply.Load(fss);
   
   // Try to determine if ply contains element called "globals_ply_v2", which is
@@ -160,7 +134,7 @@ GlObject object::Make(const char* str)
       attrs = ply.GetLine("globals_ply_v2", {"shading"});
   }
   else
-    attrs = Vector2d(1, Vector1d{Triangle::FLAT_SHADING});
+    attrs = Vector2d(1, Vector1d{static_cast<int>(Shading::FLAT)});
   
   // Try to load vertex coordinates
 
@@ -217,10 +191,10 @@ GlObject object::Make(
 
 void object::ResetAttributes(GlObject& obj)
 {
-  for (auto& tri : obj.triangles_)
+  for (auto& face : obj.faces_)
   {
-    if (tri.attrs_ & Triangle::HIDDEN) 
-      tri.attrs_ ^= Triangle::HIDDEN; 
+    if (!face.active_) 
+      face.active_ = true; 
   }
   obj.active_ = true;
 }
@@ -232,14 +206,14 @@ void object::ComputeFaceNormals(GlObject& obj)
 {
   auto& vxs = obj.GetCoords();
 
-  for (auto& tri : obj.triangles_)
+  for (auto& face : obj.faces_)
   {
-    auto p1 = vxs[tri.f1_];
-    auto p2 = vxs[tri.f2_];
-    auto p3 = vxs[tri.f3_];
+    auto p1 = vxs[face[0]].pos_;
+    auto p2 = vxs[face[1]].pos_;
+    auto p3 = vxs[face[2]].pos_;
     Vector u {p1, p2};
     Vector v {p1, p3};
-    tri.face_normal_ = vector::CrossProduct(u, v);
+    face.normal_ = vector::CrossProduct(u, v);
   }
 }
 
@@ -252,30 +226,29 @@ void object::ComputeVertexNormalsV1(GlObject& obj)
 {
   object::ComputeFaceNormals(obj);
 
-  // Clear current normals
-
-  for (auto& norm : obj.vxs_normals_)
-    norm = {0.0f, 0.0f, 0.0f};
+  auto& vxs = obj.GetCoords();
+  for (auto& vx : vxs)
+    vx.normal_ = {0.0f, 0.0f, 0.0f};
   std::vector<uint> cnt (obj.vxs_trans_.size());
 
   // Accumulate normals
 
-  for (auto& tri : obj.triangles_)
+  for (auto& face : obj.faces_)
   {
-    obj.vxs_normals_[tri.f1_] += tri.face_normal_;
-    obj.vxs_normals_[tri.f2_] += tri.face_normal_;
-    obj.vxs_normals_[tri.f3_] += tri.face_normal_;
-    ++cnt[tri.f1_];
-    ++cnt[tri.f2_];
-    ++cnt[tri.f3_];
+    vxs[face[0]].normal_ += face.normal_;
+    vxs[face[1]].normal_ += face.normal_;
+    vxs[face[2]].normal_ += face.normal_;
+    ++cnt[face[0]];
+    ++cnt[face[1]];
+    ++cnt[face[2]];
   }
 
   // Normalize
 
-  for (std::size_t i = 0; i < obj.vxs_normals_.size(); ++i)
+  for (std::size_t i = 0; i < vxs.size(); ++i)
   {
-    obj.vxs_normals_[i] /= cnt[i];
-    obj.vxs_normals_[i].Normalize();
+    vxs[i].normal_ /= cnt[i];
+    vxs[i].normal_.Normalize();
   }
 }
 
@@ -287,22 +260,21 @@ void object::ComputeVertexNormalsV2(GlObject& obj)
 {
   object::ComputeFaceNormals(obj);
 
-  // Clear current normals
-
-  for (auto& norm : obj.vxs_normals_)
-    norm = {0.0f, 0.0f, 0.0f};
+  auto& vxs = obj.GetCoords();
+  for (auto& vx : vxs)
+    vx.normal_ = {0.0f, 0.0f, 0.0f};
 
   // Accumulate normals
 
-  for (auto& tri : obj.triangles_)
+  for (auto& face : obj.faces_)
   {
-    tri.face_normal_.Normalize();
-    obj.vxs_normals_[tri.f1_] += tri.face_normal_ * tri.a1_;
-    obj.vxs_normals_[tri.f2_] += tri.face_normal_ * tri.a2_;
-    obj.vxs_normals_[tri.f3_] += tri.face_normal_ * tri.a3_;
+    face.normal_.Normalize();
+    vxs[face[0]].normal_ += face.normal_ * face.angles_[0];
+    vxs[face[1]].normal_ += face.normal_ * face.angles_[1];
+    vxs[face[2]].normal_ += face.normal_ * face.angles_[2];
   }
-  for (auto& normal : obj.vxs_normals_)
-    normal.Normalize();
+  for (auto& vx : vxs)
+    vx.normal_.Normalize();
 }
 
 // Cull objects in cameras coordinates. Since we work in camera coordinates,
@@ -363,9 +335,10 @@ bool object::Cull(GlObject& obj, const GlCamera& cam)
   // to see how object center would seen when camera would be in 0;0;0 and 0 angles
   // (i.e. when all objects would be translated in camera coordinates)
   
-  Vertexes world_pos {obj.world_pos_};
-  coords::World2Camera(world_pos, cam.vrp_, cam.dir_, cam.trig_);
-  Vector obj_pos {world_pos.back()};
+  Vertex    world {obj.world_pos_};
+  V_Vertex  v_world_pos {world};
+  coords::World2Camera(v_world_pos, cam.vrp_, cam.dir_, cam.trig_);
+  Vector    obj_pos {v_world_pos.back().pos_};
 
   // Cull z planes
 
@@ -417,22 +390,22 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
   int cnt {0};
   if (!obj.active_) return cnt;
 
-  for (auto& face : obj.triangles_)
+  for (auto& face : obj.faces_)
   {
-    auto p0 = obj.vxs_trans_[face.f1_];
-    auto p1 = obj.vxs_trans_[face.f2_];
-    auto p2 = obj.vxs_trans_[face.f3_];
+    auto p0 = obj.vxs_trans_[face[0]];
+    auto p1 = obj.vxs_trans_[face[1]];
+    auto p2 = obj.vxs_trans_[face[2]];
     
-    Vector u {p0, p1};
-    Vector v {p0, p2};
+    Vector u {p0.pos_, p1.pos_};
+    Vector v {p0.pos_, p2.pos_};
     Vector n = vector::CrossProduct(u,v);   // normal to u and v
-    Vector c {p0, cam.vrp_};                // view vector
+    Vector c {p0.pos_, cam.vrp_};                // view vector
     n.Normalize();
     c.Normalize();
     auto prod = vector::DotProduct(c,n);
     if (math::FlessZero(prod))
     {
-      face.attrs_ |= Triangle::HIDDEN;
+      face.active_ = false;
       ++cnt;
     }
   }
@@ -445,7 +418,7 @@ void object::ApplyMatrix(const Matrix<4,4>& mx, GlObject& obj)
 {
   auto& vxs = obj.GetCoords();
   for (auto& vx : vxs)
-    vx = matrix::Multiplie(vx, mx);
+    vx.pos_ = matrix::Multiplie(vx.pos_, mx);
 }
 
 void object::World2Camera(GlObject& obj, const GlCamera& cam)
@@ -462,7 +435,7 @@ void object::Camera2Persp(GlObject& obj, const GlCamera& cam)
 
 void object::Persp2Screen(GlObject& obj, const GlCamera& cam)
 {
-  auto& vxs {obj.GetCoords()};
+  auto& vxs = obj.GetCoords();
   coords::Persp2Screen(vxs, cam.wov_, cam.scr_w_, cam.scr_h_);
 }
 
@@ -473,9 +446,9 @@ void object::Scale(GlObject& obj, const Vector& scale)
   auto& vxs = obj.GetCoords();
   for (auto& vx : vxs)
   {
-    vx.x *= scale.x;
-    vx.y *= scale.y;
-    vx.z *= scale.z;
+    vx.pos_.x *= scale.x;
+    vx.pos_.y *= scale.y;
+    vx.pos_.z *= scale.z;
   }
   obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
 }
@@ -493,7 +466,7 @@ void object::Translate(GlObject& obj, const Vector& pos)
 {
   auto& vxs = obj.GetCoords();
   for (auto& vx : vxs)
-    vx += pos;
+    vx.pos_ += pos;
 }
 
 // Rotate object in YXZ sequence by rotating each vector relative to
@@ -508,9 +481,9 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
     float ycos = t.Cos(v.y);
     for (auto& vx : vxs)
     {
-      float vx_old {vx.x};
-      vx.x = (vx.x * ycos) + (vx.z * ysin);
-      vx.z = (vx.z * ycos) - (vx_old * ysin); 
+      float vx_old {vx.pos_.x};
+      vx.pos_.x = (vx.pos_.x * ycos) + (vx.pos_.z * ysin);
+      vx.pos_.z = (vx.pos_.z * ycos) - (vx_old * ysin); 
     }
   }
   if (math::FNotZero(v.x))
@@ -519,9 +492,9 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
     float xcos = t.Cos(v.x);
     for (auto& vx : vxs)
     {
-      float vy_old {vx.y}; 
-      vx.y = (vx.y * xcos) - (vx.z * xsin);
-      vx.z = (vx.z * xcos) + (vy_old * xsin); 
+      float vy_old {vx.pos_.y}; 
+      vx.pos_.y = (vx.pos_.y * xcos) - (vx.pos_.z * xsin);
+      vx.pos_.z = (vx.pos_.z * xcos) + (vy_old * xsin); 
     }
   }
   if (math::FNotZero(v.z))
@@ -530,9 +503,9 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
     float zcos = t.Cos(v.z);
     for (auto& vx : vxs)
     {
-      float vx_old {vx.x};
-      vx.x = (vx.x * zcos) - (vx.y * zsin);
-      vx.y = (vx.y * zcos) + (vx_old * zsin);
+      float vx_old {vx.pos_.x};
+      vx.pos_.x = (vx.pos_.x * zcos) - (vx.pos_.y * zsin);
+      vx.pos_.y = (vx.pos_.y * zcos) + (vx_old * zsin);
     }
   }
 }
@@ -546,9 +519,9 @@ float object::FindFarthestCoordinate(const GlObject& obj)
   const auto& vxs = obj.GetCoords();
   for (const auto& vx : vxs)
   {
-    rad = std::max(rad, std::fabs(vx.x));
-    rad = std::max(rad, std::fabs(vx.y));
-    rad = std::max(rad, std::fabs(vx.z));
+    rad = std::max(rad, std::fabs(vx.pos_.x));
+    rad = std::max(rad, std::fabs(vx.pos_.y));
+    rad = std::max(rad, std::fabs(vx.pos_.z));
   }
   return rad;
 }
@@ -566,14 +539,14 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotateEul& mx)
 // Computes drawable vertexes normals in world coordinates relative to vertex
 // of object
 
-Vertexes object::ComputeDrawableVxsNormals(const GlObject& obj, float scale)
+V_Vertex object::ComputeDrawableVxsNormals(const GlObject& obj, float scale)
 {
-  Vertexes norms {};
+  V_Vertex norms {};
   auto& vxs = obj.GetCoords();
   for (std::size_t i = 0; i < vxs.size(); ++i)
   {
-    Vector end = vxs[i] + (obj.vxs_normals_[i] * scale);
-    norms.push_back(end);
+    Vector end = vxs[i].pos_ + (vxs[i].normal_ * scale);
+    norms.emplace_back(end);
   }
   return norms;
 }
@@ -585,7 +558,7 @@ Vertexes object::ComputeDrawableVxsNormals(const GlObject& obj, float scale)
 // Refresh face normals (for lighting purposes we should call this function
 // in world coordinates)
 
-void objects::ComputeFaceNormals(GlObjects& arr)
+void objects::ComputeFaceNormals(V_GlObject& arr)
 {
   for (auto& obj : arr)
     object::ComputeFaceNormals(obj);
@@ -594,7 +567,7 @@ void objects::ComputeFaceNormals(GlObjects& arr)
 // Refresh vertex normals (for lighting purposes we should call this function
 // in world coordinates)
 
-void objects::ComputeVertexNormalsV1(GlObjects& arr)
+void objects::ComputeVertexNormalsV1(V_GlObject& arr)
 {
   for (auto& obj : arr)
     object::ComputeVertexNormalsV1(obj);
@@ -602,7 +575,7 @@ void objects::ComputeVertexNormalsV1(GlObjects& arr)
 
 // Similar as above but uses second type of vertex computation function
 
-void objects::ComputeVertexNormalsV2(GlObjects& arr)
+void objects::ComputeVertexNormalsV2(V_GlObject& arr)
 {
   for (auto& obj : arr)
     object::ComputeVertexNormalsV2(obj);
@@ -611,7 +584,7 @@ void objects::ComputeVertexNormalsV2(GlObjects& arr)
 // All these functions are the same as in ::object namespace but applies
 // changes for each object in container
 
-int objects::Cull(GlObjects& arr, const GlCamera& cam, const MatrixCamera& mx)
+int objects::Cull(V_GlObject& arr, const GlCamera& cam, const MatrixCamera& mx)
 {
   int res {0};
   for (auto& obj : arr)
@@ -622,7 +595,7 @@ int objects::Cull(GlObjects& arr, const GlCamera& cam, const MatrixCamera& mx)
   return res;
 }
 
-int objects::Cull(GlObjects& arr, const GlCamera& cam)
+int objects::Cull(V_GlObject& arr, const GlCamera& cam)
 {
   int res {0};
   for (auto& obj : arr)
@@ -635,7 +608,7 @@ int objects::Cull(GlObjects& arr, const GlCamera& cam)
 
 // Removes hidden surfaces in each object
 
-int objects::RemoveHiddenSurfaces(GlObjects& arr, const GlCamera& cam)
+int objects::RemoveHiddenSurfaces(V_GlObject& arr, const GlCamera& cam)
 {
   int cnt {0};
   for (auto& obj : arr)
@@ -648,7 +621,7 @@ int objects::RemoveHiddenSurfaces(GlObjects& arr, const GlCamera& cam)
 
 // Translates all objects by given vector
 
-void objects::Translate(GlObjects& arr, const Vector& pos)
+void objects::Translate(V_GlObject& arr, const Vector& pos)
 {
   for (auto& obj : arr)
     object::Translate(obj, pos);
@@ -656,7 +629,7 @@ void objects::Translate(GlObjects& arr, const Vector& pos)
 
 // Rotates objects using one rotate vector
 
-void objects::Rotate(GlObjects& arr, const Vector& v, const TrigTable& trig)
+void objects::Rotate(V_GlObject& arr, const Vector& v, const TrigTable& trig)
 {
   for (auto& obj : arr)
     object::Rotate(obj, v, trig);
@@ -665,7 +638,7 @@ void objects::Rotate(GlObjects& arr, const Vector& v, const TrigTable& trig)
 // Rotates objects using vector for each object
 
 void objects::Rotate(
-  GlObjects& arr, const std::vector<Vector>& rot, const TrigTable& trig)
+  V_GlObject& arr, const std::vector<Vector>& rot, const TrigTable& trig)
 {
   // todo: add assertion (arr.size() == vecs.size())
   
@@ -679,13 +652,13 @@ void objects::Rotate(
 
 // Apply givemn matrixes to onbjects
 
-void objects::ApplyMatrix(const Matrix<4,4>& mx, GlObjects& arr)
+void objects::ApplyMatrix(const Matrix<4,4>& mx, V_GlObject& arr)
 {
   for (auto& obj : arr)
     object::ApplyMatrix(mx, obj);
 }
 
-void objects::World2Camera(GlObjects& arr, const GlCamera& cam)
+void objects::World2Camera(V_GlObject& arr, const GlCamera& cam)
 {
   for (auto& obj : arr)
   {
@@ -694,7 +667,7 @@ void objects::World2Camera(GlObjects& arr, const GlCamera& cam)
   }
 }
 
-void objects::Camera2Persp(GlObjects& arr, const GlCamera& cam)
+void objects::Camera2Persp(V_GlObject& arr, const GlCamera& cam)
 {
   for (auto& obj : arr)
   {
@@ -703,30 +676,30 @@ void objects::Camera2Persp(GlObjects& arr, const GlCamera& cam)
   }
 }
 
-void objects::Persp2Screen(GlObjects& arr, const GlCamera& cam)
+void objects::Persp2Screen(V_GlObject& arr, const GlCamera& cam)
 {
   for (auto& obj : arr)
   {
-    auto& vxs {obj.GetCoords()};
+    auto& vxs = obj.GetCoords();
     coords::Persp2Screen(vxs, cam.wov_, cam.scr_w_, cam.scr_h_);
   }
 }
 
 // Reset all attributes in each object
 
-void objects::ResetAttributes(GlObjects& arr)
+void objects::ResetAttributes(V_GlObject& arr)
 {
   for (auto& obj : arr)
     object::ResetAttributes(obj);
 }
 
-void objects::SetCoords(GlObjects& arr, Coords c)
+void objects::SetCoords(V_GlObject& arr, Coords c)
 {
   for (auto& obj : arr)
     obj.SetCoords(c);
 }
 
-void objects::CopyCoords(GlObjects& arr, Coords src, Coords dest)
+void objects::CopyCoords(V_GlObject& arr, Coords src, Coords dest)
 {
   for (auto& obj : arr)
   {
@@ -736,182 +709,12 @@ void objects::CopyCoords(GlObjects& arr, Coords src, Coords dest)
 
 // Simple z sort based on z world coordinate
 
-void objects::SortZ(GlObjects& arr)
+void objects::SortZ(V_GlObject& arr)
 {
   std::sort(arr.begin(), arr.end(), [](const GlObject& a, const GlObject& b)
   {
     return a.world_pos_.z > b.world_pos_.z; 
   });  
-}
-
-//*************************************************************************
-// TRIANGLES HELPERS IMPLEMENTATION
-//*************************************************************************
-
-// Makes container of triangles references array. This is simple array of
-// references.
-
-TrianglesRef triangles::MakeContainer()
-{
-  return TrianglesRef {};
-}
-
-// Add references to triangles from objects to triangles container
-
-void triangles::AddFromObject(GlObject& obj, TrianglesRef& triangles)
-{
-  if (obj.active_)
-  {
-    // Now we place here references to triangles and fill them
-
-    for (auto& tri : obj.triangles_)
-    {
-      tri.v1_ = obj.vxs_trans_[tri.f1_];
-      tri.v2_ = obj.vxs_trans_[tri.f2_];
-      tri.v3_ = obj.vxs_trans_[tri.f3_];
-      tri.c1_ = obj.colors_trans_[tri.f1_];
-      tri.c2_ = obj.colors_trans_[tri.f2_];
-      tri.c3_ = obj.colors_trans_[tri.f3_];
-      triangles.emplace_back(std::ref(tri));
-    }
-  }
-}
-
-// Add references to triangles from objects to triangles container
-
-void triangles::AddFromObjects(GlObjects& arr, TrianglesRef& triangles)
-{
-  for (auto& obj : arr)
-  {
-    if (!obj.active_)
-      continue;
-    
-    // Now we place here references to triangles and fill them
-
-    for (auto& tri : obj.triangles_)
-    {
-      tri.v1_ = obj.vxs_trans_[tri.f1_];
-      tri.v2_ = obj.vxs_trans_[tri.f2_];
-      tri.v3_ = obj.vxs_trans_[tri.f3_];
-      tri.c1_ = obj.colors_trans_[tri.f1_];
-      tri.c2_ = obj.colors_trans_[tri.f2_];
-      tri.c3_ = obj.colors_trans_[tri.f3_];
-      triangles.emplace_back(std::ref(tri));
-    }
-  }
-}
-
-// Hides invisible faces to viewpoint. Works as the same function in
-// ::object namespace
-
-int triangles::RemoveHiddenSurfaces(TrianglesRef& arr, const GlCamera& cam)
-{
-  int cnt {0};
-  for (auto& tri_ref : arr)
-  {
-    auto& tri = tri_ref.get();
-      
-    Vector u {tri.v1_, tri.v2_};
-    Vector v {tri.v1_, tri.v3_};
-    Vector n = vector::CrossProduct(u,v);   // normal to u and v
-    Vector c {tri.v1_, cam.vrp_};           // view vector
-
-    auto prod = vector::DotProduct(c,n);
-    if (math::FlessZero(prod))
-    {
-      tri.attrs_ |= Triangle::HIDDEN;
-      ++cnt;
-    }
-  }
-  return cnt;  
-}
-
-// Reset attributes of all triangles
-// todo : test it
-
-void triangles::ResetAttributes(TrianglesRef& arr)
-{
-  for (auto& tri : arr) {
-    if (tri.get().attrs_ & Triangle::HIDDEN) 
-      tri.get().attrs_ ^= Triangle::HIDDEN; 
-  }
-}
-
-// Apply matrix to all triangles in array
-// todo : test it
-
-void triangles::ApplyMatrix(const Matrix<4,4>& mx, TrianglesRef& arr)
-{
-  for (auto& tri_ref : arr)
-  {
-    auto tri = tri_ref.get();
-    auto v1 = matrix::Multiplie(tri.v1_, mx);
-    auto v2 = matrix::Multiplie(tri.v2_, mx);
-    auto v3 = matrix::Multiplie(tri.v3_, mx);
-    tri.v1_ = v1;
-    tri.v2_ = v2;
-    tri.v3_ = v3;
-  }
-}
-
-void triangles::World2Camera(TrianglesRef& arr, const GlCamera& cam)
-{
-  for (auto& tri_ref : arr)
-  {
-    auto& tri = tri_ref.get();
-    Vertexes vxs {tri.v1_, tri.v2_, tri.v3_};
-    coords::World2Camera(vxs, cam.vrp_, cam.dir_, cam.trig_);
-    tri.v1_ = vxs[0];
-    tri.v2_ = vxs[1];
-    tri.v3_ = vxs[2];
-  }
-}
-
-void triangles::Camera2Persp(TrianglesRef& arr, const GlCamera& cam)
-{
-  for (auto& tri_ref : arr)
-  {
-    auto& tri = tri_ref.get();
-    Vertexes vxs {tri.v1_, tri.v2_, tri.v3_};
-    coords::Camera2Persp(vxs, cam.dov_, cam.ar_);
-    tri.v1_ = vxs[0];
-    tri.v2_ = vxs[1];
-    tri.v3_ = vxs[2];
-  }
-}
-
-void triangles::Homogenous2Normal(TrianglesRef& arr)
-{
-  for (auto& tri_ref : arr)
-  {
-    auto& tri = tri_ref.get();
-    vector::ConvertFromHomogeneous(tri.v1_);
-    vector::ConvertFromHomogeneous(tri.v2_);
-    vector::ConvertFromHomogeneous(tri.v3_);
-  }
-}
-
-void triangles::Persp2Screen(TrianglesRef& arr, const GlCamera& cam)
-{
-  for (auto& tri_ref : arr)
-  {
-    auto& tri = tri_ref.get();
-    Vertexes vxs {tri.v1_, tri.v2_, tri.v3_};
-    coords::Persp2Screen(vxs, cam.wov_, cam.scr_w_, cam.scr_h_);
-    tri.v1_ = vxs[0];
-    tri.v2_ = vxs[1];
-    tri.v3_ = vxs[2];
-  }
-}
-
-// We should do this before acsonometric projection
-
-void triangles::SortZ(TrianglesRef& arr)
-{
-  std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
-  {
-    return t1.get().v1_.z > t2.get().v1_.z;
-  });
 }
 
 } // namespace anshub

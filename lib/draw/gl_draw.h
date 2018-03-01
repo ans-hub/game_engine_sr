@@ -31,7 +31,7 @@ namespace draw {
   // Primitives
 
   void Point(int, int, int, Buffer&);
-  void Point(int, int, int, uint*, int);  // ???? ***
+  void Point(int, int, int, uint*, int);  // todo: explain
   void HorizontalLine(int y, int x1, int x2, int color, Buffer&);
   void LineBres(int, int, int, int, int, Buffer&);
   void Line(int, int, int, int, int color, Buffer&);
@@ -46,12 +46,12 @@ namespace draw {
 
   void WiredObject(const GlObject&, Buffer&);
   int  SolidObject(const GlObject&, Buffer&);
-  void WiredTriangles(const TrianglesRef&, Buffer&);
-  int  SolidTriangles(const TrianglesRef&, Buffer&);
+  void WiredTriangles(const V_Triangle&, Buffer&);
+  int  SolidTriangles(const V_Triangle&, Buffer&);
 
   // Debug
   
-  void ObjectNormals(const GlObject&, const Vertexes&, uint color, Buffer&);
+  void ObjectNormals(const GlObject&, const V_Vector&, uint color, Buffer&);
 
 } // namespace draw
 

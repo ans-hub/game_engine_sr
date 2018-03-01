@@ -16,18 +16,18 @@ void light::Object(GlObject& obj, Lights& lights)
   if (!obj.active_)
     return;
   
-  auto& colors = obj.GetColors();
+  // auto& colors = obj.GetColors();
   auto& vxs = obj.GetCoords();
-  std::vector<bool> used (obj.colors_trans_.size(), false);
+  std::vector<bool> used (vxs.size(), false);
 
-  for (auto& tri : obj.triangles_)
+  for (auto& face : obj.faces_)
   {
-    if (tri.attrs_ & Triangle::HIDDEN)
+    if (!face.active_)
       continue;
 
     // If emission color then do nothing
 
-    if ((tri.attrs_ & Triangle::CONST_SHADING))
+    if (obj.shading_ == Shading::CONST)
       continue;
 
     // If triangle is flat shaded and not lighted already, then light it
@@ -36,46 +36,47 @@ void light::Object(GlObject& obj, Lights& lights)
     // vxs normal, but normals to of face from each vertex to make soft
     // colors
 
-    if (tri.attrs_ & Triangle::FLAT_SHADING)
+    if (obj.shading_ == Shading::FLAT)
     {
-      auto  bc = colors[tri.f1_];
-      auto& cc = tri.face_color_;
+      auto  bc = vxs[face[0]].color_;   // base color
+      auto& cc = face.color_;           // color to change
       cc = {0.0f, 0.0f, 0.0f};
 
-      auto normalized = math::Fzero(tri.face_normal_.SquareLength() - 1.0f);
+      auto normalized = math::Fzero(face.normal_.SquareLength() - 1.0f);
       if (!normalized)
-        tri.face_normal_.Normalize();
+        face.normal_.Normalize();
 
       for (auto& light : lights.ambient_)
         cc += light.Illuminate(bc);
       for (auto& light : lights.infinite_)
-        cc += light.Illuminate(bc, tri.face_normal_);
+        cc += light.Illuminate(bc, face.normal_);
       for (auto& light : lights.point_)
-        cc += light.Illuminate(bc, tri.face_normal_, vxs[tri.f1_]);
+        cc += light.Illuminate(bc, face.normal_, vxs[face[0]].pos_);
       cc.Clamp();
     }
     
     // If triangle is gourang shaded, then iterate over its vertixes colors,
     // check if its lighted, and store color in vertexes
 
-    else if (tri.attrs_ & Triangle::GOURANG_SHADING)
+    else if (obj.shading_ == Shading::GOURANG)
     {
-      std::vector<int> faces {tri.f1_, tri.f2_, tri.f3_};
-      for (const auto& face : faces)
-      if (!used[face])
+      for (const auto& f : face.vxs_)
       {
-        auto  bc = colors[face];
-        auto& cc = colors[face];
-        cc = {0.0f, 0.0f, 0.0f};
-        used[face] = true;
+        if (!used[f])
+        {
+          auto  bc = vxs[f].color_;
+          auto& cc = vxs[f].color_;
+          cc = {0.0f, 0.0f, 0.0f};
+          used[f] = true;
 
-        for (auto& light : lights.ambient_)
-          cc += light.Illuminate(bc);
-        for (auto& light : lights.infinite_)
-          cc += light.Illuminate(bc, obj.vxs_normals_[face]);
-        for (auto& light : lights.point_)
-          cc += light.Illuminate(bc, obj.vxs_normals_[face], vxs[face]);
-        cc.Clamp();
+          for (auto& light : lights.ambient_)
+            cc += light.Illuminate(bc);
+          for (auto& light : lights.infinite_)
+            cc += light.Illuminate(bc, vxs[f].normal_);
+          for (auto& light : lights.point_)
+            cc += light.Illuminate(bc, vxs[f].normal_, vxs[f].pos_);
+          cc.Clamp();
+        }
       }
     }
   }
@@ -83,7 +84,7 @@ void light::Object(GlObject& obj, Lights& lights)
 
 // Lights objects
 
-void light::Objects(GlObjects& arr, Lights& lights)
+void light::Objects(V_GlObject& arr, Lights& lights)
 {
   for (auto& obj : arr)
     light::Object(obj, lights);

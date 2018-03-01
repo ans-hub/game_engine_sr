@@ -12,6 +12,7 @@
 #include <array>
 #include <fstream>
 
+#include "gl_enums.h"
 #include "gl_aliases.h"
 #include "gl_triangle.h"
 #include "gl_camera.h"
@@ -28,14 +29,6 @@
 
 namespace anshub {
 
-// Enum to define which coordinates currently used in object
-
-enum class Coords
-{
-  LOCAL,    // local coordinates
-  TRANS     // transformed coordinates
-};
-
 //***********************************************************************
 // DRAWABLE OBJECT DEFINITION
 //***********************************************************************
@@ -44,18 +37,16 @@ struct GlObject
 {
   // Data members: coordinates and colors
 
-  Vertexes  vxs_local_;     // vertexes local coords
-  Vertexes  vxs_trans_;     // vertexes current coords
-  Vectors   vxs_normals_;   // vertexes normals
-  FColors   colors_local_;  // local vertexes colors
-  FColors   colors_trans_;  // transformed vertexes colors
+  V_Vertex  vxs_local_;
+  V_Vertex  vxs_trans_;
   Coords    current_vxs_;   // chooser between coords type
-  Triangles triangles_;     // triangles based on coords above
+  V_Face    faces_;         // faces based on coords above
 
   // Data members: helpers
 
   int       id_;            // object id  
   bool      active_;        // object state
+  Shading   shading_;       // shading type
   Vector    world_pos_;     // position of obj center in world`s coords
   Vector    v_orient_x_;    // 
   Vector    v_orient_y_;    // orientation vectors  
@@ -73,9 +64,7 @@ struct GlObject
   void  CopyCoords(Coords src, Coords dest);
   auto& GetCoords();
   auto& GetCoords() const;
-  auto& GetColors();
-  auto& GetColors() const;
-  
+
 }; // struct Object
 
 //***********************************************************************
@@ -90,21 +79,13 @@ struct GlObject
     return (current_vxs_ == Coords::LOCAL) ? vxs_local_ : vxs_trans_;
   }
 
-  inline auto& GlObject::GetColors() { 
-    return (current_vxs_ == Coords::LOCAL) ? colors_local_ : colors_trans_;
-  }
-  
-  inline auto& GlObject::GetColors() const {
-    return (current_vxs_ == Coords::LOCAL) ? colors_local_ : colors_trans_;
-  }
-
 //***********************************************************************
 // Helper functions for ONE OBJECT
 //***********************************************************************
 
 namespace object {
   
-  // GlObjects creating
+  // V_GlObject creating
 
   GlObject  Make(const char*);
   GlObject  Make(const char*, TrigTable&, cVector&, cVector&, cVector&);
@@ -141,7 +122,7 @@ namespace object {
 
   // Debug purposes
 
-  Vertexes  ComputeDrawableVxsNormals(const GlObject&, float scale);
+  V_Vertex  ComputeDrawableVxsNormals(const GlObject&, float scale);
   
 } // namespace object
 
@@ -151,71 +132,37 @@ namespace object {
 
 namespace objects {
 
-  // GlObjects attributes manipilation
+  // V_GlObject attributes manipilation
 
-  int       Cull(GlObjects&, const GlCamera&, const MatrixCamera&);
-  int       Cull(GlObjects&, const GlCamera&);
-  int       RemoveHiddenSurfaces(GlObjects&, const GlCamera&);  
-  void      ResetAttributes(GlObjects&);
-  void      ComputeFaceNormals(GlObjects&);
-  void      ComputeVertexNormalsV1(GlObjects&);
-  void      ComputeVertexNormalsV2(GlObjects&);
+  int       Cull(V_GlObject&, const GlCamera&, const MatrixCamera&);
+  int       Cull(V_GlObject&, const GlCamera&);
+  int       RemoveHiddenSurfaces(V_GlObject&, const GlCamera&);  
+  void      ResetAttributes(V_GlObject&);
+  void      ComputeFaceNormals(V_GlObject&);
+  void      ComputeVertexNormalsV1(V_GlObject&);
+  void      ComputeVertexNormalsV2(V_GlObject&);
 
-  // GlObjects transformation
+  // V_GlObject transformation
 
-  void      Translate(GlObjects&, const Vector&);
-  void      Rotate(GlObjects&, const Vector&, const TrigTable&);
-  void      Rotate(GlObjects&, const std::vector<Vector>&, const TrigTable&);
-  void      ApplyMatrix(const Matrix<4,4>&, GlObjects&);
+  void      Translate(V_GlObject&, const Vector&);
+  void      Rotate(V_GlObject&, const Vector&, const TrigTable&);
+  void      Rotate(V_GlObject&, const std::vector<Vector>&, const TrigTable&);
+  void      ApplyMatrix(const Matrix<4,4>&, V_GlObject&);
   
-  // GlObjects coords helpers
+  // V_GlObject coords helpers
 
-  void      World2Camera(GlObjects&, const GlCamera&);
-  void      Camera2Persp(GlObjects&, const GlCamera&);
-  void      Persp2Screen(GlObjects&, const GlCamera&);
-  void      Homogenous2Normal(GlObjects&);
+  void      World2Camera(V_GlObject&, const GlCamera&);
+  void      Camera2Persp(V_GlObject&, const GlCamera&);
+  void      Persp2Screen(V_GlObject&, const GlCamera&);
+  void      Homogenous2Normal(V_GlObject&);
 
-  // GlObjects helpers
+  // V_GlObject helpers
 
-  void      SetCoords(GlObjects&, Coords);
-  void      CopyCoords(GlObjects&, Coords, Coords);
-  void      SortZ(GlObjects&);
+  void      SetCoords(V_GlObject&, Coords);
+  void      CopyCoords(V_GlObject&, Coords, Coords);
+  void      SortZ(V_GlObject&);
   
 } // namespace objects
-
-//***********************************************************************
-// Helper functions for CONTAINER OF TRIANGLES
-//***********************************************************************
-
-namespace triangles {
-
-  // Triangles array filling
-
-  TrianglesRef MakeContainer();
-  void      AddFromObject(GlObject&, TrianglesRef&);
-  void      AddFromObjects(GlObjects&, TrianglesRef&);
-
-  // Triangles array attributes manipilation
-  
-  int       RemoveHiddenSurfaces(TrianglesRef&, const GlCamera&);  
-  void      ResetAttributes(TrianglesRef&);
-
-  // Triangles array transformation
-
-  void      ApplyMatrix(const Matrix<4,4>&, TrianglesRef&);
-
-  // Triangles coords helpers
-
-  void      World2Camera(TrianglesRef&, const GlCamera&);
-  void      Camera2Persp(TrianglesRef&, const GlCamera&);
-  void      Persp2Screen(TrianglesRef&, const GlCamera&);
-  void      Homogenous2Normal(TrianglesRef&);
-
-  // Triangles helpers
-
-  void      SortZ(TrianglesRef&);
-
-} // namespace triangles
 
 //**************************************************************************
 // Inline functions implementation
@@ -227,18 +174,18 @@ inline void object::Homogenous2Normal(GlObject& obj)
 {
   auto& vxs = obj.GetCoords();
   for (auto& vx : vxs)
-    vector::ConvertFromHomogeneous(vx);
+    vector::ConvertFromHomogeneous(vx.pos_);
 }
 
 // The same function as above but for array of objects
 
-inline void objects::Homogenous2Normal(GlObjects& arr)
+inline void objects::Homogenous2Normal(V_GlObject& arr)
 {
   for (auto& obj : arr)
   {
     auto& vxs = obj.GetCoords();
     for (auto& vx : vxs)
-      vector::ConvertFromHomogeneous(vx);
+      vector::ConvertFromHomogeneous(vx.pos_);
   }
 }
 

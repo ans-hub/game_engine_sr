@@ -8,84 +8,84 @@
 #ifndef GC_GL_TRIANGLE_H
 #define GC_GL_TRIANGLE_H
 
-#include <vector>
-#include <array>
-#include <functional>
-
+#include "gl_enums.h"
 #include "gl_aliases.h"
 #include "fx_colors.h"
+#include "gl_camera.h"
+#include "gl_face.h"
+#include "gl_vertex.h"
+#include "gl_object.h"
 #include "../math/vector.h"
 
 namespace anshub {
 
 //***********************************************************************
-// Triangle struct
+// Represents separated drawable triangle struct
 //***********************************************************************
-
-// Represents drawable triangle
 
 struct Triangle
 {
-  enum Attrs
-  {
-    VISIBLE           = 0,
-    HIDDEN            = 1,
-    CONST_SHADING     = 1 << 1,
-    FLAT_SHADING      = 1 << 2,
-    PHONG_SHADING     = 1 << 3,
-    GOURANG_SHADING   = 1 << 4
-  };
+  Triangle() 
+  : active_{false}
+  , shading_{Shading::CONST}
+  , vxs_{}
+  , normal_{}
+  , color_{} { }
 
-  // Constructs triangle just with indicies && attributes
+  Triangle(const V_Vertex& vxs, Shading shading, const Face& f)
+  : active_{true}
+  , shading_{shading}
+  , vxs_{ {
+      vxs[f.vxs_[0]], vxs[f.vxs_[1]], vxs[f.vxs_[2]]
+    } }
+  , normal_{}
+  , color_{f.color_} { }
 
-  Triangle(Vertexes&, FColors&, int f1, int f2, int f3, uint attrs);
-  
-  // This fields used only inside ::triangles namespace
+  Vertex& operator[](int f) { return vxs_[f]; }
+  cVertex& operator[](int f) const { return vxs_[f]; }
 
-  Vector  v1_;
-  Vector  v2_;
-  Vector  v3_;
-  FColor  c1_;
-  FColor  c2_;
-  FColor  c3_;
-
-  // This fields used before triangulation objects
-
-  int     f1_;
-  int     f2_;
-  int     f3_;
-  
-  // Angles between edges (used in vxs normals computation)
-
-  float   a1_;
-  float   a2_;
-  float   a3_;
-
-  // Other usefull stuff
-
-  Vector  face_normal_;
-  FColor  face_color_;
-  uint    attrs_;
+  bool      active_;
+  Shading   shading_;
+  A3_Vertex vxs_;
+  Vector    normal_;
+  FColor    color_;
 
 }; // struct Triangle
+
+//***********************************************************************
+// Helper functions for CONTAINER OF TRIANGLES
+//***********************************************************************
+
+namespace triangles {
+
+  // Triangles array filling
+
+  V_Triangle MakeContainer();
+  void      AddFromObject(GlObject&, V_Triangle&);
+  void      AddFromObjects(V_GlObject&, V_Triangle&);
+
+  // Triangles array attributes manipilation
+  
+  int       RemoveHiddenSurfaces(V_Triangle&, const GlCamera&);  
+  void      ResetAttributes(V_Triangle&);
+
+  // Triangles array transformation
+
+  void      ApplyMatrix(const Matrix<4,4>&, V_Triangle&);
+
+  // Triangles coords helpers
+
+  void      World2Camera(V_Triangle&, const GlCamera&);
+  void      Camera2Persp(V_Triangle&, const GlCamera&);
+  void      Persp2Screen(V_Triangle&, const GlCamera&);
+  void      Homogenous2Normal(V_Triangle&);
+
+  // Triangles helpers
+
+  void      SortZ(V_Triangle&);
+
+} // namespace triangles
 
 } // namespace anshub
 
 #endif  // GC_GL_TRIANGLE_H
-
-
-//***********************************************************************
-
-// Note #1 : vertexes orientation is prefered as "left-handed" and
-// from low index to higher. This is necessary in clipping reasons,
-// when we define is polygon visible or not.
-//
-// For example:
-//
-//        p1
-//  p0
-//        p2
-//
-// V = p1-p0, P = p2-p0; N = VxN (cross prod) (normal to V and P).
-// As result N would be directed from camera. Now to decide is surface
-// is visible or not, we make cross (or dot) prod of N and G (surface to cam) 

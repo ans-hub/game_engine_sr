@@ -37,7 +37,7 @@ namespace light {
   // General lighting functions
 
   void Object(GlObject&, Lights&);
-  void Objects(GlObjects&, Lights&);
+  void Objects(V_GlObject&, Lights&);
 
 } // namespace light
   

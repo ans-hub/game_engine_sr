@@ -1,6 +1,6 @@
 // *****************************************************************
 // File:    gl_coords.h
-// Descr:   functions to convert different coordinates (non-marices)
+// Descr:   functions to convert different coordinates (non-matrices)
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *****************************************************************
@@ -11,20 +11,16 @@ namespace anshub {
 
 // Convertes given vertexes into the world coordinates
 
-void coords::Local2World(Vertexes& vxs, const Vector& move)
+void coords::Local2World(V_Vertex& vxs, const Vector& move)
 {
-  for (auto& vx : vxs)
-  {
-    vx.x += move.x;
-    vx.y += move.y;
-    vx.z += move.z;
-  }
+  for (Vertex& vx : vxs)
+    vx.pos_ += move;
 }
 
 // Translate all vertexes into the camera coordinates (by YXZ sequence)
 
 void coords::World2Camera(
-  Vertexes& vxs, cVector& cam_pos, cVector& cam_dir, const TrigTable& trig)
+  V_Vertex& vxs, cVector& cam_pos, cVector& cam_dir, const TrigTable& trig)
 {
   float ysin = trig.Sin(-cam_dir.y);
   float ycos = trig.Cos(-cam_dir.y);
@@ -35,55 +31,54 @@ void coords::World2Camera(
   
   for (auto& vx : vxs)
   {
+
     // Translate position
 
-    vx.y -= cam_pos.y;
-    vx.x -= cam_pos.x;
-    vx.z -= cam_pos.z;
+    vx.pos_ -= cam_pos;
 
     // Y-axis rotate (yaw)
 
     if (math::FNotZero(cam_dir.y))
     {
-      float vx_old {vx.x};
-      vx.x = (vx.x * ycos) + (vx.z * ysin);
-      vx.z = (vx.z * ycos) - (vx_old * ysin); 
+      float vx_old {vx.pos_.x};
+      vx.pos_.x = (vx.pos_.x * ycos) + (vx.pos_.z * ysin);
+      vx.pos_.z = (vx.pos_.z * ycos) - (vx_old * ysin); 
     }
 
     // X-axis rotate (pitch)
 
     if (math::FNotZero(cam_dir.x))
     {
-      float vy_old {vx.y}; 
-      vx.y = (vx.y * xcos) - (vx.z * xsin);
-      vx.z = (vx.z * xcos) + (vy_old * xsin); 
+      float vy_old {vx.pos_.y}; 
+      vx.pos_.y = (vx.pos_.y * xcos) - (vx.pos_.z * xsin);
+      vx.pos_.z = (vx.pos_.z * xcos) + (vy_old * xsin); 
     }
 
     // Z-axis rotate (roll)
 
     if (math::FNotZero(cam_dir.z))
     {
-      float vx_old {vx.x};
-      vx.x = (vx.x * zcos) - (vx.y * zsin);
-      vx.y = (vx.y * zcos) + (vx_old * zsin);
+      float vx_old {vx.pos_.x};
+      vx.pos_.x = (vx.pos_.x * zcos) - (vx.pos_.y * zsin);
+      vx.pos_.y = (vx.pos_.y * zcos) + (vx_old * zsin);
     }
   }
 }
 
 // Translates all vertexes from camera (world) to perspective
 
-void coords::Camera2Persp(Vertexes& vxs, float dov, float ar)
+void coords::Camera2Persp(V_Vertex& vxs, float dov, float ar)
 {
   for (auto& vx : vxs)
   {
-    vx.x *= dov / vx.z;
-    vx.y *= dov * ar / vx.z;
+    vx.pos_.x *= dov / vx.pos_.z;
+    vx.pos_.y *= dov * ar / vx.pos_.z;
   }
 }
 
 // Where wov - width of view
 
-void coords::Persp2Screen(Vertexes& vxs, float wov, int scr_w, int scr_h)
+void coords::Persp2Screen(V_Vertex& vxs, float wov, int scr_w, int scr_h)
 {
   // Define proportion koefficients
 
@@ -96,47 +91,47 @@ void coords::Persp2Screen(Vertexes& vxs, float wov, int scr_w, int scr_h)
 
   for (auto& vx : vxs)
   {
-    vx.x = (vx.x + half_wov) * kx;   // convert -half_wov +half_wov
-    vx.y = (vx.y + half_wov) * ky;   // to 0-width, 0-height
+    vx.pos_.x = (vx.pos_.x + half_wov) * kx;   // convert -half_wov +half_wov
+    vx.pos_.y = (vx.pos_.y + half_wov) * ky;   // to 0-width, 0-height
   }
 }
 
 // Rotates all vertexes by y-axis (conventionally yaw)
 
-void coords::RotateYaw(Vertexes& vxs, float deg, TrigTable& trig)
+void coords::RotateYaw(V_Vertex& vxs, float deg, TrigTable& trig)
 {
   float sine_y = trig.Sin(deg);
   float cosine_y = trig.Cos(deg);
   for (auto& vx : vxs)
   {
-    vx.x = vx.x * cosine_y + vx.z * sine_y;
-    vx.z = vx.x * -sine_y  + vx.z * cosine_y;
+    vx.pos_.x = vx.pos_.x * cosine_y + vx.pos_.z * sine_y;
+    vx.pos_.z = vx.pos_.x * -sine_y  + vx.pos_.z * cosine_y;
   }
 }
 
 // Rotates all vertexes by x-axis (conventionally pitch)
 
-void coords::RotatePitch(Vertexes& vxs, float deg, TrigTable& trig)
+void coords::RotatePitch(V_Vertex& vxs, float deg, TrigTable& trig)
 {
   float sine_x = trig.Sin(deg);
   float cosine_x = trig.Cos(deg);
   for (auto& vx : vxs)
   {
-    vx.y = vx.y * cosine_x - vx.z * sine_x;
-    vx.z = vx.y * sine_x   + vx.z * cosine_x;
+    vx.pos_.y = vx.pos_.y * cosine_x - vx.pos_.z * sine_x;
+    vx.pos_.z = vx.pos_.y * sine_x   + vx.pos_.z * cosine_x;
   }
 }
 
 // Rotates all vertexes by z-axis (conventionally roll)
 
-void coords::RotateRoll(Vertexes& vxs, float deg, TrigTable& trig)
+void coords::RotateRoll(V_Vertex& vxs, float deg, TrigTable& trig)
 {
   float sine_z = trig.Sin(deg);
   float cosine_z = trig.Cos(deg);
   for (auto& vx : vxs)
   {
-    vx.x = vx.x * cosine_z - vx.y * sine_z;
-    vx.y = vx.x * sine_z   + vx.y * cosine_z;
+    vx.pos_.x = vx.pos_.x * cosine_z - vx.pos_.y * sine_z;
+    vx.pos_.y = vx.pos_.x * sine_z   + vx.pos_.y * cosine_z;
   }
 }
 

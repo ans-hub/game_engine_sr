@@ -9,6 +9,7 @@
 #define GC_GL_COORDS_H
 
 #include "gl_aliases.h"
+#include "gl_vertex.h"
 #include "../math/trig.h"
 #include "../math/vector.h"
 #include "../math/matrix_rotate_uvn.h"
@@ -17,14 +18,14 @@ namespace anshub {
 
 namespace coords {
 
-  void  Local2World(Vertexes&, const Vector& move);
-  void  Camera2Persp(Vertexes&, float dov, float ar);
-  void  World2Camera(Vertexes&, cVector& pos, cVector& dir, const TrigTable&);
-  void  Persp2Screen(Vertexes&, float wov, int scr_w, int scr_h);
+  void  Local2World(V_Vertex&, const Vector& move);
+  void  Camera2Persp(V_Vertex&, float dov, float ar);
+  void  World2Camera(V_Vertex&, cVector& pos, cVector& dir, const TrigTable&);
+  void  Persp2Screen(V_Vertex&, float wov, int scr_w, int scr_h);
 
-  void  RotateYaw(Vertexes&, float deg, TrigTable&);
-  void  RotatePitch(Vertexes&, float deg, TrigTable&);
-  void  RotateRoll(Vertexes&, float deg, TrigTable&);
+  void  RotateYaw(V_Vertex&, float deg, TrigTable&);
+  void  RotatePitch(V_Vertex&, float deg, TrigTable&);
+  void  RotateRoll(V_Vertex&, float deg, TrigTable&);
 
   Vector RotationMatrix2Euler(const MatrixRotateUvn&);
   

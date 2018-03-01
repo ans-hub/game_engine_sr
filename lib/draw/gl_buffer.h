@@ -41,7 +41,7 @@ private:
   int clear_color_; // -
   GLenum format_;   // https://goo.gl/2A58hH
   GLenum type_;     // the same as above
-  Vuint ptr_;       // 32 bit color buffer
+  V_Uint ptr_;       // 32 bit color buffer
 
 }; // class Buffer
 

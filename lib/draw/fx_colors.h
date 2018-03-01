@@ -42,12 +42,14 @@ struct Color
   uint GetARGB() const {
     return ((int)b << 24) | ((int)g << 16) | ((int)r << 8) | 255;
   }
+  
   void Normalize() { 
     r = std::fmod(r, 256.0f); 
     g = std::fmod(g, 256.0f);
     b = std::fmod(b, 256.0f);
     a = 255.0f;
   }
+
   void Clamp() {
     r = std::min(255.0f, r);
     g = std::min(255.0f, g);
@@ -62,8 +64,6 @@ struct Color
     this->a /= scalar;
     return *this;
   }
-
-  // todo : decide what to do with overflow
 
   Color& operator*=(T scalar) {
     this->r *= scalar;

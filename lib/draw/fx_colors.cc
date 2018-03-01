@@ -20,6 +20,7 @@ void color::SplitARGB(int color, byte& b, byte& g, byte& r, byte& a)
 }
 
 // Increase brightness of rgba color (given in word-order)
+// todo: very-very low perfomance function now!
 
 int color::IncreaseBrightness(int color, float k)
 {

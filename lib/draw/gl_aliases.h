@@ -13,38 +13,49 @@
 
 namespace anshub {
 
+  // Forward declarations
+
   struct Vector;
   template<class T> struct Color;
   struct GlObject;
   struct Triangle;
-  // struct GlLight;
-  // struct LightAmbient;
-  // struct LightInfinite;
-  // struct LightPoint;
-  // struct LightSpot;
+  struct Vertex;
+  struct Face;
+
+  // Simple aliases
 
   using uint  = unsigned int;
   using uchar = unsigned char;
-  using Vuint = std::vector<uint>;
-  using Vuchar = std::vector<uchar>;
   using byte  = unsigned char;
   using FColor = Color<float>;
   using cFColor = const Color<float>;
   using cColor = const Color<uchar>;
-  using Colors = std::vector<Color<uchar>>;
-  using FColors = std::vector<Color<float>>;
-  using cFColors = const std::vector<Color<float>>;
-  using Vertexes  = std::vector<Vector>;
-  using Vectors  = std::vector<Vector>;
-  using GlObjects   = std::vector<GlObject>;
+  
   using Matrix2d  = std::vector<std::vector<double>>;
   using cMatrix2d = const Matrix2d;
-  using Triangles = std::vector<Triangle>;
-  using TrianglesRef = std::vector<std::reference_wrapper<Triangle>>;
-  // using LightsAmbient = std::vector<LightAmbient>;
-  // using LightsInfinite = std::vector<LightInfinite>;
-  // using LightsPoint = std::vector<LightPoint>;
-  // using LightsSpot = std::vector<LightSpot>;
+
+  // Containers aliases
+
+  using V_Uint = std::vector<uint>;
+  using V_Uchar = std::vector<uchar>;
+  using V_Triangle = std::vector<Triangle>;
+  using A3_Int = std::array<int,3>;
+  using A3_Vertex = std::array<Vertex,3>;
+  using A3_Float = std::array<float,3>;
+  using A3_FColor = std::array<FColor,3>;
+  using V_Face = std::vector<Face>;
+  using V_Vertex = std::vector<Vertex>;
+  using V_Vector = std::vector<Vector>;
+  using V_GlObject = std::vector<GlObject>;
+  using V_FColor = std::vector<Color<float>>;
+  using V_Color = std::vector<Color<uchar>>;
+  
+  // Const containers aliases
+
+  using cVertex = const Vertex;
+  using cV_Triangle = const V_Triangle;
+  using cV_Vector = const V_Vector;
+  using cV_FColor = const V_FColor;
 
 } // namespace anshub
 
