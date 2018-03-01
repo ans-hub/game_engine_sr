@@ -62,7 +62,7 @@ auto CreateGround(int rect_cnt, TrigTable& trig)
   float half_w    = (step) * (rect_cnt / 2);
   float half_h    = half_w;
   
-  std::vector<GlObject> ground (rect_cnt * rect_cnt, master);
+  V_GlObject ground (rect_cnt * rect_cnt, master);
   auto it = ground.begin();
   for (auto z = -half_h; z < half_h; z += step)
   {

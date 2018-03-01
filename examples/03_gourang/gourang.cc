@@ -88,15 +88,15 @@ int main()
 
     if (kbtn == Btn::ENTER)
     {
-      obj.colors_local_[0].r = rand_toolkit::get_rand(0, 255);
-      obj.colors_local_[0].g = rand_toolkit::get_rand(0, 255);
-      obj.colors_local_[0].b = rand_toolkit::get_rand(0, 255);
-      obj.colors_local_[1].r = rand_toolkit::get_rand(0, 255);
-      obj.colors_local_[1].g = rand_toolkit::get_rand(0, 255);
-      obj.colors_local_[1].b = rand_toolkit::get_rand(0, 255);
-      obj.colors_local_[2].r = rand_toolkit::get_rand(0, 255);
-      obj.colors_local_[2].g = rand_toolkit::get_rand(0, 255);
-      obj.colors_local_[2].b = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[0].color_.r = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[0].color_.g = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[0].color_.b = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[1].color_.r = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[1].color_.g = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[1].color_.b = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[2].color_.r = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[2].color_.g = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[2].color_.b = rand_toolkit::get_rand(0, 255);
     }
 
     // Prepare transformation matrixes for main object

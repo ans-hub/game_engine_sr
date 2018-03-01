@@ -79,9 +79,9 @@ int main(int argc, const char** argv)
   
   // Create work objects, place randomly in space
 
-  constexpr int kCubesCount {30};
-  constexpr float kWorldSize {30};
-  GlObjects cubes {kCubesCount, obj};
+  constexpr   int kCubesCount {30};
+  constexpr   float kWorldSize {30};
+  V_GlObject  cubes {kCubesCount, obj};
 
   for (auto& cube : cubes)
   {

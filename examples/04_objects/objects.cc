@@ -79,9 +79,9 @@ int main(int argc, const char** argv)
   
   // Create work objects, place randomly in space
 
-  constexpr int kCubesCount {30};
-  constexpr float kWorldSize {30};
-  GlObjects cubes {kCubesCount, obj};
+  constexpr   int kCubesCount {30};
+  constexpr   float kWorldSize {30};
+  V_GlObject  cubes {kCubesCount, obj};
 
   for (auto& cube : cubes)
   {
@@ -94,14 +94,14 @@ int main(int argc, const char** argv)
 
   for (auto& cube : cubes)
   {
-    for (auto& color : cube.colors_local_)
-      color = {
+    for (auto& vx : cube.vxs_local_)
+      vx.color_ = {
         rand_toolkit::get_rand(0.0f, 255.0f),
         rand_toolkit::get_rand(0.0f, 255.0f),
         rand_toolkit::get_rand(0.0f, 255.0f)
       };
-    for (auto& tri : cube.triangles_)
-      tri.face_color_ = cube.colors_local_[tri.f1_];
+    for (auto& face : cube.faces_)
+      face.color_ = cube.vxs_local_[face[0]].color_;
   }
 
   // Prepare vectors for rotating each cube in loop
