@@ -552,6 +552,280 @@ void draw::GourangTriangle(
   }
 }
 
+// Draws textured triangle without lighting
+
+void draw::TexturedTriangle(
+  const Bitmap& bmp, cVector& p1, cVector& p2, cVector& p3,
+  cVector& t1, cVector& t2, cVector& t3, Buffer& buf)
+{
+    // Convert float to int for vertex positions
+
+  int x1 = std::floor(p1.x);
+  int x2 = std::floor(p2.x);
+  int x3 = std::floor(p3.x);
+  int y1 = std::floor(p1.y);
+  int y2 = std::floor(p2.y);
+  int y3 = std::floor(p3.y);
+  
+  // Aliases to texture coordinates
+
+  float u1 = t1.x;
+  float u2 = t2.x;
+  float u3 = t3.x;
+  float v1 = t1.y;
+  float v2 = t2.y;
+  float v3 = t3.y;
+
+  // Make y1 as top point and y3 as bottom point, y2 is middle
+
+  if (y2 < y3) {
+    std::swap(x2, x3);
+    std::swap(y2, y3);
+    std::swap(u2, u3);
+    std::swap(v2, v3);
+  }
+  if ((y1 < y2) && (y1 > y3)) {
+    std::swap(x1, x2);
+    std::swap(y1, y2);
+    std::swap(u1, u2);
+    std::swap(v1, v2);
+  }
+  else if ((y1 < y2) && (y1 <= y3)) {
+    std::swap(x1, x2);
+    std::swap(y1, y2);
+    std::swap(u1, u2);
+    std::swap(v1, v2);
+    std::swap(x3, x2);
+    std::swap(y3, y2);
+    std::swap(u3, u2);
+    std::swap(v3, v2);
+  }
+
+  // If polygon is flat bottom, sort left to right
+
+  if (math::Feq(y2, y3) && x2 > x3) {
+    std::swap(x2, x3);
+    std::swap(u2, u3);
+    std::swap(v2, v3);
+  }
+
+  // If polygon is flat top, sort left to right
+
+  if (math::Feq(y1, y2) && x1 > x2) {
+    std::swap(x1, x2);
+    std::swap(u1, u2);
+    std::swap(v1, v2);
+  }
+
+  // Part 1 : draw top part of triangle (from top to middle)
+  // Note that 0;0 point is placed in left-bottom corner, but texture`s 0;0
+  // is placed in left-top corner
+
+  // Define step of left and right side (if perpendicular, then step = 0)
+  // Here we just suppose where left and right side
+
+  float dx_lhs {0.0f};                          // dx - diff, lhs - left hand side
+  float dx_rhs {0.0f};
+
+  if (math::FNotZero(y2-y1))
+    dx_lhs = (float)(x2-x1) / std::abs((float)(y2-y1));
+  if (math::FNotZero(y3-y1))
+    dx_rhs = (float)(x3-x1) / std::abs((float)(y3-y1));
+
+  // Calc side textures differential (from top to left bottom and to right
+  // bottom). Note that we need 4 differentials, for x and y from top to left
+  // and for x and y from top to right
+
+  float dx_lu = (u2 - u1) / std::abs((float)(y2-y1)); // dx - diff, l - left, u - x, v - y
+  float dx_lv = (v2 - v1) / std::abs((float)(y2-y1));
+  float dx_ru = (u3 - u1) / std::abs((float)(y3-y1));
+  float dx_rv = (v3 - v1) / std::abs((float)(y3-y1));
+  
+  // Now choose, where really placed left and right side step
+
+  if (dx_lhs > dx_rhs)
+  {
+    std::swap(dx_lhs, dx_rhs);
+    std::swap(dx_lu, dx_ru);
+    std::swap(dx_lv, dx_rv);
+  }
+
+  // Now we should draw triangle from top to middle (y1-y2)
+
+  float x_lhs {(float)x1};                // float curr x coord left
+  float x_rhs {(float)x1};                // float curr x coord right
+
+  // Clip top and bottom
+
+  if (y1 < 0 || y3 >= buf.Height())       // if triangle is full out of screen
+    return;
+
+  int y_top_clip = y1 - buf.Height() + 1; // how much pixels is clipped 
+  y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
+
+  x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
+  x_rhs += dx_rhs * y_top_clip;           //  coords if y1 is out of screen
+
+  int y_top = y1 - y_top_clip;            // define new drawable top
+  int y_bot = std::max(0, y2);            //  and bottom
+
+  // Draw top triangle
+
+  for (int y = y_top; y >= y_bot; --y)
+  {
+    // Compute differentials of texture coords on the left and right edges
+
+    int dy = y1 - y;                      // we need real dy, not clipped
+    float x_lu = u1 + (dx_lu * dy);       // find tex_coords on the edges
+    float x_lv = v1 + (dx_lv * dy);
+    float x_ru = u1 + (dx_ru * dy);
+    float x_rv = v1 + (dx_rv * dy);
+
+    // Compute x for left edge and right edge
+
+    int xlb = std::floor(x_lhs);          // xlb - x left border
+    int xrb = std::ceil(x_rhs);
+    xlb = std::max(0, xlb);               // clip left and right lines
+    xrb = std::min(buf.Width() - 1, xrb);
+
+    // Compute differential between edges of tex coords at the current y
+
+    float dx_currx_u {};                   // find dx between left and right
+    float dx_currx_v {};
+    if ((xrb - xlb) != 0)
+    {
+      dx_currx_u = (x_ru - x_lu) / (xrb - xlb);
+      dx_currx_v = (x_rv - x_lv) / (xrb - xlb);
+    }
+    else
+    {
+      dx_currx_u = x_lu;
+      dx_currx_v = x_lv;
+    }
+
+    // Interpolate texture coordinate for each pixel
+
+    float curr_u {};
+    float curr_v {};
+    for (int x = xlb; x < xrb; ++x)
+    {
+      int dx = x - xlb;
+      curr_u = x_lu + (dx_currx_u * dx);
+      curr_v = x_lv + (dx_currx_v * dx);
+      byte r {0};
+      byte g {0};
+      byte b {0};
+      bmp.get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
+      
+      draw::Point(x, y, color::MakeARGB(255, r, g, b), buf);
+    }
+    
+    x_lhs += dx_lhs;
+    x_rhs += dx_rhs;
+  }
+
+  // Part 2 : draw bottom side of triangle (from bottom to middle)
+  // Note that 0;0 point is placed in left-bottom corner
+
+  // Define step of left and right side (if perpendicular, then step = 0)
+  // Here we just suppose where left and right side
+
+  if (math::FNotZero(y1-y3)) 
+    dx_lhs = (float)(x1-x3) / std::abs((float)(y1-y3));
+  if (math::FNotZero(y2-y3))
+    dx_rhs = (float)(x2-x3) / std::abs((float)(y2-y3));
+
+  // Calc side textures differential (from bottom to left top and to right
+  // top). Note that we need 4 differentials, for x and y from top to left
+  // and for x and y from top to right
+
+  dx_lu = (u1 - u3) / std::abs(y1-y3);  // dx - diff, l - left, u - x, v - y
+  dx_lv = (v1 - v3) / std::abs(y1-y3);  // -1 since we go -1 step less
+  dx_ru = (u2 - u3) / std::abs(y2-y3);  // than diff in loop when we would
+  dx_rv = (v2 - v3) / std::abs(y2-y3);  // draw triangle
+
+  // Determine which is really left side step and really is right side step
+
+  if (dx_lhs > dx_rhs)
+  {
+    std::swap(dx_lhs, dx_rhs);
+    std::swap(dx_lu, dx_ru);
+    std::swap(dx_lv, dx_rv);
+  }
+    
+  // Now we should draw traingle from bottom to middle (y3-y2)
+
+  x_lhs = (float)x3;
+  x_rhs = (float)x3;
+  
+  // Clip top and bottom
+
+  int y_bot_clip {0};                   // here we calc how mush pixels
+  if (y3+1 < 0)                         //  is out of screen from bottom
+    y_bot_clip = std::abs(y3+1);
+  
+  x_lhs += dx_lhs * y_bot_clip;         // expand left and right curr coords
+  x_rhs += dx_rhs * y_bot_clip;
+
+  y_bot = std::max(0, y3+1);            // new drawable top and bottom
+  y_top = std::min(y2, buf.Height()-1);
+
+  // Draw bottom triangle
+
+  for (int y = y_bot; y < y_top; ++y)
+  {
+    x_lhs += dx_lhs;
+    x_rhs += dx_rhs;
+
+    // Compute differentials of texture coords on the left and right edges
+
+    int dy = y - y3;                    // we need real dy, not clipped
+    float x_lu = u3 + (dx_lu * dy);     // find tex_coords on the edges
+    float x_lv = v3 + (dx_lv * dy);
+    float x_ru = u3 + (dx_ru * dy);
+    float x_rv = v3 + (dx_rv * dy);
+
+    // Compute x for left edge and right edge
+
+    int xlb = std::floor(x_lhs);          // xlb - x left border
+    int xrb = std::ceil(x_rhs);
+    xlb = std::max(0, xlb);               // clip left and right lines
+    xrb = std::min(buf.Width() - 1, xrb);
+
+  // Compute differential between edges of tex coords at the current y
+
+    float dx_currx_u {};                   // find dx between left and right
+    float dx_currx_v {};
+    if ((xrb - xlb) != 0)
+    {
+      dx_currx_u = (x_ru - x_lu) / (xrb - xlb);
+      dx_currx_v = (x_rv - x_lv) / (xrb - xlb);
+    }
+    else
+    {
+      dx_currx_u = x_lu;
+      dx_currx_v = x_lv;
+    }
+    
+    // Interpolate texture coordinate for each pixel
+
+    float curr_u {};
+    float curr_v {};
+    for (int x = xlb; x < xrb; ++x)        // for each pixel interpolate color
+    {
+      int dx = x - xlb;
+      curr_u = x_lu + (dx_currx_u * dx);
+      curr_v = x_lv + (dx_currx_v * dx);
+      byte r {0};
+      byte g {0};
+      byte b {0};
+      bmp.get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
+      
+      draw::Point(x, y, color::MakeARGB(255, r, g, b), buf);
+    }
+  }
+}
+
 // Draws wired object
 
 void draw::WiredObject(const GlObject& obj, Buffer& buf)
@@ -608,24 +882,27 @@ int draw::SolidObject(const GlObject& obj, Buffer& buf)
     if (!face.active_)
       continue;
 
-    auto p1 = vxs[face[0]];
-    auto p2 = vxs[face[1]];
-    auto p3 = vxs[face[2]];
+    auto p1 = vxs[face[0]].pos_;
+    auto p2 = vxs[face[1]].pos_;
+    auto p3 = vxs[face[2]].pos_;
     
-    if (obj.shading_ == Shading::GOURANG)
+    if (obj.textured_)
+    {
+      auto t1 = vxs[face[0]].texture_;
+      auto t2 = vxs[face[1]].texture_;
+      auto t3 = vxs[face[2]].texture_;
+      draw::TexturedTriangle(obj.texture_, p1, p2, p3, t1, t2, t3, buf);
+    }
+    else if (obj.shading_ == Shading::GOURANG)
     {
       auto c1 = vxs[face[0]].color_.GetARGB();
       auto c2 = vxs[face[1]].color_.GetARGB();
       auto c3 = vxs[face[2]].color_.GetARGB();
-      draw::GourangTriangle(
-        p1.pos_.x, p1.pos_.y, p2.pos_.x, p2.pos_.y, p3.pos_.x, p3.pos_.y,
-        c1, c2, c3, buf);
+      draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     }
     else {
       auto color = face.color_.GetARGB();
-      draw::SolidTriangle(
-        p1.pos_.x, p1.pos_.y, p2.pos_.x, p2.pos_.y, p3.pos_.x, p3.pos_.y,
-        color, buf);
+      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
     }
     ++total;
   }
@@ -698,16 +975,19 @@ int draw::SolidTriangles(const V_Triangle& arr, Buffer& buf)
 // Here we build segments of normals like: obj.vx[i] is start, ends.vx[i] is end
 
 void draw::ObjectNormals(
-  const GlObject& obj, const V_Vector& ends, uint color, Buffer& buf)
+  const GlObject& obj, const V_Vertex& ends, uint color, Buffer& buf)
 {
   auto& vxs = obj.GetCoords();
+  auto w = buf.Width();
+  auto h = buf.Height();
   for (std::size_t i = 0; i < vxs.size(); ++i)
   {
-    auto start = vxs[i];
-    auto end = ends[i];
-    if (segment2d::Clip(
-      0, 0, buf.Width()-1, buf.Height()-1, start.pos_.x, start.pos_.y, end.x, end.y))
-        draw::Line(start.pos_.x, start.pos_.y, end.x, end.y, color, buf);
+    auto st_x = vxs[i].pos_.x;
+    auto st_y = vxs[i].pos_.y;
+    auto en_x = ends[i].pos_.x;
+    auto en_y = ends[i].pos_.y;
+    if (segment2d::Clip(0, 0, w-1, h-1, st_x, st_y, en_x, en_y))
+        draw::Line(st_x, st_y, en_x, en_y, color, buf);
   }
 }
 

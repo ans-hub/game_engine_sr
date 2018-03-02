@@ -15,6 +15,7 @@
 #include "gl_face.h"
 #include "gl_vertex.h"
 #include "gl_object.h"
+#include "../data/bmp_loader.h"
 #include "../math/vector.h"
 
 namespace anshub {
@@ -30,7 +31,8 @@ struct Triangle
   , shading_{Shading::CONST}
   , vxs_{}
   , normal_{}
-  , color_{} { }
+  , color_{}
+  , texture_{} { }
 
   Triangle(const V_Vertex& vxs, Shading shading, const Face& f)
   : active_{true}
@@ -39,7 +41,8 @@ struct Triangle
       vxs[f.vxs_[0]], vxs[f.vxs_[1]], vxs[f.vxs_[2]]
     } }
   , normal_{}
-  , color_{f.color_} { }
+  , color_{f.color_}
+  , texture_{} { }
 
   Vertex& operator[](int f) { return vxs_[f]; }
   cVertex& operator[](int f) const { return vxs_[f]; }
@@ -49,6 +52,7 @@ struct Triangle
   A3_Vertex vxs_;
   Vector    normal_;
   FColor    color_;
+  Bitmap    texture_;
 
 }; // struct Triangle
 

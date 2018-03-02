@@ -23,18 +23,22 @@ struct Vertex
   Vertex()
   : pos_{}
   , normal_{}
-  , color_{} { }
+  , color_{}
+  , texture_{} { }
   explicit Vertex(const Vector& v)
   : pos_{v}
   , normal_{}
-  , color_{} { }
+  , color_{}
+  , texture_{} { }
   Vertex(float x, float y, float z, float r, float g, float b)
   : pos_{x, y, z}
   , normal_{}
   , color_{r, g, b} { }
+
   Vector  pos_;
   Vector  normal_;
   FColor  color_;
+  Vector  texture_;
   
 }; // struct Vertex
 

@@ -41,6 +41,7 @@ namespace anshub {
   using V_Triangle = std::vector<Triangle>;
   using A3_Int = std::array<int,3>;
   using A3_Vertex = std::array<Vertex,3>;
+  using A3_Vector = std::array<Vector,3>;
   using A3_Float = std::array<float,3>;
   using A3_FColor = std::array<FColor,3>;
   using V_Face = std::vector<Face>;

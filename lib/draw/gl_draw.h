@@ -19,6 +19,7 @@
 #include <GL/glext.h>
 
 #include "../math/vector.h"
+#include "../data/bmp_loader.h"
 #include "gl_buffer.h"
 #include "fx_colors.h"
 #include "gl_object.h"
@@ -41,6 +42,9 @@ namespace draw {
     float, float, float, float, float, float, uint color, Buffer&);
   void GourangTriangle(
     float, float, float, float, float, float, uint, uint, uint, Buffer&);
+  void TexturedTriangle(
+    const Bitmap&, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
+    Buffer&);
   
   // Complex
 
@@ -51,7 +55,7 @@ namespace draw {
 
   // Debug
   
-  void ObjectNormals(const GlObject&, const V_Vector&, uint color, Buffer&);
+  void ObjectNormals(const GlObject&, const V_Vertex&, uint color, Buffer&);
 
 } // namespace draw
 

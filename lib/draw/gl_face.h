@@ -43,6 +43,7 @@ struct Face
 
   bool      active_;
   A3_Int    vxs_;     // number of vertices in vertices list
+  A3_Vector tex_;     // number of texels in texture list
   Vector    normal_;  // face normal
   FColor    color_;   // face color
   A3_Float  angles_;  // angles to compute vertices normals

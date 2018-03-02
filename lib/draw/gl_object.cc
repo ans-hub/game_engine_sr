@@ -16,6 +16,8 @@ GlObject::GlObject()
   , vxs_trans_{}
   , current_vxs_{Coords::LOCAL}
   , faces_{}
+  , texture_{}
+  , textured_{false}
   , id_{}
   , active_{true}
   , shading_{Shading::CONST}
@@ -34,6 +36,8 @@ GlObject::GlObject(
   , vxs_trans_{}
   , current_vxs_{Coords::LOCAL}  
   , faces_{}
+  , texture_{}
+  , textured_{false}
   , id_{}
   , active_{true}
   , shading_{}  
@@ -74,9 +78,7 @@ GlObject::GlObject(
   // Fill face colors
 
   for (std::size_t i = 0; i < faces.size(); ++i)
-  {
     faces_[i].color_ = vxs_local_[faces_[i][0]].color_;
-  }
 
   // Calc bounding sphere radius
 
@@ -153,6 +155,20 @@ GlObject object::Make(const char* str)
   else
     colors = Vector2d(vxs.size(), Vector1d{255.0f, 255.0f, 255.0f});
 
+  // Try to load texture coordinates
+
+  bool textured;
+  ply::Vector2d texels {};
+  if (ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"s", "t"}))
+  {
+    texels = ply.GetLine("vertex", {"s", "t"});
+    textured = true;
+  }
+  else {
+    texels = Vector2d(vxs.size(), Vector1d{0.0f, 0.0f});
+    textured = false;
+  }
+  
   // Try to load faces
 
   if (!ply.IsElementPresent("face"))
@@ -171,6 +187,31 @@ GlObject object::Make(const char* str)
 
   auto obj = GlObject(vxs, colors, faces, attrs);
   obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
+
+  // Try to attach texture
+
+  if (textured)
+  {
+    obj.textured_ = true;
+
+    // Load texture in memory
+    
+    std::string fname {str};
+    obj.texture_ = Bitmap(fname + ".bmp");
+
+    // Fill vertices texture coordinate and unnormalize them
+
+    auto tex_w = obj.texture_.width() - 1;
+    auto tex_h = obj.texture_.height() - 1;
+
+    // If something wrong and we can't
+
+    for (std::size_t i = 0; i < obj.vxs_local_.size(); ++i)
+    {
+      obj.vxs_local_[i].texture_.x = texels[i][0] * tex_w;
+      obj.vxs_local_[i].texture_.y = texels[i][1] * tex_h;
+    }
+  }
   return obj;
 }
 

@@ -14,12 +14,13 @@
 
 #include "gl_enums.h"
 #include "gl_aliases.h"
-#include "gl_triangle.h"
 #include "gl_camera.h"
 #include "fx_colors.h"
 #include "gl_coords.h"
+#include "gl_face.h"
 #include "exceptions.h"
 #include "../data/ply_loader.h"
+#include "../data/bmp_loader.h"
 #include "../math/segment.h"
 #include "../math/trig.h"
 #include "../math/vector.h"
@@ -37,10 +38,12 @@ struct GlObject
 {
   // Data members: coordinates and colors
 
-  V_Vertex  vxs_local_;
-  V_Vertex  vxs_trans_;
+  V_Vertex  vxs_local_;     // local vertices
+  V_Vertex  vxs_trans_;     // transformed vertices
   Coords    current_vxs_;   // chooser between coords type
   V_Face    faces_;         // faces based on coords above
+  Bitmap    texture_;       // texture struct
+  bool      textured_;      // is object textured
 
   // Data members: helpers
 
