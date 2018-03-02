@@ -276,7 +276,7 @@ int main(int argc, const char** argv)
 #ifdef DEBUG
 
     // Prepare drawing normals
-    
+
     auto norms = object::ComputeDrawableVxsNormals(obj, 0.4f);
     coords::World2Camera(norms, cam.vrp_, cam.dir_, trig);
     coords::Camera2Persp(norms, cam.dov_, cam.ar_);
