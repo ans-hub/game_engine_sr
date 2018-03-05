@@ -681,14 +681,18 @@ void draw::TexturedTriangle(
     float x_ru = u1 + (dx_ru * dy);
     float x_rv = v1 + (dx_rv * dy);
 
-    // Compute x for left edge and right edge
+    // Compute x for left edge and right edges
 
     int xlb = std::floor(x_lhs);          // xlb - x left border
     int xrb = std::ceil(x_rhs);
-    xlb = std::max(0, xlb);               // clip left and right lines
-    xrb = std::min(buf.Width() - 1, xrb);
+    
+    // Compute texture offset from left screen border if face would be clipped
+
+    int xl_dx = 0 + xlb;
+    xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
     // Compute differential between edges of tex coords at the current y
+    // before clipping left and right sides
 
     float dx_currx_u {};                   // find dx between left and right
     float dx_currx_v {};
@@ -703,13 +707,18 @@ void draw::TexturedTriangle(
       dx_currx_v = x_lv;
     }
 
+    // Clip left and right lines of face
+
+    xlb = std::max(0, xlb);
+    xrb = std::min(buf.Width() - 1, xrb);
+
     // Interpolate texture coordinate for each pixel
 
     float curr_u {};
     float curr_v {};
     for (int x = xlb; x < xrb; ++x)
     {
-      int dx = x - xlb;
+      int dx = x - xlb + xl_dx;
       curr_u = x_lu + (dx_currx_u * dx);
       curr_v = x_lv + (dx_currx_v * dx);
       byte r {0};
@@ -789,10 +798,14 @@ void draw::TexturedTriangle(
 
     int xlb = std::floor(x_lhs);          // xlb - x left border
     int xrb = std::ceil(x_rhs);
-    xlb = std::max(0, xlb);               // clip left and right lines
-    xrb = std::min(buf.Width() - 1, xrb);
 
-  // Compute differential between edges of tex coords at the current y
+    // Compute texture offset from left screen border if face would be clipped
+
+    int xl_dx = 0 + xlb;
+    xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
+
+    // Compute differential between edges of tex coords at the current y
+    // before clipping left and right sides
 
     float dx_currx_u {};                   // find dx between left and right
     float dx_currx_v {};
@@ -806,6 +819,11 @@ void draw::TexturedTriangle(
       dx_currx_u = x_lu;
       dx_currx_v = x_lv;
     }
+
+    // Clip left and right
+
+    xlb = std::max(0, xlb);               // clip left and right lines
+    xrb = std::min(buf.Width() - 1, xrb);
     
     // Interpolate texture coordinate for each pixel
 
@@ -813,7 +831,7 @@ void draw::TexturedTriangle(
     float curr_v {};
     for (int x = xlb; x < xrb; ++x)        // for each pixel interpolate color
     {
-      int dx = x - xlb;
+      int dx = x - xlb + xl_dx;
       curr_u = x_lu + (dx_currx_u * dx);
       curr_v = x_lv + (dx_currx_v * dx);
       byte r {0};

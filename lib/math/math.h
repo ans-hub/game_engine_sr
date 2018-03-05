@@ -22,6 +22,7 @@ namespace math {
   bool  FNotZero(float);
   bool  FlessZero(float);
   bool  Feq(float, float);
+  int   Clamp(int, int, int);
   float Clamp(float, float, float);
 
 } // namespace math
@@ -46,6 +47,12 @@ inline bool math::FlessZero(float num)
 inline bool math::Feq(float n1, float n2) 
 { 
   return std::abs(n1-n2) < kEpsilon;
+}
+
+inline int math::Clamp(int val, int min, int max)
+{
+  int rem = val % max;
+  return rem < 0 ? max + rem : min + rem;
 }
 
 inline float math::Clamp(float val, float min, float max)
