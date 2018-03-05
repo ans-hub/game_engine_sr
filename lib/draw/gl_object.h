@@ -21,6 +21,7 @@
 #include "exceptions.h"
 #include "../data/ply_loader.h"
 #include "../data/bmp_loader.h"
+#include "../system/strings.h"
 #include "../math/segment.h"
 #include "../math/trig.h"
 #include "../math/vector.h"

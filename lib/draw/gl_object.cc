@@ -113,12 +113,12 @@ void GlObject::CopyCoords(Coords src, Coords dest)
 //  2) ply file, exported from Blender and contains at least "vertexes" with
 //  properties "x", "y", "z" and "face" elements
 
-GlObject object::Make(const char* str)
+GlObject object::Make(const char* ply_fname)
 {
   using namespace ply;
 
   ply::Loader ply {};
-  std::ifstream fss {str};
+  std::ifstream fss {ply_fname};
   ply.Load(fss);
   
   // Try to determine if ply contains element called "globals_ply_v2", which is
@@ -138,7 +138,7 @@ GlObject object::Make(const char* str)
   else
     attrs = Vector2d(1, Vector1d{static_cast<int>(Shading::FLAT)});
   
-  // Try to load vertex coordinates
+  // Try to load vertices coordinates
 
   if (!ply.IsElementPresent("vertex"))
     throw DrawExcept("Ply file haven't vertexes element");
@@ -147,7 +147,7 @@ GlObject object::Make(const char* str)
 
   ply::Vector2d vxs = ply.GetLine("vertex", {"x", "y", "z"});
 
-  // Try load vertex colors
+  // Try load vertices colors
 
   ply::Vector2d colors {};
   if (ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"red", "green", "blue"}))
@@ -188,28 +188,41 @@ GlObject object::Make(const char* str)
   auto obj = GlObject(vxs, colors, faces, attrs);
   obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
 
-  // Try to attach texture
+  // Try to attach texture. If fails, then do object as non-textured
 
   if (textured)
   {
     obj.textured_ = true;
 
-    // Load texture in memory
+    // Load texture in memory (we suppose that texture name is the same as
+    // object file name, but with different extension)
     
-    std::string fname {str};
-    obj.texture_ = Bitmap(fname + ".bmp");
+    std::string bmp_fname {ply_fname};
+    str::Replace(bmp_fname, ".ply", ".bmp");
+    obj.texture_ = Bitmap(bmp_fname);
 
     // Fill vertices texture coordinate and unnormalize them
 
     auto tex_w = obj.texture_.width() - 1;
     auto tex_h = obj.texture_.height() - 1;
 
-    // If something wrong and we can't
+    if (tex_w == 0 || tex_h == 0)
+      obj.textured_ = false;
+    else {
+      
+      // Fill texture coords and make all vertices white color for lighting
 
-    for (std::size_t i = 0; i < obj.vxs_local_.size(); ++i)
-    {
-      obj.vxs_local_[i].texture_.x = texels[i][0] * tex_w;
-      obj.vxs_local_[i].texture_.y = texels[i][1] * tex_h;
+      for (std::size_t i = 0; i < obj.vxs_local_.size(); ++i)
+      {
+        obj.vxs_local_[i].texture_.x = texels[i][0] * tex_w;
+        obj.vxs_local_[i].texture_.y = texels[i][1] * tex_h;
+        obj.vxs_local_[i].color_ = FColor{color::White};
+      }
+      
+      // Make all faces white
+
+      for (auto& face : obj.faces_)
+        face.color_ = FColor{color::White};
     }
   }
   return obj;

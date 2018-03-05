@@ -45,7 +45,10 @@ namespace draw {
   void TexturedTriangle(
     const Bitmap&, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
     Buffer&);
-  
+  void TexturedTriangleLight(
+    const Bitmap&, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
+    uint color, Buffer&);
+
   // Complex
 
   void WiredObject(const GlObject&, Buffer&);
