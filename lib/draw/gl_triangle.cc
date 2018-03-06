@@ -24,8 +24,20 @@ void triangles::AddFromObject(GlObject& obj, V_Triangle& triangles)
   if (obj.active_)
   {
     auto& vxs = obj.GetCoords();
-    for (auto& face : obj.faces_)
-      triangles.emplace_back(vxs, obj.shading_, face);
+    if (obj.textured_) {
+      for (auto& face : obj.faces_)
+      {
+        if (face.active_)
+          triangles.emplace_back(vxs, obj.shading_, face, obj.texture_.get());
+      }
+    } 
+    else {
+      for (auto& face : obj.faces_)
+      {
+        if (face.active_)
+          triangles.emplace_back(vxs, obj.shading_, face, nullptr);
+      }
+    }
   }
 }
 
@@ -37,9 +49,21 @@ void triangles::AddFromObjects(V_GlObject& arr, V_Triangle& triangles)
   {
     if (obj.active_)
     {
-      auto& vxs = obj.GetCoords();    
-      for (auto& face : obj.faces_)
-        triangles.emplace_back(vxs, obj.shading_, face);
+      auto& vxs = obj.GetCoords();
+      if (obj.textured_) {
+        for (auto& face : obj.faces_)
+        {
+          if (face.active_)
+            triangles.emplace_back(vxs, obj.shading_, face, obj.texture_.get());
+        }
+      } 
+      else {
+        for (auto& face : obj.faces_)
+        {
+          if (face.active_)
+            triangles.emplace_back(vxs, obj.shading_, face, nullptr);
+        }
+      }
     }
   }
 }
@@ -140,13 +164,32 @@ void triangles::Persp2Screen(V_Triangle& arr, const GlCamera& cam)
   }
 }
 
-// We should do this before acsonometric projection
+// Z-sorting of triangles using average z coordinate. We should do this
+// before acsonometric projection
 
-void triangles::SortZ(V_Triangle& arr)
+void triangles::SortZAvg(V_Triangle& arr)
 {
   std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
   {
-    return t1.vxs_[0].pos_.z > t2.vxs_[0].pos_.z;
+    auto avg_z1 {
+      0.3333333f * (t1.vxs_[0].pos_.z + t1.vxs_[1].pos_.z + t1.vxs_[2].pos_.z)};
+    auto avg_z2 {
+      0.3333333f * (t2.vxs_[0].pos_.z + t2.vxs_[1].pos_.z + t2.vxs_[2].pos_.z)};
+    return avg_z1 > avg_z2;
+  });
+}
+
+// The same as above but sorts using far z coordinate
+
+void triangles::SortZFar(V_Triangle& arr)
+{
+  std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
+  {
+    auto avg_z1 {std::max(t1.vxs_[0].pos_.z, t1.vxs_[1].pos_.z)};
+    avg_z1 = std::max(avg_z1, t1.vxs_[2].pos_.z);
+    auto avg_z2 {std::max(t2.vxs_[0].pos_.z, t2.vxs_[1].pos_.z)};
+    avg_z2 = std::max(avg_z2, t2.vxs_[2].pos_.z);
+    return avg_z1 > avg_z2;
   });
 }
 

@@ -11,6 +11,7 @@
 #include <vector>
 #include <array>
 #include <fstream>
+#include <memory>
 
 #include "gl_enums.h"
 #include "gl_aliases.h"
@@ -37,13 +38,15 @@ namespace anshub {
 
 struct GlObject
 {
+  using pBitmap = std::shared_ptr<Bitmap>;
+
   // Data members: coordinates and colors
 
   V_Vertex  vxs_local_;     // local vertices
   V_Vertex  vxs_trans_;     // transformed vertices
   Coords    current_vxs_;   // chooser between coords type
   V_Face    faces_;         // faces based on coords above
-  Bitmap    texture_;       // texture struct
+  pBitmap   texture_;       // texture struct
   bool      textured_;      // is object textured
 
   // Data members: helpers

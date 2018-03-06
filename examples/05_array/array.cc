@@ -83,21 +83,6 @@ int main(int argc, const char** argv)
   constexpr   float kWorldSize {30};
   V_GlObject  cubes {kCubesCount, obj};
 
-  // // Here we change all references to vertexes inside triangles
-
-  // for (auto& cube : cubes)
-  // {
-  //   for (auto& face : cube.faces_)
-  //   {
-  //     face[0].pos_ = cube.vxs_local_[face[0].f1_]);
-  //     tri.v2_ = std::ref(cube.vxs_trans_[tri.f2_]);
-  //     tri.v3_ = std::ref(cube.vxs_trans_[tri.f3_]);
-  //     tri.c1_ = std::ref(cube.colors_trans_[tri.f1_]);
-  //     tri.c2_ = std::ref(cube.colors_trans_[tri.f2_]);
-  //     tri.c3_ = std::ref(cube.colors_trans_[tri.f3_]);
-  //   }
-  // }
-
   for (auto& cube : cubes)
   {
     cube.world_pos_.x = rand_toolkit::get_rand(-kWorldSize, kWorldSize);

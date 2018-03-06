@@ -26,23 +26,23 @@ namespace anshub {
 
 struct Triangle
 {
-  Triangle() 
-  : active_{false}
-  , shading_{Shading::CONST}
-  , vxs_{}
-  , normal_{}
-  , color_{}
-  , texture_{} { }
+  // Triangle() 
+  // : active_{false}
+  // , shading_{Shading::CONST}
+  // , vxs_{}
+  // , normal_{}
+  // , color_{}
+  // , texture_{} { }
 
-  Triangle(const V_Vertex& vxs, Shading shading, const Face& f)
+  Triangle(const V_Vertex& vxs, Shading shading, const Face& f, Bitmap* tex)
   : active_{true}
   , shading_{shading}
   , vxs_{ {
       vxs[f.vxs_[0]], vxs[f.vxs_[1]], vxs[f.vxs_[2]]
     } }
-  , normal_{}
+  , normal_{f.normal_}
   , color_{f.color_}
-  , texture_{} { }
+  , texture_{tex} { }
 
   Vertex& operator[](int f) { return vxs_[f]; }
   cVertex& operator[](int f) const { return vxs_[f]; }
@@ -52,7 +52,7 @@ struct Triangle
   A3_Vertex vxs_;
   Vector    normal_;
   FColor    color_;
-  Bitmap    texture_;
+  Bitmap*   texture_;
 
 }; // struct Triangle
 
@@ -86,7 +86,8 @@ namespace triangles {
 
   // Triangles helpers
 
-  void      SortZ(V_Triangle&);
+  void      SortZAvg(V_Triangle&);
+  void      SortZFar(V_Triangle&);
 
 } // namespace triangles
 

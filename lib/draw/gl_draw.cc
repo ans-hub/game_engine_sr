@@ -206,6 +206,33 @@ void draw::LineWu(int, int, int, int, int, Buffer&)
 void draw::SolidTriangle(
   float px1, float py1, float px2, float py2, float px3, float py3, uint color, Buffer& buf)
 {
+  // Make y1 as top point and y3 as bottom point, y2 is middle
+
+  if (py2 < py3) {
+    std::swap(px2, px3);
+    std::swap(py2, py3);
+  }
+  if ((py1 < py2) && (py1 > py3)) {
+    std::swap(px1, px2);
+    std::swap(py1, py2);
+  }
+  else if ((py1 < py2) && (py1 < py3 || math::Feq(py1, py3))) {
+    std::swap(px1, px2);
+    std::swap(py1, py2);
+    std::swap(px3, px2);
+    std::swap(py3, py2);
+  }
+
+  // If polygon is flat bottom, sort left to right
+
+  if (math::Feq(py2, py3) && px2 > px3)
+    std::swap(px2, px3);
+
+  // If polygon is flat top, sort left to right
+
+  if (math::Feq(py1, py2) && px1 > px2)
+    std::swap(px1, px2);
+
   // Convert float to int
 
   int x1 = std::floor(px1);
@@ -214,33 +241,14 @@ void draw::SolidTriangle(
   int y1 = std::floor(py1);
   int y2 = std::floor(py2);
   int y3 = std::floor(py3);
+  
+  // Special case - when object is less than 1 px, but visible
 
-  // Make y1 as top point and y3 as bottom point, y2 is middle
-
-  if (y2 < y3) {
-    std::swap(x2, x3);
-    std::swap(y2, y3);
+  if (y1 == y3) {
+    y1 += 1;
+    y3 = y1 - 1;
+    y2 = y3;
   }
-  if ((y1 < y2) && (y1 > y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-  }
-  else if ((y1 < y2) && (y1 <= y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(x3, x2);
-    std::swap(y3, y2);
-  }
-
-  // If polygon is flat bottom, sort left to right
-
-  if (math::Feq(y2, y3) && x2 > x3)
-    std::swap(x2, x3);
-
-  // If polygon is flat top, sort left to right
-
-  if (math::Feq(y1, y2) && x1 > x2)
-    std::swap(x1, x2);
 
   // Part 1 : draw top part of triangle (from top to middle)
   // Note that 0;0 point is placed in left-bottom corner
@@ -555,7 +563,7 @@ void draw::GourangTriangle(
 // Draws textured triangle without lighting
 
 void draw::TexturedTriangle(
-  const Bitmap& bmp, cVector& p1, cVector& p2, cVector& p3,
+  Bitmap* bmp, cVector& p1, cVector& p2, cVector& p3,
   cVector& t1, cVector& t2, cVector& t3, Buffer& buf)
 {
     // Convert float to int for vertex positions
@@ -724,7 +732,7 @@ void draw::TexturedTriangle(
       byte r {0};
       byte g {0};
       byte b {0};
-      bmp.get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
+      bmp->get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
       
       draw::Point(x, y, color::MakeARGB(255, r, g, b), buf);
     }
@@ -837,7 +845,7 @@ void draw::TexturedTriangle(
       byte r {0};
       byte g {0};
       byte b {0};
-      bmp.get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
+      bmp->get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
       
       draw::Point(x, y, color::MakeARGB(255, r, g, b), buf);
     }
@@ -847,7 +855,7 @@ void draw::TexturedTriangle(
 // Draws textured triangle with lighting
 
 void draw::TexturedTriangleLight(
-  const Bitmap& bmp, cVector& p1, cVector& p2, cVector& p3,
+  Bitmap* bmp, cVector& p1, cVector& p2, cVector& p3,
   cVector& t1, cVector& t2, cVector& t3, uint color, Buffer& buf)
 {
     // Convert float to int for vertex positions
@@ -1016,7 +1024,7 @@ void draw::TexturedTriangleLight(
       byte r {0};
       byte g {0};
       byte b {0};
-      bmp.get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
+      bmp->get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
       
       // Modulate light and color
 
@@ -1136,7 +1144,7 @@ void draw::TexturedTriangleLight(
       byte r {0};
       byte g {0};
       byte b {0};
-      bmp.get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
+      bmp->get_pixel(std::ceil(curr_u), std::ceil(curr_v), r, g, b);
       
       // Modulate light and color
       
@@ -1157,6 +1165,7 @@ void draw::WiredObject(const GlObject& obj, Buffer& buf)
   if (!obj.active_)
     return;
 
+  auto& vxs = obj.GetCoords();
   int w = buf.Width();
   int h = buf.Height();
     
@@ -1171,20 +1180,20 @@ void draw::WiredObject(const GlObject& obj, Buffer& buf)
 
     // Now get pairs of vectors on the triangle face and draw lines
 
-    auto p1 = obj.vxs_trans_[t[0]];
-    auto p2 = obj.vxs_trans_[t[1]];
+    auto p1 = vxs[t[0]];
+    auto p2 = vxs[t[1]];
 
     if (segment2d::Clip(0, 0, w-1, h-1, p1.pos_.x, p1.pos_.y, p2.pos_.x, p2.pos_.y))
       draw::Line(p1.pos_.x, p1.pos_.y, p2.pos_.x, p2.pos_.y, color, buf);
       
-    auto p3 = obj.vxs_trans_[t[1]];
-    auto p4 = obj.vxs_trans_[t[2]];
+    auto p3 = vxs[t[1]];
+    auto p4 = vxs[t[2]];
 
     if (segment2d::Clip(0, 0, w-1, h-1, p3.pos_.x, p3.pos_.y, p4.pos_.x, p4.pos_.y))
       draw::Line(p3.pos_.x, p3.pos_.y, p4.pos_.x, p4.pos_.y, color, buf);
 
-    auto p5 = obj.vxs_trans_[t[2]];
-    auto p6 = obj.vxs_trans_[t[0]];
+    auto p5 = vxs[t[2]];
+    auto p6 = vxs[t[0]];
 
     if (segment2d::Clip(0, 0, w-1, h-1, p5.pos_.x, p5.pos_.y, p6.pos_.x, p6.pos_.y))
       draw::Line(p5.pos_.x, p5.pos_.y, p6.pos_.x, p6.pos_.y, color, buf);
@@ -1216,7 +1225,7 @@ int draw::SolidObject(const GlObject& obj, Buffer& buf)
       auto t2 = vxs[face[1]].texture_;
       auto t3 = vxs[face[2]].texture_;
       draw::TexturedTriangleLight(
-        obj.texture_, p1, p2, p3, t1, t2, t3, face.color_.GetARGB(), buf);
+        obj.texture_.get(), p1, p2, p3, t1, t2, t3, face.color_.GetARGB(), buf);
     }
     else if (obj.shading_ == Shading::GOURANG)
     {
@@ -1234,42 +1243,42 @@ int draw::SolidObject(const GlObject& obj, Buffer& buf)
   return total;
 }
 
-// Draws triangles
+// Draws wired triangles
 
 void draw::WiredTriangles(const V_Triangle& arr, Buffer& buf)
 {
-  // int w = buf.Width();
-  // int h = buf.Height();
+  int w = buf.Width();
+  int h = buf.Height();
+    
+  for (const auto& t : arr)
+  {
+    if (!t.active_)
+      continue;
 
-  // for (const auto& tri : arr)
-  // {
-  //   if ((tri.attrs_ & Triangle::HIDDEN))
-  //     continue;
+    // As we haven`t filling, we get first vertexes color
 
-  //   // As we haven`t filling we get first vertexes color
+    auto color = t.color_.GetARGB();
 
-  //   auto color = tri.colors_[0].GetARGB();
-  
-  //   // Now get pairs of vectors on the triangle face and draw lines
-  
-  //   auto p1 = tri.vxs_[0];
-  //   auto p2 = tri.vxs_[1];
+    // Now get pairs of vectors on the triangle face and draw lines
 
-  //   if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
-  //     draw::Line(p1.x, p1.y, p2.x, p2.y, color, buf);
+    auto p1 = t.vxs_[0].pos_;
+    auto p2 = t.vxs_[1].pos_;
+
+    if (segment2d::Clip(0, 0, w-1, h-1, p1.x, p1.y, p2.x, p2.y))
+      draw::Line(p1.x, p1.y, p2.x, p2.y, color, buf);
       
-  //   auto p3 = tri.vxs_[1];
-  //   auto p4 = tri.vxs_[2];
+    auto p3 = t.vxs_[1].pos_;
+    auto p4 = t.vxs_[2].pos_;
 
-  //   if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
-  //     draw::Line(p3.x, p3.y, p4.x, p4.y, color, buf);
+    if (segment2d::Clip(0, 0, w-1, h-1, p3.x, p3.y, p4.x, p4.y))
+      draw::Line(p3.x, p3.y, p4.x, p4.y, color, buf);
 
-  //   auto p5 = tri.vxs_[2];
-  //   auto p6 = tri.vxs_[0];
+    auto p5 = t.vxs_[2].pos_;
+    auto p6 = t.vxs_[0].pos_;
 
-  //   if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
-  //     draw::Line(p5.x, p5.y, p6.x, p6.y, color, buf);
-  // }
+    if (segment2d::Clip(0, 0, w-1, h-1, p5.x, p5.y, p6.x, p6.y))
+      draw::Line(p5.x, p5.y, p6.x, p6.y, color, buf);
+  }
 }
 
 // Draws solid triangles
@@ -1285,18 +1294,31 @@ int draw::SolidTriangles(const V_Triangle& arr, Buffer& buf)
     auto p1 = t[0].pos_;
     auto p2 = t[1].pos_;
     auto p3 = t[2].pos_;
-    auto c1 = t[0].color_.GetARGB();
-    auto c2 = t[1].color_.GetARGB();
-    auto c3 = t[2].color_.GetARGB();
-    if (t.shading_ == Shading::GOURANG)
+    auto t1 = t[0].texture_;
+    auto t2 = t[1].texture_;
+    auto t3 = t[2].texture_;
+    if (t.texture_ != nullptr)
+    {
+      draw::TexturedTriangleLight(
+        t.texture_, p1, p2, p3, t1, t2, t3, t.color_.GetARGB(), buf);
+    }
+    else if (t.shading_ == Shading::GOURANG)
+    {
+      auto c1 = t[0].color_.GetARGB();
+      auto c2 = t[1].color_.GetARGB();
+      auto c3 = t[2].color_.GetARGB();
       draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
-    else 
-      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, buf);
+    }
+    else {
+      auto color = t.color_.GetARGB();
+      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
+    }
     ++total;
   }
   return total;
 }
 
+// Draws object normals in debug purposes
 // Here we build segments of normals like: obj.vx[i] is start, ends.vx[i] is end
 
 void draw::ObjectNormals(
@@ -1315,6 +1337,5 @@ void draw::ObjectNormals(
         draw::Line(st_x, st_y, en_x, en_y, color, buf);
   }
 }
-
 
 } // namespace anshub

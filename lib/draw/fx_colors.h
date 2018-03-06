@@ -32,7 +32,10 @@ struct Color
     , b {static_cast<T>((c >> 24) & 0xff)}
     , a {static_cast<T>(c & 0xff)} { }
   Color(T cr, T cg, T cb)
-    : r{cr}, g{cg}, b{cb}, a{255} { }
+    : r{static_cast<T>(cr)}
+    , g{static_cast<T>(cg)}
+    , b{static_cast<T>(cb)}
+    , a{255} { }
   
   T r;
   T g;

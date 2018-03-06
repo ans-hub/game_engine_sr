@@ -16,7 +16,7 @@ GlObject::GlObject()
   , vxs_trans_{}
   , current_vxs_{Coords::LOCAL}
   , faces_{}
-  , texture_{}
+  , texture_{nullptr}
   , textured_{false}
   , id_{}
   , active_{true}
@@ -36,7 +36,7 @@ GlObject::GlObject(
   , vxs_trans_{}
   , current_vxs_{Coords::LOCAL}  
   , faces_{}
-  , texture_{}
+  , texture_{nullptr}
   , textured_{false}
   , id_{}
   , active_{true}
@@ -199,12 +199,12 @@ GlObject object::Make(const char* ply_fname)
     
     std::string bmp_fname {ply_fname};
     str::Replace(bmp_fname, ".ply", ".bmp");
-    obj.texture_ = Bitmap(bmp_fname);
+    obj.texture_ = std::make_shared<Bitmap>(bmp_fname);
 
     // Fill vertices texture coordinate and unnormalize them
 
-    auto tex_w = obj.texture_.width() - 1;
-    auto tex_h = obj.texture_.height() - 1;
+    auto tex_w = obj.texture_->width() - 1;
+    auto tex_h = obj.texture_->height() - 1;
 
     if (tex_w == 0 || tex_h == 0)
       obj.textured_ = false;
@@ -219,7 +219,7 @@ GlObject object::Make(const char* ply_fname)
         obj.vxs_local_[i].color_ = FColor{color::White};
       }
       
-      // Make all faces white
+      // Make all faces white for fast texture lighting
 
       for (auto& face : obj.faces_)
         face.color_ = FColor{color::White};

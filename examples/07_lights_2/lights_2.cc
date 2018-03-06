@@ -121,7 +121,7 @@ int main(int argc, const char** argv)
   // Timers
 
   FpsCounter fps {};
-  constexpr int kFpsWait = 250;
+  constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
 
   // Window
@@ -202,35 +202,35 @@ int main(int argc, const char** argv)
 
     obj.world_pos_ += obj_vel;
 
-    // Prepare transformation matrixes for main object
-
-    MatrixRotateEul   mx_rot {obj_rot, trig};
-    MatrixTranslate   mx_trans {obj.world_pos_};
-    MatrixPerspective mx_per {cam.dov_, cam.ar_};
-    MatrixScale       mx_scale(obj_scale);
-
-    // Prepare total matrix
-
-    Matrix<4,4>       mx_total {};
-    matrix::MakeIdentity(mx_total);
-
-    // Rotate local coordinates of main object
-
     obj.SetCoords(Coords::LOCAL);
-    object::ApplyMatrix(mx_rot, obj);
-    object::RefreshOrientation(obj, mx_rot);
+    object::Rotate(obj, obj_rot, trig);
     obj.CopyCoords(Coords::LOCAL, Coords::TRANS);
-
-    // Transform trans coordinates of main object
-
-    mx_total = matrix::Multiplie(mx_total, mx_trans);
-    mx_total = matrix::Multiplie(mx_total, mx_scale);
     obj.SetCoords(Coords::TRANS);
-    object::ApplyMatrix(mx_total, obj);
+    objects::CopyCoords(ground, Coords::LOCAL, Coords::TRANS);
+    objects::SetCoords(ground, Coords::TRANS);
+    object::Translate(obj, obj.world_pos_);
+    for (auto& it : ground)
+      object::Translate(it, it.world_pos_);
     
-    // Prepare camera`s matrixes (Euler or uvn) for all objects
+    // Culling
 
-    MatrixCamera      mx_cam {};
+    object::ResetAttributes(obj);
+    objects::ResetAttributes(ground);
+
+    auto culled = objects::Cull(ground, cam);
+    auto hidden = objects::RemoveHiddenSurfaces(ground, cam);
+    object::Cull(obj, cam);
+    object::RemoveHiddenSurfaces(obj, cam);
+
+    // Light objects
+
+    object::ComputeFaceNormals(obj);
+    object::ComputeVertexNormalsV2(obj);
+    light::Object(obj, lights);
+
+    // Camera routines (go to cam coords)
+
+    MatrixCamera mx_cam {};
     if (cam.type_ == GlCamera::Type::EULER)
     {
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
@@ -247,77 +247,29 @@ int main(int argc, const char** argv)
       cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
     }
 
-    // Translate ground
+    object::ApplyMatrix(mx_cam, obj);
+    objects::ApplyMatrix(mx_cam, ground);
 
-    for (auto& item : ground)
-    {
-      item.CopyCoords(Coords::LOCAL, Coords::TRANS);      
-      item.SetCoords(Coords::TRANS);
-      object::Translate(item, item.world_pos_);
-    }
- 
-    // Cull hidden surfaces
+    // Make triangles
 
-    object::ResetAttributes(obj);
-    auto culled = object::Cull(obj, cam, mx_cam);
-    nfo_hidden  = object::RemoveHiddenSurfaces(obj, cam);
-    nfo_culled  = static_cast<int>(culled);
+    auto tris = triangles::MakeContainer();
+    triangles::AddFromObjects(ground, tris);
+    triangles::AddFromObject(obj, tris);
+    triangles::SortZAvg(tris);
     
-    objects::ResetAttributes(ground);
-    nfo_culled += objects::Cull(ground, cam, mx_cam);
-    nfo_hidden += objects::RemoveHiddenSurfaces(ground, cam);
-
-    // Light object
-
-    object::ComputeFaceNormals(obj);
-    object::ComputeVertexNormalsV2(obj);
-    light::Object(obj, lights);
-
-#ifdef DEBUG
-
-    // Prepare drawing normals
-
-    auto norms = object::ComputeDrawableVxsNormals(obj, 0.4f);
-    coords::World2Camera(norms, cam.vrp_, cam.dir_, trig);
-    coords::Camera2Persp(norms, cam.dov_, cam.ar_);
-    coords::Persp2Screen(norms, cam.wov_, buf.Width(), buf.Height());
-#endif
+    // Finally
     
-    // Go from world coords to camera, and the perspective coords
+    triangles::Camera2Persp(tris, cam);
+    triangles::Homogenous2Normal(tris);
+    triangles::Persp2Screen(tris, cam);
 
-    matrix::MakeIdentity(mx_total);
-    mx_total = matrix::Multiplie(mx_total, mx_cam);
-    mx_total = matrix::Multiplie(mx_total, mx_per);
-    object::ApplyMatrix(mx_total, obj);
-
-    // Make the same for the net
-    
-    objects::ApplyMatrix(mx_total, ground);
-
-    // Since after mx_per we have homogenous coords
-
-    object::Homogenous2Normal(obj);
-    objects::Homogenous2Normal(ground);
-
-    // Get screen coordinates
-
-    MatrixViewport mx_view {cam.wov_, cam.scr_w_, cam.scr_h_};
-    object::ApplyMatrix(mx_view, obj);
-    objects::ApplyMatrix(mx_view, ground);
-
-    // Draw triangles (stored in object)
+    // Draw
 
     buf.Clear();
-    for (const auto& it : ground)
-      draw::WiredObject(it, buf);
-    draw::SolidObject(obj, buf);
-#ifdef DEBUG
-    draw::WiredObject(obj, buf);
-    draw::ObjectNormals(obj, norms, color::Blue, buf);
-#endif
+    draw::SolidTriangles(tris, buf);
     buf.SendDataToFB();
 
-    // Print fps ans other info
+    // Print fps and other info
     
     PrintInfo(
       text, fps, obj.world_pos_, obj_rot, cam.vrp_, cam.dir_, nfo_culled, nfo_hidden

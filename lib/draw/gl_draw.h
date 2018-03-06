@@ -43,10 +43,10 @@ namespace draw {
   void GourangTriangle(
     float, float, float, float, float, float, uint, uint, uint, Buffer&);
   void TexturedTriangle(
-    const Bitmap&, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
+    Bitmap*, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
     Buffer&);
   void TexturedTriangleLight(
-    const Bitmap&, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
+    Bitmap*, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
     uint color, Buffer&);
 
   // Complex
