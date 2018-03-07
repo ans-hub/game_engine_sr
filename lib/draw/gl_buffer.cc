@@ -31,13 +31,6 @@ Buffer::Buffer(int w, int h, int color)
   glLoadIdentity();                 // and not glRasterPos2i
   glOrtho(0, w_, 0, h_, -1, 1);
 }
-
-void Buffer::Clear()
-{
-  memset(ptr_.data(), 0, w_*h_*sizeof(*ptr_.data())); 
-  
-  // ... forced to use memset instead std::fill after profiling
-}
   
 // Sends pixel data to framebuffer
 

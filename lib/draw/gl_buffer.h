@@ -45,6 +45,13 @@ private:
 
 }; // class Buffer
 
+inline void Buffer::Clear()
+{
+  memset(ptr_.data(), 0, w_*h_*sizeof(*ptr_.data())); 
+  
+  // ... forced to use memset instead std::fill after profiling
+}
+
 }  // namespace anshub
 
 #endif  // GL_BUFFER_H

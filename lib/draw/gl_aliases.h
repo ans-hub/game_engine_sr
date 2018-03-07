@@ -37,6 +37,7 @@ namespace anshub {
   // Containers aliases
 
   using V_Uint = std::vector<uint>;
+  using V_Float = std::vector<float>;
   using V_Uchar = std::vector<uchar>;
   using V_Triangle = std::vector<Triangle>;
   using A3_Int = std::array<int,3>;
