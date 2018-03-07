@@ -18,7 +18,7 @@
 #include "lib/math/vector.h"
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
-#include "lib/draw/gl_draw.h"
+#include "lib/draw/gl_draw_triangles.h"
 #include "lib/draw/gl_text.h"
 #include "lib/draw/gl_lights.cc"
 #include "lib/draw/gl_coords.h"
