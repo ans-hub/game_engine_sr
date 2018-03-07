@@ -75,7 +75,7 @@ int draw::SolidObject(const GlObject& obj, Buffer& buf)
       auto t1 = vxs[face[0]].texture_;
       auto t2 = vxs[face[1]].texture_;
       auto t3 = vxs[face[2]].texture_;
-      draw::TexturedTriangleLight(
+      draw::TexturedTriangleFlatLight(
         obj.texture_.get(), p1, p2, p3, t1, t2, t3, face.color_.GetARGB(), buf);
     }
     else if (obj.shading_ == Shading::GOURANG)

@@ -662,9 +662,9 @@ void draw::TexturedTriangle(
   }
 }
 
-// Draws textured triangle with lighting
+// Draws textured triangle with flat lighting
 
-void draw::TexturedTriangleLight(
+void draw::TexturedTriangleFlatLight(
   Bitmap* bmp, cVector& p1, cVector& p2, cVector& p3,
   cVector& t1, cVector& t2, cVector& t3, uint color, Buffer& buf)
 {

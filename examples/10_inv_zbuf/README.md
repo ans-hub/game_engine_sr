@@ -1,4 +1,4 @@
-# 1/z buffer example example
+# 1/z buffer example
 
 Here we use 1/z buffer and perspective correct texturing
 
@@ -19,4 +19,7 @@ Here we use 1/z buffer and perspective correct texturing
 </div>
 <div style="text-align: center;" markdown="1" />
 <img src="screenshot3.png" style="width: 600px;" />
+</div>
+<div style="text-align: center;" markdown="1" />
+<img src="screenshot4.png" style="width: 600px;" />
 </div>

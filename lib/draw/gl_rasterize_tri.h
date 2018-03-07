@@ -30,7 +30,7 @@ namespace draw {
   void TexturedTriangle(
     Bitmap*, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
     Buffer&);
-  void TexturedTriangleLight(
+  void TexturedTriangleFlatLight(
     Bitmap*, cVector&, cVector&, cVector&, cVector&, cVector&, cVector&,
     uint color, Buffer&);
 

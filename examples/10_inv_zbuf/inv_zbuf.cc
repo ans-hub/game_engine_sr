@@ -122,7 +122,7 @@ int main(int argc, const char** argv)
   // Timers
 
   FpsCounter fps {};
-  constexpr int kFpsWait = 80;
+  constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
 
   // Window
@@ -159,8 +159,8 @@ int main(int argc, const char** argv)
   FColor yellow {255.0f, 255.0f, 0.0f};
   FColor blue   {0.0f, 0.0f, 255.0f};
 
-  lights.ambient_.emplace_back(white, 0.2f);
-  lights.infinite_.emplace_back(yellow, 0.6f, Vector{0.0f, -1.0f, 0.0f});
+  lights.ambient_.emplace_back(white, 0.3f);
+  lights.infinite_.emplace_back(white, 0.7f, Vector{0.0f, -1.0f, 0.0f});
   // lights.point_.emplace_back(yellow, 0.6f, 
   //   Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
 
@@ -280,7 +280,7 @@ int main(int argc, const char** argv)
     fps.Count();
 
     win.Render();
-    // timer.Wait();
+    timer.Wait();
 
   } while (!win.Closed());
 

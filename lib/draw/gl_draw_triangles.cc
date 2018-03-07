@@ -65,7 +65,7 @@ int draw::SolidTriangles(const V_Triangle& arr, Buffer& buf)
     auto t3 = t[2].texture_;
     if (t.texture_ != nullptr)
     {
-      draw::TexturedTriangleLight(
+      draw::TexturedTriangleFlatLight(
         t.texture_, p1, p2, p3, t1, t2, t3, t.color_.GetARGB(), buf);
     }
     else if (t.shading_ == Shading::GOURANG)
@@ -107,7 +107,9 @@ int draw::SolidTrianglesZ(
     auto t3 = t[2].texture_;
 
     if (t.texture_ != nullptr)
-      draw::TexturedTriangle(t[0], t[1], t[2], t.texture_, zbuf, buf);
+      // draw::TexturedTriangle(t[0], t[1], t[2], t.texture_, zbuf, buf);
+      draw::TexturedTriangleFlatLight(
+        t[0], t[1], t[2], t.color_.GetARGB(), t.texture_, zbuf, buf);
     
     else if (t.shading_ == Shading::GOURANG)
     {
