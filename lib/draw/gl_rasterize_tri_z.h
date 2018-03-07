@@ -25,9 +25,10 @@ namespace draw {
 
   // Rasterizes triangles (with 1/z-buffer)
 
-  // void SolidTriangle(ZBuffer&, Buffer&);
-  // void GourangTriangle(
-  //   float, float, float, float, float, float, uint, uint, uint, Buffer&);
+  void SolidTriangle(
+    cVertex&, cVertex&, cVertex&, uint color, ZBuffer&, Buffer&);
+  void GourangTriangle(
+    cVertex&, cVertex&, cVertex&, ZBuffer&, Buffer&);
   void TexturedTriangle(
     cVertex&, cVertex&, cVertex&, Bitmap*, ZBuffer&, Buffer&);
   void TexturedTriangleFlatLight(

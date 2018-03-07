@@ -63,10 +63,14 @@ int draw::SolidTriangles(const V_Triangle& arr, Buffer& buf)
     auto t1 = t[0].texture_;
     auto t2 = t[1].texture_;
     auto t3 = t[2].texture_;
+
     if (t.texture_ != nullptr)
     {
-      draw::TexturedTriangleFlatLight(
-        t.texture_, p1, p2, p3, t1, t2, t3, t.color_.GetARGB(), buf);
+      if (t.shading_ == Shading::CONST)
+        draw::TexturedTriangle(t.texture_, p1, p2, p3, t1, t2, t3, buf);
+      else if (t.shading_ == Shading::FLAT || t.shading_ == Shading::GOURANG)
+        draw::TexturedTriangleFlatLight(
+          t.texture_, p1, p2, p3, t1, t2, t3, t.color_.GetARGB(), buf);
     }
     else if (t.shading_ == Shading::GOURANG)
     {
@@ -89,8 +93,6 @@ int draw::SolidTriangles(const V_Triangle& arr, Buffer& buf)
 int draw::SolidTrianglesZ(
   const V_Triangle& arr, ZBuffer& zbuf, Buffer& buf)
 {
-  // Create 1/z-buffer
-  
   // Draw triangles
 
   int total {0};
@@ -102,26 +104,20 @@ int draw::SolidTrianglesZ(
     auto p1 = t[0].pos_;
     auto p2 = t[1].pos_;
     auto p3 = t[2].pos_;
-    auto t1 = t[0].texture_;
-    auto t2 = t[1].texture_;
-    auto t3 = t[2].texture_;
-
-    if (t.texture_ != nullptr)
-      // draw::TexturedTriangle(t[0], t[1], t[2], t.texture_, zbuf, buf);
-      draw::TexturedTriangleFlatLight(
-        t[0], t[1], t[2], t.color_.GetARGB(), t.texture_, zbuf, buf);
     
-    else if (t.shading_ == Shading::GOURANG)
+    if (t.texture_ != nullptr)
     {
-      auto c1 = t[0].color_.GetARGB();
-      auto c2 = t[1].color_.GetARGB();
-      auto c3 = t[2].color_.GetARGB();
-      draw::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
+      if (t.shading_ == Shading::CONST)
+        draw::TexturedTriangle(t[0], t[1], t[2], t.texture_, zbuf, buf);
+      else if (t.shading_ == Shading::FLAT || t.shading_ == Shading::GOURANG)
+        draw::TexturedTriangleFlatLight(
+          t[0], t[1], t[2], t.color_.GetARGB(), t.texture_, zbuf, buf);
     }
-    else {
-      auto color = t.color_.GetARGB();
-      draw::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
-    }
+    else if (t.shading_ == Shading::GOURANG)
+      draw::GourangTriangle(t[0], t[1], t[2], zbuf, buf);
+    else
+      draw::SolidTriangle(t[0], t[1], t[2], t.color_.GetARGB(), zbuf, buf);
+    
     ++total;
   }
   return total;

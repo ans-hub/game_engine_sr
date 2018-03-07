@@ -257,7 +257,6 @@ int main(int argc, const char** argv)
     auto tris = triangles::MakeContainer();
     triangles::AddFromObjects(ground, tris);
     triangles::AddFromObject(obj, tris);
-    triangles::SortZAvg(tris);
     
     // Finally
     
