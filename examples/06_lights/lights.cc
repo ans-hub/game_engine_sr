@@ -177,7 +177,7 @@ int main(int argc, const char** argv)
     buf.Clear();
     objects::SortZ(cubes);
     for (auto& cube : cubes)
-      draw::SolidObject(cube, buf);
+      draw_object::Solid(cube, buf);
     buf.SendDataToFB();
     fps.Count();
 

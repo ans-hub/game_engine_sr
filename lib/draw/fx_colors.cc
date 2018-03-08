@@ -9,16 +9,6 @@
 
 namespace anshub {
 
-// Split ARGB byte-ordered little-endian into r,g,b,a components
-
-void color::SplitARGB(int color, byte& b, byte& g, byte& r, byte& a)
-{
-  b = (color >> 24) & 0xff;
-  g = (color >> 16) & 0xff;
-  r = (color >> 8)  & 0xff;
-  a = color & 0xff;
-}
-
 // Increase brightness of rgba color (given in word-order)
 // todo: very-very low perfomance function now!
 

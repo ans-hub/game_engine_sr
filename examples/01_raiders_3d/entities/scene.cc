@@ -171,7 +171,7 @@ void Scene::DrawWarships()
       
       if (segment2d::Clip(0, 0, w_-1, h_-1, x_scr_1, y_scr_1, x_scr_2, y_scr_2))
       {
-        draw::Line(x_scr_1, y_scr_1, x_scr_2, y_scr_2, color, buffer_);
+        raster::Line(x_scr_1, y_scr_1, x_scr_2, y_scr_2, color, buffer_);
       }
 
       // Define new bounding boxes
@@ -232,7 +232,7 @@ void Scene::DrawWarshipsAttack()
       float kColor = (cfg::kMaxBrightness-cfg::kMinBrightness) / shot_pos.z;
       float k1 = cfg::kMaxBrightness - (shot_pos.z * kColor);
       float k2 = (cfg::kMaxBrightness - (50 * kColor) ) * 2;
-      draw::Line(x_scr_1, y_scr_1, x_scr_2, y_scr_2, c, k1, k2, buffer_);
+      raster::Line(x_scr_1, y_scr_1, x_scr_2, y_scr_2, c, k1, k2, buffer_);
     }
   }
 }
@@ -253,8 +253,8 @@ void Scene::DrawCannon()
 
   if (polygon2d::PointsInside(0, 0, w_-1, h_-1, {l, r, t, b}))
   {
-    draw::Line(l.x, l.y, r.x, r.y, cfg::kAimColor, buffer_);
-    draw::Line(b.x, b.y, t.x, t.y, cfg::kAimColor, buffer_);
+    raster::Line(l.x, l.y, r.x, r.y, cfg::kAimColor, buffer_);
+    raster::Line(b.x, b.y, t.x, t.y, cfg::kAimColor, buffer_);
   }
   
   // Draw laser shot
@@ -266,9 +266,9 @@ void Scene::DrawCannon()
     float k2 = cfg::kMaxBrightness - (cfg::kNearZ * kColor);
 
     if (rand_toolkit::coin_toss())
-      draw::Line(0, 0, mid.x, mid.y, cfg::kCannonColor, k2, k1, buffer_);
+      raster::Line(0, 0, mid.x, mid.y, cfg::kCannonColor, k2, k1, buffer_);
     else
-      draw::Line(w_-1, 0, mid.x, mid.y, cfg::kCannonColor, k2, k1, buffer_);
+      raster::Line(w_-1, 0, mid.x, mid.y, cfg::kCannonColor, k2, k1, buffer_);
   }
 }
 
@@ -276,7 +276,7 @@ void Scene::DrawExplosions()
 {
   // Prepare color stuff
 
-  int    color = 0;
+  int   color = 0;
   float brightness = 0;
   float kColor = (cfg::kMaxBrightness*4-cfg::kMinBrightness) / cfg::kShipFarZ;
  
@@ -312,7 +312,7 @@ void Scene::DrawExplosions()
       {
         brightness = cfg::kMaxBrightness*4 - (edge.a.z * kColor);
         color = color::IncreaseBrightness(cfg::kExplColor, brightness);
-        draw::Line(x_scr_1, y_scr_1, x_scr_2, y_scr_2, color, buffer_);
+        raster::Line(x_scr_1, y_scr_1, x_scr_2, y_scr_2, color, buffer_);
       }
     }
   }

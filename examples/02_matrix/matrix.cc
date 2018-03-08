@@ -287,8 +287,8 @@ int main(int argc, const char** argv)
 
     buf.Clear();
     for (const auto& it : ground)
-      draw::WiredObject(it, buf);
-    draw::WiredObject(obj, buf);
+      draw_object::Wired(it, buf);
+    draw_object::Wired(obj, buf);
     
     buf.SendDataToFB();
 

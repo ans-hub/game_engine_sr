@@ -88,6 +88,8 @@ namespace triangles {
 
   void      SortZAvg(V_Triangle&);
   void      SortZFar(V_Triangle&);
+  void      SortZAvgInv(V_Triangle&);
+  void      SortZFarInv(V_Triangle&);
 
 } // namespace triangles
 

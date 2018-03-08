@@ -40,7 +40,7 @@ void light::Object(GlObject& obj, Lights& lights)
     {
       auto  bc = vxs[face[0]].color_;   // base color
       auto& cc = face.color_;           // color to change
-      cc = {0.0f, 0.0f, 0.0f};
+      cc = {0.0f, 0.0f, 0.0f, 255.0f};
 
       auto normalized = math::Fzero(face.normal_.SquareLength() - 1.0f);
       if (!normalized)
@@ -66,7 +66,7 @@ void light::Object(GlObject& obj, Lights& lights)
         {
           auto  bc = vxs[f].color_;
           auto& cc = vxs[f].color_;
-          cc = {0.0f, 0.0f, 0.0f};
+          cc = {0.0f, 0.0f, 0.0f, 255.0f};
           used[f] = true;
 
           for (auto& light : lights.ambient_)

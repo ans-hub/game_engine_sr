@@ -18,7 +18,7 @@
 #include "lib/math/vector.h"
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
-#include "lib/draw/gl_draw_triangles.h"
+#include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
 #include "lib/draw/gl_lights.cc"
 #include "lib/draw/gl_coords.h"
@@ -170,8 +170,6 @@ int main(int argc, const char** argv)
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
   bool    cam_z_mode {false};             // to manage mouse manipulation
-  int     nfo_culled;                     // shown how much objects is culled
-  int     nfo_hidden;                     // how much hidden surfaces removed
 
   do {
     timer.Start();
@@ -220,7 +218,7 @@ int main(int argc, const char** argv)
     auto culled = objects::Cull(ground, cam);
     auto hidden = objects::RemoveHiddenSurfaces(ground, cam);
     object::Cull(obj, cam);
-    object::RemoveHiddenSurfaces(obj, cam);
+    hidden += object::RemoveHiddenSurfaces(obj, cam);
 
     // Light objects
 
@@ -266,13 +264,13 @@ int main(int argc, const char** argv)
     // Draw
 
     buf.Clear();
-    draw::SolidTriangles(tris, buf);
+    draw_triangles::Solid(tris, buf);
     buf.SendDataToFB();
 
     // Print fps and other info
     
     PrintInfo(
-      text, fps, obj.world_pos_, obj_rot, cam.vrp_, cam.dir_, nfo_culled, nfo_hidden
+      text, fps, obj.world_pos_, obj_rot, cam.vrp_, cam.dir_, culled, hidden
     );
     fps.Count();
 

@@ -88,15 +88,15 @@ int main()
 
     if (kbtn == Btn::ENTER)
     {
-      obj.vxs_local_[0].color_.r = rand_toolkit::get_rand(0, 255);
-      obj.vxs_local_[0].color_.g = rand_toolkit::get_rand(0, 255);
-      obj.vxs_local_[0].color_.b = rand_toolkit::get_rand(0, 255);
-      obj.vxs_local_[1].color_.r = rand_toolkit::get_rand(0, 255);
-      obj.vxs_local_[1].color_.g = rand_toolkit::get_rand(0, 255);
-      obj.vxs_local_[1].color_.b = rand_toolkit::get_rand(0, 255);
-      obj.vxs_local_[2].color_.r = rand_toolkit::get_rand(0, 255);
-      obj.vxs_local_[2].color_.g = rand_toolkit::get_rand(0, 255);
-      obj.vxs_local_[2].color_.b = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[0].color_.r_ = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[0].color_.g_ = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[0].color_.b_ = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[1].color_.r_ = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[1].color_.g_ = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[1].color_.b_ = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[2].color_.r_ = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[2].color_.g_ = rand_toolkit::get_rand(0, 255);
+      obj.vxs_local_[2].color_.b_ = rand_toolkit::get_rand(0, 255);
     }
 
     // Prepare transformation matrixes for main object
@@ -162,7 +162,7 @@ int main()
     // Draw triangles (stored in object)
 
     buf.Clear();
-    draw::SolidObject(obj, buf);
+    draw_object::Solid(obj, buf);
     buf.SendDataToFB();
 
     win.Render();

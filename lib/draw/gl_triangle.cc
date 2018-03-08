@@ -21,24 +21,15 @@ V_Triangle triangles::MakeContainer()
 
 void triangles::AddFromObject(GlObject& obj, V_Triangle& triangles)
 {
-  if (obj.active_)
-  {
-    auto& vxs = obj.GetCoords();
-    if (obj.textured_) {
-      for (auto& face : obj.faces_)
-      {
-        if (face.active_)
-          triangles.emplace_back(vxs, obj.shading_, face, obj.texture_.get());
-      }
-    } 
-    else {
-      for (auto& face : obj.faces_)
-      {
-        if (face.active_)
-          triangles.emplace_back(vxs, obj.shading_, face, nullptr);
-      }
-    }
-  }
+  if (!obj.active_)
+    return;
+
+  auto& vxs = obj.GetCoords();
+  Bitmap* tex = obj.textured_ ? obj.texture_.get() : nullptr;
+ 
+  for (auto& face : obj.faces_)
+    if (face.active_)
+      triangles.emplace_back(vxs, obj.shading_, face, tex);
 }
 
 // Add references to triangles from objects to triangles container
@@ -47,24 +38,15 @@ void triangles::AddFromObjects(V_GlObject& arr, V_Triangle& triangles)
 {
   for (auto& obj : arr)
   {
-    if (obj.active_)
-    {
-      auto& vxs = obj.GetCoords();
-      if (obj.textured_) {
-        for (auto& face : obj.faces_)
-        {
-          if (face.active_)
-            triangles.emplace_back(vxs, obj.shading_, face, obj.texture_.get());
-        }
-      } 
-      else {
-        for (auto& face : obj.faces_)
-        {
-          if (face.active_)
-            triangles.emplace_back(vxs, obj.shading_, face, nullptr);
-        }
-      }
-    }
+    if (!obj.active_)
+      continue;
+
+    auto& vxs = obj.GetCoords();
+    Bitmap* tex = obj.textured_ ? obj.texture_.get() : nullptr;
+  
+    for (auto& face : obj.faces_)
+      if (face.active_)
+        triangles.emplace_back(vxs, obj.shading_, face, tex);
   }
 }
 
@@ -164,8 +146,8 @@ void triangles::Persp2Screen(V_Triangle& arr, const GlCamera& cam)
   }
 }
 
-// Z-sorting of triangles using average z coordinate. We should do this
-// before acsonometric projection
+// Sorts triangles by average z coordinate (first - nearest). We should do this
+// before acsonometric projection.
 
 void triangles::SortZAvg(V_Triangle& arr)
 {
@@ -192,5 +174,35 @@ void triangles::SortZFar(V_Triangle& arr)
     return avg_z1 > avg_z2;
   });
 }
+
+// Invert sorts triangles using average z coordinate (first - farthest). We should
+// do this before acsonometric projection
+
+void triangles::SortZAvgInv(V_Triangle& arr)
+{
+  std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
+  {
+    auto avg_z1 {
+      0.3333333f * (t1.vxs_[0].pos_.z + t1.vxs_[1].pos_.z + t1.vxs_[2].pos_.z)};
+    auto avg_z2 {
+      0.3333333f * (t2.vxs_[0].pos_.z + t2.vxs_[1].pos_.z + t2.vxs_[2].pos_.z)};
+    return avg_z1 < avg_z2;
+  });
+}
+
+// The same as above but sorts using far z coordinate
+
+void triangles::SortZFarInv(V_Triangle& arr)
+{
+  std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
+  {
+    auto avg_z1 {std::max(t1.vxs_[0].pos_.z, t1.vxs_[1].pos_.z)};
+    avg_z1 = std::max(avg_z1, t1.vxs_[2].pos_.z);
+    auto avg_z2 {std::max(t2.vxs_[0].pos_.z, t2.vxs_[1].pos_.z)};
+    avg_z2 = std::max(avg_z2, t2.vxs_[2].pos_.z);
+    return avg_z1 < avg_z2;
+  });
+}
+
 
 } // namespace anshub

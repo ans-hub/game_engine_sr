@@ -165,7 +165,7 @@ int main(int argc, const char** argv)
     auto tri_arr = triangles::MakeContainer();
     triangles::AddFromObjects(cubes, tri_arr);
     auto hidden = triangles::RemoveHiddenSurfaces(tri_arr, cam);
-    triangles::SortZ(tri_arr);
+    triangles::SortZAvg(tri_arr);
 
     // Finally
 
@@ -175,7 +175,7 @@ int main(int argc, const char** argv)
     triangles::Persp2Screen(tri_arr, cam);
 
     buf.Clear();
-    auto total = draw::SolidTriangles(tri_arr, buf);
+    auto total = draw_triangles::Solid(tri_arr, buf);
     buf.SendDataToFB();
     fps.Count();
 

@@ -21,7 +21,7 @@
 #include "lib/draw/gl_lights.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_camera.h"
-#include "lib/draw/gl_draw_triangles.h"
+#include "lib/draw/gl_draw.h"
 #include "lib/math/matrix_rotate_eul.h"
 #include "lib/math/matrix_rotate_uvn.h"
 #include "lib/math/matrix_persp.h"
@@ -179,6 +179,7 @@ int main(int argc, const char** argv)
     
     // Finally
     
+    triangles::SortZAvgInv(tris);
     triangles::Camera2Persp(tris, cam);
     triangles::Homogenous2Normal(tris);
     triangles::Persp2Screen(tris, cam);
@@ -187,7 +188,7 @@ int main(int argc, const char** argv)
 
     buf.Clear();
     zbuf.Clear();
-    draw::SolidTrianglesZ(tris, zbuf, buf);
+    draw_triangles::Solid(tris, zbuf, buf);
     buf.SendDataToFB();
     fps.Count();
 
