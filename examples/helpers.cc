@@ -142,4 +142,48 @@ void helpers::HandleRotateObject(Btn key, Vector& rot)
   }
 }
 
+void helpers::PrintInfoOnScreen(
+  GlText& text, FpsCounter& fps, 
+  const Vector& obj_pos, const Vector& obj_rot, 
+  const Vector& cam_pos, const Vector& cam_rot,
+  int nfo_culled, int nfo_hidden)
+{
+  std::ostringstream oss {};
+  
+  oss << "FPS: " << fps.ReadPrev()
+      << ", culled: " << nfo_culled << ", hidden: " << nfo_hidden;
+  text.PrintString(60, 90, oss.str().c_str());
+
+  oss.str("");
+  oss.clear();
+  oss << "Obj pos: " << obj_pos << ", cam pos: " << cam_pos;
+  text.PrintString(60, 70, oss.str().c_str());
+
+  oss.str("");
+  oss.clear();
+  oss << "Obj rot: " << obj_rot << ", cam rot: " << cam_rot;
+  text.PrintString(60, 50, oss.str().c_str());
+  
+  oss.str("");
+  oss.clear();
+  oss << "Controls: W,S - forward/backward, ARROWS - move, Z-N - rotate";
+  text.PrintString(60, 30, oss.str().c_str());  
+}
+
+void helpers::PrintInfoOnCmd(FpsCounter& fps, int culled, int hidden)
+{
+  if (fps.Ready())
+  {
+    std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
+    std::cerr << "Objects culled: " << culled << '\n';
+    std::cerr << "Hidden surface: " << hidden << "\n\n";
+  }
+}
+
+void helpers::PrintFpsOnCmd(FpsCounter& fps)
+{
+  if (fps.Ready())
+    std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
+}
+
 } // namespace anshub

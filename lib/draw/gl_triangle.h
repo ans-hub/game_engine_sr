@@ -26,14 +26,6 @@ namespace anshub {
 
 struct Triangle
 {
-  // Triangle() 
-  // : active_{false}
-  // , shading_{Shading::CONST}
-  // , vxs_{}
-  // , normal_{}
-  // , color_{}
-  // , texture_{} { }
-
   Triangle(const V_Vertex& vxs, Shading shading, const Face& f, Bitmap* tex)
   : active_{true}
   , shading_{shading}
