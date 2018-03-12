@@ -73,6 +73,7 @@ namespace color {
 
   int   MakeARGB(uchar a, uchar r, uchar g, uchar b);
   void  SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a);
+  void  SplitARGB(int color, uint& b, uint& g, uint& r, uint& a);
   int   IncreaseBrightness(int color, float k);
 
   // Output functions
@@ -136,7 +137,10 @@ template<class T>
 inline void Color<T>::Modulate(const Color<T>& rhs)
 { 
   *this *= rhs;
-  *this /= 256;
+  this->r_ >>= 8;   // divide to 256
+  this->g_ >>= 8;
+  this->b_ >>= 8;
+  this->a_ >>= 8;
 }
 
 // Clamps color components after addition
@@ -155,20 +159,22 @@ inline void Color<T>::Clamp()
 template<class T>
 inline Color<T>& Color<T>::operator/=(T scalar)
 {
-  this->r_ /= scalar;
-  this->g_ /= scalar;
-  this->b_ /= scalar;
-  this->a_ /= scalar;
+  float mp = 1.0f / scalar;  
+  this->r_ *= mp;
+  this->g_ *= mp;
+  this->b_ *= mp;
+  this->a_ *= mp;
   return *this;
 }
 
 template<class T>
 inline Color<T>& Color<T>::operator/=(int scalar)
 {
-  this->r_ /= scalar;
-  this->g_ /= scalar;
-  this->b_ /= scalar;
-  this->a_ /= scalar;
+  float mp = 1.0f / scalar;  
+  this->r_ *= mp;
+  this->g_ *= mp;
+  this->b_ *= mp;
+  this->a_ *= mp;
   return *this;
 }
 
@@ -280,6 +286,16 @@ inline Color<U> operator+(Color<U> lhs, const Color<U>& rhs)
 // Split ARGB byte-ordered little-endian into r,g,b,a components
 
 inline void color::SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a)
+{
+  b = (color >> 24) & 0xff;
+  g = (color >> 16) & 0xff;
+  r = (color >> 8)  & 0xff;
+  a = color & 0xff;
+}
+
+// The same as above but with uint
+
+inline void color::SplitARGB(int color, uint& b, uint& g, uint& r, uint& a)
 {
   b = (color >> 24) & 0xff;
   g = (color >> 16) & 0xff;
