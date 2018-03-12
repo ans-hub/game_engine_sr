@@ -1410,8 +1410,10 @@ void raster::GourangTriangle(
 
   FColor dx_lc {c2 - c1};
   FColor dx_rc {c3 - c1};
-  dx_lc /= std::abs(y2-y1);
-  dx_rc /= std::abs(y3-y1);
+  if (math::FNotZero(dy2y1))
+    dx_lc /= std::abs(y2-y1);
+  if (math::FNotZero(dy3y1))
+    dx_rc /= std::abs(y3-y1);
   
   // Now choose, where really placed left and right side step
 
@@ -1532,8 +1534,10 @@ void raster::GourangTriangle(
 
   dx_lc = c1 - c3;
   dx_rc = c2 - c3;
-  dx_lc /= dy1y3 - 1;           // -1 since we go -1 step less than diff
-  dx_rc /= dy2y3 - 1;           // in loop when we would draw triangle
+  if (math::FNotZero(dy1y3))
+    dx_lc /= dy1y3 - 1;           // -1 since we go -1 step less than diff
+  if (math::FNotZero(dy2y3))
+    dx_rc /= dy2y3 - 1;           // in loop when we would draw triangle
   
   // Determine which is really left step and really is right step
 
@@ -2022,18 +2026,35 @@ void raster::TexturedTriangle(
 // Draws textured triangle with flat lighting and with correct perspective
 // using 1/z interpolating
 
+// This is optimized function
+
 void raster::TexturedTriangleFL(
     cVertex& p1, cVertex& p2, cVertex& p3,
-    uint color, Bitmap* bmp, ZBuffer& zbuf, Buffer& buf)
+    uint color, Bitmap* bmp, ZBuffer& zbuf, Buffer& scr_buf)
 {
+  // Prepare fast screen buffer, texture and z-buffer access
+
+  auto scr_ptr = scr_buf.GetPointer();
+  int  scr_width = scr_buf.Width();
+  int  scr_height = scr_buf.Height();
+  auto tex_ptr = bmp->GetPointer();
+  auto tex_width = bmp->GetRowIncrement();
+  auto tex_texel_width = bmp->GetBytesPerPixel();
+  auto* z_ptr = zbuf.GetPointer();
+  auto  z_width = zbuf.Width();
+
+  // Convert flat light color to Color<>
+
+  Color<> light_color {color};
+
   // Convert float to int for vertex positions
 
-  int x1 = std::floor(p1.pos_.x);
-  int x2 = std::floor(p2.pos_.x);
-  int x3 = std::floor(p3.pos_.x);
-  int y1 = std::floor(p1.pos_.y);
-  int y2 = std::floor(p2.pos_.y);
-  int y3 = std::floor(p3.pos_.y);
+  int x1 = math::Floor(p1.pos_.x);
+  int x2 = math::Floor(p2.pos_.x);
+  int x3 = math::Floor(p3.pos_.x);
+  int y1 = math::Floor(p1.pos_.y);
+  int y2 = math::Floor(p2.pos_.y);
+  int y3 = math::Floor(p3.pos_.y);
 
   // Extract 1/z coordinates
   
@@ -2161,10 +2182,10 @@ void raster::TexturedTriangleFL(
 
   // Clip top and bottom
 
-  if (y1 < 0 || y3 >= buf.Height())       // if triangle is full out of screen
+  if (y1 < 0 || y3 >= scr_height)       // if triangle is full out of screen
     return;
 
-  int y_top_clip = y1 - buf.Height() + 1; // how much pixels is clipped 
+  int y_top_clip = y1 - scr_height + 1; // how much pixels is clipped 
   y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
 
   x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
@@ -2180,6 +2201,9 @@ void raster::TexturedTriangleFL(
   float x_z_start = 1.0f/z1;
 
   // Draw top triangle
+
+  Color<> tex_color {};                 // texture and its light color
+  Color<> total_color {};               //  to interpolate it inside x row loop
 
   for (int y = y_top; y >= y_bot; --y)
   {
@@ -2199,8 +2223,8 @@ void raster::TexturedTriangleFL(
 
     // Compute x for left edge and right edges
 
-    int xlb = std::floor(x_lhs);          // xlb - x left border
-    int xrb = std::ceil(x_rhs);
+    int xlb = math::Floor(x_lhs);          // xlb - x left border
+    int xrb = math::Ceil(x_rhs);
     
     // Compute texture offset from left screen border if face would be clipped
 
@@ -2224,7 +2248,7 @@ void raster::TexturedTriangleFL(
     // Clip left and right lines of face
 
     xlb = std::max(0, xlb);
-    xrb = std::min(buf.Width() - 1, xrb);
+    xrb = std::min(scr_width - 1, xrb);
 
     // Interpolate texture coordinate for each pixel
 
@@ -2233,32 +2257,39 @@ void raster::TexturedTriangleFL(
       int dx = x - xlb + xl_dx;           // we need real dx, not clipped
       float curr_z = x_lz + (dx_currx_z * dx);
       
-      if (curr_z > zbuf(x,y))
+      if (curr_z > z_ptr[y * z_width + x])
       {
         // Get real texture coordinates
 
         float curr_u = x_lu + (dx_currx_u * dx);
         float curr_v = x_lv + (dx_currx_v * dx);
+        int u = std::abs(math::Floor(curr_u / curr_z));
+        int v = std::abs(math::Floor(curr_v / curr_z));
       
-        // Get texture pixel
+        // Get texture pixel. This is same as call to call
+        // this function: bmp->get_pixel(u, v, r, g, b);
 
-        uchar r {};
-        uchar g {};
-        uchar b {};
-        auto u = std::abs(curr_u / curr_z);
-        auto v = std::abs(curr_v / curr_z);
-        bmp->get_pixel(std::floor(u), std::floor(v), r, g, b);
+        int offset = (v * tex_width) + (u * tex_texel_width);
+        uchar r = tex_ptr[offset + 2];
+        uchar g = tex_ptr[offset + 1];
+        uchar b = tex_ptr[offset + 0];
       
         // Modulate light and color
 
-        Color<> tex {r, g, b};
-        Color<> total {color};
-        total.Modulate(tex);
+        // Color<> tex {r, g, b};
+        // Color<> total {color};
+        // total.Modulate(tex);
+        
+        tex_color.r_ = r;
+        tex_color.g_ = g;
+        tex_color.b_ = b;
+        Color<> total {light_color};
+        total.Modulate(tex_color);
 
         // Draw point
 
-        raster::Point(x, y, total.GetARGB(), buf);
-        zbuf(x,y) = curr_z;
+        scr_ptr[x + y * scr_width] = total.GetARGB();
+        z_ptr[y * z_width + x] = curr_z;
       }
     }
     
@@ -2334,7 +2365,7 @@ void raster::TexturedTriangleFL(
   x_rhs += dx_rhs * y_bot_clip;
 
   y_bot = std::max(0, y3+1);            // new drawable top and bottom
-  y_top = std::min(y2, buf.Height()-1);
+  y_top = std::min(y2, scr_height-1);
 
   // Prepare start values of interpolants
 
@@ -2343,6 +2374,9 @@ void raster::TexturedTriangleFL(
   x_z_start = 1.0f/z3;
 
   // Draw bottom triangle
+
+  tex_color = Color<> {};               // texture and its light color
+  total_color = Color<> {};             //  to interpolate it inside x row loop
 
   for (int y = y_bot; y < y_top; ++y)
   {
@@ -2365,8 +2399,8 @@ void raster::TexturedTriangleFL(
 
     // Compute x for left edge and right edge
 
-    int xlb = std::floor(x_lhs);          // xlb - x left border
-    int xrb = std::ceil(x_rhs);
+    int xlb = math::Floor(x_lhs);          // xlb - x left border
+    int xrb = math::Ceil(x_rhs);
 
     // Compute texture offset from left screen border if face would be clipped
 
@@ -2390,7 +2424,7 @@ void raster::TexturedTriangleFL(
     // Clip left and right
 
     xlb = std::max(0, xlb);               // clip left and right lines
-    xrb = std::min(buf.Width() - 1, xrb);
+    xrb = std::min(scr_width - 1, xrb);
     
     // Interpolate texture coordinate for each pixel
     
@@ -2398,32 +2432,36 @@ void raster::TexturedTriangleFL(
     {
       int dx = x - xlb + xl_dx;
       float curr_z = x_lz + (dx_currx_z * dx);
-      if (curr_z > zbuf(x,y))
+      
+      if (curr_z > z_ptr[y * z_width + x])
       {
         // Get real texture coordinates
         
         float curr_u = x_lu + (dx_currx_u * dx);
         float curr_v = x_lv + (dx_currx_v * dx);
+        int u = std::abs(math::Floor(curr_u / curr_z));
+        int v = std::abs(math::Floor(curr_v / curr_z));
 
-        // Get texture pixel
+        // Get texture pixel. This is same as call to call
+        // this function: bmp->get_pixel(u, v, r, g, b);
 
-        uchar r {};
-        uchar g {};
-        uchar b {};
-        auto u = std::abs(curr_u / curr_z);
-        auto v = std::abs(curr_v / curr_z);
-        bmp->get_pixel(std::floor(u), std::floor(v), r, g, b);
+        int offset = (v * tex_width) + (u * tex_texel_width);
+        uchar r = tex_ptr[offset + 2];
+        uchar g = tex_ptr[offset + 1];
+        uchar b = tex_ptr[offset + 0];
       
         // Modulate light and color
 
-        Color<> tex {r, g, b};
-        Color<> total {color};
-        total.Modulate(tex);
+        tex_color.r_ = r;
+        tex_color.g_ = g;
+        tex_color.b_ = b;
+        Color<> total {light_color};
+        total.Modulate(tex_color);
         
         // Draw point
 
-        raster::Point(x, y, total.GetARGB(), buf);
-        zbuf(x,y) = curr_z;
+        scr_ptr[x + y * scr_width] = total.GetARGB();
+        z_ptr[y * z_width + x] = curr_z;
       }
     }
   }

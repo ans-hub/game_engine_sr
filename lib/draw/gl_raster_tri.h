@@ -60,7 +60,7 @@ namespace raster {
     cVertex& v1, cVertex& v2, cVertex& v3,
     Bitmap*, ZBuffer&, Buffer&
   );
-  void TexturedTriangleFL(
+  void TexturedTriangleFL(                    // highly optimized
     cVertex& v1, cVertex& v2, cVertex& v3,
     uint color, Bitmap*, ZBuffer&, Buffer&
   );
