@@ -131,12 +131,23 @@ inline uint Color<T>::GetARGB() const
   return ((int)b_ << 24) | ((int)g_ << 16) | ((int)r_ << 8) | 255;
 }
 
+// Partial specialization of function above (optimized for uint)
+
+template<>
+inline uint Color<uint>::GetARGB() const
+{
+  return (b_ << 24) | (g_ << 16) | (r_ << 8) | 255;
+}
+
 // Modulates 2 colors
 
 template<class T>
 inline void Color<T>::Modulate(const Color<T>& rhs)
 { 
-  *this *= rhs;
+  this->r_ *= rhs.r_;
+  this->g_ *= rhs.g_;
+  this->b_ *= rhs.b_;
+  this->a_ *= rhs.a_;
   this->r_ >>= 8;   // divide to 256
   this->g_ >>= 8;
   this->b_ >>= 8;
