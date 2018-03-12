@@ -173,6 +173,11 @@ int main(int argc, const char** argv)
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
   bool    cam_z_mode {false};             // to manage mouse manipulation
 
+  // Make triangles arrays
+
+  auto tris_base = triangles::MakeBaseContainer(0);
+  auto tris_ptrs = triangles::MakePtrsContainer(0);
+
   do {
     timer.Start();
     win.Clear();
@@ -252,22 +257,24 @@ int main(int argc, const char** argv)
 
     // Make triangles
 
-    auto tris = triangles::MakeContainer();
-    triangles::AddFromObjects(ground, tris);
-    triangles::AddFromObject(obj, tris);
-    // triangles::SortZAvg(tris);
+    tris_base.resize(0);
+    tris_ptrs.resize(0);
+    triangles::AddFromObjects(ground, tris_base);
+    triangles::AddFromObject(obj, tris_base);
+    triangles::MakePointers(tris_base, tris_ptrs);
+    triangles::SortZAvg(tris_ptrs);
     
     // Finally
     
-    triangles::Camera2Persp(tris, cam);
-    triangles::Homogenous2Normal(tris);
-    triangles::Persp2Screen(tris, cam);
+    triangles::Camera2Persp(tris_base, cam);
+    triangles::Homogenous2Normal(tris_base);
+    triangles::Persp2Screen(tris_base, cam);
 
     // Draw
 
     buf.Clear();
     zbuf.Clear();
-    draw_triangles::Solid(tris, zbuf, buf);
+    draw_triangles::Solid(tris_ptrs, zbuf, buf);
     buf.SendDataToFB();
 
     // Print fps and other info

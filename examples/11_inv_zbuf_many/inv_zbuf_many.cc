@@ -110,7 +110,7 @@ int main(int argc, const char** argv)
 
   float    dov     {2};
   float    fov     {60};
-  Vector   cam_pos {0.0f, 0.0f, -kWorldSize};
+  Vector   cam_pos {0.0f, 0.0f, -kWorldSize*3};
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {300};
@@ -133,6 +133,11 @@ int main(int argc, const char** argv)
   Buffer  buf (kWidth, kHeight, color::Black);
   ZBuffer zbuf (kWidth, kHeight);
   GlText  text {win};
+
+  // Make triangles arrays
+
+  auto tris_base = triangles::MakeBaseContainer(1);
+  auto tris_ptrs = triangles::MakePtrsContainer(1);
 
   do {
     timer.Start();
@@ -174,21 +179,23 @@ int main(int argc, const char** argv)
 
     // Make triangles
 
-    auto tris = triangles::MakeContainer();
-    triangles::AddFromObjects(cubes, tris);
-    
+    tris_base.resize(0);
+    tris_ptrs.resize(0);
+    triangles::AddFromObjects(cubes, tris_base);
+    triangles::MakePointers(tris_base, tris_ptrs);
+        
     // Finally
     
-    triangles::SortZAvgInv(tris);
-    triangles::Camera2Persp(tris, cam);
-    triangles::Homogenous2Normal(tris);
-    triangles::Persp2Screen(tris, cam);
+    triangles::SortZAvgInv(tris_ptrs);
+    triangles::Camera2Persp(tris_base, cam);
+    triangles::Homogenous2Normal(tris_base);
+    triangles::Persp2Screen(tris_base, cam);
 
     // Draw triangles
 
     buf.Clear();
     zbuf.Clear();
-    draw_triangles::Solid(tris, zbuf, buf);
+    draw_triangles::Solid(tris_ptrs, zbuf, buf);
     buf.SendDataToFB();
     fps.Count();
 
