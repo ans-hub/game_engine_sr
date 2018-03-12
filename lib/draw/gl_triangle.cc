@@ -9,12 +9,35 @@
 
 namespace anshub {
 
-// Makes container of triangles references array. This is simple array of
-// references.
+// Makes container of Triangles with supposed capacity. If we would use
+// this container right (i.e. will resize it to 0, but not clear every 
+// loop tick), then start capacity may be 0
 
-V_Triangle triangles::MakeContainer()
+V_Triangle triangles::MakeBaseContainer(int capacity)
 {
-  return V_Triangle {};
+  V_Triangle res {};
+  res.reserve(capacity);
+  return res;
+}
+
+// Makes container of Triangles with supposed capacity. If we would use
+// this container right (i.e. will resize it to 0, but not clear every 
+// loop tick), then start capacity may be 0
+
+V_TrianglePtr triangles::MakePtrsContainer(int capacity)
+{
+  V_TrianglePtr res {};
+  res.reserve(capacity);
+  return res;
+}
+
+// Makes container of Triangles pointers for quick sort and other perfomance
+// purposes
+
+void triangles::MakePointers(V_Triangle& base, V_TrianglePtr& ptr)
+{
+  for (auto& tri : base)
+    ptr.emplace_back(&tri);
 }
 
 // Add references to triangles from objects to triangles container
@@ -58,12 +81,24 @@ int triangles::RemoveHiddenSurfaces(V_Triangle& arr, const GlCamera& cam)
   int cnt {0};
   for (auto& tri : arr)
   {
-    Vector u {tri[0].pos_, tri[1].pos_};
-    Vector v {tri[0].pos_, tri[2].pos_};
-    Vector n = vector::CrossProduct(u,v);   // normal to u and v
-    Vector c {tri[0].pos_, cam.vrp_};       // view vector
+    // Compute trianglenormal
+    
+    if (tri.normal_.IsZero())
+    {
+      Vector u {tri[0].pos_, tri[1].pos_};
+      Vector v {tri[0].pos_, tri[2].pos_};
+      tri.normal_ = vector::CrossProduct(u,v);
+      tri.normal_.Normalize();
+    }
 
-    auto prod = vector::DotProduct(c,n);
+    // Compute vector of view (this is just potential view, not fact)
+    
+    Vector view {tri[0].pos_, cam.vrp_};
+    view.Normalize();
+
+    // If angle between view vector and normal < 90 deg, then face is invisible    
+
+    auto prod = vector::DotProduct(view, tri.normal_);
     if (math::FlessZero(prod))
     {
       tri.active_ = false;
@@ -81,6 +116,7 @@ void triangles::ResetAttributes(V_Triangle& arr)
   for (auto& tri : arr) {
     if (!tri.active_)
       tri.active_ = true;
+    tri.normal_.Zero();
   }
 }
 
@@ -149,28 +185,28 @@ void triangles::Persp2Screen(V_Triangle& arr, const GlCamera& cam)
 // Sorts triangles by average z coordinate (first - nearest). We should do this
 // before acsonometric projection.
 
-void triangles::SortZAvg(V_Triangle& arr)
+void triangles::SortZAvg(V_TrianglePtr& arr)
 {
-  std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
+  std::sort(arr.begin(), arr.end(), [](auto* t1, auto* t2)
   {
     auto avg_z1 {
-      0.3333333f * (t1.vxs_[0].pos_.z + t1.vxs_[1].pos_.z + t1.vxs_[2].pos_.z)};
+      0.3333333f * (t1->vxs_[0].pos_.z + t1->vxs_[1].pos_.z + t1->vxs_[2].pos_.z)};
     auto avg_z2 {
-      0.3333333f * (t2.vxs_[0].pos_.z + t2.vxs_[1].pos_.z + t2.vxs_[2].pos_.z)};
+      0.3333333f * (t2->vxs_[0].pos_.z + t2->vxs_[1].pos_.z + t2->vxs_[2].pos_.z)};
     return avg_z1 > avg_z2;
   });
 }
 
 // The same as above but sorts using far z coordinate
 
-void triangles::SortZFar(V_Triangle& arr)
+void triangles::SortZFar(V_TrianglePtr& arr)
 {
-  std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
+  std::sort(arr.begin(), arr.end(), [](auto* t1, auto* t2)
   {
-    auto avg_z1 {std::max(t1.vxs_[0].pos_.z, t1.vxs_[1].pos_.z)};
-    avg_z1 = std::max(avg_z1, t1.vxs_[2].pos_.z);
-    auto avg_z2 {std::max(t2.vxs_[0].pos_.z, t2.vxs_[1].pos_.z)};
-    avg_z2 = std::max(avg_z2, t2.vxs_[2].pos_.z);
+    auto avg_z1 {std::max(t1->vxs_[0].pos_.z, t1->vxs_[1].pos_.z)};
+    avg_z1 = std::max(avg_z1, t1->vxs_[2].pos_.z);
+    auto avg_z2 {std::max(t2->vxs_[0].pos_.z, t2->vxs_[1].pos_.z)};
+    avg_z2 = std::max(avg_z2, t2->vxs_[2].pos_.z);
     return avg_z1 > avg_z2;
   });
 }
@@ -178,28 +214,28 @@ void triangles::SortZFar(V_Triangle& arr)
 // Invert sorts triangles using average z coordinate (first - farthest). We should
 // do this before acsonometric projection
 
-void triangles::SortZAvgInv(V_Triangle& arr)
+void triangles::SortZAvgInv(V_TrianglePtr& arr)
 {
-  std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
+  std::sort(arr.begin(), arr.end(), [](auto* t1, auto* t2)
   {
     auto avg_z1 {
-      0.3333333f * (t1.vxs_[0].pos_.z + t1.vxs_[1].pos_.z + t1.vxs_[2].pos_.z)};
+      0.3333333f * (t1->vxs_[0].pos_.z + t1->vxs_[1].pos_.z + t1->vxs_[2].pos_.z)};
     auto avg_z2 {
-      0.3333333f * (t2.vxs_[0].pos_.z + t2.vxs_[1].pos_.z + t2.vxs_[2].pos_.z)};
+      0.3333333f * (t2->vxs_[0].pos_.z + t2->vxs_[1].pos_.z + t2->vxs_[2].pos_.z)};
     return avg_z1 < avg_z2;
   });
 }
 
 // The same as above but sorts using far z coordinate
 
-void triangles::SortZFarInv(V_Triangle& arr)
+void triangles::SortZFarInv(V_TrianglePtr& arr)
 {
   std::sort(arr.begin(), arr.end(), [](auto& t1, auto& t2)
   {
-    auto avg_z1 {std::max(t1.vxs_[0].pos_.z, t1.vxs_[1].pos_.z)};
-    avg_z1 = std::max(avg_z1, t1.vxs_[2].pos_.z);
-    auto avg_z2 {std::max(t2.vxs_[0].pos_.z, t2.vxs_[1].pos_.z)};
-    avg_z2 = std::max(avg_z2, t2.vxs_[2].pos_.z);
+    auto avg_z1 {std::max(t1->vxs_[0].pos_.z, t1->vxs_[1].pos_.z)};
+    avg_z1 = std::max(avg_z1, t1->vxs_[2].pos_.z);
+    auto avg_z2 {std::max(t2->vxs_[0].pos_.z, t2->vxs_[1].pos_.z)};
+    avg_z2 = std::max(avg_z2, t2->vxs_[2].pos_.z);
     return avg_z1 < avg_z2;
   });
 }

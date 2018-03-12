@@ -16,7 +16,6 @@ void light::Object(GlObject& obj, Lights& lights)
   if (!obj.active_)
     return;
   
-  // auto& colors = obj.GetColors();
   auto& vxs = obj.GetCoords();
   std::vector<bool> used (vxs.size(), false);
 
@@ -87,7 +86,7 @@ void light::Object(GlObject& obj, Lights& lights)
 void light::Objects(V_GlObject& arr, Lights& lights)
 {
   for (auto& obj : arr)
-    light::Object(obj, lights);
+    if (obj.active_) light::Object(obj, lights);
 }
 
 } // namespace anshub

@@ -103,7 +103,7 @@ namespace object {
   bool      Cull(GlObject&, const GlCamera&);  
   int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
   void      ResetAttributes(GlObject&);
-  void      ComputeFaceNormals(GlObject&);
+  void      ComputeFaceNormals(GlObject&, bool normalize = true);
   void      ComputeVertexNormalsV1(GlObject&);
   void      ComputeVertexNormalsV2(GlObject&);
  
@@ -145,7 +145,7 @@ namespace objects {
   int       Cull(V_GlObject&, const GlCamera&);
   int       RemoveHiddenSurfaces(V_GlObject&, const GlCamera&);  
   void      ResetAttributes(V_GlObject&);
-  void      ComputeFaceNormals(V_GlObject&);
+  void      ComputeFaceNormals(V_GlObject&, bool normalize = false);
   void      ComputeVertexNormalsV1(V_GlObject&);
   void      ComputeVertexNormalsV2(V_GlObject&);
 

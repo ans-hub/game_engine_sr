@@ -126,24 +126,24 @@ void draw_object::Normals(
 
 // Draws wired triangles
 
-int draw_triangles::Wired(const V_Triangle& arr, Buffer& buf)
+int draw_triangles::Wired(const V_TrianglePtr& arr, Buffer& buf)
 {
   int total {0};  
   int w {buf.Width()};
   int h {buf.Height()};
 
-  for (const auto& t : arr)
+  for (const auto* t : arr)
   {
-    if (!t.active_)
+    if (!t->active_)
       continue;
 
-    int x1 = t[0].pos_.x;
-    int x2 = t[1].pos_.x;
-    int x3 = t[2].pos_.x;
-    int y1 = t[0].pos_.y;
-    int y2 = t[1].pos_.y;
-    int y3 = t[2].pos_.y;
-    auto color = t.color_.GetARGB();
+    int x1 = t->vxs_[0].pos_.x;
+    int x2 = t->vxs_[1].pos_.x;
+    int x3 = t->vxs_[2].pos_.x;
+    int y1 = t->vxs_[0].pos_.y;
+    int y2 = t->vxs_[1].pos_.y;
+    int y3 = t->vxs_[2].pos_.y;
+    auto color = t->color_.GetARGB();
 
     if (segment2d::Clip(0, 0, w-1, h-1, x1, y1, x2, y2))
       raster::Line(x1, y1, x2, y2, color, buf);
@@ -159,46 +159,46 @@ int draw_triangles::Wired(const V_Triangle& arr, Buffer& buf)
 
 // Draws solid triangles
 
-int draw_triangles::Solid(const V_Triangle& arr, Buffer& buf)
+int draw_triangles::Solid(const V_TrianglePtr& arr, Buffer& buf)
 {
   int total {0};
 
-  for (const auto& t : arr)
+  for (const auto* t : arr)
   {
-    if (!t.active_)
+    if (!t->active_)
       continue;
 
-    auto p1 = t[0].pos_;
-    auto p2 = t[1].pos_;
-    auto p3 = t[2].pos_;
+    auto& p1 = t->vxs_[0].pos_;
+    auto& p2 = t->vxs_[1].pos_;
+    auto& p3 = t->vxs_[2].pos_;
 
     // Draw textured triangle
 
-    if (t.texture_ != nullptr)
+    if (t->texture_ != nullptr)
     {
-      auto t1 = t[0].texture_;
-      auto t2 = t[1].texture_;
-      auto t3 = t[2].texture_;
-      auto c = t.color_.GetARGB();
+      auto& t1 = t->vxs_[0].texture_;
+      auto& t2 = t->vxs_[1].texture_;
+      auto& t3 = t->vxs_[2].texture_;
+      auto c = t->color_.GetARGB();
 
-      if (t.shading_ == Shading::CONST)
-        raster::TexturedTriangle(p1, p2, p3, t1, t2, t3, t.texture_, buf);
+      if (t->shading_ == Shading::CONST)
+        raster::TexturedTriangle(p1, p2, p3, t1, t2, t3, t->texture_, buf);
 
-      else if (t.shading_ == Shading::FLAT || t.shading_ == Shading::GOURANG)
-        raster::TexturedTriangleFL( p1, p2, p3, t1, t2, t3, c, t.texture_, buf);
+      else if (t->shading_ == Shading::FLAT || t->shading_ == Shading::GOURANG)
+        raster::TexturedTriangleFL( p1, p2, p3, t1, t2, t3, c, t->texture_, buf);
     }
 
     // Draw colored triangle
 
-    else if (t.shading_ == Shading::GOURANG)
+    else if (t->shading_ == Shading::GOURANG)
     {
-      auto c1 = t[0].color_.GetARGB();
-      auto c2 = t[1].color_.GetARGB();
-      auto c3 = t[2].color_.GetARGB();
+      auto c1 = t->vxs_[0].color_.GetARGB();
+      auto c2 = t->vxs_[1].color_.GetARGB();
+      auto c3 = t->vxs_[2].color_.GetARGB();
       raster::GourangTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c1, c2, c3, buf);
     }
     else {
-      auto color = t.color_.GetARGB();
+      auto color = t->color_.GetARGB();
       raster::SolidTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color, buf);
     }
     ++total;
@@ -208,34 +208,39 @@ int draw_triangles::Solid(const V_Triangle& arr, Buffer& buf)
 
 // Draws solid triangles with 1/z buffer
 
-int draw_triangles::Solid(const V_Triangle& arr, ZBuffer& zbuf, Buffer& buf)
+int draw_triangles::Solid(const V_TrianglePtr& arr, ZBuffer& zbuf, Buffer& buf)
 {
   int total {0};
 
-  for (const auto& t : arr)
+  for (const auto* t : arr)
   {
-    if (!t.active_)
+    if (!t->active_)
       continue;
 
-    // Draw textured triangle
+    auto& t0 = t->vxs_[0];
+    auto& t1 = t->vxs_[1];
+    auto& t2 = t->vxs_[2];
     
-    if (t.texture_ != nullptr)
+    // Draw textured triangle
+
+    if (t->texture_ != nullptr)
     {
-      auto c = t.color_.GetARGB();
+      auto c = t->color_.GetARGB();
 
-      if (t.shading_ == Shading::CONST)
-        raster::TexturedTriangle(t[0], t[1], t[2], t.texture_, zbuf, buf);
+      if (t->shading_ == Shading::CONST)
+        raster::TexturedTriangle(t0, t1, t2, t->texture_, zbuf, buf);
 
-      else if (t.shading_ == Shading::FLAT || t.shading_ == Shading::GOURANG)
-        raster::TexturedTriangleFL(t[0], t[1], t[2], c, t.texture_, zbuf, buf);
+      else if (t->shading_ == Shading::FLAT || t->shading_ == Shading::GOURANG)
+        raster::TexturedTriangleFL(t0, t1, t2, c, t->texture_, zbuf, buf);
     }
 
     // Draw colored triangle
     
-    else if (t.shading_ == Shading::GOURANG)
-      raster::GourangTriangle(t[0], t[1], t[2], zbuf, buf);
+    else if (t->shading_ == Shading::GOURANG)
+      raster::GourangTriangle(t0, t1, t2, zbuf, buf);
+
     else
-      raster::SolidTriangle(t[0], t[1], t[2], t.color_.GetARGB(), zbuf, buf);
+      raster::SolidTriangle(t0, t1, t2, t->color_.GetARGB(), zbuf, buf);
     
     ++total;
   }

@@ -249,15 +249,18 @@ void object::ResetAttributes(GlObject& obj)
   {
     if (!face.active_) 
       face.active_ = true; 
+    face.normal_.Zero();
   }
   obj.active_ = true;
 }
 
 // Refresh face normals (for lighting purposes we should call this function
-// in world coordinates)
+// in world coordinates). Normals are not normalized
 
-void object::ComputeFaceNormals(GlObject& obj)
+void object::ComputeFaceNormals(GlObject& obj, bool normalize)
 {
+  if (!obj.active_) return;
+  
   auto& vxs = obj.GetCoords();
 
   for (auto& face : obj.faces_)
@@ -268,6 +271,8 @@ void object::ComputeFaceNormals(GlObject& obj)
     Vector u {p1, p2};
     Vector v {p1, p3};
     face.normal_ = vector::CrossProduct(u, v);
+    if (normalize)
+      face.normal_.Normalize();
   }
 }
 
@@ -278,6 +283,8 @@ void object::ComputeFaceNormals(GlObject& obj)
 
 void object::ComputeVertexNormalsV1(GlObject& obj)
 {
+  if (!obj.active_) return;
+  
   object::ComputeFaceNormals(obj);
 
   auto& vxs = obj.GetCoords();
@@ -312,6 +319,8 @@ void object::ComputeVertexNormalsV1(GlObject& obj)
 
 void object::ComputeVertexNormalsV2(GlObject& obj)
 {
+  if (!obj.active_) return;
+  
   object::ComputeFaceNormals(obj);
 
   auto& vxs = obj.GetCoords();
@@ -444,19 +453,28 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
   int cnt {0};
   if (!obj.active_) return cnt;
 
+  auto& vxs = obj.GetCoords();
+
   for (auto& face : obj.faces_)
-  {
-    auto p0 = obj.vxs_trans_[face[0]];
-    auto p1 = obj.vxs_trans_[face[1]];
-    auto p2 = obj.vxs_trans_[face[2]];
-    
-    Vector u {p0.pos_, p1.pos_};
-    Vector v {p0.pos_, p2.pos_};
-    Vector n = vector::CrossProduct(u,v);   // normal to u and v
-    Vector c {p0.pos_, cam.vrp_};                // view vector
-    n.Normalize();
-    c.Normalize();
-    auto prod = vector::DotProduct(c,n);
+  {    
+    // Compute face normal
+
+    if (face.normal_.IsZero())
+    {
+      Vector u {vxs[face[0]].pos_, vxs[face[1]].pos_};
+      Vector v {vxs[face[0]].pos_, vxs[face[2]].pos_};
+      face.normal_ = vector::CrossProduct(u,v);
+      face.normal_.Normalize();
+    }
+
+    // Compute vector of view (this is just potential view, not fact)
+
+    Vector view {vxs[face[0]].pos_, cam.vrp_};
+    view.Normalize();
+
+    // If angle between view vector and normal < 90 deg, then face is invisible
+
+    auto prod = vector::DotProduct(view, face.normal_);
     if (math::FlessZero(prod))
     {
       face.active_ = false;
@@ -612,10 +630,10 @@ V_Vertex object::ComputeDrawableVxsNormals(const GlObject& obj, float scale)
 // Refresh face normals (for lighting purposes we should call this function
 // in world coordinates)
 
-void objects::ComputeFaceNormals(V_GlObject& arr)
+void objects::ComputeFaceNormals(V_GlObject& arr, bool normalize)
 {
   for (auto& obj : arr)
-    object::ComputeFaceNormals(obj);
+    if (obj.active_) object::ComputeFaceNormals(obj, normalize);
 }
 
 // Refresh vertex normals (for lighting purposes we should call this function
@@ -623,8 +641,8 @@ void objects::ComputeFaceNormals(V_GlObject& arr)
 
 void objects::ComputeVertexNormalsV1(V_GlObject& arr)
 {
-  for (auto& obj : arr)
-    object::ComputeVertexNormalsV1(obj);
+  for (auto& obj : arr) 
+    if (obj.active_) object::ComputeVertexNormalsV1(obj);
 }
 
 // Similar as above but uses second type of vertex computation function

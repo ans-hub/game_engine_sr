@@ -40,6 +40,7 @@ namespace anshub {
   using V_Float = std::vector<float>;
   using V_Uchar = std::vector<uchar>;
   using V_Triangle = std::vector<Triangle>;
+  using V_TrianglePtr = std::vector<Triangle*>;
   using A3_Int = std::array<int,3>;
   using A3_Vertex = std::array<Vertex,3>;
   using A3_Vector = std::array<Vector,3>;

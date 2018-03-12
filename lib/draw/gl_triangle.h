@@ -26,6 +26,14 @@ namespace anshub {
 
 struct Triangle
 {
+  Triangle()
+  : active_{false}
+  , shading_{}
+  , vxs_{}
+  , normal_{}
+  , color_{}
+  , texture_{} { }
+
   Triangle(const V_Vertex& vxs, Shading shading, const Face& f, Bitmap* tex)
   : active_{true}
   , shading_{shading}
@@ -52,11 +60,19 @@ struct Triangle
 // Helper functions for CONTAINER OF TRIANGLES
 //***********************************************************************
 
+// Here we use two conceptual containers:
+//  1) array of triangles
+//  2) array of triangles pointers
+// Due to perfomance some functions use only array of pointers. I.e., we may sort
+// only pointers, and we may draw only pointers
+
 namespace triangles {
 
   // Triangles array filling
 
-  V_Triangle MakeContainer();
+  V_Triangle    MakeBaseContainer(int capacity);
+  V_TrianglePtr MakePtrsContainer(int capacity);
+  void      MakePointers(V_Triangle&, V_TrianglePtr&);
   void      AddFromObject(GlObject&, V_Triangle&);
   void      AddFromObjects(V_GlObject&, V_Triangle&);
 
@@ -78,10 +94,10 @@ namespace triangles {
 
   // Triangles helpers
 
-  void      SortZAvg(V_Triangle&);
-  void      SortZFar(V_Triangle&);
-  void      SortZAvgInv(V_Triangle&);
-  void      SortZFarInv(V_Triangle&);
+  void      SortZAvg(V_TrianglePtr&);
+  void      SortZFar(V_TrianglePtr&);
+  void      SortZAvgInv(V_TrianglePtr&);
+  void      SortZFarInv(V_TrianglePtr&);
 
 } // namespace triangles
 

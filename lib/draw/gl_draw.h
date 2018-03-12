@@ -33,13 +33,13 @@ namespace draw_object {
 
 } // namespace draw_object
 
-// Functions that draws triangles arrays
+// Functions that draws triangles pointers arrays
 
 namespace draw_triangles {
 
-  int  Wired(const V_Triangle&, Buffer&);
-  int  Solid(const V_Triangle&, Buffer&);
-  int  Solid(const V_Triangle&, ZBuffer&, Buffer&);
+  int  Wired(const V_TrianglePtr&, Buffer&);
+  int  Solid(const V_TrianglePtr&, Buffer&);
+  int  Solid(const V_TrianglePtr&, ZBuffer&, Buffer&);
 
 } // namespace draw_triangles
 

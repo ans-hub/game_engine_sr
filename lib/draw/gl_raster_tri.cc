@@ -2263,26 +2263,19 @@ void raster::TexturedTriangleFL(
 
         float curr_u = x_lu + (dx_currx_u * dx);
         float curr_v = x_lv + (dx_currx_v * dx);
-        int u = std::abs(math::Floor(curr_u / curr_z));
-        int v = std::abs(math::Floor(curr_v / curr_z));
+        int u = std::abs((int)(curr_u / curr_z));
+        int v = std::abs((int)(curr_v / curr_z));
       
         // Get texture pixel. This is same as call to call
         // this function: bmp->get_pixel(u, v, r, g, b);
 
         int offset = (v * tex_width) + (u * tex_texel_width);
-        uchar r = tex_ptr[offset + 2];
-        uchar g = tex_ptr[offset + 1];
-        uchar b = tex_ptr[offset + 0];
+        tex_color.r_ = tex_ptr[offset + 2];
+        tex_color.g_ = tex_ptr[offset + 1];
+        tex_color.b_ = tex_ptr[offset + 0];
       
         // Modulate light and color
 
-        // Color<> tex {r, g, b};
-        // Color<> total {color};
-        // total.Modulate(tex);
-        
-        tex_color.r_ = r;
-        tex_color.g_ = g;
-        tex_color.b_ = b;
         Color<> total {light_color};
         total.Modulate(tex_color);
 
@@ -2439,22 +2432,19 @@ void raster::TexturedTriangleFL(
         
         float curr_u = x_lu + (dx_currx_u * dx);
         float curr_v = x_lv + (dx_currx_v * dx);
-        int u = std::abs(math::Floor(curr_u / curr_z));
-        int v = std::abs(math::Floor(curr_v / curr_z));
+        int u = std::abs((int)(curr_u / curr_z));   // (int) - fast floor
+        int v = std::abs((int)(curr_v / curr_z));
 
         // Get texture pixel. This is same as call to call
         // this function: bmp->get_pixel(u, v, r, g, b);
 
         int offset = (v * tex_width) + (u * tex_texel_width);
-        uchar r = tex_ptr[offset + 2];
-        uchar g = tex_ptr[offset + 1];
-        uchar b = tex_ptr[offset + 0];
+        tex_color.r_ = tex_ptr[offset + 2];
+        tex_color.g_ = tex_ptr[offset + 1];
+        tex_color.b_ = tex_ptr[offset + 0];
       
         // Modulate light and color
 
-        tex_color.r_ = r;
-        tex_color.g_ = g;
-        tex_color.b_ = b;
         Color<> total {light_color};
         total.Modulate(tex_color);
         
