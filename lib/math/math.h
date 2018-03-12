@@ -18,6 +18,8 @@ namespace anshub {
 
 namespace math {
 
+  int   Floor(float);
+  int   Ceil(float);
   bool  Fzero(float);
   bool  FNotZero(float);
   bool  FlessZero(float);
@@ -28,6 +30,16 @@ namespace math {
 } // namespace math
 
 // Math helpers implementation
+
+inline int math::Floor(float num)
+{
+  return (int)(num);
+}
+
+inline int math::Ceil(float num)
+{
+  return (int)(num+1.0f);
+}
 
 inline bool math::Fzero(float num)
 {

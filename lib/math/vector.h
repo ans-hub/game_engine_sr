@@ -52,6 +52,7 @@ struct Vector
   void  Normalize();
 
   void  Zero() { x = 0.0f; y = 0.0f; z = 0.0f; w = 0.0f; }
+  bool  IsZero() const { return (x+y+z+w == 0.0f) ? true : false; }
 
   Vector& operator*=(float scalar) {
     this->x *= scalar;
@@ -179,6 +180,48 @@ inline void vector::ConvertFromHomogeneous(Vector& v)
 {
   v /= v.w;
   v.w = 1.0f;
+}
+
+
+// Returns dot product (scalar) (evaluated by coordinates)
+// If result > 0, then angle between v1 && v2 from 0 to 90 degree
+// If result < 0, then angle between v1 && v2 more than 90 degree
+// 0 - particullary 90
+
+inline float vector::DotProduct(const Vector& v1, const Vector& v2)
+{
+  return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+}
+
+// Returns vector which is perpendicular to v1 and v2. Only actual for
+// 3d vectors
+
+// Properties of this vector are:
+//  1) [v1*v2] == -[v2*v1]
+//  2) length of result == S parallelogram based on v1 and v2
+//  3) S par-m = |v1| * |v2| * sin (v1,v2);
+
+// To get cross product of vector we should solve determinant. We have 8 
+// variants to do this. One of them:
+//
+//        | a1 b1 c1 |     |   i     j     k  |
+//  det = | a2 b2 c2 |  =  | v1.x  v1.y  v1.z |
+//        | a3 b3 c3 |     | v2.x  v2.y  v2.z |
+//
+//  solve = a1*b2*c3 + b1*c2*a3 + c1*a2*b3 - c1*b2*a3 - a1*c2*b3 - b1*a2*c3
+//          i          j          k          k          i          j
+
+// ru1: https://goo.gl/m9BdbV
+// ru2: https://goo.gl/PVm3oX
+
+inline Vector vector::CrossProduct(const Vector& v1, const Vector& v2)
+{
+  return Vector
+  (
+    (v1.y * v2.z - v2.y * v1.z),
+   -(v1.x * v2.z - v2.x * v1.z),
+    (v1.x * v2.y - v2.x * v1.y)    
+  );
 }
 
 } // namespace anshub
