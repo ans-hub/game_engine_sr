@@ -133,6 +133,11 @@ int main(int argc, const char** argv)
   Buffer  buf (kWidth, kHeight, color::Black);
   GlText  text {win};
 
+  // Make triangles arrays
+
+  auto tris_base = triangles::MakeBaseContainer(1);
+  auto tris_ptrs = triangles::MakePtrsContainer(1);
+
   do {
     timer.Start();
     win.Clear();
@@ -158,24 +163,25 @@ int main(int argc, const char** argv)
     // Cull hidden surfaces
 
     objects::ResetAttributes(cubes);
-    auto culled = objects::Cull(cubes, cam);
+    auto hidden = objects::RemoveHiddenSurfaces(cubes, cam);    
+    objects::World2Camera(cubes, cam);
     
     // Make triangles from objects. Now all changes go through this array
 
-    auto tri_arr = triangles::MakeContainer();
-    triangles::AddFromObjects(cubes, tri_arr);
-    auto hidden = triangles::RemoveHiddenSurfaces(tri_arr, cam);
-    triangles::SortZAvg(tri_arr);
+    tris_base.resize(0);
+    tris_ptrs.resize(0);
+    triangles::AddFromObjects(cubes, tris_base);
+    auto culled = triangles::CullAndClip(tris_base, cam);
+    triangles::MakePointers(tris_base, tris_ptrs);
 
     // Finally
 
-    triangles::World2Camera(tri_arr, cam);
-    triangles::Camera2Persp(tri_arr, cam);
-    triangles::Homogenous2Normal(tri_arr);
-    triangles::Persp2Screen(tri_arr, cam);
+    triangles::SortZAvgInv(tris_ptrs);
+    triangles::Camera2Persp(tris_base, cam);
+    triangles::Persp2Screen(tris_base, cam);
 
     buf.Clear();
-    auto total = draw_triangles::Solid(tri_arr, buf);
+    auto total = draw_triangles::Solid(tris_ptrs, buf);
     buf.SendDataToFB();
     fps.Count();
 

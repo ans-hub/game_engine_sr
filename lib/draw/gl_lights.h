@@ -38,6 +38,7 @@ namespace light {
 
   void Object(GlObject&, Lights&);
   void Objects(V_GlObject&, Lights&);
+  void Triangles(V_Triangle&, Lights&);
 
 } // namespace light
   

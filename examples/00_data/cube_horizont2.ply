@@ -1,0 +1,46 @@
+ply
+format ascii 1.0
+comment Created by Blender 2.79 (sub 0) - www.blender.org, source file: ''
+comment Property "shading" of element "globals_ply_v2"
+comment   0x2  = const shading
+comment   0x4  = flat shading
+comment   0x8  = phong shading
+comment   0x10 = gourang shading
+element globals_ply_v2 1
+property uint shading
+element vertex 14
+property float x
+property float y
+property float z
+property float s
+property float t
+element face 12
+property list uchar uint vertex_indices
+end_header
+2
+1.000000 -1.000000 -1.000000 0.249366 0.333930
+-1.000000 1.000000 -1.000000 0.498470 0.001791
+1.000000 1.000000 -1.000000 0.498470 0.333930
+-1.000000 1.000000 1.000000 0.498470 0.998209
+0.999999 -1.000001 1.000000 0.249366 0.666070
+1.000000 0.999999 1.000000 0.498470 0.666070
+-1.000000 -1.000000 -1.000000 0.000261 0.333930
+-1.000000 -1.000000 -1.000000 0.996680 0.333930
+-1.000000 1.000000 1.000000 0.747575 0.666070
+-1.000000 1.000000 -1.000000 0.747575 0.333930
+-1.000000 -1.000000 -1.000000 0.249365 0.001791
+-1.000000 -1.000000 1.000000 0.249366 0.998209
+-1.000000 -1.000000 1.000000 0.000261 0.666070
+-1.000000 -1.000000 1.000000 0.996680 0.666069
+3 2 1 0
+3 5 4 3
+3 2 0 5
+3 0 6 4
+3 9 8 7
+3 5 8 2
+3 1 10 0
+3 4 11 3
+3 0 4 5
+3 6 12 4
+3 8 13 7
+3 8 9 2

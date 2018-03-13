@@ -164,7 +164,6 @@ int main(int argc, const char** argv)
     // Cull hidden surfaces
 
     objects::ResetAttributes(cubes);
-    auto culled = objects::Cull(cubes, cam);
     auto hidden = objects::RemoveHiddenSurfaces(cubes, cam);
     
     // Light objects
@@ -182,13 +181,13 @@ int main(int argc, const char** argv)
     tris_base.resize(0);
     tris_ptrs.resize(0);
     triangles::AddFromObjects(cubes, tris_base);
+    auto culled = triangles::CullAndClip(tris_base, cam);
     triangles::MakePointers(tris_base, tris_ptrs);
-        
+
     // Finally
     
     triangles::SortZAvgInv(tris_ptrs);
     triangles::Camera2Persp(tris_base, cam);
-    triangles::Homogenous2Normal(tris_base);
     triangles::Persp2Screen(tris_base, cam);
 
     // Draw triangles

@@ -89,4 +89,16 @@ void light::Objects(V_GlObject& arr, Lights& lights)
     if (obj.active_) light::Object(obj, lights);
 }
 
+// Lights triangles
+
+void light::Triangles(V_Triangle& arr, Lights& lights)
+{
+  for (const auto& tri : arr)
+  {
+    if (!tri.active_) continue;
+
+    // todo: implement
+  }
+}
+
 } // namespace anshub

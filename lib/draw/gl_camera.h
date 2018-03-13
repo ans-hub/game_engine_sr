@@ -64,8 +64,8 @@ struct GlCamera
   
   // Euler specific
 
-  Vector  dir_;       // cam direction angles (for Euler model)
-  Vector  view_;       // cam view vector (corresponds to dir_ vector)
+  Vector  dir_;         // cam direction angles (for Euler model)
+  Vector  view_;        // cam view vector (corresponds to dir_ vector)
   
   // UVN specific
 

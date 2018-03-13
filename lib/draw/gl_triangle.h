@@ -17,6 +17,8 @@
 #include "gl_object.h"
 #include "../data/bmp_loader.h"
 #include "../math/vector.h"
+#include "../math/plane3d.h"
+#include "../math/parmline3d.h"
 
 namespace anshub {
 
@@ -78,7 +80,8 @@ namespace triangles {
 
   // Triangles array attributes manipilation
   
-  int       RemoveHiddenSurfaces(V_Triangle&, const GlCamera&);  
+  int       CullAndClip(V_Triangle&, const GlCamera&);
+  int       RemoveHiddenSurfaces(V_Triangle&, const GlCamera&);
   void      ResetAttributes(V_Triangle&);
 
   // Triangles array transformation

@@ -93,8 +93,14 @@ inline float trig::Rad2deg(float rad)
   return rad * 180.0 / math::kPI;
 }
 
-// cos& = adj / hyp
-// hyp  = adj / cos&
+// Computes opposite catet in triangle with right angle:
+//  cos_& = adj / hyp
+//  hyp   = adj / cos_&
+//  opp   = sin_& * hyp
+// Also we may compute oppisite catet from tg:
+//  tg_& = sin_& / cos_&
+//  tg_& = opp / adj
+//  opp = tg_& * adj = (sin_& / cos_&) * adj 
 
 inline float trig::CalcOppositeCatet(
   float adjanced_catet, float theta, TrigTable& tab)

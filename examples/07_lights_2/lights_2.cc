@@ -171,6 +171,11 @@ int main(int argc, const char** argv)
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
   bool    cam_z_mode {false};             // to manage mouse manipulation
 
+  // Make triangles arrays
+
+  auto tris_base = triangles::MakeBaseContainer(1);
+  auto tris_ptrs = triangles::MakePtrsContainer(1);
+
   do {
     timer.Start();
     win.Clear();
@@ -215,9 +220,7 @@ int main(int argc, const char** argv)
     object::ResetAttributes(obj);
     objects::ResetAttributes(ground);
 
-    auto culled = objects::Cull(ground, cam);
     auto hidden = objects::RemoveHiddenSurfaces(ground, cam);
-    object::Cull(obj, cam);
     hidden += object::RemoveHiddenSurfaces(obj, cam);
 
     // Light objects
@@ -250,21 +253,23 @@ int main(int argc, const char** argv)
 
     // Make triangles
 
-    auto tris = triangles::MakeContainer();
-    triangles::AddFromObjects(ground, tris);
-    triangles::AddFromObject(obj, tris);
-    triangles::SortZAvg(tris);
+    tris_base.resize(0);
+    tris_ptrs.resize(0);
+    triangles::AddFromObjects(ground, tris_base);
+    triangles::AddFromObject(obj, tris_base);
+    auto culled = triangles::CullAndClip(tris_base, cam);
+    triangles::MakePointers(tris_base, tris_ptrs);
+    triangles::SortZAvg(tris_ptrs);
     
     // Finally
     
-    triangles::Camera2Persp(tris, cam);
-    triangles::Homogenous2Normal(tris);
-    triangles::Persp2Screen(tris, cam);
+    triangles::Camera2Persp(tris_base, cam);
+    triangles::Persp2Screen(tris_base, cam);
 
     // Draw
 
     buf.Clear();
-    draw_triangles::Solid(tris, buf);
+    draw_triangles::Solid(tris_ptrs, buf);
     buf.SendDataToFB();
 
     // Print fps and other info

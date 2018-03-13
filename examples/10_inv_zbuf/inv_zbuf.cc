@@ -136,17 +136,17 @@ int main(int argc, const char** argv)
 
   auto obj = object::Make(
     fname, trig, 
-    {1.0f, 1.0f, 1.0f},     // initial scale
+    {2.0f, 2.0f, 2.0f},     // initial scale
     {0.0f, 0.0f, 10.0f},    // world pos
-    {180.0f, 0.0f, 0.0f}    // initial rotate
+    {0.0f, 0.0f, 0.0f}    // initial rotate
   );
   auto ground = CreateGround(20, trig);
 
   // Camera
 
-  float    dov     {2};
-  float    fov     {75};
-  Vector   cam_pos {-1.0f, 2.0f, 0.0f};
+  float    dov     {5.0f};
+  float    fov     {75.0f};
+  Vector   cam_pos {0.0f, 0.0f, -10.0f};
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {500};
@@ -161,8 +161,8 @@ int main(int argc, const char** argv)
 
   lights.ambient_.emplace_back(white, 0.3f);
   lights.infinite_.emplace_back(white, 0.7f, Vector{0.0f, -1.0f, 0.0f});
-  // lights.point_.emplace_back(yellow, 0.6f, 
-  //   Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
+  lights.point_.emplace_back(yellow, 0.6f, 
+    Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
 
   // Other stuff
 
@@ -222,9 +222,7 @@ int main(int argc, const char** argv)
     object::ResetAttributes(obj);
     objects::ResetAttributes(ground);
 
-    auto culled = objects::Cull(ground, cam);
     auto hidden = objects::RemoveHiddenSurfaces(ground, cam);
-    object::Cull(obj, cam);
     hidden += object::RemoveHiddenSurfaces(obj, cam);
 
     // Light objects
@@ -261,13 +259,13 @@ int main(int argc, const char** argv)
     tris_ptrs.resize(0);
     triangles::AddFromObjects(ground, tris_base);
     triangles::AddFromObject(obj, tris_base);
+    auto culled = triangles::CullAndClip(tris_base, cam);    
     triangles::MakePointers(tris_base, tris_ptrs);
     triangles::SortZAvg(tris_ptrs);
     
     // Finally
     
     triangles::Camera2Persp(tris_base, cam);
-    triangles::Homogenous2Normal(tris_base);
     triangles::Persp2Screen(tris_base, cam);
 
     // Draw

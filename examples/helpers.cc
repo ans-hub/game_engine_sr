@@ -22,7 +22,7 @@ void helpers::HandleCamType(Btn kbtn, GlCamera& cam)
 
 void helpers::HandleCamMovement(Btn kbtn, GlCamera& cam)
 {
-  float cam_vel = 0.5f;
+  float cam_vel = 0.1f;
   switch (kbtn)
   {
     case Btn::W :
@@ -108,10 +108,10 @@ void helpers::HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
 {
   switch(key)
   {
-    case Btn::UP :    vel.y =  0.5f; break;
-    case Btn::DOWN :  vel.y = -0.5f; break;
-    case Btn::LEFT :  vel.x = -0.5f; break;
-    case Btn::RIGHT : vel.x =  0.5f; break;
+    case Btn::UP :    vel.y =  0.2f; break;
+    case Btn::DOWN :  vel.y = -0.2f; break;
+    case Btn::LEFT :  vel.x = -0.2f; break;
+    case Btn::RIGHT : vel.x =  0.2f; break;
     case Btn::Z :     rot.x -= 0.5f; break;
     case Btn::X :     rot.x += 0.5f; break;
     case Btn::C :     rot.y -= 0.5f; break;
@@ -170,11 +170,12 @@ void helpers::PrintInfoOnScreen(
   text.PrintString(60, 30, oss.str().c_str());  
 }
 
-void helpers::PrintInfoOnCmd(FpsCounter& fps, int culled, int hidden)
+void helpers::PrintInfoOnCmd(FpsCounter& fps, int culled, int hidden, cVector& pos)
 {
   if (fps.Ready())
   {
     std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
+    std::cerr << "Camera pos: " << pos << '\n';
     std::cerr << "Objects culled: " << culled << '\n';
     std::cerr << "Hidden surface: " << hidden << "\n\n";
   }

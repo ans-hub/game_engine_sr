@@ -22,7 +22,7 @@ namespace anshub {
 
 namespace helpers {
 
-  // Execute heleprs
+  // Execute helpers
 
   void HandleCamType(Btn, GlCamera&);
   void HandleCamMovement(Btn, GlCamera&);
@@ -39,7 +39,7 @@ namespace helpers {
     cVector& cam_pos, cVector& cam_rot,
     int nfo_culled, int nfo_hidden
   );
-  void PrintInfoOnCmd(FpsCounter&, int culled, int hidden);
+  void PrintInfoOnCmd(FpsCounter&, int culled, int hidden, cVector& world_pos);
   void PrintFpsOnCmd(FpsCounter&);
 
 } // namespace helpers

@@ -71,8 +71,8 @@ void coords::Camera2Persp(V_Vertex& vxs, float dov, float ar)
 {
   for (auto& vx : vxs)
   {
-    vx.pos_.x *= dov / vx.pos_.z;
-    vx.pos_.y *= dov * ar / vx.pos_.z;
+    vx.pos_.x = vx.pos_.x * dov / vx.pos_.z;
+    vx.pos_.y = vx.pos_.y * dov * ar / vx.pos_.z;
   }
 }
 
