@@ -17,6 +17,7 @@
 #include "lib/draw/fx_colors.h"
 #include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_z_buffer.h"
+#include "lib/draw/extras/skybox.h"
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
@@ -66,14 +67,11 @@ int main(int argc, const char** argv)
   auto pos  = io_helpers::GetXYToMiddle(kWinWidth, kWinHeight); 
   GlWindow win (pos.x, pos.y, kWinWidth, kWinHeight, "Horizont"); 
 
-  // Horizont object
+  // Create skybox and terrain objects
 
-  auto horizont = object::Make(
-    fname, trig,
-    {30.0f, 30.0f, 30.0f},  // initial scale
-    {0.0f, 0.0f, 0.0f},     // world pos
-    {90.0f, 0.0f, 0.0f}     // initial rotate
-  );
+  Skybox  horizont (fname, {0.0f, 0.0f, 0.0f});
+  object::Scale(horizont, {200.0f, 200.0f, 200.0f});
+  object::Rotate(horizont, {90.0f, 0.0f, 0.0f}, trig);
 
   // Camera
 
