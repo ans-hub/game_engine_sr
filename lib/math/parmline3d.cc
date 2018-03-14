@@ -36,6 +36,7 @@ Vector parmline3d::Intersects(const Parmline3d& l, const Plane3d& p)
 
 // The same as above but returns intersects point through argument and bool as
 // result of searching intersects point
+//  todo: additional check to t-range in 0-1
 
 bool parmline3d::Intersects(const Parmline3d& l, const Plane3d& p, Vector& i)
 {

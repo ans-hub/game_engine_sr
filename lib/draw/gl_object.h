@@ -95,7 +95,10 @@ namespace object {
   // V_GlObject creating
 
   GlObject  Make(const char*);
-  GlObject  Make(const char*, TrigTable&, cVector&, cVector&, cVector&);
+  GlObject  Make(
+    const char*, TrigTable&, cVector& scale, cVector& pos, cVector& rot);
+  GlObject  Make(
+    const char*, cVector& scale, cVector& pos);
 
   // Object attributes manipilation
 

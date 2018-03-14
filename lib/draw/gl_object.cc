@@ -228,7 +228,7 @@ GlObject object::Make(const char* ply_fname)
   return obj;
 }
 
-// Makes object from ply file, then scale it and move to world position
+// Makes object from ply file, scale it, move to world position and rotate
 
 GlObject object::Make(
   const char* str, TrigTable& t, cVector& scale, cVector& pos, cVector& rot)
@@ -238,6 +238,17 @@ GlObject object::Make(
   object::Scale(obj, scale);
   object::Move(obj, pos);
   object::Rotate(obj, rot, t);
+  return obj;
+}
+
+// Makes object from ply file, then scale it and move to world position
+
+GlObject object::Make(const char* str, cVector& scale, cVector& pos)
+{
+  auto obj = object::Make(str);
+  obj.SetCoords(Coords::LOCAL);
+  object::Scale(obj, scale);
+  object::Move(obj, pos);
   return obj;
 }
 

@@ -3,6 +3,8 @@
 
 LIBNAME = libdraw.a
 SRCDIR = ./
+DATADIR = ../data/
+EXTRASDIR = ./extras/
 ROOTDIR = ../../
 
 # Setup dependicies libs
@@ -14,7 +16,7 @@ LDFLAGS = -lwindow -lmath
 # Compiler settings
 
 CXX = g++
-CXXFLAGS = -I $(SRCDIR) -ansi -pedantic -Wall -Wextra -std=c++14 
+CXXFLAGS = -I $(SRCDIR) -I $(EXTRASDIR) -ansi -pedantic -Wall -Wextra -std=c++14 
 CXXFLAGS += -L $(LIBWINDOW) -L $(LIBMATH)
 CXXFLAGS += -MP -MMD
 DBGFLAGS = -ggdb3 -DDEBUG -O0 -pg -no-pie
@@ -22,8 +24,8 @@ RLSFLAGS = -O2
 
 # Setup objects
 
-VPATH =  ../data
-OBJECTS = ply_loader.o
+VPATH =  $(DATADIR):$(EXTRASDIR)
+OBJECTS = ply_loader.o terrain.o skybox.o
 
 # Other stuff
 
