@@ -57,7 +57,7 @@ inline TrigTable::TrigTable()
 
 inline float TrigTable::Sin(float theta) const
 {
-  if (theta > 360.0f)
+  if (theta > 360.0f || theta < -360.0f)
     theta = fmodf(theta, 360.0f);
   if (theta < 0.0f)
     theta += 360.0f;
@@ -70,7 +70,7 @@ inline float TrigTable::Sin(float theta) const
 
 inline float TrigTable::Cos(float theta) const
 {
-  if (theta > 360.0f)
+  if (theta > 360.0f || theta < -360.0f)
     theta = fmodf(theta, 360.0f);
   if (theta < 0.0f)
     theta += 360.0f;
