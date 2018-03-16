@@ -34,7 +34,7 @@ using   cVector = const Vector;
 struct Vector
 {
   Vector() 
-    : x{}, y{}, z{}, w{} { }
+    : x{}, y{}, z{}, w{1.0f} { }
   Vector(const Vector& v1, const Vector& v2)
     : x{v2.x-v1.x}, y{v2.y-v1.y}, z{v2.z-v1.z}, w{1.0} { }
   Vector(float ax, float ay) 
@@ -51,8 +51,8 @@ struct Vector
   float SquareLength() const;  // used to exclude sqrt in some calculations
   void  Normalize();
 
-  void  Zero() { x = 0.0f; y = 0.0f; z = 0.0f; w = 0.0f; }
-  bool  IsZero() const { return (x+y+z+w == 0.0f) ? true : false; }
+  void  Zero() { x = 0.0f; y = 0.0f; z = 0.0f; w = 1.0f; }
+  bool  IsZero() const;
 
   Vector& operator*=(float scalar) {
     this->x *= scalar;
@@ -169,6 +169,12 @@ inline void Vector::Normalize()
   y *= p;
   z *= p;
 }
+
+inline bool Vector::IsZero() const
+{ 
+  return math::Fzero(x) && math::Fzero(y) && math::Fzero(z);
+}
+
 
 //****************************************************************************
 // INLINE HELPER FUNCTIONS IMPLEMENTATION
