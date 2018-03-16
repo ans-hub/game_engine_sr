@@ -31,7 +31,6 @@ void coords::World2Camera(
   
   for (auto& vx : vxs)
   {
-
     // Translate position
 
     vx.pos_ -= cam_pos;
@@ -100,12 +99,13 @@ void coords::Persp2Screen(V_Vertex& vxs, float wov, int scr_w, int scr_h)
 
 void coords::RotateYaw(V_Vertex& vxs, float deg, TrigTable& trig)
 {
-  float sine_y = trig.Sin(deg);
-  float cosine_y = trig.Cos(deg);
+  float ysin = trig.Sin(deg);
+  float ycos = trig.Cos(deg);
   for (auto& vx : vxs)
   {
-    vx.pos_.x = vx.pos_.x * cosine_y + vx.pos_.z * sine_y;
-    vx.pos_.z = vx.pos_.x * -sine_y  + vx.pos_.z * cosine_y;
+    float vx_old {vx.pos_.x};    
+    vx.pos_.x = (vx.pos_.x * ycos) + (vx.pos_.z * ysin);
+    vx.pos_.z = (vx.pos_.z * ycos) - (vx_old * ysin);
   }
 }
 
@@ -113,12 +113,13 @@ void coords::RotateYaw(V_Vertex& vxs, float deg, TrigTable& trig)
 
 void coords::RotatePitch(V_Vertex& vxs, float deg, TrigTable& trig)
 {
-  float sine_x = trig.Sin(deg);
-  float cosine_x = trig.Cos(deg);
+  float xsin = trig.Sin(deg);
+  float xcos = trig.Cos(deg);
   for (auto& vx : vxs)
   {
-    vx.pos_.y = vx.pos_.y * cosine_x - vx.pos_.z * sine_x;
-    vx.pos_.z = vx.pos_.y * sine_x   + vx.pos_.z * cosine_x;
+    float vy_old {vx.pos_.y}; 
+    vx.pos_.y = (vx.pos_.y * xcos) - (vx.pos_.z * xsin);
+    vx.pos_.z = (vx.pos_.z * xcos) + (vy_old * xsin);
   }
 }
 
@@ -126,13 +127,50 @@ void coords::RotatePitch(V_Vertex& vxs, float deg, TrigTable& trig)
 
 void coords::RotateRoll(V_Vertex& vxs, float deg, TrigTable& trig)
 {
-  float sine_z = trig.Sin(deg);
-  float cosine_z = trig.Cos(deg);
+  float zsin = trig.Sin(deg);
+  float zcos = trig.Cos(deg);
   for (auto& vx : vxs)
   {
-    vx.pos_.x = vx.pos_.x * cosine_z - vx.pos_.y * sine_z;
-    vx.pos_.y = vx.pos_.x * sine_z   + vx.pos_.y * cosine_z;
+    float vx_old {vx.pos_.x};
+    vx.pos_.x = (vx.pos_.x * zcos) - (vx.pos_.y * zsin);
+    vx.pos_.y = (vx.pos_.y * zcos) + (vx_old * zsin);
   }
+}
+
+// Rotates vector by y-axis (conventionally yaw)
+
+void coords::RotateYaw(Vector& vx, float deg, const TrigTable& trig)
+{
+  float ysin = trig.Sin(deg);
+  float ycos = trig.Cos(deg);
+
+  float vx_old {vx.x};    
+  vx.x = (vx.x * ycos) + (vx.z * ysin);
+  vx.z = (vx.z * ycos) - (vx_old * ysin);
+}
+
+// Rotates vector by x-axis (conventionally pitch)
+
+void coords::RotatePitch(Vector& vx, float deg, const TrigTable& trig)
+{
+  float xsin = trig.Sin(deg);
+  float xcos = trig.Cos(deg);
+
+  float vy_old {vx.y}; 
+  vx.y = (vx.y * xcos) - (vx.z * xsin);
+  vx.z = (vx.z * xcos) + (vy_old * xsin);
+}
+
+// Rotates vector by z-axis (conventionally roll)
+
+void coords::RotateRoll(Vector& vx, float deg, const TrigTable& trig)
+{
+  float zsin = trig.Sin(deg);
+  float zcos = trig.Cos(deg);
+
+  float vx_old {vx.x};
+  vx.x = (vx.x * zcos) - (vx.y * zsin);
+  vx.y = (vx.y * zcos) + (vx_old * zsin);
 }
 
 // Extracts eulers angles from yxz rotation matrix. As example, but in another

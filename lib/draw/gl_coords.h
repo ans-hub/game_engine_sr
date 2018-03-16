@@ -27,6 +27,10 @@ namespace coords {
   void  RotatePitch(V_Vertex&, float deg, TrigTable&);
   void  RotateRoll(V_Vertex&, float deg, TrigTable&);
 
+  void  RotateYaw(Vector&, float deg, const TrigTable&);
+  void  RotatePitch(Vector&, float deg, const TrigTable&);
+  void  RotateRoll(Vector&, float deg, const TrigTable&);
+
   Vector RotationMatrix2Euler(const MatrixRotateUvn&);
   
 } // namespace coords
