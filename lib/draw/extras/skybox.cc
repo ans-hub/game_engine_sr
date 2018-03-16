@@ -18,6 +18,10 @@ Skybox::Skybox(const char* fname, cVector& pos)
 
   for (auto& f : faces_)
     std::swap(f.vxs_[0], f.vxs_[2]);
+
+  // Set shading for lighting purposes
+
+  this->shading_ = Shading::FLAT;
 }
 
 } // namespace anshub
