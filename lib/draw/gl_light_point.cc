@@ -13,8 +13,15 @@ LightPoint::LightPoint(cFColor& c, float i, cVector& pos, cVector& dir)
   : color_{c}
   , intense_{i}
   , position_{pos}
+  , position_copy_{}
   , direction_{dir}
-{ 
+  , direction_copy_{}
+{
+  direction_.Normalize();
+
+  direction_copy_ = direction_;
+  position_copy_ = position_;
+  
   math::Clamp(intense_, 0.0f, 1.0f);
   kc_ = 1.0f;
   kl_ = 1.0f;
@@ -22,15 +29,29 @@ LightPoint::LightPoint(cFColor& c, float i, cVector& pos, cVector& dir)
 }
 
 LightPoint::LightPoint(cFColor&& c, float i, cVector&& pos, cVector& dir)
-  : color_{c}
-  , intense_{i}
-  , position_{pos}
-  , direction_{dir}
+  : LightPoint(c, i, pos, dir) { }
+
+void LightPoint::Reset()
 {
-  math::Clamp(intense_, 0.0f, 1.0f);  
-  kc_ = 1.0f;
-  kl_ = 1.0f;
-  kq_ = 0.0f;
+  position_ = position_copy_;
+  direction_ = direction_copy_;
+}
+
+void LightPoint::World2Camera(const GlCamera& cam)
+{
+  // Just rotate direction vector
+
+  coords::RotateYaw(direction_, -cam.dir_.y, cam.trig_);
+  coords::RotatePitch(direction_, -cam.dir_.x, cam.trig_);
+  coords::RotateRoll(direction_, -cam.dir_.z, cam.trig_);
+  direction_.Normalize();
+
+  // Move and rotate position vector
+
+  position_ += cam.vrp_ * (-1.0f);
+  coords::RotateYaw(position_, -cam.dir_.y, cam.trig_);
+  coords::RotatePitch(position_, -cam.dir_.x, cam.trig_);
+  coords::RotateRoll(position_, -cam.dir_.z, cam.trig_);
 }
 
 FColor LightPoint::Illuminate(

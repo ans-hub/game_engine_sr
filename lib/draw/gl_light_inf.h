@@ -10,6 +10,8 @@
 
 #include "fx_colors.h"
 #include "gl_aliases.h"
+#include "gl_camera.h"
+#include "gl_coords.h"
 #include "../math/vector.h"
 
 namespace anshub {
@@ -21,12 +23,15 @@ struct LightInfinite
   LightInfinite(cFColor& c, float i, cVector& dir);
   LightInfinite(cFColor&& c, float i, cVector&& dir);
 
-  FColor Illuminate(cFColor& base_color, cVector& normal);
+  void    Reset() { direction_ = direction_copy_; };
+  void    World2Camera(const GlCamera&);
+  FColor  Illuminate(cFColor& base_color, cVector& normal);
 
-private:
+// private:
   FColor  color_;
   float   intense_;
-  Vector  direction_;
+  Vector  direction_;       // direction of light source
+  Vector  direction_copy_;  // used to recover direction after frame 
 
 }; // struct LightInfinite
 

@@ -77,13 +77,14 @@ namespace triangles {
   void      MakePointers(V_Triangle&, V_TrianglePtr&);
   void      AddFromObject(GlObject&, V_Triangle&);
   void      AddFromObjects(V_GlObject&, V_Triangle&);
+  void      AddFromTriangles(cV_Triangle&, V_Triangle&);
 
   // Triangles array attributes manipilation
   
   int       CullAndClip(V_Triangle&, const GlCamera&);
   int       RemoveHiddenSurfaces(V_Triangle&, const GlCamera&);
   void      ResetAttributes(V_Triangle&);
-
+  
   // Triangles array transformation
 
   void      ApplyMatrix(const Matrix<4,4>&, V_Triangle&);

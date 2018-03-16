@@ -74,6 +74,11 @@ void triangles::AddFromObjects(V_GlObject& arr, V_Triangle& triangles)
   }
 }
 
+void triangles::AddFromTriangles(cV_Triangle& from, V_Triangle& to)
+{
+  std::copy(from.begin(), from.end(), std::back_inserter(to));
+}
+
 // Cull triangles by 6 frustum planes and clip by near_z plane. Function works
 // in camera coordinates. In perfomance reasons we should call it before lighting,
 // but after removing backfaces
@@ -86,6 +91,10 @@ void triangles::AddFromObjects(V_GlObject& arr, V_Triangle& triangles)
 
 int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
 {
+  // Prepare container for new triangles if we would divide old
+  
+  V_Triangle new_tris {};
+  
   // Test planes
 
   int total {};
@@ -96,11 +105,12 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
     // Compute x-axis projection of point, which lies on L and R plane
     // when z = 1. Attent, that cam.wov_/2 - is proj_x when z = cam.dov_
 
-    if (!tri.active_) continue;
+    if (!tri.active_) 
+      continue;
 
     int out_of_l {0};
     int out_of_r {0};
-    float proj_x = cam.wov_ * 0.5 / cam.dov_;
+    float proj_x = cam.wov_ * 0.5f / cam.dov_;
 
     // Test left and right plane for all 3 vertexes in triangle
 
@@ -125,7 +135,8 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
 
     // 2. Start culling triangle by U and D planes
 
-    if (!tri.active_) continue;
+    if (!tri.active_)
+      continue;
 
     int out_of_u {0};
     int out_of_d {0};
@@ -154,11 +165,13 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
 
     // 3. Start culling triangle by Near_Z and Far_Z planes
 
-    if (!tri.active_) continue;
+    if (!tri.active_)
+      continue;
 
     int out_of_fz {0};
     std::vector<int> behind_nz {};
     behind_nz.reserve(3);
+    behind_nz.resize(0);
 
     // Test near_z and far_z for all 3 vertexes in triangle
 
@@ -183,7 +196,8 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
 
     // 4. Start clipping triangle by Near_Z plane
     
-    if (!tri.active_) continue;
+    if (!tri.active_)
+      continue;
 
     // Light case (search intersect of 2 lines with Near_Z and make new triangle)
 
@@ -229,7 +243,7 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
       tri[pb1].texture_ = 
         tri[pa].texture_ + (tri[pb1].texture_ - tri[pa].texture_) * t1;
       tri[pb2].texture_ = 
-        tri[pa].texture_ + (tri[pb2].texture_ - tri[pa].texture_) * t2; 
+        tri[pa].texture_ + (tri[pb2].texture_ - tri[pa].texture_) * t2;
     }
     
     // Difficult case
@@ -291,7 +305,7 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
       new_tri.vxs_ = {v1, v2, v3};
       new_tri.normal_ = 
         vector::CrossProduct(v2.pos_-v1.pos_, v3.pos_-v1.pos_);
-      arr.push_back(new_tri);
+      new_tris.push_back(new_tri);
 
       // Change old triangle
 
@@ -300,6 +314,10 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
         vector::CrossProduct(tri[1].pos_-tri[0].pos_, tri[2].pos_-tri[0].pos_);
     }
   }
+  
+  // Insert back new triangles which was prepared when we divide them above
+
+  std::copy(new_tris.begin(), new_tris.end(), std::back_inserter(arr));
   return total;
 }
 
@@ -437,7 +455,7 @@ void triangles::SortZAvg(V_TrianglePtr& arr)
       0.3333333f * (t1->vxs_[0].pos_.z + t1->vxs_[1].pos_.z + t1->vxs_[2].pos_.z)};
     auto avg_z2 {
       0.3333333f * (t2->vxs_[0].pos_.z + t2->vxs_[1].pos_.z + t2->vxs_[2].pos_.z)};
-    return avg_z1 > avg_z2;
+    return avg_z1 < avg_z2;
   });
 }
 
@@ -451,7 +469,7 @@ void triangles::SortZFar(V_TrianglePtr& arr)
     avg_z1 = std::max(avg_z1, t1->vxs_[2].pos_.z);
     auto avg_z2 {std::max(t2->vxs_[0].pos_.z, t2->vxs_[1].pos_.z)};
     avg_z2 = std::max(avg_z2, t2->vxs_[2].pos_.z);
-    return avg_z1 > avg_z2;
+    return avg_z1 < avg_z2;
   });
 }
 
@@ -466,7 +484,7 @@ void triangles::SortZAvgInv(V_TrianglePtr& arr)
       0.3333333f * (t1->vxs_[0].pos_.z + t1->vxs_[1].pos_.z + t1->vxs_[2].pos_.z)};
     auto avg_z2 {
       0.3333333f * (t2->vxs_[0].pos_.z + t2->vxs_[1].pos_.z + t2->vxs_[2].pos_.z)};
-    return avg_z1 < avg_z2;
+    return avg_z1 > avg_z2;
   });
 }
 
@@ -480,7 +498,7 @@ void triangles::SortZFarInv(V_TrianglePtr& arr)
     avg_z1 = std::max(avg_z1, t1->vxs_[2].pos_.z);
     auto avg_z2 {std::max(t2->vxs_[0].pos_.z, t2->vxs_[1].pos_.z)};
     avg_z2 = std::max(avg_z2, t2->vxs_[2].pos_.z);
-    return avg_z1 < avg_z2;
+    return avg_z1 > avg_z2;
   });
 }
 

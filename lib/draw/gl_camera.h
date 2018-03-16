@@ -60,7 +60,7 @@ struct GlCamera
   int       scr_w_;     // screen width
   int       scr_h_;     // screen height
   float     ar_;        // aspect ratio
-  Vector    vrp_;       // view reference point (world pos)
+  Vector    vrp_;       // view reference point (world pos in world coords)
   
   // Euler specific
 

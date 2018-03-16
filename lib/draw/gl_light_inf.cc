@@ -13,23 +13,29 @@ LightInfinite::LightInfinite(cFColor& c, float i, cVector& dir)
   : color_{c}
   , intense_{i}
   , direction_{dir}
+  , direction_copy_{}
 { 
   direction_.Normalize();
+  direction_copy_ = direction_;  
   math::Clamp(intense_, 0.0f, 1.0f);  
 }
 
 LightInfinite::LightInfinite(cFColor&& c, float i, cVector&& dir)
-  : color_{c}
-  , intense_{i}
-  , direction_{dir}
-{ 
+  : LightInfinite(c, i, dir) { }
+
+void LightInfinite::World2Camera(const GlCamera& cam)
+{
+  // Just rotate direction vector
+  
+  coords::RotateYaw(direction_, -cam.dir_.y, cam.trig_);
+  coords::RotatePitch(direction_, -cam.dir_.x, cam.trig_);
+  coords::RotateRoll(direction_, -cam.dir_.z, cam.trig_);
   direction_.Normalize();
-  math::Clamp(intense_, 0.0f, 1.0f);  
 }
 
 FColor LightInfinite::Illuminate(cFColor& base_color, cVector& normal)
 {
-  auto dir = direction_ * (-1);
+  auto dir = direction_ * (-1.0f);
   auto prod = vector::DotProduct(dir, normal);
   if (prod < 0) prod = 0;
   return (base_color * color_ * intense_ * prod) / 256.0f;

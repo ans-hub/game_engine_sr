@@ -15,7 +15,6 @@
 #include "gl_light_amb.h"
 #include "gl_light_inf.h"
 #include "gl_light_point.h"
-#include "gl_light_spot.h"
 #include "../math/vector.h"
 
 namespace anshub {
@@ -28,12 +27,14 @@ struct Lights
   std::vector<LightAmbient>   ambient_;
   std::vector<LightInfinite>  infinite_;
   std::vector<LightPoint>     point_;
-  std::vector<LightSpot>      spot_;
 
 }; // struct Lights
 
 namespace light {
   
+  void Reset(Lights&);
+  void World2Camera(Lights&, const GlCamera&);
+
   // General lighting functions
 
   void Object(GlObject&, Lights&);

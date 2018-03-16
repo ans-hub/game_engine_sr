@@ -10,6 +10,7 @@
 
 #include "fx_colors.h"
 #include "gl_aliases.h"
+#include "gl_camera.h"
 
 namespace anshub {
 
@@ -25,12 +26,8 @@ struct LightAmbient
   }
 
   LightAmbient(FColor&& c, float i)
-  : color_{c}
-  , intense_{i}
-  {
-    math::Clamp(intense_, 0.0f, 1.0f);      
-  }
-  
+    : LightAmbient(c, i) { }
+
   FColor Illuminate(cFColor& base_color)
   {
     return (base_color * color_ * intense_) / 256.0f;

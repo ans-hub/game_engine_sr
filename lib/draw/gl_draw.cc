@@ -206,11 +206,15 @@ int draw_triangles::Solid(const V_TrianglePtr& arr, Buffer& buf)
   return total;
 }
 
-// Draws solid triangles with 1/z buffer
+// Draws solid triangles with 1/z buffer and returns total triangle which
+// were been drawn
 
 int draw_triangles::Solid(const V_TrianglePtr& arr, ZBuffer& zbuf, Buffer& buf)
 {
-  int total {0};
+  // Debug variables (we collect drawn pixels only from heavy weight functions)
+
+  int total_px {0};     // total pixels drawn
+  int total_tris {0};   // total triangles drawn
 
   for (const auto* t : arr)
   {
@@ -230,8 +234,11 @@ int draw_triangles::Solid(const V_TrianglePtr& arr, ZBuffer& zbuf, Buffer& buf)
       if (t->shading_ == Shading::CONST)
         raster::TexturedTriangle(t0, t1, t2, t->texture_, zbuf, buf);
 
-      else if (t->shading_ == Shading::FLAT || t->shading_ == Shading::GOURANG)
-        raster::TexturedTriangleFL(t0, t1, t2, c, t->texture_, zbuf, buf);
+      else if (t->shading_ == Shading::FLAT)
+        total_px += raster::TexturedTriangleFL(t0, t1, t2, c, t->texture_, zbuf, buf);
+
+      else if (t->shading_ == Shading::GOURANG)
+        total_px += raster::TexturedTriangleGR(t0, t1, t2, t->texture_, zbuf, buf);
     }
 
     // Draw colored triangle
@@ -242,9 +249,9 @@ int draw_triangles::Solid(const V_TrianglePtr& arr, ZBuffer& zbuf, Buffer& buf)
     else
       raster::SolidTriangle(t0, t1, t2, t->color_.GetARGB(), zbuf, buf);
     
-    ++total;
+    ++total_tris;
   }
-  return total;
+  return total_tris;
 }
 
 } // namespace anshub

@@ -107,6 +107,7 @@ namespace object {
   int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
   void      ResetAttributes(GlObject&);
   void      ComputeFaceNormals(GlObject&, bool normalize = true);
+  void      ComputeFaceNormalsInv(GlObject&, bool normalize = true);
   void      ComputeVertexNormalsV1(GlObject&);
   void      ComputeVertexNormalsV2(GlObject&);
  

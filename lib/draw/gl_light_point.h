@@ -10,6 +10,8 @@
 
 #include "fx_colors.h"
 #include "gl_aliases.h"
+#include "gl_camera.h"
+#include "gl_coords.h"
 #include "../math/vector.h"
 
 namespace anshub {
@@ -19,13 +21,17 @@ struct LightPoint
   LightPoint(cFColor& c, float i, cVector& pos, cVector& dir);
   LightPoint(cFColor&& c, float i, cVector&& pos, cVector& dir);
 
-  FColor Illuminate(cFColor& base_color, cVector& normal, cVector& dest);
+  void    Reset();
+  void    World2Camera(const GlCamera&);
+  FColor  Illuminate(cFColor& base_color, cVector& normal, cVector& dest);
 
 private:
   FColor  color_;
   float   intense_;
-  Vector  position_;
-  Vector  direction_;
+  Vector  position_;          // direction of light source
+  Vector  position_copy_;     // used to recover direction after frame 
+  Vector  direction_;         // direction of light source
+  Vector  direction_copy_;    // used to recover direction after frame 
   float   kc_;
   float   kl_;
   float   kq_;

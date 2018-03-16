@@ -282,7 +282,28 @@ void object::ComputeFaceNormals(GlObject& obj, bool normalize)
     Vector u {p1, p2};
     Vector v {p1, p3};
     face.normal_ = vector::CrossProduct(u, v);
-    if (normalize)
+    if (normalize && !face.normal_.IsZero())
+      face.normal_.Normalize();
+  }
+}
+
+// Compute inverted face normals
+
+void object::ComputeFaceNormalsInv(GlObject& obj, bool normalize)
+{
+  if (!obj.active_) return;
+  
+  auto& vxs = obj.GetCoords();
+
+  for (auto& face : obj.faces_)
+  {
+    auto p1 = vxs[face[0]].pos_;
+    auto p2 = vxs[face[1]].pos_;
+    auto p3 = vxs[face[2]].pos_;
+    Vector u {p1, p2};
+    Vector v {p1, p3};
+    face.normal_ = vector::CrossProduct(v, u);
+    if (normalize && !face.normal_.IsZero())
       face.normal_.Normalize();
   }
 }
@@ -292,11 +313,12 @@ void object::ComputeFaceNormals(GlObject& obj, bool normalize)
 // process: compute non-normalized face normals, lenghts of this normals would
 // be a weight factor (since length of face normal is 2x square of triangle). 
 
+// Note: we should compute face NON-normalized normals before calling this
+// function
+
 void object::ComputeVertexNormalsV1(GlObject& obj)
 {
   if (!obj.active_) return;
-  
-  object::ComputeFaceNormals(obj);
 
   auto& vxs = obj.GetCoords();
   for (auto& vx : vxs)
@@ -328,11 +350,12 @@ void object::ComputeVertexNormalsV1(GlObject& obj)
 // would be used angles between edges of triangle. This method is really low
 // perfomance since requires compute acos and lengths vectors
 
+// Note: we should compute face normalized normals before calling this
+// function
+
 void object::ComputeVertexNormalsV2(GlObject& obj)
 {
   if (!obj.active_) return;
-  
-  object::ComputeFaceNormals(obj);
 
   auto& vxs = obj.GetCoords();
   for (auto& vx : vxs)
@@ -347,8 +370,10 @@ void object::ComputeVertexNormalsV2(GlObject& obj)
     vxs[face[1]].normal_ += face.normal_ * face.angles_[1];
     vxs[face[2]].normal_ += face.normal_ * face.angles_[2];
   }
-  for (auto& vx : vxs)
-    vx.normal_.Normalize();
+  for (auto& vx : vxs) {
+    if (!vx.normal_.IsZero() && math::FNotZero(vx.normal_.SquareLength()-1.0f))
+      vx.normal_.Normalize();
+  }
 }
 
 // Cull objects in cameras coordinates. Since we work in camera coordinates,
@@ -483,7 +508,7 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
     Vector view {vxs[face[0]].pos_, cam.vrp_};
     view.Normalize();
 
-    // If angle between view vector and normal < 90 deg, then face is invisible
+    // If angle between view vector and normal > 90 deg, then face is invisible
 
     auto prod = vector::DotProduct(view, face.normal_);
     if (math::FlessZero(prod))
