@@ -145,7 +145,7 @@ int main(int argc, const char** argv)
     // Handle input
 
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    helpers::HandleCamMovement(kbtn, cam);
+    helpers::HandleCamMovement(kbtn, 2.0f, cam);
     helpers::HandlePause(kbtn, win);    
 
     // Rotate cubes

@@ -51,7 +51,7 @@ const char* HandleInput(int argc, const char** argv)
 
 auto CreateGround(int rect_cnt, TrigTable& trig)
 {
-  auto master = object::Make("../00_data/floor.ply", trig,
+  auto master = object::Make("../00_data/objects/floor.ply", trig,
     {1.0f, 1.0f, 1.0f},
     {0.0f, 0.0f, 0.0f},
     {0.0f, 0.0f, 0.0f}
@@ -196,7 +196,7 @@ int main(int argc, const char** argv)
     Vector  obj_vel    {0.0f, 0.0f, 0.0f};
     Vector  obj_scale  {1.0f, 1.0f, 1.0f};
     HandleCamType(kbtn, cam);
-    HandleCamMovement(kbtn, cam);
+    HandleCamMovement(kbtn, 1.0f, cam);
     HandleCamRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
     HandlePause(kbtn, win);
     HandleObject(kbtn, obj_vel, obj_rot, obj_scale);

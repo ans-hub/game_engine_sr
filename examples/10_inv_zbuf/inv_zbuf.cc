@@ -52,7 +52,7 @@ const char* HandleInput(int argc, const char** argv)
 
 auto CreateGround(int rect_cnt, TrigTable& trig)
 {
-  auto master = object::Make("../00_data/floor.ply", trig,
+  auto master = object::Make("../00_data/objects/floor.ply", trig,
     {1.0f, 1.0f, 1.0f},
     {0.0f, 0.0f, 0.0f},
     {0.0f, 0.0f, 0.0f}
@@ -160,7 +160,7 @@ int main(int argc, const char** argv)
   FColor blue   {0.0f, 0.0f, 255.0f};
 
   lights.ambient_.emplace_back(white, 0.3f);
-  lights.infinite_.emplace_back(white, 0.7f, Vector{0.0f, -1.0f, 0.0f});
+  lights.infinite_.emplace_back(white, 0.7f, Vector{-1.0f, -1.0f, 0.0f});
   lights.point_.emplace_back(yellow, 0.6f, 
     Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
 
@@ -198,7 +198,7 @@ int main(int argc, const char** argv)
     Vector  obj_vel    {0.0f, 0.0f, 0.0f};
     Vector  obj_scale  {1.0f, 1.0f, 1.0f};
     HandleCamType(kbtn, cam);
-    HandleCamMovement(kbtn, cam);
+    HandleCamMovement(kbtn, 0.3f, cam);
     HandleCamRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
     HandlePause(kbtn, win);
     HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
