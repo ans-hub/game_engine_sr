@@ -148,10 +148,25 @@ inline void Color<T>::Modulate(const Color<T>& rhs)
   this->g_ *= rhs.g_;
   this->b_ *= rhs.b_;
   this->a_ *= rhs.a_;
-  this->r_ >>= 8;   // divide to 256
+  this->r_ >>= 8;
   this->g_ >>= 8;
   this->b_ >>= 8;
   this->a_ >>= 8;
+}
+
+// Modulates 2 colors (float specialization)
+
+template<>
+inline void Color<float>::Modulate(const Color<float>& rhs)
+{ 
+  this->r_ *= rhs.r_;
+  this->g_ *= rhs.g_;
+  this->b_ *= rhs.b_;
+  this->a_ *= rhs.a_;
+  this->r_ /= 256.0f;
+  this->g_ /= 256.0f;
+  this->b_ /= 256.0f;
+  this->a_ /= 256.0f;
 }
 
 // Clamps color components after addition
