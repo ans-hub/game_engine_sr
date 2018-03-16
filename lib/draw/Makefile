@@ -26,6 +26,7 @@ RLSFLAGS = -O2
 
 VPATH =  $(DATADIR):$(EXTRASDIR)
 OBJECTS = ply_loader.o terrain.o skybox.o
+DBGOBJECTS = ply_loaderdbg.o terraindbg.o skyboxdbg.o
 
 # Other stuff
 
@@ -47,10 +48,10 @@ $(LIBNAME) : $(SRCFILES:%.cc=%.o) $(OBJECTS)
 
 # Build library (debug version)
 
-debug	: $(SRCFILES:%.cc=%dbg.o) $(OBJECTS)
+debug	: $(SRCFILES:%.cc=%dbg.o) $(DBGOBJECTS)
 	make debug -C $(LIBWINDOW)
 	make debug -C $(LIBMATH)	
-	ar crs $(LIBNAME) $(SRCFILES:%.cc=%dbg.o) $(OBJECTS)
+	ar crs $(LIBNAME) $(SRCFILES:%.cc=%dbg.o) $(DBGOBJECTS)
 	ranlib $(LIBNAME)
 
 %dbg.o : %.cc %.h
