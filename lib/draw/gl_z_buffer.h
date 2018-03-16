@@ -22,9 +22,12 @@ struct ZBuffer
   ZBuffer(int w, int h)
   : w_{w}
   , h_{h}
+  , writed_{0}
   , data_(w_ * h_, 0.0f) { }
 
   void    Clear();
+  void    Writed() { ++writed_; }
+  int     GetWrited() const { return writed_; }
   int     Width() const { return w_; }
   int     Height() const { return h_; }
   float*  GetPointer() { return data_.data(); }
@@ -34,12 +37,16 @@ struct ZBuffer
 private:
   int w_;
   int h_;
+  int writed_;    // debug info how much pixels was writed during frame
   V_Float data_;
 
 }; // struct ZBuffer
 
+// Clears zbuffer and debug info
+
 inline void ZBuffer::Clear()
 {
+  writed_ = 0;
   memset(data_.data(), 0.0f, w_*h_*sizeof(*data_.data()));
   
   // ... forced to use memset instead std::fill after profiling
