@@ -40,7 +40,7 @@ namespace raster {
     cVector& t1, cVector& t2, cVector& t3,
     Bitmap*, Buffer&
   );
-  void TexturedTriangleFL(
+  void TexturedTriangleFL(                    // flat shading
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
     uint color, Bitmap*, Buffer&
@@ -56,13 +56,18 @@ namespace raster {
     cVertex& v1, cVertex& v2, cVertex& v3,
     ZBuffer&, Buffer&
   );
-  void TexturedTriangle(
+  int TexturedTriangle(                      // optimized with const shading
     cVertex& v1, cVertex& v2, cVertex& v3,
     Bitmap*, ZBuffer&, Buffer&
   );
-  void TexturedTriangleFL(                    // highly optimized
+  int TexturedTriangleFL(                    // optimized with flat shading
     cVertex& v1, cVertex& v2, cVertex& v3,
     uint color, Bitmap*, ZBuffer&, Buffer&
+  );
+
+  int TexturedTriangleGR(                    // optimized with gourang shading
+    cVertex& v1, cVertex& v2, cVertex& v3,
+    Bitmap*, ZBuffer&, Buffer&
   );
 
 } // namespace raster
