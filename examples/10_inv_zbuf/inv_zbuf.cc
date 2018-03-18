@@ -144,7 +144,7 @@ int main(int argc, const char** argv)
 
   // Camera
 
-  float    dov     {5.0f};
+  float    dov     {1.0f};
   float    fov     {75.0f};
   Vector   cam_pos {0.0f, 0.0f, -10.0f};
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
@@ -161,7 +161,7 @@ int main(int argc, const char** argv)
 
   lights.ambient_.emplace_back(white, 0.3f);
   lights.infinite_.emplace_back(white, 0.7f, Vector{-1.0f, -1.0f, 0.0f});
-  lights.point_.emplace_back(yellow, 0.6f, 
+  lights.point_.emplace_back(blue, 0.6f, 
     Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
 
   // Other stuff

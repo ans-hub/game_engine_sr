@@ -144,7 +144,8 @@ int main(int argc, const char** argv)
 
   Terrain terrain (fnames.terrain_hm_, fnames.terrain_tx_, fnames.divider_);
   object::Scale(terrain, {2.0f, 2.0f, 2.0f});
-  terrain.SetDetalization({50.0f, 80.0f, 100.0f}, 1, 10);
+  // terrain.SetDetalization({50.0f, 80.0f, 100.0f}, 1, 10);
+  terrain.SetDetalization({1.0f}, 10, 10);
   terrain.shading_ = Shading::GOURANG;
   
   // Other stuff
@@ -251,7 +252,7 @@ int main(int argc, const char** argv)
 
     // buf.Clear(); // we may don`t clean screen buffer since all pixels are redrawn
     zbuf.Clear();
-    draw_triangles::Solid(tris_ptrs, zbuf, buf);
+    render::Solid(tris_ptrs, zbuf, 150.0f, buf);
     buf.SendDataToFB();
     fps.Count();
 

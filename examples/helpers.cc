@@ -20,60 +20,29 @@ void helpers::HandleCamType(Btn kbtn, GlCamera& cam)
   }
 }
 
+// Moves camera in given directions
+
 void helpers::HandleCamMovement(Btn kbtn, float cam_vel, GlCamera& cam)
 {
   switch (kbtn)
   {
-    case Btn::W :
-    {
-      if (cam.type_ == GlCamera::Type::EULER)
-      {
-        cam.vrp_.z += cam_vel * cam.trig_.Cos(cam.dir_.y);
-        cam.vrp_.x += cam_vel * cam.trig_.Sin(cam.dir_.y);
-      }
-      else
-        cam.vrp_.z += cam_vel;
-    }
-      break;
-    case Btn::S :
-    {
-      if (cam.type_ == GlCamera::Type::EULER)
-      {
-        cam.vrp_.z -= cam_vel * cam.trig_.Cos(cam.dir_.y);
-        cam.vrp_.x -= cam_vel * cam.trig_.Sin(cam.dir_.y);
-      }
-      else
-        cam.vrp_.z -= cam_vel;
-    }
-      break;
-    case Btn::A :
-    {
-      if (cam.type_ == GlCamera::Type::EULER)
-      {
-        cam.vrp_.x -= cam_vel * cam.trig_.Cos(cam.dir_.y);
-        cam.vrp_.z += cam_vel * cam.trig_.Sin(cam.dir_.y);
-      }
-      else
-        cam.vrp_.x -= cam_vel;
-    }
-      break;
-    case Btn::D :
-    {
-      if (cam.type_ == GlCamera::Type::EULER)
-      {
-        cam.vrp_.x += cam_vel * cam.trig_.Cos(cam.dir_.y);
-        cam.vrp_.z -= cam_vel * cam.trig_.Sin(cam.dir_.y);
-      }
-      else
-        cam.vrp_.x += cam_vel;
-    }
-      break;
-    case Btn::R : cam.vrp_.y += cam_vel; break;
-    case Btn::F : cam.vrp_.y -= cam_vel; break;
+    case Btn::W : cam.MoveForward(); break;
+    case Btn::S : cam.MoveBackward(); break;
+    case Btn::A : cam.MoveLeft(); break;
+    case Btn::D : cam.MoveRight(); break;
+    case Btn::R : cam.MoveUp(); break;
+    case Btn::F : cam.MoveDown(); break;
     case Btn::NUM9 : cam.ChangeFov(cam.fov_-1); break;
     case Btn::NUM0 : cam.ChangeFov(cam.fov_+1); break;
     default     : break;
   }
+}
+
+// Moves camera to given y position (used in movement on the terrains)
+
+void helpers::HandleCamYPosition(float y, GlCamera& cam)
+{
+  cam.vrp_.y = y;
 }
 
 void helpers::HandleCamRotate(
