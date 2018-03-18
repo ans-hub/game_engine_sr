@@ -24,6 +24,7 @@ namespace math {
   bool  FNotZero(float);
   bool  FlessZero(float);
   bool  Feq(float, float);
+  bool  IsAbsFactorOfTwo(int);
   int   Clamp(int, int, int);
   float Clamp(float, float, float);
 
@@ -38,7 +39,7 @@ inline int math::Floor(float num)
 
 inline int math::Ceil(float num)
 {
-  return (int)(num+1.0f);
+  return (int)(num + 1.0f);
 }
 
 inline bool math::Fzero(float num)
@@ -59,6 +60,12 @@ inline bool math::FlessZero(float num)
 inline bool math::Feq(float n1, float n2) 
 { 
   return std::abs(n1-n2) < kEpsilon;
+}
+
+inline bool math::IsAbsFactorOfTwo(int num)
+{
+  int n = std::abs(num);
+  return !(n & (n-1));
 }
 
 inline int math::Clamp(int val, int min, int max)

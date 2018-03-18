@@ -79,19 +79,8 @@ GlObject::GlObject(
 
   for (std::size_t i = 0; i < faces.size(); ++i)
     faces_[i].color_ = vxs_local_[faces_[i][0]].color_;
-
-  // Calc bounding sphere radius
-
-  for (const auto& vx : vxs_local_)
-  {
-    float curr {};
-    curr = std::fabs(vx.pos_.x);
-    if (curr > sphere_rad_) sphere_rad_ = curr;
-    curr = std::fabs(vx.pos_.y);
-    if (curr > sphere_rad_) sphere_rad_ = curr;
-    curr = std::fabs(vx.pos_.z);
-    if (curr > sphere_rad_) sphere_rad_ = curr;    
-  }
+    
+  sphere_rad_ = object::ComputeBoundingSphereRadius(vxs_local_, Axis::XYZ);
 }
 
 // Copies internal coordinates from source to destination
@@ -427,6 +416,8 @@ bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
 }
 
 // Same as above but not matrixes
+// Make as member function (i.e. if we inherit from object, we can override
+// Cull by own proc)
 
 bool object::Cull(GlObject& obj, const GlCamera& cam)
 {
@@ -434,28 +425,26 @@ bool object::Cull(GlObject& obj, const GlCamera& cam)
   // to see how object center would seen when camera would be in 0;0;0 and 0 angles
   // (i.e. when all objects would be translated in camera coordinates)
   
-  Vertex    world {obj.world_pos_};
-  V_Vertex  v_world_pos {world};
-  coords::World2Camera(v_world_pos, cam.vrp_, cam.dir_, cam.trig_);
-  Vector    obj_pos {v_world_pos.back().pos_};
+  Vector obj_pos {obj.world_pos_};
+  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, cam.trig_);
 
   // Cull z planes
 
-  if (obj_pos.z - obj.sphere_rad_ < cam.z_near_)
+  if (obj_pos.z + obj.sphere_rad_ < cam.z_near_)
     obj.active_ = false;
   
-  if (obj_pos.z + obj.sphere_rad_ > cam.z_far_)
+  if (obj_pos.z - obj.sphere_rad_ > cam.z_far_)
     obj.active_ = false;
 
   // Cull x planes (project point on the view plane and check)
 
-  float x_lhs = (cam.dov_ * (obj_pos.x + obj.sphere_rad_) / obj_pos.z);
-  float x_rhs = (cam.dov_ * (obj_pos.x - obj.sphere_rad_) / obj_pos.z);
+  float x_lhs = (cam.dov_ * (obj_pos.x + obj.sphere_rad_*2) / obj_pos.z);
+  float x_rhs = (cam.dov_ * (obj_pos.x - obj.sphere_rad_*2) / obj_pos.z);
 
-  if (x_lhs < -(cam.wov_ / 2))
-    obj.active_ = false;
-  if (x_rhs >  (cam.wov_ / 2))
-    obj.active_ = false;  
+  // if (x_lhs < -(cam.wov_ / 2))
+  //   obj.active_ = false;
+  // if (x_rhs >  (cam.wov_ / 2))
+  //   obj.active_ = false;  
 
   // Cull y planes (project point on the view plane and check)
   //  todo : here I forgot to use ar
@@ -463,10 +452,10 @@ bool object::Cull(GlObject& obj, const GlCamera& cam)
   float y_dhs = (cam.dov_ * (obj_pos.y + obj.sphere_rad_) / obj_pos.z);
   float y_uhs = (cam.dov_ * (obj_pos.y - obj.sphere_rad_) / obj_pos.z);
 
-  if (y_dhs < -(cam.wov_ / 2))
-    obj.active_ = false;  
-  if (y_uhs > (cam.wov_ / 2))
-    obj.active_ = false;
+  // if (y_dhs < -(cam.wov_ / 2))
+  //   obj.active_ = false;
+  // if (y_uhs > (cam.wov_ / 2))
+  //   obj.active_ = false;
 
   return !obj.active_;
 }
@@ -642,6 +631,59 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotateEul& mx)
   obj.v_orient_x_ = matrix::Multiplie(obj.v_orient_x_, mx);
   obj.v_orient_y_ = matrix::Multiplie(obj.v_orient_y_, mx);
   obj.v_orient_z_ = matrix::Multiplie(obj.v_orient_z_, mx);
+}
+
+// Computes bounding sphere radius using 3 dimensions
+// todo: incorrect!!!
+
+float object::ComputeBoundingSphereRadius(V_Vertex& vxs, Axis axis)
+{
+  float res {};
+  
+  float curr {};
+  if (axis == Axis::XYZ)
+  {
+    for (const auto& vx : vxs)
+    {
+      curr = std::fabs(vx.pos_.x);
+      if (curr > res) res = curr;
+      curr = std::fabs(vx.pos_.y);
+      if (curr > res) res = curr;
+      curr = std::fabs(vx.pos_.z);
+      if (curr > res) res = curr;    
+    }
+  }
+  else if (axis == Axis::XY)
+  {
+    for (const auto& vx : vxs)
+    {
+      curr = std::fabs(vx.pos_.x);
+      if (curr > res) res = curr;
+      curr = std::fabs(vx.pos_.y);
+      if (curr > res) res = curr;
+    }
+  }
+  else if (axis == Axis::XZ)
+  {
+    for (const auto& vx : vxs)
+    {
+      curr = std::fabs(vx.pos_.x);
+      if (curr > res) res = curr;
+      curr = std::fabs(vx.pos_.z);
+      if (curr > res) res = curr;
+    }
+  }
+  else if (axis == Axis::YZ)
+  {
+    for (const auto& vx : vxs)
+    {
+      curr = std::fabs(vx.pos_.y);
+      if (curr > res) res = curr;
+      curr = std::fabs(vx.pos_.z);
+      if (curr > res) res = curr;
+    }
+  }
+  return res;
 }
 
 // Computes drawable vertexes normals in world coordinates relative to vertex

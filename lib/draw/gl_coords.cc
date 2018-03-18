@@ -64,6 +64,17 @@ void coords::World2Camera(
   }
 }
 
+// Translates vector into the camera coordinates (by YXZ sequence)
+
+void coords::World2Camera(
+  Vector& vec, cVector& cam_pos, cVector& cam_dir, const TrigTable& trig)
+{
+  vec += cam_pos * (-1.0f);
+  coords::RotateYaw(vec, -cam_dir.y, trig);
+  coords::RotatePitch(vec, -cam_dir.x, trig);
+  coords::RotateRoll(vec, -cam_dir.z, trig);
+}
+
 // Translates all vertexes from camera (world) to perspective
 
 void coords::Camera2Persp(V_Vertex& vxs, float dov, float ar)

@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    terrain.cc
-// Descr:   generates terrain 
+// Descr:   represents terrain
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -9,39 +9,72 @@
 
 namespace anshub {
 
-// Creates GlObject that imitates terrain
-
-Terrain::Terrain(const char* map_fname, const char* tex_fname, int div_factor)
-  : GlObject()
-  , hm_w_{}
+Terrain::Terrain(
+  cChar* map_fname, cChar* tex_fname, 
+  int div_factor, int obj_width, Shading shading)
+  : hm_w_{}
   , hm_h_{}
   , tx_w_{}
   , tx_h_{}
-  , det_lengths_{}
-  , det_faces_{}
+  , obj_w_{obj_width}
+  , obj_h_{obj_width}
+  , texture_{nullptr}
+  , heightmap_{nullptr}
+  , vxs_{}
+  , chunks_{}
+  , shading_{shading}
 {
-  // Load texture of terrain and add texture to the object
-
-  this->textured_ = true;
-  this->texture_ = std::make_shared<Bitmap>(tex_fname);
-  this->shading_ = Shading::FLAT;
-  tx_h_ = this->texture_->height();
-  tx_w_ = this->texture_->width();
-
-  // Load heightmap and fill vertices of the object
-
-  Bitmap map {map_fname};
-  hm_h_ = map.height();
-  hm_w_ = map.width();
-  ComputeVertices(map, div_factor);
-
-  // Fill faces of the object
-
-  faces_ = ComputeFaces(1);
-  det_faces_.push_back(faces_);
+  LoadTexture(tex_fname);
+  LoadHeightmap(map_fname);
+  ComputeAllVertices(div_factor);
+  MakeChunkObjects(obj_width);
 }
 
-void Terrain::ComputeVertices(const Bitmap& map, int div_factor)
+// Sets shading of terrain
+
+void Terrain::SetShading(Shading s)
+{
+  shading_ = s;
+  for (auto& chunk : chunks_)
+    chunk.shading_ = s;
+}
+
+// Loads texture of terrain
+
+void Terrain::LoadTexture(const char* fname)
+{
+  texture_ = std::make_shared<Bitmap>(fname);
+  tx_h_ = texture_->height();
+  tx_w_ = texture_->width();
+
+  if (tx_h_ == 0 || tx_w_ == 0)
+    throw DrawExcept("Texture width or height is zero");
+
+  // Note: unnecessary to check for square of texture or
+  // to check is w and h of texture is the factor of two 
+  // since we may stretch texture as we wish
+}
+
+// Loads heightmap of terrain
+
+void Terrain::LoadHeightmap(const char* fname)
+{
+  heightmap_ = std::make_unique<Bitmap>(fname);
+  hm_h_ = heightmap_->height();
+  hm_w_ = heightmap_->width();
+
+  if (hm_h_ == 0 || hm_w_ == 0)
+    throw DrawExcept("Heighmap width or height is zero");
+  if (tx_h_ != tx_w_)
+    throw DrawExcept("Heightmap width and height are not the same");
+  if (!math::IsAbsFactorOfTwo(tx_h_) || (!math::IsAbsFactorOfTwo(tx_w_)))
+    throw DrawExcept("Heightmap dimensions are not the factor of two");
+}
+
+// Compute vertices for most deta;ized level. Divide factor used here
+// to regulate impact of pixel color to y coordinate
+
+void Terrain::ComputeAllVertices(int div_factor)
 {
   // Helpers computations
 
@@ -55,7 +88,7 @@ void Terrain::ComputeVertices(const Bitmap& map, int div_factor)
 
   // Filling
 
-  this->vxs_local_.reserve(hm_h_ * hm_w_);
+  vxs_.reserve(hm_h_ * hm_w_);
 
   for (int z = 0; z < hm_h_; ++z) {
     for (int x = 0; x < hm_w_; ++x) {
@@ -63,7 +96,7 @@ void Terrain::ComputeVertices(const Bitmap& map, int div_factor)
       // Make position and texture vectors
 
       float vx = (float)(x - half_w);
-      float vy = (float)(map.red_channel(x,z) / div_factor);;
+      float vy = (float)(heightmap_->red_channel(x,z) / div_factor);;
       float vz = (float)(-(z - half_h));
       Vector pos {vx, vy, vz};
       Vector tex {x*dx_u, z*dx_v, 0.0f};
@@ -74,88 +107,98 @@ void Terrain::ComputeVertices(const Bitmap& map, int div_factor)
       v.pos_ = std::move(pos);
       v.texture_ = std::move(tex);
       v.color_ = FColor{color::White};  // by convient in ligthing purposes
-      this->vxs_local_.emplace_back(v);
+      vxs_.emplace_back(v);
     }
   }
 }
 
-// Returs faces for vertices in object using detalization factor
+// Divide vertices into the chunks and makes objects, where chunk_width is
+// the count of vertices inside one chunk (should be factor of 2)
 
-V_Face Terrain::ComputeFaces(int det)
+void Terrain::MakeChunkObjects(int chunk_width)
 {
-  std::vector<Face> res {};
+  if (!math::IsAbsFactorOfTwo(chunk_width))
+    throw DrawExcept("Chunk width is not the factor of two");
 
+  int chunks_in_line {hm_w_ / chunk_width};
+  int lpitch {chunk_width * chunks_in_line};
+  
+  // Iterate over objects and create objects array
+  // where x and y is position of chunk in chunk 2d square matrix
+
+  for (int y = 0; y < chunks_in_line; ++y) {
+    for (int x = 0; x < chunks_in_line; ++x) {
+      
+      Chunk obj {chunk_width};
+      
+      obj.active_ = true;
+      obj.textured_ = true;
+      obj.texture_ = texture_;  // sure, that Bitmap doesn`t copies
+      obj.shading_ = shading_;
+
+      int st_ind {y * lpitch * chunk_width + x * chunk_width};
+      obj.CopyVertices(vxs_, st_ind, chunk_width, lpitch);
+      obj.ComputeDetalizationFaces();
+
+      obj.world_pos_ =
+        (obj.vxs_local_.front().pos_ + obj.vxs_local_.back().pos_) / 2;
+      obj.world_pos_.y = 0.0f;
+      // obj.faces_ = obj.det_faces_.front();
+      obj.faces_ = obj.det_faces_[0];
+      obj.sphere_rad_ = chunk_width / 2;
+      
+      chunks_.push_back(obj);
+    }
+  }
+}
+
+// Copies part of vertices from global terrain mesh to the local object
+// storage
+
+void Terrain::Chunk::CopyVertices(
+  const V_Vertex& vxs, int st_ind, int chunk_width, int lpitch)
+{ 
+  int end_ind {st_ind + (lpitch * chunk_width)};
+
+  for (int y = st_ind; y < end_ind; y += lpitch)
+    for (int x = y; x < y + chunk_width; ++x)
+      vxs_local_.push_back(vxs[x]);
+}
+
+// Computes all possible detalization faces for object
+
+void Terrain::Chunk::ComputeDetalizationFaces()
+{
+  det_faces_.resize(0);
+  int w = chunk_width_;
+  
   // Here we simple use variable `det` as step
 
-  for (int y = 0; y < hm_h_-det; y+=det) {
-    for (int x = 0; x < hm_w_-det; x+=det) {
-      
-      // Create faces
+  for (int det = 1; det < w; det *= 2){
 
-      Face f1 {
-        this->vxs_local_, y*hm_w_+x, y*hm_w_+x+det, (y+det)*hm_w_+x};
-      Face f2 {
-        this->vxs_local_, y*hm_w_+x+det, (y+det)*hm_w_+x+det, (y+det)*hm_w_+x};
-      
-      // Fill face color (by convient this is the white)
+    V_Face curr_faces {};
 
-      f1.color_ = FColor{color::White};
-      f2.color_ = FColor{color::White};
+    for (int y = 0; y < w-det; y+=det) {    // -det since we take y+det
+      for (int x = 0; x < w-det; x+=det) {  // and x+det inside loop
+        
+        // Create faces
 
-      res.push_back(f1);
-      res.push_back(f2);
+        Face f1 {
+          vxs_local_, y*w+x, y*w+x+det, (y+det)*w+x};
+        Face f2 {
+          vxs_local_, y*w+x+det, (y+det)*w+x+det, (y+det)*w+x};
+        
+        // Fill face color (by convient this is the white)
+
+        f1.color_ = FColor{color::White};
+        f2.color_ = FColor{color::White};
+
+        curr_faces.push_back(f1);
+        curr_faces.push_back(f2);
+      }
     }
-  }
-  return res;
-}
-
-// Recompute levels of terrain detalization. Levels of detalization interpolated
-// from min_det to max_det
-
-void Terrain::SetDetalization(
-  std::vector<float> det_lenghts, int min_det, int max_det)
-{
-  // Store lenghts for detalization
-
-  det_lengths_ = det_lenghts;
-  std::sort(det_lengths_.begin(), det_lengths_.end());
-
-  // Clear structure for storing new faces
-
-  det_faces_.resize(0);
-  det_faces_.reserve(det_lengths_.size());
-  
-  // Prepare interpolant
-
-  int curr_det = min_det;
-  int dx_det = (max_det - min_det) / det_faces_.capacity();
-  
-  // Fill faces
-  
-  for (auto it = det_lengths_.begin(); it < det_lengths_.end(); ++it)
-  {
-    det_faces_.push_back(ComputeFaces(curr_det));
-    curr_det += dx_det;
+    det_faces_.push_back(curr_faces);
   }
 }
 
-// Use detalization in depends of view reference point of camera
-
-void Terrain::UseDetalization(const Vector& vrp)
-{
-  Vector dist {world_pos_ - vrp};
-  float len = dist.Length();
-
-  int curr_level {0};
-  int i {0};
-  for (const auto& det : det_lengths_)
-  {
-    if (det < len)
-      curr_level = i;
-    ++i;
-  }
-
-  faces_ = det_faces_[curr_level];
-}
-
-} // namespace anshub
+}  // namespace anshub

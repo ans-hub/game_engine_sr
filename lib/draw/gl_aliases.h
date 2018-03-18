@@ -10,11 +10,13 @@
 
 #include <vector>
 #include <functional>
+#include <memory>
 
 namespace anshub {
 
   // Forward declarations
 
+  class Bitmap;
   struct Vector;
   template<class T> struct Color;
   struct GlObject;
@@ -30,9 +32,15 @@ namespace anshub {
   using FColor = Color<float>;
   using cFColor = const Color<float>;
   using cColor = const Color<uchar>;
+  using cChar = const char;
   
   using Matrix2d  = std::vector<std::vector<double>>;
   using cMatrix2d = const Matrix2d;
+
+  // Pointer aliases
+
+  using psBitmap = std::shared_ptr<Bitmap>;
+  using puBitmap = std::unique_ptr<Bitmap>;
 
   // Containers aliases
 
@@ -47,6 +55,7 @@ namespace anshub {
   using A3_Float = std::array<float,3>;
   using A3_FColor = std::array<FColor,3>;
   using V_Face = std::vector<Face>;
+  using VV_Face = std::vector<V_Face>;
   using V_Vertex = std::vector<Vertex>;
   using V_Vector = std::vector<Vector>;
   using V_GlObject = std::vector<GlObject>;

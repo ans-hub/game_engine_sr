@@ -38,15 +38,13 @@ namespace anshub {
 
 struct GlObject
 {
-  using pBitmap = std::shared_ptr<Bitmap>;
-
   // Data members: coordinates and colors
 
   V_Vertex  vxs_local_;     // local vertices
   V_Vertex  vxs_trans_;     // transformed vertices
   Coords    current_vxs_;   // chooser between coords type
   V_Face    faces_;         // faces based on coords above
-  pBitmap   texture_;       // texture struct
+  psBitmap  texture_;       // texture struct
   bool      textured_;      // is object textured
 
   // Data members: helpers
@@ -130,6 +128,7 @@ namespace object {
 
   float     FindFarthestCoordinate(const GlObject&);
   void      RefreshOrientation(GlObject&, const MatrixRotateEul&);
+  float     ComputeBoundingSphereRadius(V_Vertex& vxs, Axis);
 
   // Debug purposes
 

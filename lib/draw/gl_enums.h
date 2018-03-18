@@ -38,7 +38,22 @@ enum class Coords
 {
   LOCAL,    // local coordinates
   TRANS     // transformed coordinates
-};
+
+}; // enum class Coords
+
+// Represent Axis names
+
+enum class Axis
+{
+  X         = 1 << 1,
+  Y         = 1 << 2,
+  XY        = 3,
+  Z         = 1 << 3,
+  XZ        = 5,
+  YZ        = 6,
+  XYZ       = 7
+
+}; // enum class Axis
 
 } // namespace anshub
 

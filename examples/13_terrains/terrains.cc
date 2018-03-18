@@ -127,10 +127,10 @@ int main(int argc, const char** argv)
 
   // Camera
 
-  float    dov     {5.0f};
+  float    dov     {2.0f};
   float    fov     {75.0f};
-  Vector   cam_pos {-1.5f, 40.0f, 60.0f};
-  Vector   cam_dir {55.0f, 15.0f, 0.0f};
+  Vector   cam_pos {-1.5f, 120.0f, 0.0f};
+  Vector   cam_dir {0.0f, 15.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {800.0f};
   GlCamera cam (fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z);
@@ -142,11 +142,18 @@ int main(int argc, const char** argv)
   object::Scale(skybox, {500.0f, 500.0f, 500.0f});
   object::Rotate(skybox, {90.0f, 0.0f, 0.0f}, trig);
 
-  Terrain terrain (fnames.terrain_hm_, fnames.terrain_tx_, fnames.divider_);
-  object::Scale(terrain, {2.0f, 2.0f, 2.0f});
+  constexpr int kObjVxsWidth {32};
+  Terrain terrain (
+    fnames.terrain_hm_, fnames.terrain_tx_, fnames.divider_,
+    kObjVxsWidth,
+    Shading::GOURANG
+  );
+  auto& terrain_chunks = terrain.GetChunks();
+
+  // object::Scale(terrain, {2.0f, 2.0f, 2.0f});
   // terrain.SetDetalization({50.0f, 80.0f, 100.0f}, 1, 10);
-  terrain.SetDetalization({1.0f}, 10, 10);
-  terrain.shading_ = Shading::GOURANG;
+  // terrain.SetDetalization({1.0f}, 10, 10);
+  // terrain.SetShading(Shading::GOURANG);
   
   // Other stuff
 
@@ -200,32 +207,43 @@ int main(int argc, const char** argv)
 
     // Draw terrain
 
-    terrain.SetCoords(Coords::TRANS);
-    terrain.CopyCoords(Coords::LOCAL, Coords::TRANS);
-    terrain.UseDetalization(cam.vrp_);
-    object::ResetAttributes(terrain);
-    hidden += object::RemoveHiddenSurfaces(terrain, cam);
+    int obj_culled {};
+    for (auto& chunk : terrain_chunks)
+    {
+      chunk.SetCoords(Coords::TRANS);
+      chunk.CopyCoords(Coords::LOCAL, Coords::TRANS);
+      object::ResetAttributes(chunk);
+      chunk.world_pos_.y = cam.vrp_.y;    // for culling purposes
+      obj_culled += object::Cull(chunk, cam);
+      chunk.world_pos_.y = 0.0f;
+    // terrain.UseDetalization(cam.vrp_);
+      hidden += object::RemoveHiddenSurfaces(chunk, cam);
+    }
 
     // Light objects
     
     ProceedAmbientLightChange(lights_all, day_time);
     ProceedAmbientLightChange(lights_sky, day_time);
 
-    // Go to camera coordinates
+    // Go to camera coordinates    // optimization - make two copies of vxs of terrain - world coord and camera coord
 
-    object::World2Camera(skybox, cam);
-    object::World2Camera(terrain, cam);
     light::World2Camera(lights_all, cam);
-    object::ComputeFaceNormals(terrain);
-    object::ComputeVertexNormalsV2(terrain);
-    object::ComputeFaceNormals(terrain);
+    object::World2Camera(skybox, cam);
+    for (auto& chunk : terrain_chunks)
+    {
+      object::World2Camera(chunk, cam);
+      object::ComputeFaceNormals(chunk);
+      object::ComputeVertexNormalsV2(chunk);
+      object::ComputeFaceNormals(chunk);
+    }
 
     // Make triangles from terrain
 
     tris_base.resize(0);
     tris_ptrs.resize(0);
     
-    triangles::AddFromObject(terrain, tris_base);
+    for (auto& chunk : terrain_chunks)
+      triangles::AddFromObject(chunk, tris_base);
     auto culled = triangles::CullAndClip(tris_base, cam);
     
     // Light terrain triangles
@@ -259,7 +277,7 @@ int main(int argc, const char** argv)
     win.Render();
     timer.Wait();    
 
-    PrintInfoOnCmd(fps, 0, hidden, cam.vrp_);
+    PrintInfoOnCmd(fps, obj_culled, hidden, cam.vrp_);
 
   } while (!win.Closed());
 
