@@ -235,11 +235,16 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
       tri[pb1].pos_ = q1;
       tri[pb2].pos_ = q2;
 
-      tri[pb1].color_ = 
-        tri[pa].color_ + (tri[pb1].color_ - tri[pa].color_) * t1;
-      tri[pb2].color_ = 
-        tri[pa].color_ + (tri[pb2].color_ - tri[pa].color_) * t2;
+      FColor dx_cl = tri[pb1].color_ - tri[pa].color_;
+      FColor dx_cr = tri[pb2].color_ - tri[pa].color_;
+      tri[pb1].color_ = tri[pa].color_ + (dx_cl * t1);
+      tri[pb2].color_ = tri[pa].color_ + (dx_cr * t2);
       
+      Vector dx_nl = tri[pb1].normal_ - tri[pa].normal_;
+      Vector dx_nr = tri[pb2].normal_ - tri[pa].normal_;
+      tri[pb1].normal_ = tri[pa].normal_ + (dx_nl * t1);
+      tri[pb2].normal_ = tri[pa].normal_ + (dx_nr * t2);
+
       tri[pb1].texture_ = 
         tri[pa].texture_ + (tri[pb1].texture_ - tri[pa].texture_) * t1;
       tri[pb2].texture_ = 
@@ -292,8 +297,16 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
       float t1 = parmline3d::FindIntersectsT(line_1, plane_z);
       float t2 = parmline3d::FindIntersectsT(line_2, plane_z);
 
-      v3.color_ = tri[pa1].color_ + (tri[pb].color_ - tri[pa1].color_) * t1;
-      v2.color_ = tri[pa2].color_ + (tri[pb].color_ - tri[pa2].color_) * t2;
+      FColor dx_cl = tri[pb].color_ - tri[pa1].color_;
+      FColor dx_cr = tri[pb].color_ - tri[pa2].color_;
+      v3.color_ = tri[pa1].color_ + (dx_cl * t1);
+      v2.color_ = tri[pa2].color_ + (dx_cr * t2);
+
+      Vector dx_nl = tri[pb].normal_ - tri[pa1].normal_;
+      Vector dx_nr = tri[pb].normal_ - tri[pa2].normal_;
+      v3.normal_ = tri[pa1].normal_ + (dx_nl * t1);
+      v3.normal_ = tri[pa2].normal_ + (dx_nr * t2);
+
       v3.texture_ = 
         tri[pa1].texture_ + (tri[pb].texture_ - tri[pa1].texture_) * t1;
       v2.texture_ = 
@@ -303,6 +316,7 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
 
       Triangle new_tri {tri};
       new_tri.vxs_ = {v1, v2, v3};
+      new_tri.color_ = tri.color_;
       new_tri.normal_ = 
         vector::CrossProduct(v2.pos_-v1.pos_, v3.pos_-v1.pos_);
       new_tris.push_back(new_tri);
@@ -310,8 +324,8 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
       // Change old triangle
 
       tri.vxs_[pb] = v3;
-      tri.normal_ =
-        vector::CrossProduct(tri[1].pos_-tri[0].pos_, tri[2].pos_-tri[0].pos_);
+      // tri.normal_ =
+        // vector::CrossProduct(tri[1].pos_-tri[0].pos_, tri[2].pos_-tri[0].pos_);
     }
   }
   

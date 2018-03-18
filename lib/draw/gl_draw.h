@@ -17,7 +17,7 @@
 #include "gl_vertex.h"
 #include "gl_triangle.h"
 #include "gl_z_buffer.h"
-#include "gl_raster_tri.h"
+#include "fx_rasterizers.h"
 
 #include "../math/segment.h"
 
@@ -33,7 +33,7 @@ namespace draw_object {
 
 } // namespace draw_object
 
-// Functions that draws triangles pointers arrays
+// Functions that draws triangles pointers arrays (legacy)
 
 namespace draw_triangles {
 
@@ -42,6 +42,36 @@ namespace draw_triangles {
   int  Solid(const V_TrianglePtr&, ZBuffer&, Buffer&);
 
 } // namespace draw_triangles
+
+// New way to render 
+
+namespace render {
+
+  // Adaptors to legacy functions
+  
+  int  Wired(const V_TrianglePtr& t, Buffer& b);
+  int  Solid(const V_TrianglePtr&, Buffer&);
+  int  Solid(const V_TrianglePtr&, ZBuffer&, Buffer&);
+  int  Solid(const V_TrianglePtr&, ZBuffer&, float dist, Buffer&);
+
+} // namespace render
+
+// Inline  functions (adaptors) implementation
+
+inline int render::Wired(const V_TrianglePtr& t, Buffer& b)
+{
+  return draw_triangles::Wired(t, b);
+}
+
+inline int render::Solid(const V_TrianglePtr& t, Buffer& b)
+{
+  return draw_triangles::Solid(t, b);
+}
+
+inline int render::Solid(const V_TrianglePtr& t, ZBuffer& z, Buffer& b)
+{
+  return draw_triangles::Solid(t, z, b);
+}
 
 } // namespace anshub
 

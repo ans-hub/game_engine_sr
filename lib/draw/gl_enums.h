@@ -14,12 +14,23 @@ namespace anshub {
 
 enum class Shading
 {
+  NONE      = 0,
   CONST     = 1 << 1,
   FLAT      = 1 << 2,
   PHONG     = 1 << 3,
   GOURANG   = 1 << 4
 
 }; // enum class Shading
+
+// Used to define which texturing we would use
+
+enum class Texturing
+{
+  NONE      = 0,
+  AFFINE    = 1 << 1,
+  PERSP     = 1 << 2
+
+}; // enum class Texturing
 
 // Used to define which coordinates currently used in object
 
