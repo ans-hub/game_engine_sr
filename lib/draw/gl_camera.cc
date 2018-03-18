@@ -31,6 +31,7 @@ GlCamera::GlCamera
   , scr_h_{scr_h}
   , ar_{(float)scr_w_ / (float)scr_h_}
   , vrp_{vrp}
+  , vel_{1.0f}
   , dir_{dir}
   , view_{0.0f, 0.0f, 1.0f}
   , u_{1.0f, 0.0f, 0.0f}
@@ -38,6 +39,70 @@ GlCamera::GlCamera
   , n_{0.0f, 0.0f, 1.0f}
   , gimbal_{}
 { }
+
+void GlCamera::MoveLeft()
+{
+  if (type_ == GlCamera::Type::EULER)
+  {
+    vrp_.x -= vel_ * trig_.Cos(dir_.y);
+    vrp_.z += vel_ * trig_.Sin(dir_.y);
+  }
+  else
+    vrp_.x -= vel_;
+}
+
+void GlCamera::MoveRight()
+{
+  if (type_ == GlCamera::Type::EULER)
+  {
+    vrp_.x += vel_ * trig_.Cos(dir_.y);
+    vrp_.z -= vel_ * trig_.Sin(dir_.y);
+  }
+  else
+    vrp_.x += vel_;
+}
+
+void GlCamera::MoveForward()
+{
+  if (type_ == GlCamera::Type::EULER)
+  {
+    vrp_.z += vel_ * trig_.Cos(dir_.y);
+    vrp_.x += vel_ * trig_.Sin(dir_.y);
+  }
+  else
+    vrp_.z += vel_;
+}
+
+void GlCamera::MoveBackward()
+{
+  if (type_ == GlCamera::Type::EULER)
+  {
+    vrp_.z -= vel_ * trig_.Cos(dir_.y);
+    vrp_.x -= vel_ * trig_.Sin(dir_.y);
+  }
+  else
+    vrp_.z -= vel_;
+}
+
+void GlCamera::MoveUp()
+{
+  vrp_.y += vel_;
+}
+
+void GlCamera::MoveDown()
+{
+  vrp_.y -= vel_;
+}
+
+void GlCamera::RotateYaw(float theta)
+{
+  dir_.z -= theta;
+}
+
+void GlCamera::RotateRoll(float theta)
+{
+  dir_.y -= theta;
+}
 
 void GlCamera::SwitchType(Type type)
 {

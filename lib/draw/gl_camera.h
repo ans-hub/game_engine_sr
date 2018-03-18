@@ -44,10 +44,27 @@ struct GlCamera
   // MEMBER DEFINITIONS
 
   GlCamera(
-    float, float, int, int, const Vector&, const Vector&, float, float);
+    float fov, float dov, int scr_w, int scr_h,
+    const Vector& vrp, const Vector& dir,
+    float z_near, float z_far
+  );
+  
+  virtual ~GlCamera() { }
+  
+  void  SetVelocity(float vel) { vel_ = vel; }
+  
+  void  MoveLeft();
+  void  MoveRight();
+  void  MoveForward();
+  void  MoveBackward();
+  void  MoveUp();
+  void  MoveDown();
+  
+  void  RotateYaw(float theta);
+  void  RotateRoll(float theta);
 
   void  SwitchType(Type);
-  void  ChangeFov(int);
+  void  ChangeFov(int new_fov);
   void  RefreshViewVector();
   
   TrigTable trig_;
@@ -61,7 +78,8 @@ struct GlCamera
   int       scr_h_;     // screen height
   float     ar_;        // aspect ratio
   Vector    vrp_;       // view reference point (world pos in world coords)
-  
+  float     vel_;       // camera velocity in choosed direction
+
   // Euler specific
 
   Vector  dir_;         // cam direction angles (for Euler model)
