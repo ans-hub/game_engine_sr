@@ -375,6 +375,9 @@ void object::ComputeVertexNormalsV2(GlObject& obj)
 // Note #2 : also we may cull objects in world coordinates and when cam matrix
 // is known (we just convert obj.world_pos_ with matrix to camera coordinates)
 
+// Note #3 : this is old legacy function. More better is to use new CullX, CullY
+// and CullZ
+
 bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
 {
   // Translate world coords to camera for world_pos_ of object. This is necessary
@@ -438,13 +441,13 @@ bool object::Cull(GlObject& obj, const GlCamera& cam)
 
   // Cull x planes (project point on the view plane and check)
 
-  float x_lhs = (cam.dov_ * (obj_pos.x + obj.sphere_rad_*2) / obj_pos.z);
-  float x_rhs = (cam.dov_ * (obj_pos.x - obj.sphere_rad_*2) / obj_pos.z);
+  float x_lhs = (cam.dov_ * (obj_pos.x + obj.sphere_rad_) / obj_pos.z);
+  float x_rhs = (cam.dov_ * (obj_pos.x - obj.sphere_rad_) / obj_pos.z);
 
-  // if (x_lhs < -(cam.wov_ / 2))
-  //   obj.active_ = false;
-  // if (x_rhs >  (cam.wov_ / 2))
-  //   obj.active_ = false;  
+  if (x_lhs < -(cam.wov_ / 2))
+    obj.active_ = false;
+  if (x_rhs >  (cam.wov_ / 2))
+    obj.active_ = false;  
 
   // Cull y planes (project point on the view plane and check)
   //  todo : here I forgot to use ar
@@ -452,10 +455,88 @@ bool object::Cull(GlObject& obj, const GlCamera& cam)
   float y_dhs = (cam.dov_ * (obj_pos.y + obj.sphere_rad_) / obj_pos.z);
   float y_uhs = (cam.dov_ * (obj_pos.y - obj.sphere_rad_) / obj_pos.z);
 
-  // if (y_dhs < -(cam.wov_ / 2))
-  //   obj.active_ = false;
-  // if (y_uhs > (cam.wov_ / 2))
-  //   obj.active_ = false;
+  if (y_dhs < -(cam.wov_ / 2))
+    obj.active_ = false;
+  if (y_uhs > (cam.wov_ / 2))
+    obj.active_ = false;
+
+  return !obj.active_;
+}
+
+// Culls object by left and right X planes of camera frustrum. We take world pos
+// of object and convert it to camera coordinates. Then using radius of bounding 
+// spere we decide if it visible or not
+
+bool object::CullX(GlObject& obj, const GlCamera& cam)
+{
+  if (!obj.active_)
+    return false;
+    
+  // Convert world pos to camera coordinates
+
+  Vector obj_pos {obj.world_pos_};
+  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, cam.trig_);
+
+  // Find max_y coordinate when obj_pos_.z
+
+  float proj_x = cam.wov_ * 0.5f / cam.dov_;      // when z == 1
+  float max_x = proj_x * obj_pos.z;               // when z == pos_.z
+
+  if (obj_pos.x + obj.sphere_rad_ < -max_x)
+    obj.active_ = false;
+  if (obj_pos.x - obj.sphere_rad_ >  max_x)
+    obj.active_ = false;
+
+  return !obj.active_;
+}
+
+// Culls object by top and bottom Y planes of camera frustrum. We take world pos
+// of object and convert it to camera coordinates. Then using radius of bounding 
+// spere we decide if it visible or not
+
+bool object::CullY(GlObject& obj, const GlCamera& cam)
+{
+  if (!obj.active_)
+    return false;
+
+  // Convert world pos to camera coordinates
+
+  Vector obj_pos {obj.world_pos_};
+  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, cam.trig_);
+  
+  // Find max_y coordinate when obj_pos_.z
+
+  float proj_y = cam.wov_ * 0.5f / cam.dov_;      // when z == 1
+  float max_y = proj_y * obj_pos.z / cam.ar_;     // when z == pos_.z
+  
+  if (obj_pos.y + obj.sphere_rad_ < -max_y)
+    obj.active_ = false;
+  if (obj_pos.y - obj.sphere_rad_ >  max_y)
+    obj.active_ = false;
+
+  return !obj.active_;
+}
+
+// Culls object by near and far Y planes of camera frustrum. We take world pos
+// of object and convert it to camera coordinates. Then using radius of bounding 
+// spere we decide if it visible or not
+
+bool object::CullZ(GlObject& obj, const GlCamera& cam)
+{
+  if (!obj.active_)
+    return false;
+
+  // Convert world pos to camera coordinates
+
+  Vector obj_pos {obj.world_pos_};
+  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, cam.trig_);
+
+  // Project point on the view plane and check
+
+  if (obj_pos.z + obj.sphere_rad_ < cam.z_near_)
+    obj.active_ = false;
+  if (obj_pos.z - obj.sphere_rad_ > cam.z_far_)
+    obj.active_ = false;
 
   return !obj.active_;
 }
@@ -495,7 +576,8 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
     // Compute vector of view (this is just potential view, not fact)
 
     Vector view {vxs[face[0]].pos_, cam.vrp_};
-    view.Normalize();
+    if (!view.IsZero())
+      view.Normalize();
 
     // If angle between view vector and normal > 90 deg, then face is invisible
 
@@ -679,6 +761,30 @@ float object::ComputeBoundingSphereRadius(V_Vertex& vxs, Axis axis)
     {
       curr = std::fabs(vx.pos_.y);
       if (curr > res) res = curr;
+      curr = std::fabs(vx.pos_.z);
+      if (curr > res) res = curr;
+    }
+  }
+  else if (axis == Axis::X)
+  {
+    for (const auto& vx : vxs)
+    {
+      curr = std::fabs(vx.pos_.x);
+      if (curr > res) res = curr;
+    }
+  }
+  else if (axis == Axis::Y)
+  {
+    for (const auto& vx : vxs)
+    {
+      curr = std::fabs(vx.pos_.y);
+      if (curr > res) res = curr;
+    }
+  }
+  else if (axis == Axis::Z)
+  {
+    for (const auto& vx : vxs)
+    {
       curr = std::fabs(vx.pos_.z);
       if (curr > res) res = curr;
     }

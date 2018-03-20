@@ -142,14 +142,14 @@ int main(int argc, const char** argv)
   object::Scale(skybox, {500.0f, 500.0f, 500.0f});
   object::Rotate(skybox, {90.0f, 0.0f, 0.0f}, trig);
 
-  constexpr int kObjVxsWidth {32};
+  constexpr int kObjVxsWidth {64+1};
   Terrain terrain (
     fnames.terrain_hm_, fnames.terrain_tx_, fnames.divider_,
     kObjVxsWidth,
     Shading::GOURANG
   );
   auto& terrain_chunks = terrain.GetChunks();
-
+  
   // object::Scale(terrain, {2.0f, 2.0f, 2.0f});
   // terrain.SetDetalization({50.0f, 80.0f, 100.0f}, 1, 10);
   // terrain.SetDetalization({1.0f}, 10, 10);
@@ -159,6 +159,7 @@ int main(int argc, const char** argv)
 
   Buffer  buf (kWinWidth, kWinHeight, color::Black);
   ZBuffer zbuf (kWinWidth, kWinHeight);
+  bool wired {false};
   
   // Make triangles arrays
 
@@ -189,95 +190,126 @@ int main(int argc, const char** argv)
     // Handle input
 
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    auto mpos = win.ReadMousePos();
-    helpers::HandleCamMovement(kbtn, 1.0f, cam);
-    helpers::HandleCamType(kbtn, cam);
-    helpers::HandleCamRotate(false, mpos, mpos_prev, cam.dir_);
-    helpers::HandlePause(kbtn, win);
+    // auto mpos = win.ReadMousePos();
+    // helpers::HandleCamMovement(kbtn, 1.0f, cam);
+    // helpers::HandleCamType(kbtn, cam);
+    // helpers::HandleCamRotate(false, mpos, mpos_prev, cam.dir_);
+    // helpers::HandlePause(kbtn, win);
 
-    // Draw skybox
+    // // Draw skybox
   
-    skybox.world_pos_ = cam.vrp_;
-    skybox.SetCoords(Coords::TRANS);
-    skybox.CopyCoords(Coords::LOCAL, Coords::TRANS);
-    object::ResetAttributes(skybox);
-    auto hidden = object::RemoveHiddenSurfaces(skybox, cam);
-    object::Translate(skybox, skybox.world_pos_);
-    light::Object(skybox, lights_sky);
+    // skybox.world_pos_ = cam.vrp_;
+    // skybox.SetCoords(Coords::TRANS);
+    // skybox.CopyCoords(Coords::LOCAL, Coords::TRANS);
+    // object::ResetAttributes(skybox);
+    // auto hidden = object::RemoveHiddenSurfaces(skybox, cam);
+    // object::Translate(skybox, skybox.world_pos_);
+    // light::Object(skybox, lights_sky);
 
-    // Draw terrain
+    // // Cull terrain chunks
 
     int obj_culled {};
     for (auto& chunk : terrain_chunks)
     {
       chunk.SetCoords(Coords::TRANS);
-      chunk.CopyCoords(Coords::LOCAL, Coords::TRANS);
       object::ResetAttributes(chunk);
-      chunk.world_pos_.y = cam.vrp_.y;    // for culling purposes
-      obj_culled += object::Cull(chunk, cam);
-      chunk.world_pos_.y = 0.0f;
-    // terrain.UseDetalization(cam.vrp_);
-      hidden += object::RemoveHiddenSurfaces(chunk, cam);
+      obj_culled += object::CullZ(chunk, cam);
+      obj_culled += object::CullX(chunk, cam);
+      obj_culled += object::CullY(chunk, cam);
     }
 
-    // Light objects
-    
-    ProceedAmbientLightChange(lights_all, day_time);
-    ProceedAmbientLightChange(lights_sky, day_time);
+    // Change terrain detalization
 
-    // Go to camera coordinates    // optimization - make two copies of vxs of terrain - world coord and camera coord
+    // terrain.ProcessDetalization(cam);
 
-    light::World2Camera(lights_all, cam);
-    object::World2Camera(skybox, cam);
     for (auto& chunk : terrain_chunks)
     {
-      object::World2Camera(chunk, cam);
-      object::ComputeFaceNormals(chunk);
-      object::ComputeVertexNormalsV2(chunk);
-      object::ComputeFaceNormals(chunk);
+      if (chunk.active_)
+        chunk.CopyCoords(Coords::LOCAL, Coords::TRANS);
+      // hidden += object::RemoveHiddenSurfaces(chunk, cam);
     }
 
-    // Make triangles from terrain
-
-    tris_base.resize(0);
-    tris_ptrs.resize(0);
+    // // Light objects
     
-    for (auto& chunk : terrain_chunks)
-      triangles::AddFromObject(chunk, tris_base);
-    auto culled = triangles::CullAndClip(tris_base, cam);
+    // ProceedAmbientLightChange(lights_all, day_time);
+    // ProceedAmbientLightChange(lights_sky, day_time);
+
+    // // Go to camera coordinates
+
+    // light::World2Camera(lights_all, cam);
+    // object::World2Camera(skybox, cam);
+    // for (auto& chunk : terrain_chunks)
+    // {
+    //   if (!chunk.active_)
+    //     continue;
+    //   object::World2Camera(chunk, cam);
+    //   object::ComputeFaceNormals(chunk);
+    //   object::ComputeVertexNormalsV2(chunk);  // here is the problem when gourang
+    //   object::ComputeFaceNormals(chunk);
+    // }
+
+    // // Make triangles from terrain
+
+    // tris_base.resize(0);
+    // tris_ptrs.resize(0);
     
-    // Light terrain triangles
+    // for (auto& chunk : terrain_chunks)
+    // {
+    //   if (chunk.active_)
+    //     triangles::AddFromObject(chunk, tris_base);
+    // }
+    // auto tri_culled = triangles::CullAndClip(tris_base, cam);
+    
+    // // Light terrain triangles
 
-    light::Triangles(tris_base, lights_all);
-    light::Reset(lights_all);
+    // light::Triangles(tris_base, lights_all);
+    // light::Reset(lights_all);
 
-    // Make triangles for skybox (we want light it sepearately)
+    // // Make triangles for skybox (we want light it sepearately)
 
-    auto tris_sky = triangles::MakeBaseContainer(32);
-    triangles::AddFromObject(skybox, tris_sky);
-    culled += triangles::CullAndClip(tris_sky, cam);
+    // auto tris_sky = triangles::MakeBaseContainer(32);
+    // triangles::AddFromObject(skybox, tris_sky);
+    // tri_culled += triangles::CullAndClip(tris_sky, cam);
 
-    // Triangles merging
+    // // Triangles merging
 
-    triangles::AddFromTriangles(tris_sky, tris_base);
-    triangles::MakePointers(tris_base, tris_ptrs);
-    triangles::SortZAvg(tris_ptrs);
+    // triangles::AddFromTriangles(tris_sky, tris_base);
+    // triangles::MakePointers(tris_base, tris_ptrs);
+    // triangles::SortZAvg(tris_ptrs);
 
-    triangles::Camera2Persp(tris_base, cam);
-    triangles::Persp2Screen(tris_base, cam);
+    // triangles::Camera2Persp(tris_base, cam);
+    // triangles::Persp2Screen(tris_base, cam);
 
-    // Draw triangles
+    // // Draw triangles
 
-    // buf.Clear(); // we may don`t clean screen buffer since all pixels are redrawn
     zbuf.Clear();
-    render::Solid(tris_ptrs, zbuf, 150.0f, buf);
+    if (kbtn == Btn::T)
+      wired = !wired;
+    if (wired)
+    {
+      buf.Clear();
+      render::Wired(tris_ptrs, buf);
+    }
+    else
+      render::Solid(tris_ptrs, zbuf, 10.0f, buf);
     buf.SendDataToFB();
     fps.Count();
 
     win.Render();
     timer.Wait();    
 
-    PrintInfoOnCmd(fps, obj_culled, hidden, cam.vrp_);
+    if (fps.Ready())
+    {
+      std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
+      std::cerr << "Camera position: " << cam.vrp_ << '\n';
+      std::cerr << "Curr faces in chunk:" << terrain_chunks.front().faces_.size() << '\n';
+      std::cerr << "Chunks total: " << terrain_chunks.size() << '\n';
+      std::cerr << "Chunks culled: " << obj_culled << '\n';
+      // std::cerr << "Hidden surfaces: " << hidden << '\n';
+      std::cerr << "Triangles total: " << tris_base.size() << '\n';
+      // std::cerr << "Triangles culled: " << tri_culled << '\n';
+      std::cerr << '\n';
+    }
 
   } while (!win.Closed());
 

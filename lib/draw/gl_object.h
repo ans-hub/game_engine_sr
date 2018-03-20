@@ -62,11 +62,12 @@ struct GlObject
 
   GlObject();
   GlObject(cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs);
-  
+  virtual ~GlObject() {}
+
   // Coordinates routines
 
   void  SetCoords(Coords c) { current_vxs_ = c; }
-  void  CopyCoords(Coords src, Coords dest);
+  virtual void CopyCoords(Coords src, Coords dest);
   auto& GetCoords();
   auto& GetCoords() const;
 
@@ -102,6 +103,9 @@ namespace object {
 
   bool      Cull(GlObject&, const GlCamera&, const MatrixCamera&);
   bool      Cull(GlObject&, const GlCamera&);  
+  bool      CullX(GlObject&, const GlCamera&);  
+  bool      CullY(GlObject&, const GlCamera&);  
+  bool      CullZ(GlObject&, const GlCamera&);  
   int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
   void      ResetAttributes(GlObject&);
   void      ComputeFaceNormals(GlObject&, bool normalize = true);
