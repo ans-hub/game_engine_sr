@@ -346,16 +346,6 @@ void Terrain::AlignNeighboringChunks(Terrain::Chunk& curr)
 // PROXY CLASS MEMBER FUNCITONS IMPLEMENTATION
 //****************************************************************************
 
-// Copies coordinates in specified manner for Chunk
-
-void Terrain::Chunk::CopyCoords(Coords src, Coords dest)
-{
-  if (src == Coords::LOCAL && dest == Coords::TRANS)
-    vxs_trans_ = vxs_local_;
-  else if (src == Coords::TRANS && dest == Coords::LOCAL)
-    vxs_local_ = vxs_trans_;
-}
-
 // Set current face by given face_num and returns true if success
  
 bool Terrain::Chunk::SetFace(int face_num)

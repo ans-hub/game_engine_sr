@@ -110,7 +110,7 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
 
     int out_of_l {0};
     int out_of_r {0};
-    float proj_x = cam.wov_ * 0.5f / cam.dov_;
+    float proj_x = cam.wov_ * 0.5f / cam.dov_;  // todo: move out of loop
 
     // Test left and right plane for all 3 vertexes in triangle
 
@@ -403,15 +403,54 @@ void triangles::ApplyMatrix(const Matrix<4,4>& mx, V_Triangle& arr)
 
 void triangles::World2Camera(V_Triangle& arr, const GlCamera& cam)
 {
+  auto& trig = cam.trig_;
+  auto& cam_dir = cam.dir_;
+  auto& cam_pos = cam.vrp_;
+
   for (auto& tri : arr)
   {
     if (!tri.active_) continue;
     
-    V_Vertex vxs {tri[0], tri[1], tri[2]};
-    coords::World2Camera(vxs, cam.vrp_, cam.dir_, cam.trig_);
-    tri[0].pos_ = vxs[0].pos_;
-    tri[1].pos_ = vxs[1].pos_;
-    tri[2].pos_ = vxs[2].pos_;
+    float ysin = trig.Sin(-cam_dir.y);
+    float ycos = trig.Cos(-cam_dir.y);
+    float xsin = trig.Sin(-cam_dir.x);
+    float xcos = trig.Cos(-cam_dir.x);
+    float zsin = trig.Sin(-cam_dir.z);
+    float zcos = trig.Cos(-cam_dir.z);
+    
+    for (auto& vx : tri.vxs_)
+    {
+      // Translate position
+
+      vx.pos_ -= cam_pos;
+
+      // Y-axis rotate (yaw)
+
+      if (math::FNotZero(cam_dir.y))
+      {
+        float vx_old {vx.pos_.x};
+        vx.pos_.x = (vx.pos_.x * ycos) + (vx.pos_.z * ysin);
+        vx.pos_.z = (vx.pos_.z * ycos) - (vx_old * ysin); 
+      }
+
+      // X-axis rotate (pitch)
+
+      if (math::FNotZero(cam_dir.x))
+      {
+        float vy_old {vx.pos_.y}; 
+        vx.pos_.y = (vx.pos_.y * xcos) - (vx.pos_.z * xsin);
+        vx.pos_.z = (vx.pos_.z * xcos) + (vy_old * xsin); 
+      }
+
+      // Z-axis rotate (roll)
+
+      if (math::FNotZero(cam_dir.z))
+      {
+        float vx_old {vx.pos_.x};
+        vx.pos_.x = (vx.pos_.x * zcos) - (vx.pos_.y * zsin);
+        vx.pos_.y = (vx.pos_.y * zcos) + (vx_old * zsin);
+      }
+    }
   }
 }
 
@@ -421,11 +460,11 @@ void triangles::Camera2Persp(V_Triangle& arr, const GlCamera& cam)
   {
     if (!tri.active_) continue;
     
-    V_Vertex vxs {tri[0], tri[1], tri[2]};
-    coords::Camera2Persp(vxs, cam.dov_, cam.ar_);
-    tri[0].pos_ = vxs[0].pos_;
-    tri[1].pos_ = vxs[1].pos_;
-    tri[2].pos_ = vxs[2].pos_;
+    for (auto& vx : tri.vxs_)
+    {
+      vx.pos_.x = vx.pos_.x * cam.dov_ / vx.pos_.z;
+      vx.pos_.y = vx.pos_.y * cam.dov_ * cam.ar_ / vx.pos_.z;
+    }
   }
 }
 
@@ -450,11 +489,20 @@ void triangles::Persp2Screen(V_Triangle& arr, const GlCamera& cam)
   {
     if (!tri.active_) continue;
     
-    V_Vertex vxs {tri[0], tri[1], tri[2]};
-    coords::Persp2Screen(vxs, cam.wov_, cam.scr_w_, cam.scr_h_);
-    tri[0].pos_ = vxs[0].pos_;
-    tri[1].pos_ = vxs[1].pos_;
-    tri[2].pos_ = vxs[2].pos_;
+    // Define proportion koefficients
+
+    float kx = cam.scr_w_ / cam.wov_; // how much pix in one unit of proj plane 
+    float ky = cam.scr_h_ / cam.wov_;
+    
+    float half_wov = cam.wov_ / 2;
+
+    // Convert all points from persp to screen
+
+    for (auto& vx : tri.vxs_)
+    {
+      vx.pos_.x = (vx.pos_.x + half_wov) * kx;   // convert -half_wov +half_wov
+      vx.pos_.y = (vx.pos_.y + half_wov) * ky;   // to 0-width, 0-height
+    }
   }
 }
 

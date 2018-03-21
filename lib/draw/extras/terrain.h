@@ -80,7 +80,6 @@ struct Terrain::Chunk : public GlObject
   ~Chunk() { }
 
   bool SetFace(int face_num);
-  void CopyCoords(Coords src, Coords dest) override;
 
   void ComputeAllFaces();
   void AlignCorners();

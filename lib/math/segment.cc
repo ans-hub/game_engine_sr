@@ -36,10 +36,10 @@ bool segment2d::Clip(
 {
   enum Sides { LEFT, RIGHT, BOTTOM, TOP};
 
-  int vx = x2 - x1; // x component of directing vector
-  int vy = y2 - y1; // y component of directing vector
-  float t0 = 0;    // with parametr t1 = 0 we have p1
-  float t1 = 1;    // with parametr t2 = 1 we have p2
+  int vx = x2 - x1;   // x component of directing vector
+  int vy = y2 - y1;   // y component of directing vector
+  float tmin = 1.0f;  // with parametr t1 = 0 we have p1
+  float tmax = 0.0f;  // with parametr t2 = 1 we have p2
   
   float p;         // inequalities variables
   float q; 
@@ -64,21 +64,23 @@ bool segment2d::Clip(
     // p !=0  - then r is intersection point
 
     if (p < 0)
-      t0 = std::max(t0, t);
+      tmax = std::max(tmax, t);
     else if (p > 0)
-      t1 = std::min(t1, t);
+      tmin = std::min(tmin, t);
     else if (q < 0)           // parallel and outside
       return false;
     
-    if (t0 > t1) {
+    if (tmax > tmin) {
       return false;
     }
   }
 
-  x2 = x1 + (t1 * vx),
-  y2 = y1 + (t1 * vy);
-  x1 += (t0 * vx),
-  y1 += (t0 * vy);
+  int x1_res = x1 + (tmax * vx);
+  int y1_res = y1 + (tmax * vy);
+  x2 = x1 + (tmin * vx),
+  y2 = y1 + (tmin * vy);
+  x1 = x1_res;
+  y1 = y1_res;
 
   return true;
 }

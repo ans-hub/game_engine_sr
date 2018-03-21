@@ -600,6 +600,8 @@ void object::ApplyMatrix(const Matrix<4,4>& mx, GlObject& obj)
     vx.pos_ = matrix::Multiplie(vx.pos_, mx);
 }
 
+// Convert all vertices of object to camera coordinates
+
 void object::World2Camera(GlObject& obj, const GlCamera& cam)
 {
   auto& vxs = obj.GetCoords();

@@ -27,21 +27,31 @@ int draw_object::Wired(const GlObject& obj, Buffer& buf)
     if (!f.active_)
       continue;
 
-    int x1 = vxs[f[0]].pos_.x;
-    int x2 = vxs[f[1]].pos_.x;
-    int x3 = vxs[f[2]].pos_.x;
-    int y1 = vxs[f[0]].pos_.y;
-    int y2 = vxs[f[1]].pos_.y;
-    int y3 = vxs[f[2]].pos_.y;
+    auto v1 = vxs[f[0]].pos_;
+    auto v2 = vxs[f[1]].pos_;
+    auto v3 = vxs[f[2]].pos_;
+    auto v1_back = v1;
+    auto v2_back = v2;
+    auto v3_back = v3;
     auto color = f.color_.GetARGB();
 
-    if (segment2d::Clip(0, 0, w-1, h-1, x1, y1, x2, y2))
-      raster::Line(x1, y1, x2, y2, color, buf);
-    if (segment2d::Clip(0, 0, w-1, h-1, x2, y2, x3, y3))
-      raster::Line(x2, y2, x3, y3, color, buf);
-    if (segment2d::Clip(0, 0, w-1, h-1, x3, y3, x1, y1))
-      raster::Line(x3, y3, x1, y1, color, buf);
-    
+    if (segment2d::Clip(0, 0, w-1, h-1, v1.x, v1.y, v2.x, v2.y))
+    {
+      raster::Line(v1.x, v1.y, v2.x, v2.y, color, buf);
+      v1 = v1_back;
+      v2 = v2_back;
+      v3 = v3_back;
+    }
+    if (segment2d::Clip(0, 0, w-1, h-1, v2.x, v2.y, v3.x, v3.y))
+    {
+      raster::Line(v2.x, v2.y, v3.x, v3.y, color, buf);
+      v1 = v1_back;
+      v2 = v2_back;
+      v3 = v3_back;
+    }    
+    if (segment2d::Clip(0, 0, w-1, h-1, v3.x, v3.y, v1.x, v1.y))
+      raster::Line(v3.x, v3.y, v1.x, v1.y, color, buf);
+
     ++total;
   }
   return total;
@@ -153,21 +163,31 @@ int draw_triangles::Wired(const V_TrianglePtr& arr, Buffer& buf)
     if (!t->active_)
       continue;
 
-    int x1 = t->vxs_[0].pos_.x;
-    int x2 = t->vxs_[1].pos_.x;
-    int x3 = t->vxs_[2].pos_.x;
-    int y1 = t->vxs_[0].pos_.y;
-    int y2 = t->vxs_[1].pos_.y;
-    int y3 = t->vxs_[2].pos_.y;
+    auto v1 = t->vxs_[0].pos_;
+    auto v2 = t->vxs_[1].pos_;
+    auto v3 = t->vxs_[2].pos_;
+    auto v1_back = v1;
+    auto v2_back = v2;
+    auto v3_back = v3;
     auto color = t->color_.GetARGB();
 
-    if (segment2d::Clip(0, 0, w-1, h-1, x1, y1, x2, y2))
-      raster::Line(x1, y1, x2, y2, color, buf);
-    if (segment2d::Clip(0, 0, w-1, h-1, x2, y2, x3, y3))
-      raster::Line(x2, y2, x3, y3, color, buf);
-    if (segment2d::Clip(0, 0, w-1, h-1, x3, y3, x1, y1))
-      raster::Line(x3, y3, x1, y1, color, buf);
-    
+    if (segment2d::Clip(0, 0, w-1, h-1, v1.x, v1.y, v2.x, v2.y))
+    {
+      raster::Line(v1.x, v1.y, v2.x, v2.y, color, buf);
+      v1 = v1_back;
+      v2 = v2_back;
+      v3 = v3_back;
+    }
+    if (segment2d::Clip(0, 0, w-1, h-1, v2.x, v2.y, v3.x, v3.y))
+    {
+      raster::Line(v2.x, v2.y, v3.x, v3.y, color, buf);
+      v1 = v1_back;
+      v2 = v2_back;
+      v3 = v3_back;
+    }    
+    if (segment2d::Clip(0, 0, w-1, h-1, v3.x, v3.y, v1.x, v1.y))
+      raster::Line(v3.x, v3.y, v1.x, v1.y, color, buf);
+
     ++total;
   }
   return total;
