@@ -28,6 +28,7 @@ namespace helpers {
   void HandleCamMovement(Btn, float, GlCamera&);
   void HandleCamYPosition(float, GlCamera&);  
   void HandleCamRotate(bool mode, const Pos&, Pos&, Vector&);
+  void HandleFullscreen(Btn, int mode, GlWindow&);
   void HandlePause(Btn, GlWindow&);
   void HandleObject(Btn, Vector&, Vector&, Vector&);
   void HandleRotateObject(Btn, Vector&);

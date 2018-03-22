@@ -10,27 +10,27 @@ LIBWINDOW = $(LIBDIR)/window
 LIBMATH 	= $(LIBDIR)/math
 LIBDRAW 	= $(LIBDIR)/draw
 LIBSYSTEM = $(LIBDIR)/system
-LDFLAGS 	= -lwindow  -ldraw -lmath -lsystem 				# internal
-LDFLAGS  += -lX11 -lGL -lGLU -lXrandr								# external
+LDFLAGS 	= -lwindow  -ldraw -lmath -lsystem
+LDFLAGS  += -lX11 -lGL -lGLU -lXrandr
 
 # Setup compiler
 
 CXX 			= g++
-CXXFLAGS 	= -I $(ROOTDIR) -I .											# see note below
+CXXFLAGS 	= -I $(ROOTDIR) -I .
 CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
 CXXLIBS  += -L $(LIBWINDOW) -L $(LIBMATH)
 CXXLIBS  += -L $(LIBDRAW) -L $(LIBSYSTEM)
 CXXLIBS  += -L /usr/local/lib/
 CXXFLAGS += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
-DBGFLAGS += -pg -no-pie															# profiler flags
+DBGFLAGS += -pg -no-pie
 RLSFLAGS  = -O2
 
 # Setup objects
 
 VPATH = $(LIBDIR)/data/
 VPATH +=  ../
-OBJECTS = helpers.o
+OBJECTS = helpers.o camera_operator.o
 
 # Other stuff
 
@@ -76,7 +76,7 @@ debug : $(APPNAME).cc $(OBJECTS)
 # Cleans garbage (local)
 
 lclean :
-	rm -rf gmon.out		# profiler out
+	rm -rf gmon.out
 	rm -rf $(APPNAME) $(APPNAME)_* *.d *.o 
 
 # Cleans garbage (all)
@@ -88,7 +88,3 @@ clean :
 	make clean -C $(LIBMATH)
 	make clean -C $(LIBDRAW)
 	make clean -C $(LIBSYSTEM)
-
-	# Important note: we have 2 include path - root (for including libraries headers
-	# like #include "lib/math/point.h), and current dir (for including game headers
-	# like #include "engine/renderer.h" or alternatively #include "src/raiders/config.h")

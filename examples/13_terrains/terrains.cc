@@ -1,5 +1,5 @@
 // *************************************************************
-// File:    terrain.cc
+// File:    terrains.cc
 // Descr:   example of terrain generation
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <string>
 #include <iomanip> 
 
 #include "lib/window/gl_window.h"
@@ -25,31 +27,12 @@
 #include "lib/system/rand_toolkit.h"
 #include "lib/math/trig.h"
 
+#include "config.h"
 #include "../helpers.h"
+#include "../camera_operator.h"
 
 using namespace anshub;
 using namespace helpers;
-
-// Helper struct to recieve info about used file names
-
-struct Fnames
-{
-  Fnames()
-    : skybox_{nullptr}
-    , terrain_hm_{nullptr}
-    , terrain_tx_{nullptr}
-    , divider_{} { } 
-  Fnames(const char* sky, const char* terr_hm, const char* terr_tx, float div)
-    : skybox_{sky}
-    , terrain_hm_{terr_hm}
-    , terrain_tx_{terr_tx}
-    , divider_{div} { }
-  const char* skybox_;        // skybox ply
-  const char* terrain_hm_;    // terrain height map
-  const char* terrain_tx_;    // terrain texture map
-  float divider_;             // define how much we reduce heights
-
-}; // struct Fnames
 
 // Helpers struct for imitating of changing day and night
 
@@ -59,11 +42,19 @@ struct DayTime
     : min_amb_{std::min(0.0f, min_amb)}
     , max_amb_{std::max(1.0f, max_amb)}
     , velocity_{velocity} { }
+
+  void ProceedAmbientLightChange(Lights& lights)
+  {
+    float& intense = lights.ambient_.back().intense_;
+    intense = this->NextTick(intense);
+  }
+
+private:
+
   float NextTick(float intense)
   {
     float result {intense + velocity_};
-    if (result < min_amb_ || result > max_amb_)
-    {
+    if (result < min_amb_ || result > max_amb_) {
       result -= velocity_;
       velocity_ *= -1.0f;
     }
@@ -76,34 +67,15 @@ struct DayTime
 
 }; // struct DayTime
 
-Fnames ExtractFnamesFromArgv(int argc, const char** argv)
-{
-  if (argc != 5)
-    return {};
-  else
-    return {argv[1], argv[2], argv[3], std::stof(argv[4])};
-}
-
-// Imitates change day and night. Coordinate `w` inside vector used for
-// decide - is we should add or sub 
-
-void ProceedAmbientLightChange(Lights& lights, DayTime& dt)
-{
-  float& intense = lights.ambient_.back().intense_;
-  intense = dt.NextTick(intense);
-}
-
 int main(int argc, const char** argv)
 {
-  // Check file name
-
-  auto fnames = ExtractFnamesFromArgv(argc, argv);
-  if (!fnames.skybox_ || !fnames.terrain_hm_ || !fnames.terrain_tx_)
+  if (argc != 2)
   {
-    std::cerr << "Incorrect file name\n";
-    return 1;
+    std::cerr << "You must input config file name" << '\n';
+    return false;
   }
-  
+  Config cfg {argv[1]};
+
   // Math processor
   
   TrigTable trig {};
@@ -112,74 +84,94 @@ int main(int argc, const char** argv)
   // Timers
 
   FpsCounter fps {};
-  constexpr int kFpsWait {1000};
-  Timer timer (kFpsWait);
+  Timer timer (cfg.GetFloat("win_fps"));
 
   // Constants
 
-  constexpr int kWinWidth {800};
-  constexpr int kWinHeight {600};
+  const int kWinWidth {cfg.GetFloat("win_w")};
+  const int kWinHeight {cfg.GetFloat("win_h")};
+  std::string kSkyboxFname {cfg.GetString("ter_sky")};
+  std::string kTerrainHmFname {cfg.GetString("ter_hm")};
+  std::string kTerrainTxFname {cfg.GetString("ter_tx")};
+
+  FColor kWhite  {255.0f, 255.0f, 255.0f};
+  FColor kYellow {255.0f, 255.0f, 0.0f};
+  FColor kBlue   {0.0f, 0.0f, 255.0f};
   
   // Window
   
   auto pos  = io_helpers::GetXYToMiddle(kWinWidth, kWinHeight); 
-  GlWindow win (pos.x, pos.y, kWinWidth, kWinHeight, "Terrain"); 
+  auto mode = io_helpers::FindVideoMode(kWinWidth, kWinHeight);
+  GlWindow win (pos.x, pos.y, kWinWidth, kWinHeight, "Terrain");
+  
+  if (cfg.GetFloat("win_fs"))
+    win.ToggleFullscreen(mode);
 
   // Camera
 
-  float    dov     {2.0f};
-  float    fov     {75.0f};
-  Vector   cam_pos {-1.5f, 120.0f, 0.0f};
-  Vector   cam_dir {0.0f, 15.0f, 0.0f};
-  float    near_z  {dov};
-  float    far_z   {800.0f};
-  GlCamera cam (fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z);
-  Pos      mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
+  float    dov     {cfg.GetFloat("cam_dov")};
+  float    fov     {cfg.GetFloat("cam_fov")};
+  float    near_z  {cfg.GetFloat("cam_nearz")};
+  float    far_z   {cfg.GetFloat("cam_farz")};
+  Vector   cam_pos {cfg.GetVector3d("cam_pos")};
+  Vector   cam_dir {cfg.GetVector3d("cam_dir")};
+  
+  CameraOperator cam {
+    fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z
+  };
+  cam.SetClarity(cfg.GetFloat("cam_clarity"));
+  cam.SetPrevMousePos(win.ReadMousePos());
+  cam.SetLeftButton(KbdBtn::A);
+  cam.SetRightButton(KbdBtn::D);
+  cam.SetForwardButton(KbdBtn::W);
+  cam.SetBackwardButton(KbdBtn::S);
+  cam.SetUpButton(KbdBtn::R);
+  cam.SetDownButton(KbdBtn::F);
+  cam.SetZoomInButton(KbdBtn::NUM9);
+  cam.SetZoomOutButton(KbdBtn::NUM0);
+  cam.SetSwitchRollButton(KbdBtn::L);
+  cam.SetWiredModeButton(KbdBtn::T);
+  cam.SetMoveVelocity(cfg.GetFloat("cam_velocity"));
 
-  // Create skybox and terrain objects
+  // Create skybox
 
-  Skybox  skybox (fnames.skybox_, cam.vrp_);
-  object::Scale(skybox, {500.0f, 500.0f, 500.0f});
+  Skybox  skybox (cfg.GetString("ter_sky").c_str(), cam.vrp_);
+  object::Scale(skybox, {far_z, far_z, far_z});
   object::Rotate(skybox, {90.0f, 0.0f, 0.0f}, trig);
+  
+  // Create terrain
 
-  constexpr int kObjVxsWidth {64+1};
   Terrain terrain (
-    fnames.terrain_hm_, fnames.terrain_tx_, fnames.divider_,
-    kObjVxsWidth,
-    Shading::GOURANG
+    cfg.GetString("ter_hm").c_str(),
+    cfg.GetString("ter_tx").c_str(),
+    cfg.GetFloat("ter_divider"),
+    cfg.GetFloat("ter_chunk"), 
+    static_cast<Shading>(cfg.GetFloat("ter_shading"))
   );
+  terrain.SetDetalization(cfg.GetVectorF("ter_detalization"));
   auto& terrain_chunks = terrain.GetChunks();
-  
-  // object::Scale(terrain, {2.0f, 2.0f, 2.0f});
-  // terrain.SetDetalization({50.0f, 80.0f, 100.0f}, 1, 10);
-  // terrain.SetDetalization({1.0f}, 10, 10);
-  // terrain.SetShading(Shading::GOURANG);
-  
+
   // Other stuff
 
   Buffer  buf (kWinWidth, kWinHeight, color::Black);
   ZBuffer zbuf (kWinWidth, kWinHeight);
-  bool wired {false};
   
   // Make triangles arrays
 
   auto tris_base = triangles::MakeBaseContainer(0);
   auto tris_ptrs = triangles::MakePtrsContainer(0);
+  auto tris_sky  = triangles::MakeBaseContainer(0);
 
   // Prepare lights sources
  
   DayTime day_time (0.1f, 0.7f, 0.0009f);
 
-  FColor white  {255.0f, 255.0f, 255.0f};
-  FColor yellow {255.0f, 255.0f, 0.0f};
-  FColor blue   {0.0f, 0.0f, 255.0f};
-
   Lights lights_all {};
-  lights_all.ambient_.emplace_back(white, 0.2f);
-  lights_all.infinite_.emplace_back(white, 0.7f, Vector{-1.0f, -1.0f, 0.0f});
+  lights_all.ambient_.emplace_back(kWhite, 0.2f);
+  lights_all.infinite_.emplace_back(kWhite, 0.7f, Vector{-1.0f, -1.0f, 0.0f});
 
   Lights lights_sky {};
-  lights_sky.ambient_.emplace_back(white, 0.7f);
+  lights_sky.ambient_.emplace_back(kWhite, 0.7f);
   
   // Main loop
 
@@ -187,31 +179,33 @@ int main(int argc, const char** argv)
     timer.Start();
     win.Clear();
 
-    // Handle input
+    // Handle camera
 
+    cam.Process(win);
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    // auto mpos = win.ReadMousePos();
-    // helpers::HandleCamMovement(kbtn, 1.0f, cam);
-    // helpers::HandleCamType(kbtn, cam);
-    // helpers::HandleCamRotate(false, mpos, mpos_prev, cam.dir_);
-    // helpers::HandlePause(kbtn, win);
+    helpers::HandlePause(kbtn, win);
+    helpers::HandleFullscreen(kbtn, mode, win);
+      
+    // Process ambient intense changing
 
-    // // Draw skybox
+    day_time.ProceedAmbientLightChange(lights_all);
+    day_time.ProceedAmbientLightChange(lights_sky);
+    
+    // Process skybox
   
-    // skybox.world_pos_ = cam.vrp_;
-    // skybox.SetCoords(Coords::TRANS);
-    // skybox.CopyCoords(Coords::LOCAL, Coords::TRANS);
-    // object::ResetAttributes(skybox);
-    // auto hidden = object::RemoveHiddenSurfaces(skybox, cam);
-    // object::Translate(skybox, skybox.world_pos_);
-    // light::Object(skybox, lights_sky);
+    skybox.world_pos_ = cam.vrp_;
+    skybox.SetCoords(Coords::TRANS);
+    skybox.CopyCoords(Coords::LOCAL, Coords::TRANS);
+    object::ResetAttributes(skybox);
+    auto hidden = object::RemoveHiddenSurfaces(skybox, cam);
+    object::Translate(skybox, skybox.world_pos_);
+    light::Object(skybox, lights_sky);
 
-    // // Cull terrain chunks
+    // Cull terrain chunks by world pos
 
     int obj_culled {};
     for (auto& chunk : terrain_chunks)
     {
-      chunk.SetCoords(Coords::TRANS);
       object::ResetAttributes(chunk);
       obj_culled += object::CullZ(chunk, cam);
       obj_culled += object::CullX(chunk, cam);
@@ -220,94 +214,89 @@ int main(int argc, const char** argv)
 
     // Change terrain detalization
 
-    // terrain.ProcessDetalization(cam);
+    terrain.ProcessDetalization(cam);
 
     for (auto& chunk : terrain_chunks)
     {
-      if (chunk.active_)
-        chunk.CopyCoords(Coords::LOCAL, Coords::TRANS);
-      // hidden += object::RemoveHiddenSurfaces(chunk, cam);
+      if (!chunk.active_)
+        continue;
+
+      chunk.CopyCoords(Coords::LOCAL, Coords::TRANS);
+      chunk.SetCoords(Coords::TRANS);
+      
+      object::ComputeFaceNormals(chunk, true);
+      hidden += object::RemoveHiddenSurfaces(chunk, cam);
+      object::VerticesNormals2Camera(chunk, cam);
     }
 
-    // // Light objects
+    // Go to camera coords for light and skybox (exclude terrain)
+
+    light::World2Camera(lights_all, cam);
+    object::World2Camera(skybox, cam);
+
+    // Make triangles from terrain
+
+    tris_base.resize(0);
+    tris_ptrs.resize(0);
+    tris_sky.resize(0);
     
-    // ProceedAmbientLightChange(lights_all, day_time);
-    // ProceedAmbientLightChange(lights_sky, day_time);
-
-    // // Go to camera coordinates
-
-    // light::World2Camera(lights_all, cam);
-    // object::World2Camera(skybox, cam);
-    // for (auto& chunk : terrain_chunks)
-    // {
-    //   if (!chunk.active_)
-    //     continue;
-    //   object::World2Camera(chunk, cam);
-    //   object::ComputeFaceNormals(chunk);
-    //   object::ComputeVertexNormalsV2(chunk);  // here is the problem when gourang
-    //   object::ComputeFaceNormals(chunk);
-    // }
-
-    // // Make triangles from terrain
-
-    // tris_base.resize(0);
-    // tris_ptrs.resize(0);
+    for (auto& chunk : terrain_chunks)
+    {
+      if (chunk.active_)
+        triangles::AddFromObject(chunk, tris_base);
+    }
+    triangles::World2Camera(tris_base, cam);
+    auto tri_culled = triangles::CullAndClip(tris_base, cam);
     
-    // for (auto& chunk : terrain_chunks)
-    // {
-    //   if (chunk.active_)
-    //     triangles::AddFromObject(chunk, tris_base);
-    // }
-    // auto tri_culled = triangles::CullAndClip(tris_base, cam);
-    
-    // // Light terrain triangles
+    // Light terrain triangles in world coordinates
 
-    // light::Triangles(tris_base, lights_all);
-    // light::Reset(lights_all);
+    triangles::ComputeNormals(tris_base);
+    light::Triangles(tris_base, lights_all);
+    light::Reset(lights_all);
 
-    // // Make triangles for skybox (we want light it sepearately)
+    // Make triangles for skybox (we want light it sepearately)
 
-    // auto tris_sky = triangles::MakeBaseContainer(32);
-    // triangles::AddFromObject(skybox, tris_sky);
-    // tri_culled += triangles::CullAndClip(tris_sky, cam);
+    triangles::AddFromObject(skybox, tris_sky);
+    tri_culled += triangles::CullAndClip(tris_sky, cam);
 
-    // // Triangles merging
+    // Triangles merging
 
-    // triangles::AddFromTriangles(tris_sky, tris_base);
-    // triangles::MakePointers(tris_base, tris_ptrs);
-    // triangles::SortZAvg(tris_ptrs);
+    triangles::AddFromTriangles(tris_sky, tris_base);
+    triangles::MakePointers(tris_base, tris_ptrs);
+    triangles::SortZAvg(tris_ptrs);
 
-    // triangles::Camera2Persp(tris_base, cam);
-    // triangles::Persp2Screen(tris_base, cam);
+    triangles::Camera2Persp(tris_base, cam);
+    triangles::Persp2Screen(tris_base, cam);
 
-    // // Draw triangles
+    // Draw triangles
 
     zbuf.Clear();
-    if (kbtn == Btn::T)
-      wired = !wired;
-    if (wired)
+    if (cam.IsWired())
     {
       buf.Clear();
       render::Wired(tris_ptrs, buf);
     }
     else
-      render::Solid(tris_ptrs, zbuf, 10.0f, buf);
+    {
+      buf.Clear();
+      render::Solid(tris_ptrs, zbuf, cam.GetClarity(), buf);
+    }
     buf.SendDataToFB();
     fps.Count();
 
     win.Render();
-    timer.Wait();    
-
+    timer.Wait();
+    
     if (fps.Ready())
     {
       std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
       std::cerr << "Camera position: " << cam.vrp_ << '\n';
-      std::cerr << "Curr faces in chunk:" << terrain_chunks.front().faces_.size() << '\n';
+      std::cerr << "Camera direction: " << cam.dir_ << '\n';
       std::cerr << "Chunks total: " << terrain_chunks.size() << '\n';
       std::cerr << "Chunks culled: " << obj_culled << '\n';
-      // std::cerr << "Hidden surfaces: " << hidden << '\n';
+      std::cerr << "Hidden surfaces: " << hidden << '\n';
       std::cerr << "Triangles total: " << tris_base.size() << '\n';
-      // std::cerr << "Triangles culled: " << tri_culled << '\n';
+      std::cerr << "Triangles culled: " << tri_culled << '\n';
       std::cerr << '\n';
     }
 

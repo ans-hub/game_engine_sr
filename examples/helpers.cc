@@ -9,6 +9,8 @@
 
 namespace anshub {
 
+// Specialized camera function that changes camera type
+
 void helpers::HandleCamType(Btn kbtn, GlCamera& cam)
 {
   if (kbtn == Btn::ENTER)
@@ -20,9 +22,9 @@ void helpers::HandleCamType(Btn kbtn, GlCamera& cam)
   }
 }
 
-// Moves camera in given directions
+// Specialized camera function that moves camera in given directions
 
-void helpers::HandleCamMovement(Btn kbtn, float cam_vel, GlCamera& cam)
+void helpers::HandleCamMovement(Btn kbtn, float, GlCamera& cam)
 {
   switch (kbtn)
   {
@@ -44,6 +46,8 @@ void helpers::HandleCamYPosition(float y, GlCamera& cam)
 {
   cam.vrp_.y = y;
 }
+
+// Rotates camera by eulers angles and using mouse positions
 
 void helpers::HandleCamRotate(
   bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
@@ -70,6 +74,12 @@ void helpers::HandlePause(Btn key, GlWindow& win)
         timer.Wait();
     }
   }
+}
+
+void helpers::HandleFullscreen(Btn key, int mode, GlWindow& win)
+{
+  if (key == Btn::ESC)
+    win.ToggleFullscreen(mode);
 }
 
 void helpers::HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)

@@ -1,14 +1,17 @@
 # Terrain and skybox
 
-Example of terrain generating with skybox
+Example of different terrains generating with skyboxes. Here I decide to use different examples without arguments since we have too many parameters to tune for some terrains.
 
 ## Usage:
 ```bash
   $ make
-  $ ./terrains ../00_data/skyboxes/cube_skybox2.ply ../00_data/terrains/terrain_hm.bmp ../00_data/terrains/terrain_tx.bmp 7
-  $ ./terrains ../00_data/skyboxes/cube_skybox2.ply ../00_data/terrains/terrain_hm2.bmp ../00_data/terrains/terrain_tx.bmp2 40
-
+  $ ./terrains configs/01.txt
+  $ ./terrains configs/02.txt
+  $ ./terrains configs/03.txt
+  $ ./terrains configs/04.txt
+  ...
 ```
+## Subdirectories:
 
 <div style="text-align: center;" markdown="1" />
 <img src="screenshot.png" style="width: 600px;" />
