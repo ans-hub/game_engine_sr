@@ -84,6 +84,7 @@ namespace triangles {
   int       CullAndClip(V_Triangle&, const GlCamera&);
   int       RemoveHiddenSurfaces(V_Triangle&, const GlCamera&);
   void      ResetAttributes(V_Triangle&);
+  void      ComputeNormals(V_Triangle&, bool normalize = true);
   
   // Triangles array transformation
 

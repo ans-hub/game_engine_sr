@@ -187,15 +187,16 @@ auto BaseWindow::GetNextEvent()
   }
 }
 
-Btn BaseWindow::ReadKeyboardBtn(BtnType t)            // see note #1 
+Btn BaseWindow::ReadKeyboardBtn(BtnType t) const      // see note #1 
 {
+  XEvent event;
   auto buf = Btn::NONE;
   long type = 1L << static_cast<int>(t);              // see note #2
-  if (XCheckWindowEvent(disp_, self_, type, &event_)) // see note #3
+  if (XCheckWindowEvent(disp_, self_, type, &event)) // see note #3
   {
-    auto key = XkbKeycodeToKeysym(disp_, event_.xkey.keycode, 0, 0);
+    auto key = XkbKeycodeToKeysym(disp_, event.xkey.keycode, 0, 0);
     char buff[20];
-    XLookupString(&event_.xkey, buff, 20, &key, NULL);  // see note below
+    XLookupString(&event.xkey, buff, 20, &key, NULL);  // see note below
     buf = static_cast<Btn>(key);
   }
   return buf;
@@ -204,18 +205,19 @@ Btn BaseWindow::ReadKeyboardBtn(BtnType t)            // see note #1
   // differ than ISO Latin-1
 }
 
-Btn BaseWindow::ReadMouseBtn(BtnType t)
+Btn BaseWindow::ReadMouseBtn(BtnType t) const
 {
+  XEvent event;
   auto buf = Btn::NONE;
   long type = 1L << static_cast<int>(t);              // see note #2  
-  if (XCheckWindowEvent(disp_, self_, type, &event_)) // see note #3
+  if (XCheckWindowEvent(disp_, self_, type, &event)) // see note #3
   {
     buf = static_cast<Btn>(event_.xbutton.button + kMouseBtnOffset);
   }
   return buf;
 }
 
-Pos BaseWindow::ReadMousePos()
+Pos BaseWindow::ReadMousePos() const
 {
   Window root_ret;
   Window child_ret;
@@ -225,7 +227,8 @@ Pos BaseWindow::ReadMousePos()
   int y_win {0};
   unsigned int mask;
 
-  XQueryPointer(disp_, self_, &root_ret, &child_ret, &x_rel, &y_rel, &x_win, &y_win, &mask);
+  XQueryPointer(
+    disp_, self_, &root_ret, &child_ret, &x_rel, &y_rel, &x_win, &y_win, &mask);
   return Pos(x_win, y_win);
 
   // Variants - http://www.rahul.net/kenton/perf.html
@@ -240,8 +243,53 @@ Pos BaseWindow::ReadMousePos()
   // return buf;
 }
 
+// From here: https://goo.gl/W3zqgh
+
+bool BaseWindow::IsKeyboardBtnPressed(KbdBtn btn) const
+{
+  if (btn == KbdBtn::NONE)
+    return false;
+
+  KeyCode keycode = XKeysymToKeycode(disp_, static_cast<KeySym>(btn));
+  
+  if (keycode) {
+    char keys[32];
+    XQueryKeymap(disp_, keys);
+    return (keys[keycode / 8] & (1 << (keycode % 8))) != 0;
+  }
+  else
+    return false;
+}
+
+// From here: https://goo.gl/W3zqgh
+
+bool BaseWindow::IsMouseBtnPressed(MouseBtn btn) const
+{
+  Window root_ret;
+  Window child_ret;
+  int x_rel {0};
+  int y_rel {0};
+  int x_win {0};
+  int y_win {0};
+  unsigned int btns;
+
+  XQueryPointer(
+    disp_, self_, &root_ret, &child_ret, &x_rel, &y_rel, &x_win, &y_win, &btns);
+
+  switch (btn)
+  {
+    case MouseBtn::LMB:     return btns & Button1Mask;
+    case MouseBtn::RMB:     return btns & Button3Mask;
+    case MouseBtn::MMB:     return btns & Button2Mask;
+    case MouseBtn::WH_UP:   return false;
+    case MouseBtn::WH_DWN:  return false;
+    default:                return false;
+  }
+  return false;
+}
+
 //********************************************************************
-// INPUT HANDLERS
+// PRIVATE IMPLEMENTATION
 //********************************************************************
 
 // Ask WM to notify when it should close the window

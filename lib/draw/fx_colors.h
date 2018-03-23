@@ -163,10 +163,10 @@ inline void Color<float>::Modulate(const Color<float>& rhs)
   this->g_ *= rhs.g_;
   this->b_ *= rhs.b_;
   this->a_ *= rhs.a_;
-  this->r_ /= 256.0f;
-  this->g_ /= 256.0f;
-  this->b_ /= 256.0f;
-  this->a_ /= 256.0f;
+  this->r_ *= 0.00390625f;
+  this->g_ *= 0.00390625f;
+  this->b_ *= 0.00390625f;
+  this->a_ *= 0.00390625f;
 }
 
 // Clamps color components after addition

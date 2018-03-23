@@ -46,12 +46,20 @@ Vector vector::Sub(const Vector& v1, const Vector& v2)
 
 Vector vector::Normalize(const Vector& v)
 {
-  auto len = v.Length();
-  if (math::Fzero(len)) {
-    throw MathExcept("vector::Normalize - zero length vector");
+  float length = v.SquareLength();
+
+  if (!(length - 1.0f < math::kEpsilon))
+  {
+    length = v.Length();
+    
+    if (math::Fzero(length)) {
+      throw MathExcept("vector::Normalize - zero length vector");
+    }
+    float p = 1.0f / length;
+    return Vector(v.x * p, v.y * p, v.z * p);
   }
-  float p = 1 / len;
-  return Vector(v.x * p, v.y * p, v.z * p);
+  else
+    return v;
 }
 
 // Calculates cosine of the angle between given vectors

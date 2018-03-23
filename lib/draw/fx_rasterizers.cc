@@ -3797,7 +3797,7 @@ int raster_tri::TexturedAffineGR(
   // Draw top triangle
 
   FColor tex_color {};                 // texture and its light color
-  FColor total_color {};               //  to interpolate it inside x row loop
+  FColor curr_color {};               //  to interpolate it inside x row loop
 
   for (int y = y_top; y >= y_bot; --y)
   {
@@ -3857,8 +3857,8 @@ int raster_tri::TexturedAffineGR(
     {
       int dx = x - xlb + xl_dx;           // we need real dx, not clipped
       float curr_z = x_lz + (dx_currx_z * dx);
-      FColor curr_c = x_lc + (dx_currx_c * dx);      
-      
+      curr_color = x_lc + (dx_currx_c * dx);      
+
       if (curr_z > z_ptr[y * z_width + x])
       {
         // Get real texture coordinates
@@ -3878,12 +3878,11 @@ int raster_tri::TexturedAffineGR(
       
         // Modulate light and color
 
-        FColor total {curr_c};
-        total.Modulate(tex_color);
+        curr_color.Modulate(tex_color);
 
         // Draw point
 
-        scr_ptr[x + y * scr_width] = total.GetARGB();
+        scr_ptr[x + y * scr_width] = curr_color.GetARGB();
         z_ptr[y * z_width + x] = curr_z;
         ++total_drawn;
       }
@@ -3981,7 +3980,7 @@ int raster_tri::TexturedAffineGR(
   // Draw bottom triangle
 
   tex_color = FColor {};               // texture and its light color
-  total_color = FColor {};             //  to interpolate it inside x row loop
+  curr_color = FColor {};             //  to interpolate it inside x row loop
 
   for (int y = y_bot; y < y_top; ++y)
   {
@@ -4044,7 +4043,7 @@ int raster_tri::TexturedAffineGR(
     {
       int dx = x - xlb + xl_dx;
       float curr_z = x_lz + (dx_currx_z * dx);
-      FColor curr_c = x_lc + (dx_currx_c * dx);      
+      curr_color = x_lc + (dx_currx_c * dx);      
       
       if (curr_z > z_ptr[y * z_width + x])
       {
@@ -4065,12 +4064,11 @@ int raster_tri::TexturedAffineGR(
       
         // Modulate light and color
 
-        FColor total {curr_c};
-        total.Modulate(tex_color);
+        curr_color.Modulate(tex_color);
         
         // Draw point
 
-        scr_ptr[x + y * scr_width] = total.GetARGB();
+        scr_ptr[x + y * scr_width] = curr_color.GetARGB();
         z_ptr[y * z_width + x] = curr_z;
         ++total_drawn;
       }

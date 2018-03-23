@@ -153,21 +153,27 @@ inline float Vector::Length() const
 
 inline float Vector::SquareLength() const
 {
-  return std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2);
+  return x * x + y * y + z * z;
 }
 
-// Make length == 1
+// Normalizes vector if not normalized yet 
 
 inline void Vector::Normalize()
 {
-  float len = Length();
-  if (math::Fzero(len)) {
-    throw MathExcept("vector::Normalize - zero length vector");
+  float length = SquareLength();
+
+  if (!(length - 1.0f < math::kEpsilon))
+  {
+    length = Length();
+    
+    if (math::Fzero(length)) {
+      throw MathExcept("vector::Normalize - zero length vector");
+    }
+    float p = 1.0f / length;
+    x *= p;
+    y *= p;
+    z *= p;
   }
-  float p = 1 / len;
-  x *= p;
-  y *= p;
-  z *= p;
 }
 
 inline bool Vector::IsZero() const

@@ -265,9 +265,9 @@ void object::ComputeFaceNormals(GlObject& obj, bool normalize)
 
   for (auto& face : obj.faces_)
   {
-    auto p1 = vxs[face[0]].pos_;
-    auto p2 = vxs[face[1]].pos_;
-    auto p3 = vxs[face[2]].pos_;
+    auto& p1 = vxs[face[0]].pos_;
+    auto& p2 = vxs[face[1]].pos_;
+    auto& p3 = vxs[face[2]].pos_;
     Vector u {p1, p2};
     Vector v {p1, p3};
     face.normal_ = vector::CrossProduct(u, v);
@@ -286,9 +286,9 @@ void object::ComputeFaceNormalsInv(GlObject& obj, bool normalize)
 
   for (auto& face : obj.faces_)
   {
-    auto p1 = vxs[face[0]].pos_;
-    auto p2 = vxs[face[1]].pos_;
-    auto p3 = vxs[face[2]].pos_;
+    auto& p1 = vxs[face[0]].pos_;
+    auto& p2 = vxs[face[1]].pos_;
+    auto& p3 = vxs[face[2]].pos_;
     Vector u {p1, p2};
     Vector v {p1, p3};
     face.normal_ = vector::CrossProduct(v, u);
@@ -331,16 +331,17 @@ void object::ComputeVertexNormalsV1(GlObject& obj)
   for (std::size_t i = 0; i < vxs.size(); ++i)
   {
     vxs[i].normal_ /= cnt[i];
-    vxs[i].normal_.Normalize();
+    if (!vxs[i].normal_.IsZero())
+        vxs[i].normal_.Normalize();
   }
 }
 
-// Compute vertexes normals, using more complex method, where as weighted factor 
+// Compute vertices normals, using more complex method, where as weighted factor 
 // would be used angles between edges of triangle. This method is really low
 // perfomance since requires compute acos and lengths vectors
 
 // Note: we should compute face normalized normals before calling this
-// function
+// function. Also we can use normals that was after hiding surfaces
 
 void object::ComputeVertexNormalsV2(GlObject& obj)
 {
@@ -354,13 +355,14 @@ void object::ComputeVertexNormalsV2(GlObject& obj)
 
   for (auto& face : obj.faces_)
   {
-    face.normal_.Normalize();
+    if (!face.normal_.IsZero())
+      face.normal_.Normalize();
     vxs[face[0]].normal_ += face.normal_ * face.angles_[0];
     vxs[face[1]].normal_ += face.normal_ * face.angles_[1];
     vxs[face[2]].normal_ += face.normal_ * face.angles_[2];
   }
   for (auto& vx : vxs) {
-    if (!vx.normal_.IsZero() && math::FNotZero(vx.normal_.SquareLength()-1.0f))
+    if (!vx.normal_.IsZero())
       vx.normal_.Normalize();
   }
 }
@@ -424,6 +426,9 @@ bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
 
 bool object::Cull(GlObject& obj, const GlCamera& cam)
 {
+  if (!obj.active_)
+    return false;
+
   // Translate world coords to camera for world_pos_ of object. This is necessary
   // to see how object center would seen when camera would be in 0;0;0 and 0 angles
   // (i.e. when all objects would be translated in camera coordinates)
@@ -563,14 +568,15 @@ int object::RemoveHiddenSurfaces(GlObject& obj, const GlCamera& cam)
 
   for (auto& face : obj.faces_)
   {    
-    // Compute face normal
+    // Compute face normal if it is absent
 
     if (face.normal_.IsZero())
     {
       Vector u {vxs[face[0]].pos_, vxs[face[1]].pos_};
       Vector v {vxs[face[0]].pos_, vxs[face[2]].pos_};
       face.normal_ = vector::CrossProduct(u,v);
-      face.normal_.Normalize();
+      if (!face.normal_.IsZero())
+        face.normal_.Normalize();
     }
 
     // Compute vector of view (this is just potential view, not fact)
@@ -618,6 +624,20 @@ void object::Persp2Screen(GlObject& obj, const GlCamera& cam)
 {
   auto& vxs = obj.GetCoords();
   coords::Persp2Screen(vxs, cam.wov_, cam.scr_w_, cam.scr_h_);
+}
+
+// Convert vertices normals to camera coordinates
+
+void object::VerticesNormals2Camera(GlObject& obj, const GlCamera& cam)
+{
+  auto& vxs = obj.GetCoords();
+
+  for (auto& vx : vxs) {
+    coords::RotateYaw(vx.normal_, -cam.dir_.y, cam.trig_);
+    coords::RotatePitch(vx.normal_, -cam.dir_.x, cam.trig_);
+    coords::RotateRoll(vx.normal_, -cam.dir_.z, cam.trig_);
+    // vx.normal_.Normalize();
+  }
 }
 
 // Scale object and recalc bounding radius

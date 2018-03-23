@@ -48,10 +48,9 @@ struct GlCamera
     const Vector& vrp, const Vector& dir,
     float z_near, float z_far
   );
+  virtual ~GlCamera() noexcept { }
   
-  virtual ~GlCamera() { }
-  
-  void  SetVelocity(float vel) { vel_ = vel; }
+  void  SetMoveVelocity(float vel) { vel_ = vel; }
   
   void  MoveLeft();
   void  MoveRight();

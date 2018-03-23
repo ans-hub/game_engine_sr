@@ -344,8 +344,8 @@ int triangles::RemoveHiddenSurfaces(V_Triangle& arr, const GlCamera& cam)
   {
     if (!tri.active_) continue;
     
-    // Compute trianglenormal
-    
+    // Compute triangle normal
+  
     if (tri.normal_.IsZero())
     {
       Vector u {tri[0].pos_, tri[1].pos_};
@@ -383,21 +383,36 @@ void triangles::ResetAttributes(V_Triangle& arr)
   }
 }
 
+// Computes triangles normals
+
+void triangles::ComputeNormals(V_Triangle& arr, bool normalize)
+{
+  for (auto& tri : arr)
+  {
+    if (!tri.active_)
+      continue;
+
+    Vector u {tri[0].pos_, tri[1].pos_};
+    Vector v {tri[0].pos_, tri[2].pos_};
+    tri.normal_ = vector::CrossProduct(u, v);
+
+    if (normalize && !tri.normal_.IsZero())
+      tri.normal_.Normalize();
+  }
+}
+
 // Apply matrix to all triangles in array
-// todo : test it
 
 void triangles::ApplyMatrix(const Matrix<4,4>& mx, V_Triangle& arr)
 {
   for (auto& tri : arr)
   {
-    if (!tri.active_) continue;
+    if (!tri.active_)
+      continue;
 
-    auto v1 = matrix::Multiplie(tri[0].pos_, mx);
-    auto v2 = matrix::Multiplie(tri[1].pos_, mx);
-    auto v3 = matrix::Multiplie(tri[2].pos_, mx);
-    tri[0].pos_ = v1;
-    tri[1].pos_ = v2;
-    tri[2].pos_ = v3;
+    tri[0].pos_ = matrix::Multiplie(tri[0].pos_, mx);
+    tri[1].pos_ = matrix::Multiplie(tri[1].pos_, mx);
+    tri[2].pos_ = matrix::Multiplie(tri[2].pos_, mx);
   }
 }
 

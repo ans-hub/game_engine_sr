@@ -127,6 +127,7 @@ namespace object {
   void      Camera2Persp(GlObject&, const GlCamera&);
   void      Persp2Screen(GlObject&, const GlCamera&);
   void      Homogenous2Normal(GlObject&);
+  void      VerticesNormals2Camera(GlObject&, const GlCamera&);
 
   // Object helpers
 

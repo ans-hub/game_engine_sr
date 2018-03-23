@@ -24,7 +24,9 @@ struct Face
   Face(V_Vertex& vxs, int f1, int f2, int f3) 
   : active_{true}
   , vxs_{f1, f2, f3}
-  , normal_{}
+  , normal_{
+      vector::CrossProduct(
+        Vector{vxs[f2].pos_-vxs[f1].pos_}, Vector{vxs[f3].pos_-vxs[f1].pos_}) }
   , color_{}
   , angles_{
     vector::AngleBetween(
@@ -36,7 +38,10 @@ struct Face
     vector::AngleBetween(
       Vector(vxs[f1].pos_ - vxs[f3].pos_), Vector(vxs[f2].pos_ - vxs[f3].pos_)
     ) }
-  { }
+  {
+    if (!normal_.IsZero())
+      normal_.Normalize();
+  }
 
   int& operator[](int f) { return vxs_[f]; }
   const int& operator[](int f) const { return vxs_[f]; }

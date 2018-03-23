@@ -12,6 +12,7 @@
 #include "../gl_aliases.h"
 #include "../gl_object.h"
 #include "../gl_camera.h"
+#include "../gl_vertex.h"
 
 #include "../../math/math.h"
 
@@ -32,12 +33,10 @@ struct Terrain
   Terrain(
     cChar* hm_fname, cChar* tex_fname, int div_factor, int obj_width, Shading);
   
+  auto& GetChunks() { return chunks_; }
   void  SetShading(Shading);
+  void  SetDetalization(const V_Float&);
   void  ProcessDetalization(const GlCamera&);
-  V_Chunk&  GetChunks() { return chunks_; }
-
-  // void SetDetalization(std::vector<float> det_lenghts);
-  // void UseDetalization(const Vector& vrp);
 
 private:
 
@@ -47,7 +46,7 @@ private:
   void MakeChunks(int obj_width);
   void MakeChunkFaces();
   void FillChunks();
-  void AlignNeighboringChunks(Chunk&);
+  void ComputeVerticesNormals();
 
   int       hm_w_;                  // heightmap width
   int       hm_h_;                  // heightmap height
@@ -58,44 +57,45 @@ private:
   psBitmap  texture_;
   puBitmap  heightmap_;
   V_Vertex  vxs_;                   // vertices for all mesh
-  V_Chunk   chunks_;                // objects
+  V_Chunk   chunks_;                // chunks of terrain
   Shading   shading_;
+  V_Float   distances_;             // distances to determine detalization level
 
 }; // struct Terrain
 
 // Nested class of Terrain. Represents chunk of Terrain
 
-struct Terrain::Chunk : public GlObject
+struct Terrain::Chunk : GlObject
 {
-  Chunk(int width)
-    : GlObject()
-    , chunk_width_{width}
-    , min_y_{}
-    , max_y_{}
-    , left_{-1}
-    , right_{-1}
-    , top_{-1}
-    , bottom_{-1}
-    , det_faces_{} { }
+  Chunk(const V_Vertex& vxs, int ln, int rn, int tn, int bn);
   ~Chunk() { }
 
   bool SetFace(int face_num);
-
+  int  DetLevels() const { return det_faces_.size(); }
+  void CopyCoords(Coords src, Coords dest) override;
   void ComputeAllFaces();
-  void AlignCorners();
-  void AlignLeftToBiggest();
-  void AlignRightToBiggest();
-  void AlignTopToBiggest();
-  void AlignBottomToBiggest();
+  void AlignNeighboringChunks(std::vector<Chunk>&);
 
-  int     chunk_width_;  // how many vertices contains chunk in max det
-  float   min_y_;
-  float   max_y_;
-  int     left_;
-  int     right_;
-  int     top_;
-  int     bottom_;
-  VV_Face det_faces_;   // faces for different detalization level
+private:
+  void AlignLeftSide(float step);
+  void AlignRightSide(float step);
+  void AlignTopSide(float step);
+  void AlignBottomSide(float step);
+  void RecoverLeftSide();
+  void RecoverRightSide();
+  void RecoverTopSide();
+  void RecoverBottomSide();
+
+  V_Vertex  vxs_backup_;    // backup of local vertices
+  VV_Face   det_faces_;     // faces for different detalization levels
+  int       vxs_step_;      // step between vertices
+  int       vxs_in_row_;    // how many vertices contains chunk in max det
+  int       left_chunk_;    // index of left neighboring chunk
+  int       right_chunk_;   // index of right neighboring chunk
+  int       top_chunk_;     // index of top neighboring chunk
+  int       bottom_chunk_;  // index of bottom neighboring chunk
+  float     min_y_;         // min y coordinate  
+  float     max_y_;         // max y coordinate
 
 }; // struct Terrain::Chunk
 

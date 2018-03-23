@@ -59,8 +59,7 @@ void light::Object(GlObject& obj, Lights& lights)
       auto& cc = face.color_;           // color to change
       cc = {0.0f, 0.0f, 0.0f, 255.0f};
 
-      auto normalized = math::Fzero(face.normal_.SquareLength() - 1.0f);
-      if (!normalized)
+      if (!face.normal_.IsZero())
         face.normal_.Normalize();
 
       for (auto& light : lights.ambient_)
@@ -132,8 +131,7 @@ void light::Triangles(V_Triangle& arr, Lights& lights)
       auto& cc = tri.color_;           // color to change
       cc = {0.0f, 0.0f, 0.0f, 255.0f};
 
-      auto normalized = math::Fzero(tri.normal_.SquareLength() - 1.0f);
-      if (!normalized)
+      if (!tri.normal_.IsZero())
         tri.normal_.Normalize();
 
       for (auto& light : lights.ambient_)

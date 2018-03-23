@@ -10,6 +10,7 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
+#include <X11/keysymdef.h>
 #include <X11/extensions/Xrandr.h>
 
 #include "enums.h"
@@ -54,9 +55,14 @@ public:
   // Input handlers
 
   auto GetNextEvent();
-  Btn  ReadKeyboardBtn(BtnType);   // read keyboard and mouse
-  Btn  ReadMouseBtn(BtnType);      // event in event loop by
-  Pos  ReadMousePos();             // async
+  Btn  ReadKeyboardBtn(BtnType) const;  // read keyboard and mouse
+  Btn  ReadMouseBtn(BtnType) const;     // event in event loop by
+  Pos  ReadMousePos() const;            // async
+
+  // Another input handlers
+
+  bool IsKeyboardBtnPressed(KbdBtn) const;
+  bool IsMouseBtnPressed(MouseBtn) const;
   
   // Helper member functions
 

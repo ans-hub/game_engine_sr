@@ -23,13 +23,20 @@ Terrain::Terrain(
   , vxs_{}
   , chunks_{}
   , shading_{shading}
-{
+  , distances_{}
+{   
   LoadTexture(tex_fname);
   LoadHeightmap(map_fname);
   ComputeAllVertices(div_factor);
+  ComputeVerticesNormals();
   MakeChunks(obj_width);
-  MakeChunkFaces();
-  FillChunks();
+  
+  // Make all possible detalization faces for every chunk
+
+  for (auto& obj : chunks_) {
+    obj.ComputeAllFaces();
+    obj.SetFace(0);
+  }
 }
 
 //****************************************************************************
@@ -45,50 +52,49 @@ void Terrain::SetShading(Shading s)
     chunk.shading_ = s;
 }
 
+// Store lenghts for determine detalization levels
+
+void Terrain::SetDetalization(const V_Float& dists)
+{
+  distances_ = dists;
+  std::sort(distances_.begin(), distances_.end());
+}
+
 // Change detalization of every chunk if necessary and align borders
 
 void Terrain::ProcessDetalization(const GlCamera& cam)
 {
   for (auto& chunk : chunks_)
   {
-    if (!chunk.active_)
-      continue;
-
     // Find distance length between curr cam pos and pos of chunk
 
     Vector dist {chunk.world_pos_ - cam.vrp_};
-    float len = dist.Length();
+    float  len = dist.Length();
+    bool   need_align {false};
+    int    det_level {0};
 
-    // Change detalization faces
-    // todo: make correct range check
+    // Compare distance of view and detalization levels
 
-    if (len < 40.0f)
+    for (auto& dist : distances_)
     {
-      if (chunk.SetFace(1))
-        AlignNeighboringChunks(chunk);      
+      if (len < dist && det_level < chunk.DetLevels()) {
+        need_align |= chunk.SetFace(det_level);
+        break;
+      }
+      else
+        ++det_level;
     }
-    else if (len >= 40.0f && len < 60.0f)
-    {
-      if (chunk.SetFace(2))
-        AlignNeighboringChunks(chunk);      
-    }
-    else if (len >= 60.0f && len < 80.0f)
-    {
-      if (chunk.SetFace(3))
-        AlignNeighboringChunks(chunk);
-    }
-    // else if (len >= 80.0f && len < 100.0f)
-    else
-    {
-      chunk.SetFace(4);
-      // if (chunk.SetFace(4))
-        // AlignNeighboringChunks(chunk);
-    }
-    // else
-    // {
-    //   chunk.SetFace(4);
-    //     // AlignNeighboringChunks(chunk);
-    // }
+
+    // If distance of view more than given, then set next as current
+
+    if (need_align)
+      chunk.AlignNeighboringChunks(chunks_);
+    
+    if (det_level >= chunk.DetLevels())
+      det_level = chunk.DetLevels() - 1;
+
+    if (chunk.SetFace(det_level))
+      chunk.AlignNeighboringChunks(chunks_);
   }
 }
 
@@ -122,8 +128,10 @@ void Terrain::LoadHeightmap(const char* fname)
 
   if (hm_h_ == 0 || hm_w_ == 0)
     throw DrawExcept("Heighmap width or height is zero");
-  if (tx_h_ != tx_w_)
+  if (hm_h_ != hm_w_)
     throw DrawExcept("Heightmap width and height are not the same");
+  if (hm_h_ < obj_h_ || hm_w_ < obj_w_)
+    throw DrawExcept("Heightmap width or height less than given chunk width");  
   if (!math::IsAbsFactorOfTwo(tx_h_-1) || (!math::IsAbsFactorOfTwo(tx_w_-1)))
     throw DrawExcept("Heightmap dimensions are not the 2^n+1");
 }
@@ -164,24 +172,25 @@ void Terrain::ComputeAllVertices(int div_factor)
       v.pos_ = std::move(pos);
       v.texture_ = std::move(tex);
       v.color_ = FColor{color::White};  // by convient in ligthing purposes
+      v.normal_ = {0.0f, 0.0f, 0.0f};
       vxs_.emplace_back(v);
     }
   }
 }
 
-// Divide vertices into the chunks and makes objects, where chunk_width is
-// the count of vertices inside one chunk (should be 2^n+1)
+// Divide vertices into the chunks and makes objects, where vxs_in_row is
+// the count of vertices inside one line of chunk (should be 2^n+1).
 
-void Terrain::MakeChunks(int chunk_width)
+void Terrain::MakeChunks(int vxs_in_row)
 {
-  if (!math::IsAbsFactorOfTwo(chunk_width - 1))
+  if (!math::IsAbsFactorOfTwo(vxs_in_row - 1))
     throw DrawExcept("Chunk width is not the 2^n+1");
 
   // Precalculations
 
   int lpitch = hm_w_;
-  int chunk_height   = chunk_width;
-  int chunks_in_line = (hm_w_ - 1) / (chunk_width - 1);
+  int vxs_in_col   = vxs_in_row;
+  int chunks_in_line = (hm_w_ - 1) / (vxs_in_row - 1);
 
   // Iterate over objects and create objects array, where x+y is current 
   // chunk number
@@ -189,81 +198,125 @@ void Terrain::MakeChunks(int chunk_width)
   for (int y = 0; y < chunks_in_line; ++y) {
     for (int x = 0; x < chunks_in_line; ++x) {
       
-      Chunk obj {chunk_width};
-      
+      // Prepare neighboring chunks numbers and vertices array
+
+      int ln {-1};
+      int rn {-1};
+      int tn {-1};
+      int bn {-1};
+      V_Vertex vxs {};
+      vxs.reserve(vxs_in_row * vxs_in_col);
+
       // Fill neighboring chunks
 
       if (x != 0)
-        obj.left_ = y * chunks_in_line + x - 1;
+        ln = y * chunks_in_line + x - 1;
       if (x != chunks_in_line - 1)
-        obj.right_ = y * chunks_in_line + x + 1;
+        rn = y * chunks_in_line + x + 1;
       if (y != 0)
-        obj.top_ = ((y - 1) * chunks_in_line) + x;
+        tn = ((y - 1) * chunks_in_line) + x;
       if (y !=chunks_in_line - 1)
-        obj.bottom_ = ((y + 1) * chunks_in_line) + x;
+        bn = ((y + 1) * chunks_in_line) + x;
 
       // Compute indecies in global vertices list and get part of vertices
       
-      int st_index = y * lpitch * (chunk_height-1) + x * (chunk_width-1);
-      int en_index = st_index + lpitch * (chunk_height-1) + x * (chunk_width-1);
+      int st_index = y * lpitch * (vxs_in_row-1) + x * (vxs_in_row-1);
+      int en_index = st_index + lpitch * (vxs_in_row-1) + x * (vxs_in_row-1);
 
       for (int y = st_index; y <= en_index; y += lpitch)
-        for (int x = y; x < y + chunk_width; ++x)
-          obj.vxs_local_.push_back(vxs_[x]);
-      obj.vxs_trans_ = obj.vxs_local_;
-          
+        for (int x = y; x < y + vxs_in_row; ++x)
+          vxs.push_back(vxs_[x]);
+      
+      // Create chunk
+      
+      Chunk obj {vxs, ln, rn, tn, bn};
+      obj.textured_ = true;
+      obj.texture_ = texture_;
+      obj.shading_ = shading_;
       chunks_.push_back(obj);
     }
   }
 }
 
-// Compute all possible faces for all detalizations
+// Precomputes vertices normals for all terrain mesh using the most detalized
+// faces. This function computes again faces normal and angles between face edge.
 
-void Terrain::MakeChunkFaces()
+void Terrain::ComputeVerticesNormals()
 {
-  for (auto& obj : chunks_)
+  int w = std::sqrt(vxs_.size());
+
+  // Iterate over all vertices, create temporarity faces and compute normals
+  // for each vertex
+
+  for (int y = 0; y < w-1; ++y)
   {
-    obj.ComputeAllFaces();
-    obj.SetFace(0);
+    for (int x = 0; x < w-1; ++x) {
+
+      int lt = y*w+x;
+      int rt = y*w+x+1;
+      int lb = (y+1)*w+x;
+      int rb = (y+1)*w+x+1;
+
+      Face f1 {vxs_, lt, rt, lb};
+      Face f2 {vxs_, rt, rb, lb};
+
+      vxs_[lt].normal_ += f1.normal_ * f1.angles_[0];
+      vxs_[rt].normal_ += f1.normal_ * f1.angles_[1];
+      vxs_[lb].normal_ += f1.normal_ * f1.angles_[2];
+      vxs_[rt].normal_ += f2.normal_ * f2.angles_[0];
+      vxs_[lb].normal_ += f2.normal_ * f2.angles_[1];
+      vxs_[rb].normal_ += f2.normal_ * f2.angles_[2];
+    }
+  }
+  
+  for (auto& vx : vxs_) {
+    if (!vx.normal_.IsZero())
+      vx.normal_.Normalize();
   }
 }
 
-// Fill formed early chunks
+//****************************************************************************
+// PROXY CLASS MEMBER FUNCITONS IMPLEMENTATION
+//****************************************************************************
 
-void Terrain::FillChunks()
+Terrain::Chunk::Chunk(const V_Vertex& cvxs, int ln, int rn, int tn, int bn)
+  : GlObject()
+  , det_faces_{}
+  , vxs_step_{}
+  , vxs_in_row_(std::sqrt(cvxs.size()))  
+  , left_chunk_{ln}
+  , right_chunk_{rn}
+  , top_chunk_{tn}
+  , bottom_chunk_{bn}
+  , min_y_{}
+  , max_y_{}
 {
-  for (auto& obj : chunks_)
-  {
-    // Set chunk attributes
+  this->vxs_local_ = cvxs;
+  this->vxs_trans_ = cvxs;
+  this->vxs_backup_ = cvxs;
+  auto& vxs = this->vxs_local_;
 
-    obj.active_ = true;
-    obj.textured_ = true;
-    obj.texture_ = texture_;  // todo: make sure, that Bitmap doesn`t copies
-    obj.shading_ = shading_;
+  // Compute world position (x and z is median, y is median between most top y
+  // and less top y)
 
-    // Compute world position (x and z is median, y is median between most top y
-    // and less top y)
+  auto minmax_y = 
+    std::minmax_element(vxs.begin(), vxs.end(), [](Vertex& l, Vertex& r) {
+    return l.pos_.y < r.pos_.y;  
+  });
+  auto min_y_el = minmax_y.first - vxs.begin();
+  auto max_y_el = minmax_y.second - vxs.begin();
+  min_y_ = vxs[min_y_el].pos_.y;
+  max_y_ = vxs[max_y_el].pos_.y;
+  this->world_pos_ = (vxs.front().pos_ + vxs.back().pos_) / 2.0f;
+  this->world_pos_.y = (min_y_ + max_y_) / 2.0f;
 
-    auto& vxs = obj.vxs_local_;
-    auto minmax_y = 
-      std::minmax_element(vxs.begin(), vxs.end(), [](Vertex& l, Vertex& r) {
-      return l.pos_.y < r.pos_.y;  
-    });
-    auto min_y_el = minmax_y.first - vxs.begin();
-    auto max_y_el = minmax_y.second - vxs.begin();
-    obj.min_y_ = vxs[min_y_el].pos_.y;
-    obj.max_y_ = vxs[max_y_el].pos_.y;
-    obj.world_pos_ = (vxs.front().pos_ + vxs.back().pos_) / 2.0f;
-    obj.world_pos_.y = (obj.min_y_ + obj.max_y_) / 2.0f;
+  // Compute sphere radius (see note below)
 
-    // Compute sphere radius (see note below)
-
-    constexpr float kSureKoeff {1.5f};
-    float rad_candidate_1 = (float)(obj.chunk_width_) / 2.0f;
-    float rad_candidate_2 = obj.max_y_ - obj.min_y_;
-    obj.sphere_rad_ = std::max(rad_candidate_1, rad_candidate_2);
-    obj.sphere_rad_ *= kSureKoeff;
-  }
+  constexpr float kSureKoeff {1.5f};
+  float rad_candidate_1 = (float)(vxs_in_row_) / 2.0f;
+  float rad_candidate_2 = max_y_ - min_y_;
+  this->sphere_rad_ = std::max(rad_candidate_1, rad_candidate_2);
+  this->sphere_rad_ *= kSureKoeff;
 
   // Note #1 : we can`t simple call function to calc radius, since in regular 
   // object 0,0,0 is the middle point, but in Chunk this is not.
@@ -277,75 +330,6 @@ void Terrain::FillChunks()
   // each object. May be this is not so correct, but I increase sphere_rad to 1.5f 
 }
 
-// Try to align neighboring chunks after changing curr chunk faces
-
-void Terrain::AlignNeighboringChunks(Terrain::Chunk& curr)
-{
-  if (curr.left_ > 0)     // if has left neighboring chubk
-  {
-    auto& neigh = chunks_[curr.left_];
-    if (curr.faces_.size() > neigh.faces_.size())
-      curr.AlignLeftToBiggest();
-
-    else if (curr.faces_.size() < neigh.faces_.size())
-      neigh.AlignRightToBiggest();
-
-    else {
-      neigh.AlignRightToBiggest();
-      curr.AlignLeftToBiggest();
-    }
-  }
-
-  if (curr.right_ > 0)    // if has right neighboring chunk
-  {
-    auto& neigh = chunks_[curr.right_];
-    if (curr.faces_.size() < neigh.faces_.size())
-      neigh.AlignLeftToBiggest();
-
-    else if (curr.faces_.size() > neigh.faces_.size())
-      curr.AlignRightToBiggest();
-
-    else {
-      curr.AlignRightToBiggest();
-      neigh.AlignLeftToBiggest();
-    }
-  }
-
-  if (curr.top_ > 0)      // if has top neighboring chunk
-  {
-    // auto& neigh = chunks_[curr.top_];
-    // if (curr.faces_.size() < neigh.faces_.size())
-    //   neigh.AlignBottomToBiggest();
-
-    // else if (curr.faces_.size() > neigh.faces_.size())
-    //   curr.AlignTopToBiggest();
-
-    // else {
-    //   curr.AlignTopToBiggest();
-    //   neigh.AlignBottomToBiggest();
-    // }
-  }
-
-  if (curr.bottom_ > 0)      // if has bottom neighboring chunk
-  {
-  //   auto& neigh = chunks_[curr.bottom_];
-  //   if (curr.faces_.size() < neigh.faces_.size())
-  //     neigh.AlignTopToBiggest();
-
-  //   else if (curr.faces_.size() > neigh.faces_.size())
-  //     curr.AlignBottomToBiggest();
-
-  //   else {
-  //     curr.AlignBottomToBiggest();
-  //     neigh.AlignTopToBiggest();
-  //   }
-  }
-}
-
-//****************************************************************************
-// PROXY CLASS MEMBER FUNCITONS IMPLEMENTATION
-//****************************************************************************
-
 // Set current face by given face_num and returns true if success
  
 bool Terrain::Chunk::SetFace(int face_num)
@@ -353,21 +337,47 @@ bool Terrain::Chunk::SetFace(int face_num)
   if (faces_.size() != det_faces_[face_num].size())
   {
     faces_ = det_faces_[face_num];
+    vxs_local_ = vxs_backup_;
+    vxs_step_ = std::pow(2, face_num); // 2 << face_num;
     return true;
   }
   return false;
 }
 
-// Computes all possible detalization faces for object
+// Copies coordinates by faces
+
+void Terrain::Chunk::CopyCoords(Coords src, Coords dest)
+{
+  if (src == Coords::LOCAL && dest == Coords::TRANS)
+  {
+    for (auto& f : faces_)
+    {
+      vxs_trans_[f[0]] = vxs_local_[f[0]];
+      vxs_trans_[f[1]] = vxs_local_[f[1]];
+      vxs_trans_[f[2]] = vxs_local_[f[2]];
+    }
+  }
+  else if (src == Coords::TRANS && dest == Coords::LOCAL)  
+  {
+    for (auto& f : faces_)
+    {
+      vxs_local_[f[0]] = vxs_trans_[f[0]];
+      vxs_local_[f[1]] = vxs_trans_[f[1]];
+      vxs_local_[f[2]] = vxs_trans_[f[2]];
+    }
+  }
+}
+
+// Computes all possible detalization faces for this chunk
 
 void Terrain::Chunk::ComputeAllFaces()
 {
   det_faces_.resize(0);
-  int w = chunk_width_;
+  int w = vxs_in_row_;
   
   // Here we simple use variable `det` as step
 
-  for (int det = 1; det < w; det *= 2){
+  for (int det = 1; det <= w; det *= 2){
 
     V_Face curr_faces {};
 
@@ -375,11 +385,14 @@ void Terrain::Chunk::ComputeAllFaces()
       for (int x = 0; x < w-det; x+=det) {  // and x+det inside loop
         
         // Create faces
-
-        Face f1 {
-          vxs_local_, y*w+x, y*w+x+det, (y+det)*w+x};
-        Face f2 {
-          vxs_local_, y*w+x+det, (y+det)*w+x+det, (y+det)*w+x};
+          
+        int lt = y*w+x;
+        int rt = y*w+x+det;
+        int lb = (y+det)*w+x;
+        int rb = (y+det)*w+x+det;
+        
+        Face f1 {vxs_local_, lt, rt, lb};
+        Face f2 {vxs_local_, rt, rb, lb};
         
         // Fill face color (by convient this is the white)
 
@@ -394,103 +407,182 @@ void Terrain::Chunk::ComputeAllFaces()
   }
 }
 
-// Aligns current chunk by left border to prevent gaps between different faces
-// in current chunk and neighboring chunk (aligns left border to biggest)
+// Try to align neighboring chunks after changing current chunk face
 
-void Terrain::Chunk::AlignLeftToBiggest()
+void Terrain::Chunk::AlignNeighboringChunks(std::vector<Terrain::Chunk>& chunks)
 {
-  // Compute faces in row. Size/2 - count of quads in arr,
-  //  sqrt(size/2) - count of quads in row, res*2 = count of faces in row 
-
-  int lpitch = std::sqrt(faces_.size() / 2) * 2;
-  
-  // Iterate throw faces rows
-  
-  for (int y = 0; y < faces_.size(); y += lpitch * 2)
+  if (this->left_chunk_ >= 0)     // if has left neighboring chubk
   {
-    int f1 = y;           // first face in row
-    int f2 = y+1;         // first opposite face in row
-    int f3 = y+lpitch;    // first face in next row
-    int f4 = y+lpitch+1;  // first opposite face in next row
-
-    faces_[f1][2] = faces_[f4][2];
-    faces_[f2][2] = faces_[f4][2];
-    faces_[f3].vxs_ = faces_[f4].vxs_;
-  }
-}
-
-// Aligns current chunk by left border to prevent gaps between different faces
-// in current chunk and neighboring chunk (aligns right border to biggest)
-
-void Terrain::Chunk::AlignRightToBiggest()
-{
-  // Compute faces in row. Size/2 - count of quads in arr,
-  //  sqrt(size/2) - count of quads in row, res*2 = count of faces in row 
-
-  int lpitch = std::sqrt(faces_.size() / 2) * 2;
-
-  // Iterate throw faces rows
-
-  for (int y = lpitch-2; y < faces_.size(); y += lpitch * 2)
-  {
-    int f1 = y;           // last face in row
-    int f2 = y+1;         // last opposite face in row
-    int f3 = y+lpitch;    // last face in next row
-    int f4 = y+lpitch+1;  // last opposite face in next row
+    auto& neigh = chunks[this->left_chunk_];
+    bool curr_detalized  = this->vxs_step_ < neigh.vxs_step_;
+    bool neigh_detalized = this->vxs_step_ > neigh.vxs_step_;
     
-    faces_[f2].vxs_ = faces_[f1].vxs_;
-    faces_[f3][1] = faces_[f1][1];
-    faces_[f4][0] = faces_[f1][1];
+    this->RecoverLeftSide();
+    neigh.RecoverRightSide();
+
+    if (curr_detalized)
+      this->AlignLeftSide(neigh.vxs_step_);
+    else if (neigh_detalized)
+      neigh.AlignRightSide(this->vxs_step_);
+  }
+
+  if (this->right_chunk_ >= 0)    // if has right neighboring chunk
+  {
+    auto& neigh = chunks[this->right_chunk_];
+    bool curr_detalized  = this->vxs_step_ < neigh.vxs_step_;
+    bool neigh_detalized = this->vxs_step_ > neigh.vxs_step_;
+
+    this->RecoverRightSide();
+    neigh.RecoverLeftSide();
+
+    if (curr_detalized)
+      this->AlignRightSide(neigh.vxs_step_);
+    else if (neigh_detalized)
+      neigh.AlignLeftSide(this->vxs_step_);
+  }
+
+  if (this->top_chunk_ >= 0)      // if has top neighboring chunk
+  {
+    auto& neigh = chunks[this->top_chunk_];
+    bool curr_detalized  = this->vxs_step_ < neigh.vxs_step_;
+    bool neigh_detalized = this->vxs_step_ > neigh.vxs_step_;
+    
+    this->RecoverTopSide();
+    neigh.RecoverBottomSide();
+
+    if (curr_detalized)
+      this->AlignTopSide(neigh.vxs_step_);
+    else if (neigh_detalized)
+      neigh.AlignBottomSide(this->vxs_step_);
+  }
+
+  if (this->bottom_chunk_ >= 0)      // if has bottom neighboring chunk
+  {
+    auto& neigh = chunks[this->bottom_chunk_];
+    bool curr_detalized  = this->vxs_step_ < neigh.vxs_step_;
+    bool neigh_detalized = this->vxs_step_ > neigh.vxs_step_;
+
+    this->RecoverBottomSide();
+    neigh.RecoverTopSide();
+    
+    if (curr_detalized)
+      this->AlignBottomSide(neigh.vxs_step_);
+    else if (neigh_detalized)
+      neigh.AlignTopSide(this->vxs_step_);
   }
 }
 
-// Aligns current chunk by top border to prevent gaps between different faces
-// in current chunk and neighboring chunk (aligns top border to biggest chunk)
+// Aligns left side of chunk in depends of step between vertices mesh
+// of neighboring chunk  
 
-void Terrain::Chunk::AlignTopToBiggest()
+void Terrain::Chunk::AlignLeftSide(float neigh_step)
 {
-  // Compute faces in row. Size/2 - count of quads in arr,
-  //  sqrt(size/2) - count of quads in row, res*2 = count of faces in row 
-
-  int lpitch = std::sqrt(faces_.size() / 2) * 2;
-  
-  // Iterate through faces cols
-
-  for (int x = 0; x < lpitch; x += 4)
+  int k = 0;
+  int vxs_total = vxs_local_.size();
+  for (int i = 0; i < vxs_total; i += vxs_in_row_)
   {
-    int f1 = x;     // first face in first col
-    int f2 = x+1;   // first opposite face in col
-    int f3 = x+2;   // first face in next col
-    int f4 = x+3;   // first opposite face in next col
-
-    faces_[f1][0] = faces_[f4][0];
-    faces_[f2][0] = faces_[f4][0];
-    faces_[f3].vxs_ = faces_[f4].vxs_;
+    vxs_local_[i] = vxs_local_[k];
+    if (k == i)
+      k += neigh_step * vxs_in_row_;
   }
 }
 
-// Aligns current chunk by bototm border to prevent gaps between different faces
-// in current chunk and neighboring chunk (aligns bottom border to biggest chunk)
+// Aligns right side of chunk in depends of step between vertices mesh
+// of neighboring chunk  
 
-void Terrain::Chunk::AlignBottomToBiggest()
+void Terrain::Chunk::AlignRightSide(float neigh_step)
 {
-  // Compute faces in row. Size/2 - count of quads in arr,
-  //  sqrt(size/2) - count of quads in row, res*2 = count of faces in row 
-
-  int lpitch = std::sqrt(faces_.size() / 2) * 2;
-  
-  // Iterate through faces cols
-
-  for (int x = faces_.size() - 1 - lpitch; x < faces_.size(); x += 4)
+  int k = vxs_in_row_ - 1;
+  int vxs_total = vxs_local_.size();  
+  for (int i = k; i < vxs_total; i += vxs_in_row_)
   {
-    int f1 = x;     // first face in first col
-    int f2 = x+1;   // first opposite face in col
-    int f3 = x+2;   // first face in next col
-    int f4 = x+3;   // first opposite face in next col
+    vxs_local_[i] = vxs_local_[k];
+    if (k == i)
+      k += neigh_step * vxs_in_row_;
+  }
+}
 
-    faces_[f2].vxs_ = faces_[f1].vxs_;
-    faces_[f3][2] = faces_[f1][2];
-    faces_[f4][2] = faces_[f1][2];
+// Aligns top side of chunk in depends of step between vertices mesh
+// of neighboring chunk  
+
+void Terrain::Chunk::AlignTopSide(float neigh_step)
+{
+  int k = 0;
+  for (int i = k; i < vxs_in_row_; ++i)
+  {
+    vxs_local_[i] = vxs_local_[k];
+    if (k == i)
+      k += neigh_step;
+  }
+}
+
+// Aligns bottom side of chunk in depends of step between vertices mesh
+// of neighboring chunk  
+
+void Terrain::Chunk::AlignBottomSide(float neigh_step)
+{
+  int k = vxs_in_row_ * (vxs_in_row_ - 1);
+  int vxs_total = vxs_local_.size();  
+  for (int i = k; i < vxs_total; ++i)
+  {
+    vxs_local_[i] = vxs_local_[k];
+    if (k == i)
+      k += neigh_step;
+  }
+}
+
+// Aligns left side of chunk to its real step
+
+void Terrain::Chunk::RecoverLeftSide()
+{
+  int k = 0;
+  int vxs_total = vxs_backup_.size();  
+  for (int i = 0; i < vxs_total; i += vxs_in_row_)
+  {
+    vxs_local_[i] = vxs_backup_[k];
+    if (k == i)
+      k += vxs_step_ * vxs_in_row_;
+  }
+}
+
+// Aligns right side of chunk to its real step
+
+void Terrain::Chunk::RecoverRightSide()
+{
+  int k = vxs_in_row_ - 1;
+  int vxs_total = vxs_backup_.size();    
+  for (int i = k; i < vxs_total; i += vxs_in_row_)
+  {
+    vxs_local_[i] = vxs_backup_[k];
+    if (k == i)
+      k += vxs_step_ * vxs_in_row_;
+  }
+}
+
+// Aligns top side of chunk to its real step
+
+void Terrain::Chunk::RecoverTopSide()
+{
+  int k = 0;
+  for (int i = k; i < vxs_in_row_; ++i)
+  {
+    vxs_local_[i] = vxs_backup_[k];
+    if (k == i)
+      k += vxs_step_;
+  }
+}
+
+// Aligns bottom side of chunk to its real step
+
+void Terrain::Chunk::RecoverBottomSide()
+{
+  int k = vxs_in_row_ * (vxs_in_row_ - 1);
+  int vxs_total = vxs_backup_.size();    
+  for (int i = k; i < vxs_total; ++i)
+  {
+    vxs_local_[i] = vxs_backup_[k];
+    if (k == i)
+      k += vxs_step_;
   }
 }
 
