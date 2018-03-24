@@ -19,6 +19,7 @@
 #include "lib/draw/fx_colors.h"
 #include "lib/draw/gl_lights.h"
 #include "lib/draw/gl_buffer.h"
+#include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_z_buffer.h"
 #include "lib/draw/extras/terrain.h"
 #include "lib/draw/extras/skybox.h"
@@ -127,11 +128,13 @@ int main(int argc, const char** argv)
   cam.SetBackwardButton(KbdBtn::S);
   cam.SetUpButton(KbdBtn::R);
   cam.SetDownButton(KbdBtn::F);
+  cam.SetJumpButton(KbdBtn::SPACE);
+  cam.SetSpeedUpButton(KbdBtn::LSHIFT);
   cam.SetZoomInButton(KbdBtn::NUM9);
   cam.SetZoomOutButton(KbdBtn::NUM0);
   cam.SetSwitchRollButton(KbdBtn::L);
   cam.SetWiredModeButton(KbdBtn::T);
-  cam.SetMoveVelocity(cfg.GetFloat("cam_velocity"));
+  cam.SetMoveVelocity({0.0f, 0.0f, cfg.GetFloat("cam_velocity")});
 
   // Create skybox
 
@@ -181,11 +184,14 @@ int main(int argc, const char** argv)
 
     // Handle camera
 
-    cam.Process(win);
+    float ground = terrain.FindGroundPosition(cam);
+    cam.ProcessInput(win);
+    cam.SetGroundPosition(ground);
+
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);
     helpers::HandleFullscreen(kbtn, mode, win);
-      
+
     // Process ambient intense changing
 
     day_time.ProceedAmbientLightChange(lights_all);
@@ -215,7 +221,7 @@ int main(int argc, const char** argv)
     // Change terrain detalization
 
     terrain.ProcessDetalization(cam);
-
+    
     for (auto& chunk : terrain_chunks)
     {
       if (!chunk.active_)
@@ -223,7 +229,7 @@ int main(int argc, const char** argv)
 
       chunk.CopyCoords(Coords::LOCAL, Coords::TRANS);
       chunk.SetCoords(Coords::TRANS);
-      
+
       object::ComputeFaceNormals(chunk, true);
       hidden += object::RemoveHiddenSurfaces(chunk, cam);
       object::VerticesNormals2Camera(chunk, cam);
