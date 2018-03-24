@@ -37,6 +37,7 @@ struct Terrain
   void  SetShading(Shading);
   void  SetDetalization(const V_Float&);
   void  ProcessDetalization(const GlCamera&);
+  float FindGroundPosition(const GlCamera&);
 
 private:
 

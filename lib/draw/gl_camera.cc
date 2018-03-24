@@ -31,7 +31,7 @@ GlCamera::GlCamera
   , scr_h_{scr_h}
   , ar_{(float)scr_w_ / (float)scr_h_}
   , vrp_{vrp}
-  , vel_{1.0f}
+  , vel_{0.0f, 0.0f, 1.0f}
   , dir_{dir}
   , view_{0.0f, 0.0f, 1.0f}
   , u_{1.0f, 0.0f, 0.0f}
@@ -44,54 +44,58 @@ void GlCamera::MoveLeft()
 {
   if (type_ == GlCamera::Type::EULER)
   {
-    vrp_.x -= vel_ * trig_.Cos(dir_.y);
-    vrp_.z += vel_ * trig_.Sin(dir_.y);
+    vrp_.x -= vel_.z * trig_.Cos(dir_.y);
+    vrp_.z += vel_.z * trig_.Sin(dir_.y);
   }
   else
-    vrp_.x -= vel_;
+    vrp_.x -= vel_.z;
+  vrp_.y += vel_.y;  
 }
 
 void GlCamera::MoveRight()
 {
   if (type_ == GlCamera::Type::EULER)
   {
-    vrp_.x += vel_ * trig_.Cos(dir_.y);
-    vrp_.z -= vel_ * trig_.Sin(dir_.y);
+    vrp_.x += vel_.z * trig_.Cos(dir_.y);
+    vrp_.z -= vel_.z * trig_.Sin(dir_.y);
   }
   else
-    vrp_.x += vel_;
+    vrp_.x += vel_.z;
+  vrp_.y += vel_.y;
 }
 
 void GlCamera::MoveForward()
 {
   if (type_ == GlCamera::Type::EULER)
   {
-    vrp_.z += vel_ * trig_.Cos(dir_.y);
-    vrp_.x += vel_ * trig_.Sin(dir_.y);
+    vrp_.z += vel_.z * trig_.Cos(dir_.y);
+    vrp_.x += vel_.z * trig_.Sin(dir_.y);
   }
   else
-    vrp_.z += vel_;
+    vrp_.z += vel_.z;
+  vrp_.y += vel_.y;
 }
 
 void GlCamera::MoveBackward()
 {
   if (type_ == GlCamera::Type::EULER)
   {
-    vrp_.z -= vel_ * trig_.Cos(dir_.y);
-    vrp_.x -= vel_ * trig_.Sin(dir_.y);
+    vrp_.z -= vel_.z * trig_.Cos(dir_.y);
+    vrp_.x -= vel_.z * trig_.Sin(dir_.y);
   }
   else
-    vrp_.z -= vel_;
+    vrp_.z -= vel_.z;
+  vrp_.y += vel_.y;
 }
 
 void GlCamera::MoveUp()
 {
-  vrp_.y += vel_;
+  vrp_.y += vel_.z;
 }
 
 void GlCamera::MoveDown()
 {
-  vrp_.y -= vel_;
+  vrp_.y -= vel_.z;
 }
 
 void GlCamera::RotateYaw(float theta)

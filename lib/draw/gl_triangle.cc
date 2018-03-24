@@ -550,6 +550,20 @@ void triangles::SortZFar(V_TrianglePtr& arr)
   });
 }
 
+// The same as above but sorts using near z coordinate
+
+void triangles::SortZNear(V_TrianglePtr& arr)
+{
+  std::sort(arr.begin(), arr.end(), [](auto* t1, auto* t2)
+  {
+    auto avg_z1 {std::min(t1->vxs_[0].pos_.z, t1->vxs_[1].pos_.z)};
+    avg_z1 = std::min(avg_z1, t1->vxs_[2].pos_.z);
+    auto avg_z2 {std::min(t2->vxs_[0].pos_.z, t2->vxs_[1].pos_.z)};
+    avg_z2 = std::min(avg_z2, t2->vxs_[2].pos_.z);
+    return avg_z1 < avg_z2;
+  });
+}
+
 // Invert sorts triangles using average z coordinate (first - farthest). We should
 // do this before acsonometric projection
 

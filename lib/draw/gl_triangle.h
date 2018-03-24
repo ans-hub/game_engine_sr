@@ -101,6 +101,7 @@ namespace triangles {
 
   void      SortZAvg(V_TrianglePtr&);
   void      SortZFar(V_TrianglePtr&);
+  void      SortZNear(V_TrianglePtr&);
   void      SortZAvgInv(V_TrianglePtr&);
   void      SortZFarInv(V_TrianglePtr&);
 

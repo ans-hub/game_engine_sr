@@ -98,6 +98,25 @@ void Terrain::ProcessDetalization(const GlCamera& cam)
   }
 }
 
+float Terrain::FindGroundPosition(const GlCamera& cam)
+{
+  float row_float = vxs_[0].pos_.z - cam.vrp_.z;
+  float col_float = cam.vrp_.x - vxs_[0].pos_.x;
+
+  float tz = row_float - math::Floor(row_float);
+  float tx = col_float - math::Floor(col_float);
+  
+  int lt = (int)row_float * hm_w_ + (int)col_float;
+  int rt = lt + 1;
+  int lb = lt + hm_w_;
+  int rb = lb + 1;
+
+  float y_tside = vxs_[lt].pos_.y + ((vxs_[rt].pos_.y - vxs_[lt].pos_.y) * tx);
+  float y_bside = vxs_[lb].pos_.y + ((vxs_[rb].pos_.y - vxs_[lb].pos_.y) * tx);
+
+  return y_tside + ((y_bside - y_tside) * tz);
+}
+
 //****************************************************************************
 // PRIVATE MEMBER FUNCTIONS IMPLEMENTATION
 //****************************************************************************
