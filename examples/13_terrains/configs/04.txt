@@ -9,8 +9,8 @@ f win_w 800
 f win_h 600
 f win_fs 0 # fullscreen (1 on, 0 off)
 f win_fps 1000
-f cam_dov 2.0
-f cam_fov 75.0
+f cam_dov 1.0
+f cam_fov 90.0
 v cam_pos -1.5 120.0 0.0
 v cam_dir 12.0 0.0 0.0
 f cam_nearz 2.0
