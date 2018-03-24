@@ -24,7 +24,9 @@ struct CameraOperator : public GlCamera
   bool IsWired() const { return wired_mode_; }
   auto GetClarity() const { return clarity_; }
 
-  void Process(const BaseWindow&);
+  void ProcessGravity();
+  void ProcessInput(const BaseWindow&);
+  void SetGroundPosition(float ypos);
   void SetPrevMousePos(const Pos& pos) { prev_mouse_pos_ = pos; }
   void SetLeftButton(KbdBtn b) { move_left_ = b; }
   void SetRightButton(KbdBtn b)  { move_right_ = b; }
@@ -32,6 +34,8 @@ struct CameraOperator : public GlCamera
   void SetBackwardButton(KbdBtn b) { move_backward_ = b; }
   void SetUpButton(KbdBtn b) { move_up_ = b; }
   void SetDownButton(KbdBtn b) { move_down_ = b; }
+  void SetJumpButton(KbdBtn b) { jump_ = b; }
+  void SetSpeedUpButton(KbdBtn b) { speed_up_ = b; }
   void SetZoomInButton(KbdBtn b) { zoom_in_ = b; }
   void SetZoomOutButton(KbdBtn b) { zoom_out_ = b; }
   void SetSwitchTypeButton(KbdBtn b) { switch_type_ = b; }
@@ -47,6 +51,8 @@ private:
   KbdBtn  move_backward_;
   KbdBtn  move_up_;
   KbdBtn  move_down_;
+  KbdBtn  jump_;
+  KbdBtn  speed_up_;
   KbdBtn  zoom_in_;
   KbdBtn  zoom_out_;
   KbdBtn  switch_type_;     // euler or uvn
@@ -54,8 +60,14 @@ private:
   KbdBtn  switch_wired_;
   bool    roll_mode_;       // if true, then cam rotate z axis, else x
   bool    wired_mode_;      // if true, then all object are draws as wired
+  bool    speed_up_mode_;
+  float   speed_up_val_;
   Pos     prev_mouse_pos_;  // used to determine where was mouse in prev frame
   float   clarity_;         // max distance between cam and object to see precisely
+  float   operator_height_; // distance of camera from the ground
+  float   prev_ypos_;
+  bool    on_ground_;
+  Vector  gravity_;
 
 }; // class CameraOperator 
 

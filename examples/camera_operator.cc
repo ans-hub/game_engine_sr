@@ -26,6 +26,8 @@ CameraOperator::CameraOperator(
   , move_backward_ {KbdBtn::NONE}
   , move_up_ {KbdBtn::NONE}
   , move_down_ {KbdBtn::NONE}
+  , jump_ {KbdBtn::NONE}
+  , speed_up_ { KbdBtn::NONE}
   , zoom_in_ {KbdBtn::NONE}
   , zoom_out_ {KbdBtn::NONE}
   , switch_type_ {KbdBtn::NONE}
@@ -33,22 +35,53 @@ CameraOperator::CameraOperator(
   , switch_wired_ {KbdBtn::NONE}
   , roll_mode_{false}
   , wired_mode_{false}
+  , speed_up_mode_{false}
+  , speed_up_val_{3.0f}
   , prev_mouse_pos_{-1,-1}
   , clarity_{1.0f}
+  , operator_height_{4.0f}
+  , on_ground_{false}
+  , gravity_ {0.0f, -0.04f, 0.0f}
 { }
 
-void CameraOperator::Process(const BaseWindow& win)
+// Apply gravity vector to velocity vector (should be used every frame
+// after camera movements)
+
+void CameraOperator::ProcessGravity()
 {
+  vel_ += gravity_;
+}
+
+void CameraOperator::ProcessInput(const BaseWindow& win)
+{
+  // Start process speed
+
+  speed_up_mode_ = win.IsKeyboardBtnPressed(speed_up_);
+  if (speed_up_mode_)
+    vel_.z *= speed_up_val_;
+
   // Handle movements
   
-  if (win.IsKeyboardBtnPressed(move_forward_))  this->MoveForward();
-  if (win.IsKeyboardBtnPressed(move_backward_))  this->MoveBackward();
-  if (win.IsKeyboardBtnPressed(move_right_))  this->MoveRight();
-  if (win.IsKeyboardBtnPressed(move_left_))  this->MoveLeft();
-  if (win.IsKeyboardBtnPressed(move_up_))  this->MoveUp();
-  if (win.IsKeyboardBtnPressed(move_down_))  this->MoveDown();
+  if (win.IsKeyboardBtnPressed(move_forward_)) this->MoveForward();
+  if (win.IsKeyboardBtnPressed(move_backward_)) this->MoveBackward();
+  if (win.IsKeyboardBtnPressed(move_right_)) this->MoveRight();
+  if (win.IsKeyboardBtnPressed(move_left_)) this->MoveLeft();
+  if (win.IsKeyboardBtnPressed(move_up_)) this->MoveUp();
+  if (win.IsKeyboardBtnPressed(move_down_)) this->MoveDown();
   if (win.IsKeyboardBtnPressed(zoom_in_)) this->ChangeFov(this->fov_ - 1.0f);
   if (win.IsKeyboardBtnPressed(zoom_out_)) this->ChangeFov(this->fov_ + 1.0f);
+  if (win.IsKeyboardBtnPressed(jump_) && on_ground_)
+  {
+    this->vel_.y = 0.6f;
+    on_ground_ = false;
+  }
+
+  // End speed-up
+
+  if (speed_up_mode_)
+    vel_.z /= speed_up_val_;
+
+  ProcessGravity();
 
   // Handle swithching camera type
 
@@ -81,6 +114,17 @@ void CameraOperator::Process(const BaseWindow& win)
 
   this->dir_.x -= (prev_mouse_pos_.y - mpos.y) / 2;
   prev_mouse_pos_ = mpos;
+}
+
+void CameraOperator::SetGroundPosition(float ypos)
+{
+  this->vrp_.y += this->vel_.y;
+  if (this->vrp_.y < ypos + operator_height_)
+  {
+    this->vrp_.y = ypos + operator_height_;
+    this->vel_.y = 0.0f;
+    on_ground_ = true;
+  }
 }
 
 }  // namespace anshub
