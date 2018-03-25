@@ -17,7 +17,7 @@ property uchar blue
 element face 1
 property list uchar uint indicies
 end_header
-2
+4
 3.000000 -3.000000 -3.000000 214 42 12
 -3.000000 3.000000 -3.000000 214 42 12
 3.000000 3.000000 -3.000000 214 42 12

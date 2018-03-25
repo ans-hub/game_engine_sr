@@ -1,6 +1,8 @@
 ply
 format ascii 1.0
 comment Created by Blender 2.79 (sub 0) - www.blender.org, source file: ''
+element globals_ply_v2 1
+property uint shading
 element vertex 512
 property float x
 property float y
@@ -10,6 +12,7 @@ property float t
 element face 960
 property list uchar uint vertex_indices
 end_header
+16
 0.000000 1.111140 1.662939 0.697492 0.824480
 0.275899 1.387040 1.414214 0.709376 0.752105
 0.000000 1.414214 1.414214 0.735147 0.779654
