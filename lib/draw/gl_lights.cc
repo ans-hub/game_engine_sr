@@ -42,22 +42,17 @@ void light::Object(GlObject& obj, Lights& lights)
     if (!face.active_)
       continue;
 
-    // If emission color then do nothing
-
     if (obj.shading_ == Shading::CONST)
       continue;
 
     // If triangle is flat shaded and not lighted already, then light it
     // and store color inside Triangle struct
-    // Todo: here we may use something like gourang shading, but using not 
-    // vxs normal, but normals to of face from each vertex to make soft
-    // colors
 
     if (obj.shading_ == Shading::FLAT)
     {
-      auto  bc = vxs[face[0]].color_;   // base color
+      auto  bc = vxs[face[0]].color_;   // base color (note #1 after code)
       auto& cc = face.color_;           // color to change
-      cc = {0.0f, 0.0f, 0.0f, 255.0f};
+      cc = {0.0f, 0.0f, 0.0f, bc.a_};
 
       if (!face.normal_.IsZero())
         face.normal_.Normalize();
@@ -82,7 +77,7 @@ void light::Object(GlObject& obj, Lights& lights)
         {
           auto  bc = vxs[f].color_;
           auto& cc = vxs[f].color_;
-          cc = {0.0f, 0.0f, 0.0f, 255.0f};
+          cc = {0.0f, 0.0f, 0.0f, bc.a_};
           used[f] = true;
 
           for (auto& light : lights.ambient_)
@@ -121,15 +116,12 @@ void light::Triangles(V_Triangle& arr, Lights& lights)
 
     // If triangle is flat shaded and not lighted already, then light it
     // and store color inside Triangle struct
-    // Todo: here we may use something like gourang shading, but using not 
-    // vxs normal, but normals to of face from each vertex to make soft
-    // colors
-
+ 
     if (tri.shading_ == Shading::FLAT)
     {
-      auto  bc = tri.vxs_[0].color_;   // base color
-      auto& cc = tri.color_;           // color to change
-      cc = {0.0f, 0.0f, 0.0f, 255.0f};
+      auto  bc = tri.vxs_[0].color_;      // base color (note #1 after code)
+      auto& cc = tri.color_;              // color to change
+      cc = {0.0f, 0.0f, 0.0f, bc.a_};
 
       if (!tri.normal_.IsZero())
         tri.normal_.Normalize();
@@ -152,7 +144,7 @@ void light::Triangles(V_Triangle& arr, Lights& lights)
       {
         auto  bc = vx.color_;
         auto& cc = vx.color_;
-        cc = {0.0f, 0.0f, 0.0f, 255.0f};
+        cc = {0.0f, 0.0f, 0.0f, bc.a_};
 
         for (auto& light : lights.ambient_)
           cc += light.Illuminate(bc);
@@ -167,3 +159,8 @@ void light::Triangles(V_Triangle& arr, Lights& lights)
 }
 
 } // namespace anshub
+
+// Note #1 : since many 3d software support vertices color and ignore 
+// face color I decide to use as color for face color of vertex[0].
+// When we lights face color, it automatic replacements by the
+// new color from vertex[0] in the next frame  

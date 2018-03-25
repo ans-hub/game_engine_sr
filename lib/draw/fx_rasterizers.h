@@ -78,7 +78,7 @@ namespace raster_tri {
 
   void SolidFL(
     cVertex& v1, cVertex& v2, cVertex& v3,
-    uint color, ZBuffer&, Buffer&
+    cFColor& color, ZBuffer&, Buffer&
   );
   void SolidGR(
     cVertex& v1, cVertex& v2, cVertex& v3,
@@ -90,7 +90,7 @@ namespace raster_tri {
   );
   int TexturedPerspectiveFL(                    // optimized
     cVertex& v1, cVertex& v2, cVertex& v3,
-    uint color, Bitmap*, ZBuffer&, Buffer&
+    cFColor& color, Bitmap*, ZBuffer&, Buffer&
   );
   int TexturedPerspectiveGR(                    // optimized
     cVertex& v1, cVertex& v2, cVertex& v3,

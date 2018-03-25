@@ -134,6 +134,7 @@ int main(int argc, const char** argv)
   cam.SetZoomOutButton(KbdBtn::NUM0);
   cam.SetSwitchRollButton(KbdBtn::L);
   cam.SetWiredModeButton(KbdBtn::T);
+  cam.SetOnGround(false);
   cam.SetMoveVelocity({0.0f, 0.0f, cfg.GetFloat("cam_velocity")});
 
   // Create skybox

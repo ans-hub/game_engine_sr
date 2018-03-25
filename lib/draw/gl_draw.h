@@ -17,11 +17,44 @@
 #include "gl_vertex.h"
 #include "gl_triangle.h"
 #include "gl_z_buffer.h"
+#include "gl_alpha_lut.h"
 #include "fx_rasterizers.h"
 
 #include "../math/segment.h"
 
 namespace anshub {
+
+// Represents struct to hold different information about
+// rendering
+
+struct RenderContext
+{
+  RenderContext(int w, int h, int color)
+    : is_wired_{false}
+    , is_alpha_{false}
+    , is_zbuf_{true}
+    , clarity_{}
+    , pixels_drawn_{}
+    , sbuf_{w, h, color}
+    , zbuf_{w, h}
+    , alpha_lut_{}
+  { }
+
+  // Context members
+
+  bool is_wired_;
+  bool is_alpha_;
+  bool is_zbuf_;
+  int  clarity_;
+  int  pixels_drawn_;
+
+  // Context entities
+
+  Buffer    sbuf_;
+  ZBuffer   zbuf_;
+  AlphaLut  alpha_lut_;
+
+}; // struct RenderContext
 
 // Functions that draws objects
 
@@ -33,7 +66,7 @@ namespace draw_object {
 
 } // namespace draw_object
 
-// Functions that draws triangles pointers arrays (legacy)
+// Functions that draws triangles pointers arrays (old way)
 
 namespace draw_triangles {
 
@@ -47,16 +80,24 @@ namespace draw_triangles {
 
 namespace render {
 
-  // Adaptors to legacy functions
+  // Main function to rendering triangles 
+
+  int  Context(const V_TrianglePtr&, RenderContext&);
+
+  // Just adaptors to legacy functions
   
-  int  Wired(const V_TrianglePtr& t, Buffer& b);
+  int  Wired(const V_TrianglePtr& t, Buffer&b);
   int  Solid(const V_TrianglePtr&, Buffer&);
   int  Solid(const V_TrianglePtr&, ZBuffer&, Buffer&);
+
+  // Regular functions
+
   int  Solid(const V_TrianglePtr&, ZBuffer&, float dist, Buffer&);
+  int  Solid(const V_TrianglePtr&, ZBuffer&, float dist, const AlphaLut&, Buffer&);
 
 } // namespace render
 
-// Inline  functions (adaptors) implementation
+// Inline functions (adaptors) implementation
 
 inline int render::Wired(const V_TrianglePtr& t, Buffer& b)
 {

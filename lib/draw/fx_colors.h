@@ -65,7 +65,7 @@ namespace color {
 
   // Colors constants
 
-  constexpr uint White {0xffffffff};
+  constexpr uint White {0xffffff00};
   constexpr uint Blue  {0xff000000};
   constexpr uint Black {0x00000000};
 
@@ -94,7 +94,7 @@ inline Color<T>::Color()
   : r_{0}
   , g_{0}
   , b_{0}
-  , a_{255} { }
+  , a_{0} { }
 
 // Constructs Color with given color components (using alpha)
 
@@ -112,7 +112,7 @@ inline Color<T>::Color(T cr, T cg, T cb)
   : r_{static_cast<T>(cr)}
   , g_{static_cast<T>(cg)}
   , b_{static_cast<T>(cb)}
-  , a_{255} { }
+  , a_{} { }
 
 // Constructs Color with unsigned represent of color
 
@@ -128,7 +128,7 @@ inline Color<T>::Color(unsigned int c)
 template<class T>
 inline uint Color<T>::GetARGB() const
 {
-  return ((int)b_ << 24) | ((int)g_ << 16) | ((int)r_ << 8) | 255;
+  return ((int)b_ << 24) | ((int)g_ << 16) | ((int)r_ << 8) | (int)a_;
 }
 
 // Partial specialization of function above (optimized for uint)
@@ -136,7 +136,7 @@ inline uint Color<T>::GetARGB() const
 template<>
 inline uint Color<uint>::GetARGB() const
 {
-  return (b_ << 24) | (g_ << 16) | (r_ << 8) | 255;
+  return (b_ << 24) | (g_ << 16) | (r_ << 8) | a_;
 }
 
 // Modulates 2 colors
@@ -147,11 +147,9 @@ inline void Color<T>::Modulate(const Color<T>& rhs)
   this->r_ *= rhs.r_;
   this->g_ *= rhs.g_;
   this->b_ *= rhs.b_;
-  this->a_ *= rhs.a_;
   this->r_ >>= 8;
   this->g_ >>= 8;
   this->b_ >>= 8;
-  this->a_ >>= 8;
 }
 
 // Modulates 2 colors (float specialization)
@@ -162,11 +160,9 @@ inline void Color<float>::Modulate(const Color<float>& rhs)
   this->r_ *= rhs.r_;
   this->g_ *= rhs.g_;
   this->b_ *= rhs.b_;
-  this->a_ *= rhs.a_;
   this->r_ *= 0.00390625f;
   this->g_ *= 0.00390625f;
   this->b_ *= 0.00390625f;
-  this->a_ *= 0.00390625f;
 }
 
 // Clamps color components after addition
@@ -177,7 +173,6 @@ inline void Color<T>::Clamp()
   r_ = std::min(255.0f, r_);
   g_ = std::min(255.0f, g_);
   b_ = std::min(255.0f, b_);
-  a_ = 255.0f;
 }
 
 // Other useful member functions implementation
@@ -189,7 +184,6 @@ inline Color<T>& Color<T>::operator/=(T scalar)
   this->r_ *= mp;
   this->g_ *= mp;
   this->b_ *= mp;
-  this->a_ *= mp;
   return *this;
 }
 
@@ -200,7 +194,6 @@ inline Color<T>& Color<T>::operator/=(int scalar)
   this->r_ *= mp;
   this->g_ *= mp;
   this->b_ *= mp;
-  this->a_ *= mp;
   return *this;
 }
 
@@ -210,7 +203,6 @@ inline Color<T>& Color<T>::operator*=(T scalar)
   this->r_ *= scalar;
   this->g_ *= scalar;
   this->b_ *= scalar;
-  this->a_ *= scalar;
   return *this;
 }
 
@@ -220,7 +212,6 @@ inline Color<T>& Color<T>::operator*=(int scalar)
   this->r_ *= scalar;
   this->g_ *= scalar;
   this->b_ *= scalar;
-  this->a_ *= scalar;
   return *this;
 }
 
@@ -230,7 +221,6 @@ inline Color<T>& Color<T>::operator*=(const Color& rhs)
   this->r_ *= rhs.r_;
   this->g_ *= rhs.g_;
   this->b_ *= rhs.b_;
-  this->a_ *= rhs.a_;
   return *this;
 }
 
@@ -240,7 +230,6 @@ inline Color<T>& Color<T>::operator-=(const Color& rhs)
   this->r_ -= rhs.r_;
   this->g_ -= rhs.g_;
   this->b_ -= rhs.b_;
-  this->a_ -= rhs.a_;
   return *this;
 }
 
@@ -250,7 +239,6 @@ inline Color<T>& Color<T>::operator+=(const Color& rhs)
   this->r_ += rhs.r_;
   this->g_ += rhs.g_;
   this->b_ += rhs.b_;
-  this->a_ += rhs.a_;
   return *this;
 }
 

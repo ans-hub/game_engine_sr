@@ -1664,10 +1664,12 @@ void raster_tri::TexturedAffineGR(
 
 void raster_tri::SolidFL(
     cVertex& v1, cVertex& v2, cVertex& v3,
-    uint color, ZBuffer& zbuf, Buffer& buf)
+    cFColor& fcolor, ZBuffer& zbuf, Buffer& buf)
 {
   // Todo: function SortVertices(v1, v2, v3);
   
+  uint color = fcolor.GetARGB();
+
   // Convert float to int
 
   int x1 = std::floor(v1.pos_.x);
@@ -1820,9 +1822,19 @@ void raster_tri::SolidFL(
     {
       int dx = x - xlb;
       float curr_z = x_lz + (dx_currx_z * dx);
+
       if (curr_z > zbuf(x,y))
       {
-        raster::Point(x, y, color, buf);
+        if (fcolor.a_ > 0.0f)
+        {
+          // FColor t {buf[y*buf.Width()+x]};
+          uint drawn = buf[y*buf.Width()+x] * 0.5f;
+          uint would = color * 0.5f;
+          std::cerr << drawn << ' ' << would << '\n';
+          raster::Point(x, y, drawn + would, buf);
+        }
+        else
+          raster::Point(x, y, color, buf);
         zbuf(x,y) = curr_z;
       }
     }
@@ -1922,8 +1934,7 @@ void raster_tri::SolidFL(
     {
       int dx = x - xlb;
       float curr_z = x_lz + (dx_currx_z * dx);
-      if (curr_z > zbuf(x,y))
-      {
+      if (curr_z > zbuf(x,y)) {
         raster::Point(x, y, color, buf);
         zbuf(x,y) = curr_z;
       }
@@ -2679,10 +2690,9 @@ int raster_tri::TexturedPerspective(
 
 int raster_tri::TexturedPerspectiveFL(
     cVertex& p1, cVertex& p2, cVertex& p3,
-    uint color, Bitmap* bmp, ZBuffer& zbuf, Buffer& scr_buf)
+    cFColor& fcolor, Bitmap* bmp, ZBuffer& zbuf, Buffer& scr_buf)
 {
-  // Debug variables
-
+  uint color = fcolor.GetARGB();
   int total_drawn {};
 
   // Prepare fast screen buffer, texture and z-buffer access

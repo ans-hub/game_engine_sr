@@ -33,7 +33,7 @@ struct Vertex
   Vertex(float x, float y, float z, float r, float g, float b)
   : pos_{x, y, z}
   , normal_{}
-  , color_{r, g, b, 255.0f} { }
+  , color_{r, g, b, 0.0f} { }
 
   Vector  pos_;
   Vector  normal_;

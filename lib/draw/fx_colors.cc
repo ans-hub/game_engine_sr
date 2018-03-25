@@ -14,7 +14,7 @@ namespace anshub {
 
 int color::IncreaseBrightness(int color, float k)
 {
-  unsigned int a = 255;
+  unsigned int a = 0;
   unsigned int r = (int)(((color>>8)&0xff)*k);
   unsigned int g = (int)(((color>>16)&0xff)*k);
   unsigned int b = (int)(((color>>24)&0xff)*k);

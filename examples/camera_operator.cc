@@ -38,9 +38,8 @@ CameraOperator::CameraOperator(
   , speed_up_mode_{false}
   , speed_up_val_{3.0f}
   , prev_mouse_pos_{-1,-1}
-  , clarity_{1.0f}
   , operator_height_{4.0f}
-  , on_ground_{false}
+  , on_ground_{true}
   , gravity_ {0.0f, -0.04f, 0.0f}
 { }
 
@@ -81,7 +80,11 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
   if (speed_up_mode_)
     vel_.z /= speed_up_val_;
 
-  ProcessGravity();
+  if (!on_ground_)
+  {
+    std::cerr << "sa\n";
+    ProcessGravity();
+  }
 
   // Handle swithching camera type
 
@@ -125,6 +128,8 @@ void CameraOperator::SetGroundPosition(float ypos)
     this->vel_.y = 0.0f;
     on_ground_ = true;
   }
+  else
+    on_ground_ = false;
 }
 
 }  // namespace anshub

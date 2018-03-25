@@ -22,7 +22,6 @@ struct CameraOperator : public GlCamera
   ~CameraOperator() noexcept override { }
   
   bool IsWired() const { return wired_mode_; }
-  auto GetClarity() const { return clarity_; }
 
   void ProcessGravity();
   void ProcessInput(const BaseWindow&);
@@ -41,7 +40,7 @@ struct CameraOperator : public GlCamera
   void SetSwitchTypeButton(KbdBtn b) { switch_type_ = b; }
   void SetSwitchRollButton(KbdBtn b) { switch_roll_ = b; }
   void SetWiredModeButton(KbdBtn b) { switch_wired_ = b; }
-  void SetClarity(float c) { clarity_ = c; }
+  void SetOnGround(bool s) { on_ground_ = s; }
 
 private:
 
@@ -63,7 +62,6 @@ private:
   bool    speed_up_mode_;
   float   speed_up_val_;
   Pos     prev_mouse_pos_;  // used to determine where was mouse in prev frame
-  float   clarity_;         // max distance between cam and object to see precisely
   float   operator_height_; // distance of camera from the ground
   float   prev_ypos_;
   bool    on_ground_;
