@@ -17,44 +17,12 @@
 #include "gl_vertex.h"
 #include "gl_triangle.h"
 #include "gl_z_buffer.h"
-#include "gl_alpha_lut.h"
+#include "gl_render_ctx.h"
 #include "fx_rasterizers.h"
 
 #include "../math/segment.h"
 
 namespace anshub {
-
-// Represents struct to hold different information about
-// rendering
-
-struct RenderContext
-{
-  RenderContext(int w, int h, int color)
-    : is_wired_{false}
-    , is_alpha_{false}
-    , is_zbuf_{true}
-    , clarity_{}
-    , pixels_drawn_{}
-    , sbuf_{w, h, color}
-    , zbuf_{w, h}
-    , alpha_lut_{}
-  { }
-
-  // Context members
-
-  bool is_wired_;
-  bool is_alpha_;
-  bool is_zbuf_;
-  int  clarity_;
-  int  pixels_drawn_;
-
-  // Context entities
-
-  Buffer    sbuf_;
-  ZBuffer   zbuf_;
-  AlphaLut  alpha_lut_;
-
-}; // struct RenderContext
 
 // Functions that draws objects
 
@@ -80,7 +48,7 @@ namespace draw_triangles {
 
 namespace render {
 
-  // Main function to rendering triangles 
+  // Main function to rendering triangles
 
   int  Context(const V_TrianglePtr&, RenderContext&);
 
@@ -93,7 +61,7 @@ namespace render {
   // Regular functions
 
   int  Solid(const V_TrianglePtr&, ZBuffer&, float dist, Buffer&);
-  int  Solid(const V_TrianglePtr&, ZBuffer&, float dist, const AlphaLut&, Buffer&);
+  int  SolidWithAlpha(const V_TrianglePtr&, ZBuffer&, float dist, Buffer&);
 
 } // namespace render
 

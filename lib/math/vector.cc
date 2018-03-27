@@ -46,15 +46,12 @@ Vector vector::Sub(const Vector& v1, const Vector& v2)
 
 Vector vector::Normalize(const Vector& v)
 {
-  float length = v.SquareLength();
-
-  if (!(length - 1.0f < math::kEpsilon))
+  if (!v.IsNormalized())
   {
-    length = v.Length();
-    
-    if (math::Fzero(length)) {
+    float length = v.Length();    
+    if (math::Fzero(length))
       throw MathExcept("vector::Normalize - zero length vector");
-    }
+
     float p = 1.0f / length;
     return Vector(v.x * p, v.y * p, v.z * p);
   }

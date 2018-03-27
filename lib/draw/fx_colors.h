@@ -11,11 +11,9 @@
 #include <iostream>
 #include <cmath>
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
-
 #include "gl_aliases.h"
+#include "exceptions.h"
+#include "../math/math.h"
 
 namespace anshub {
 
@@ -28,7 +26,7 @@ struct Color
 {
   Color();
   Color(T r, T g, T b);
-  Color(T r, T g, T b, T a);
+  Color(T r, T g, T b, float a);
   explicit Color(unsigned int);
 
   uint  GetARGB() const;
@@ -39,6 +37,7 @@ struct Color
   Color& operator/=(int scalar);
   Color& operator*=(T scalar);
   Color& operator*=(int scalar);
+  Color& operator*=(double scalar);   // is dirty trick to overload T scalar 
   Color& operator*=(const Color& rhs);
   Color& operator-=(const Color& rhs);
   Color& operator+=(const Color& rhs);
@@ -53,7 +52,7 @@ struct Color
   T r_;
   T g_;
   T b_;
-  T a_;
+  float a_;
 
 }; // struct Color
 
@@ -65,9 +64,12 @@ namespace color {
 
   // Colors constants
 
-  constexpr uint White {0xffffff00};
-  constexpr uint Blue  {0xff000000};
-  constexpr uint Black {0x00000000};
+  constexpr uint White  {0xffffff01};
+  constexpr uint Blue   {0xff000001};
+  constexpr uint Red    {0x0000ff01};
+  constexpr uint Green  {0x00ff0001};
+  constexpr uint Cyan   {0xffff0001};
+  constexpr uint Black  {0x00000001};
 
   // Helpers functions
 
@@ -75,6 +77,7 @@ namespace color {
   void  SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a);
   void  SplitARGB(int color, uint& b, uint& g, uint& r, uint& a);
   int   IncreaseBrightness(int color, float k);
+  void  ShiftRight(Color<uint>&, uint cnt);
 
   // Output functions
 
@@ -90,16 +93,16 @@ namespace color {
 // Default Color constructor
 
 template<class T>
-inline Color<T>::Color() 
+inline Color<T>::Color()
   : r_{0}
   , g_{0}
   , b_{0}
-  , a_{0} { }
+  , a_{1} { }
 
 // Constructs Color with given color components (using alpha)
 
 template<class T>
-inline Color<T>::Color(T cr, T cg, T cb, T ca)
+inline Color<T>::Color(T cr, T cg, T cb, float ca)
   : r_{static_cast<T>(cr)}
   , g_{static_cast<T>(cg)}
   , b_{static_cast<T>(cb)}
@@ -112,7 +115,7 @@ inline Color<T>::Color(T cr, T cg, T cb)
   : r_{static_cast<T>(cr)}
   , g_{static_cast<T>(cg)}
   , b_{static_cast<T>(cb)}
-  , a_{} { }
+  , a_{1} { }
 
 // Constructs Color with unsigned represent of color
 
@@ -121,14 +124,14 @@ inline Color<T>::Color(unsigned int c)
   : r_{static_cast<T>((c >> 8) & 0xff)}
   , g_{static_cast<T>((c >> 16) & 0xff)}
   , b_{static_cast<T>((c >> 24) & 0xff)}
-  , a_{static_cast<T>(c & 0xff)} { }
+  , a_{1} { }
 
 // Returns color in uint representation
 
 template<class T>
 inline uint Color<T>::GetARGB() const
 {
-  return ((int)b_ << 24) | ((int)g_ << 16) | ((int)r_ << 8) | (int)a_;
+  return ((int)b_ << 24) | ((int)g_ << 16) | ((int)r_ << 8) | 1;
 }
 
 // Partial specialization of function above (optimized for uint)
@@ -136,7 +139,7 @@ inline uint Color<T>::GetARGB() const
 template<>
 inline uint Color<uint>::GetARGB() const
 {
-  return (b_ << 24) | (g_ << 16) | (r_ << 8) | a_;
+  return (b_ << 24) | (g_ << 16) | (r_ << 8) | 1;
 }
 
 // Modulates 2 colors
@@ -160,7 +163,7 @@ inline void Color<float>::Modulate(const Color<float>& rhs)
   this->r_ *= rhs.r_;
   this->g_ *= rhs.g_;
   this->b_ *= rhs.b_;
-  this->r_ *= 0.00390625f;
+  this->r_ *= 0.00390625f;  // divide by 256.0f
   this->g_ *= 0.00390625f;
   this->b_ *= 0.00390625f;
 }
@@ -208,6 +211,15 @@ inline Color<T>& Color<T>::operator*=(T scalar)
 
 template<class T>
 inline Color<T>& Color<T>::operator*=(int scalar)
+{
+  this->r_ *= scalar;
+  this->g_ *= scalar;
+  this->b_ *= scalar;
+  return *this;
+}
+
+template<class T>
+inline Color<T>& Color<T>::operator*=(double scalar)
 {
   this->r_ *= scalar;
   this->g_ *= scalar;
@@ -323,6 +335,15 @@ inline void color::SplitARGB(int color, uint& b, uint& g, uint& r, uint& a)
 inline int color::MakeARGB(uchar a, uchar r, uchar g, uchar b)
 {
   return (b << 24) | (g << 16) | (r << 8) | a;
+}
+
+// Shifts right every color component but not alpha
+
+inline void color::ShiftRight(Color<uint>& c, uint cnt)
+{
+  c.r_ >>= cnt;
+  c.g_ >>= cnt;
+  c.b_ >>= cnt;
 }
 
 // Prints on output stream color information

@@ -269,7 +269,7 @@ int draw_triangles::Solid(const V_TrianglePtr& arr, ZBuffer& zbuf, Buffer& buf)
 
   int total_tris {0};   // total triangles drawn
 
-  for (const auto* t : arr)
+  for (auto* t : arr)
   {
     if (!t->active_)
       continue;
@@ -320,7 +320,7 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx)
   else if (ctx.is_zbuf_ && !ctx.is_alpha_)
     drawn += render::Solid(triangles, ctx.zbuf_, ctx.clarity_, ctx.sbuf_);
   else if (ctx.is_zbuf_ && ctx.is_alpha_)
-    drawn += render::Solid(triangles, ctx.zbuf_, ctx.clarity_, ctx.alpha_lut_, ctx.sbuf_);
+    drawn += render::SolidWithAlpha(triangles, ctx.zbuf_, ctx.clarity_, ctx.sbuf_);
   
   ctx.sbuf_.SendDataToFB();
   ctx.pixels_drawn_ = drawn;
@@ -337,7 +337,7 @@ int render::Solid(
   int total_px {0};     // total pixels drawn
   int total_tris {0};   // total triangles drawn
 
-  for (const auto* t : arr)
+  for (auto* t : arr)
   {
     if (!t->active_)
       continue;
@@ -375,16 +375,15 @@ int render::Solid(
     }
     ++total_tris;
   }
+
   return total_tris;
 }
-
 
 // Renders triangles, uses dist as chooser between affine and perspective
 // correct texturing, and use alpha blending
 
-int render::Solid(
-  const V_TrianglePtr& arr, ZBuffer& zbuf, 
-  float dist, const AlphaLut& alpha, Buffer& buf)
+int render::SolidWithAlpha(
+  const V_TrianglePtr& arr, ZBuffer& zbuf, float dist, Buffer& sbuf)
 {
   // Debug variables (we collect drawn pixels only from heavy weight functions)
 
@@ -395,35 +394,28 @@ int render::Solid(
   // Draws first not transparent triangles, and then transparent when
   // the firsts would be absent
 
-  int tri_idx {0};
+  int tri_idx {-1};
   int alpha_cnt {0};
   auto it = arr.begin();
   Triangle* t = nullptr;
 
-  while (true)
-  {
-    // Take next the triangle and render it, or if it transparent,
-    // then place in other array and continue
-    
+  while (it != arr.end() || alpha_cnt != 0)
+  { 
     if (it != arr.end())
     {
-      if (!(*it)->active_)
-        continue;
-      
       t = *it;
       ++it;
-      
-      if (t->color_.a_ > 0) {
+      ++tri_idx;
+      if (!t->active_)
+        continue;
+      if (t->color_.a_ < 1.0f || t->vxs_[0].color_.a_ < 1.0f) {
         alpha_tris.push_back(tri_idx);
         ++alpha_cnt;
         continue;
       }
-      ++tri_idx;
     }
     else {
-      if (alpha_cnt == 0)
-        break;
-      t = arr[alpha_cnt-1];
+      t = arr[alpha_tris[alpha_cnt-1]];
       --alpha_cnt;
     }
 
@@ -433,6 +425,7 @@ int render::Solid(
     auto& v2 = t->vxs_[1];
     auto& v3 = t->vxs_[2];
 
+    
     // Draw textured triangle
 
     if (t->texture_ != nullptr)
@@ -440,15 +433,15 @@ int render::Solid(
       auto* tex = t->texture_;
 
       if (t->shading_ == Shading::CONST)
-        raster_tri::TexturedPerspective(v1, v2, v3, tex, zbuf, buf);
+        raster_tri::TexturedPerspective(v1, v2, v3, tex, zbuf, sbuf);
       else if (t->shading_ == Shading::FLAT)
-        raster_tri::TexturedPerspectiveFL(v1, v2, v3, t->color_, tex, zbuf, buf);
+        raster_tri::TexturedPerspectiveFL(v1, v2, v3, t->color_, tex, zbuf, sbuf);
       else if (t->shading_ == Shading::GOURANG)
       {
         if (v1.pos_.z < dist)
-          raster_tri::TexturedPerspectiveGR(v1, v2, v3, tex, zbuf, buf);
+          raster_tri::TexturedPerspectiveGR(v1, v2, v3, tex, zbuf, sbuf);
         else
-          raster_tri::TexturedAffineGR(v1, v2, v3, tex, zbuf, buf);
+          raster_tri::TexturedAffineGR(v1, v2, v3, tex, zbuf, sbuf);
       }
     }
 
@@ -457,13 +450,14 @@ int render::Solid(
     else
     {
       if (t->shading_ == Shading::CONST || t->shading_ == Shading::FLAT)
-        raster_tri::SolidFL(v1, v2, v3, t->color_, zbuf, buf);
+        raster_tri::SolidFL(v1, v2, v3, t->color_, zbuf, sbuf);
       else if (t->shading_ == Shading::GOURANG)
-        raster_tri::SolidGR(v1, v2, v3, zbuf, buf);
+        raster_tri::SolidGR(v1, v2, v3, zbuf, sbuf);
     }
 
     ++total_tris;
   }
+
   return total_tris;
 }
 

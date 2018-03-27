@@ -63,12 +63,12 @@ namespace raster_tri {
     cVector& t1, cVector& t2, cVector& t3,
     Bitmap*, Buffer&
   );
-  void TexturedAffineFL(                        // optimized
+  void TexturedAffineFL(
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
     uint color, Bitmap*, Buffer&
   );
-  void TexturedAffineGR(                        // optimized
+  void TexturedAffineGR(
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
     uint c1, uint c2, uint c3, Bitmap*, Buffer&
@@ -76,32 +76,43 @@ namespace raster_tri {
 
   // Rasterizes triangle with 1/z-buffering
 
-  void SolidFL(
-    cVertex& v1, cVertex& v2, cVertex& v3,
+  void SolidFL(                                 // v2, optimized
+    Vertex v1, Vertex v2, Vertex v3,
     cFColor& color, ZBuffer&, Buffer&
   );
-  void SolidGR(
-    cVertex& v1, cVertex& v2, cVertex& v3,
+  void SolidGR(                                 // v2, optimized
+    Vertex v1, Vertex v2, Vertex v3,
     ZBuffer&, Buffer&
   );
-  int TexturedPerspective(                      // optimized
+  int TexturedPerspective(
     cVertex& v1, cVertex& v2, cVertex& v3,
     Bitmap*, ZBuffer&, Buffer&
   );
-  int TexturedPerspectiveFL(                    // optimized
-    cVertex& v1, cVertex& v2, cVertex& v3,
+  int TexturedPerspectiveFL(                    // v2, optimized
+    Vertex v1, Vertex v2, Vertex v3,
     cFColor& color, Bitmap*, ZBuffer&, Buffer&
   );
-  int TexturedPerspectiveGR(                    // optimized
-    cVertex& v1, cVertex& v2, cVertex& v3,
+  int TexturedPerspectiveGR(                    // v2, optimized
+    Vertex v1, Vertex v2, Vertex v3,
     Bitmap*, ZBuffer&, Buffer&
   );
-  int TexturedAffineGR(                         // optimized
-    cVertex& v1, cVertex& v2, cVertex& v3,
+  int TexturedAffineGR(                         // v2, optimized
+    Vertex v1, Vertex v2, Vertex v3,
     Bitmap*, ZBuffer&, Buffer&    
   );
 
 } // namespace raster_tri
+
+
+//****************************************************************************
+// RASTERIZERS HELPERS
+//****************************************************************************
+
+namespace raster_helpers {
+
+  void SortVertices(Vertex&, Vertex&, Vertex&);
+
+} // namespace raster_helpers
 
 //****************************************************************************
 // Implementations of inline functions

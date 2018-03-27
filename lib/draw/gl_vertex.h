@@ -33,7 +33,7 @@ struct Vertex
   Vertex(float x, float y, float z, float r, float g, float b)
   : pos_{x, y, z}
   , normal_{}
-  , color_{r, g, b, 0.0f} { }
+  , color_{r, g, b} { }
 
   Vector  pos_;
   Vector  normal_;
@@ -42,6 +42,11 @@ struct Vertex
   
 }; // struct Vertex
 
-} // namespace anshub
+}  // namespace anshub
 
 #endif  // GC_GL_VERTEX_H
+
+// Note : it is more logical to do Vertex as derived class from Vector, since
+// vertex in the first is defined by its position, but I am afraid that this
+// will slow down system (we copy vertices every frame, and in this case
+// we would have one more copy constructor calling (for base class))

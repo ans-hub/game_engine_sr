@@ -1660,606 +1660,623 @@ void raster_tri::TexturedAffineGR(
   }
 }
 
-// Draws solid triangle using 1/z buffer
+// Draws solid triangle with flat shading using 1/z buffer with
+// fast 50% alpha blending if alpha blending is defined
 
 void raster_tri::SolidFL(
-    cVertex& v1, cVertex& v2, cVertex& v3,
-    cFColor& fcolor, ZBuffer& zbuf, Buffer& buf)
+    Vertex v1, Vertex v2, Vertex v3,
+    cFColor& color, ZBuffer& zbuffer, Buffer& sbuffer)
 {
-  // Todo: function SortVertices(v1, v2, v3);
-  
-  uint color = fcolor.GetARGB();
+  // Prepare fast buffers access
 
-  // Convert float to int
+  int sbuf_w = sbuffer.Width();
+  int sbuf_h = sbuffer.Height();
+  auto* s_buf = sbuffer.GetPointer();
+  auto* z_buf = zbuffer.GetPointer();
 
-  int x1 = std::floor(v1.pos_.x);
-  int x2 = std::floor(v2.pos_.x);
-  int x3 = std::floor(v3.pos_.x);
-  int y1 = std::floor(v1.pos_.y);
-  int y2 = std::floor(v2.pos_.y);
-  int y3 = std::floor(v3.pos_.y);
+  // Prepare order of vertices from top to bottom 
 
-  // Get 1/z coords
+  raster_helpers::SortVertices(v1, v2, v3);
+  v1.pos_.z = 1.0f / v1.pos_.z;
+  v2.pos_.z = 1.0f / v2.pos_.z;
+  v3.pos_.z = 1.0f / v3.pos_.z;
 
-  float z1 = 1.0f / v1.pos_.z;
-  float z2 = 1.0f / v2.pos_.z;
-  float z3 = 1.0f / v3.pos_.z;
+  // Prepare alpha blending of current color
 
-  // Make y1 as top point and y3 as bottom point, y2 is middle
+  uint curr_color {};
+  if (color.a_ < 1.0f)
+    curr_color = (color * color.a_).GetARGB();
+  else
+    curr_color = color.GetARGB();
 
-  if (y2 < y3) {
-    std::swap(x2, x3);
-    std::swap(y2, y3);
-    std::swap(z2, z3);
-  }
-  if ((y1 < y2) && (y1 > y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-  }
-  else if ((y1 < y2) && (y1 < y3 || math::Feq(y1, y3))) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(x3, x2);
-    std::swap(y3, y2);
-    std::swap(z3, z2);
-  }
+  // Part 1 : draw top part of triangle (using top left filling convention)
 
-  // If polygon is flat bottom, sort left to right
+  int iy1 = math::Ceil(v1.pos_.y);
+  int iy2 = math::Ceil(v2.pos_.y) + 1;          // fill convention
+  int iy3 = math::Ceil(v3.pos_.y) + 1;          // fill convention
 
-  if (math::Feq(y2, y3) && x2 > x3) {
-    std::swap(x2, x3);
-    std::swap(z2, z3);
-  }
-
-  // If polygon is flat top, sort left to right
-
-  if (math::Feq(y1, y2) && x1 > x2) {
-    std::swap(x1, x2);
-    std::swap(z1, z2);
-  }
-
-  // Special case - when object is less than 1 px, but visible
-
-  if (y1 == y3) {
-    y1 += 1;
-    y3 = y1 - 1;
-    y2 = y3;
-  }
-
-  // Part 1 : draw top part of triangle (from top to middle)
-  // Note that 0;0 point is placed in left-bottom corner
-
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
-
-  float dx_lhs {0.0f};
-  float dx_rhs {0.0f};
-
-  float dy2y1 = std::abs(y2-y1);
-  float dy3y1 = std::abs(y3-y1);
-
-  if (math::FNotZero(dy2y1))
-    dx_lhs = (float)(x2-x1) / dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rhs = (float)(x3-x1) / dy3y1;
-
-  // Here we calc 1/z coordinate for left and right edges
-
-  float dx_lz {z2 - z1};
-  float dx_rz {z3 - z1};
-  
-  if (math::FNotZero(dy2y1))
-    dx_lz /= dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rz /= dy3y1;
-
-  // Now choose, where really placed left and right side step
-
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lz, dx_rz);
-  }
-  
-  // Now we should draw triangle from top to middle (y1-y2)
-
-  float x_lhs {(float)x1};                // float curr x coord left
-  float x_rhs {(float)x1};                // float curr x coord right
-
-  // Clip top and bottom
-
-  if (y1 < 0 || y3 >= buf.Height())       // if triangle is full out of screen
+  if (iy1 < 0 || iy3 >= sbuf_h)                 // full out of screen
     return;
 
-  int y_top_clip = y1 - buf.Height() + 1; // how much pixels is clipped 
-  y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
+  // Precompute dy for sides (we need full differential, not cutted)
 
-  x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
-  x_rhs += dx_rhs * y_top_clip;           //  coords if y1 is out of screen
+  int dy2y1 = iy1 - (iy2 - 1);
+  int dy3y1 = iy1 - (iy3 - 1);
 
-  int y_top = y1 - y_top_clip;            // define new drawable top
-  int y_bot = std::max(0, y2);            //  and bottom
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
 
-  // Draw top triangle
+  float lx_step {v2.pos_.x - v1.pos_.x};
+  float rx_step {v3.pos_.x - v1.pos_.x};
+  float lz_step {v2.pos_.z - v1.pos_.z};
+  float rz_step {v3.pos_.z - v1.pos_.z};
+
+  if (math::FNotZero(dy2y1)) {
+    lx_step /= dy2y1;
+    lz_step /= dy2y1;
+  }
+  if (math::FNotZero(dy3y1)) {
+    rx_step /= dy3y1;
+    rz_step /= dy3y1;
+  }
+
+  // Swap interpolants if our suppose was wrong
+
+  if (lx_step > rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+  }
   
+  // Prepare vars for x and 1/z on the borders of triangle
+
+  float x_lhs {v1.pos_.x};
+  float z_lhs {v1.pos_.z};
+  float x_rhs {x_lhs};
+  float z_rhs {z_lhs};
+
+  // Clip top triangle
+
+  int y_top_clip = iy1 - sbuf_h + 1; 
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+
+  // Draw top triangle (note that 0-0 is in left bottom corner of screen)
+
+  int y_top = iy1 - y_top_clip;
+  int y_bot = std::max(0, iy2);
+
   for (int y = y_top; y >= y_bot; --y)
   {
-    int dy = y1 - y;                      // we need real dy, not clipped
-    
-    // Compute differentials of 1/z coords on the left and right edges
+    // Convert most left and most right x pixels
 
-    float x_lz = z1 + (dx_lz * dy);
-    float x_rz = z1 + (dx_rz * dy);
-    
-    // Compute x border coords for left edge and right edges
-    
-    int xlb = std::floor(x_lhs);
-    int xrb = std::ceil(x_rhs);
+    int xlb = math::Ceil(x_lhs);
+    int xrb = math::Ceil(x_rhs) - 1;           // fill convention
 
-    // Compute x offset from left screen border if face would be clipped
+    // Compute how much pixels we should clip from left
 
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Compute 1/z differential between edges at the current y before clipping
-    // left and right sides
+    // Make 1/z interpolant and clip it from left side
 
-    float  dx_currx_z {};
-
+    float z_step {};
     if ((xrb - xlb) != 0)
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
-
-    // Clip left and right lines of face
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+    float z_curr = z_lhs + (z_step * xl_dx);
+   
+    // Clip x interpolant
 
     xlb = std::max(0, xlb);
-    xrb = std::min(buf.Width() - 1, xrb);
+    xrb = std::min(sbuf_w - 1, xrb);
 
-    // Interpolate color and 1/z coordinate for each pixel    
-    
-    for (int x = xlb; x < xrb; ++x)
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (color.a_ < 1.0f)
     {
-      int dx = x - xlb;
-      float curr_z = x_lz + (dx_currx_z * dx);
-
-      if (curr_z > zbuf(x,y))
+      for (int x = xlb; x <= xrb; ++x)
       {
-        if (fcolor.a_ > 0.0f)
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
         {
-          // FColor t {buf[y*buf.Width()+x]};
-          uint drawn = buf[y*buf.Width()+x] * 0.5f;
-          uint would = color * 0.5f;
-          std::cerr << drawn << ' ' << would << '\n';
-          raster::Point(x, y, drawn + would, buf);
+          Color<> buf_color {s_buf[idx]};
+          color::ShiftRight(buf_color, 1);
+          s_buf[idx] = curr_color + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
         }
-        else
-          raster::Point(x, y, color, buf);
-        zbuf(x,y) = curr_z;
+        ++idx;
+        z_curr += z_step;
+      }
+    }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          s_buf[idx] = curr_color;
+          z_buf[idx] = z_curr;
+        }
+        ++idx;
+        z_curr += z_step;        
       }
     }
     
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
   }
 
-  // Part 2 : draw bottom side of triangle (from bottom to middle)
-  // Note that 0;0 point is placed in left-bottom corner
+  // Part 2 : draw bottom part of triangle (0-0 is the left bottom)
 
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
+  // Down middle pixel as it was drawn
 
-  float dy1y3 = std::abs(y1-y3);
-  float dy2y3 = std::abs(y2-y3);
+  iy2 = iy2 - 1;
 
-  if (math::FNotZero(dy1y3)) 
-    dx_lhs = (float)(x1-x3) / dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rhs = (float)(x2-x3) / dy2y3;
+  // Precompute dy for sides (we need full differential, not cutted)
 
-  // Here we calc 1/z coordinate for left and right edges
+  int dy1y3 = iy1 - (iy3 - 1);
+  int dy2y3 = iy2 - (iy3 - 1);
 
-  dx_lz = z1 - z3;
-  dx_rz = z2 - z3;
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
 
-  if (math::FNotZero(dy1y3))
-    dx_lz /= dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rz /= dy2y3;
-  
-  // Determine which is really left step and really is right step
+  lx_step = v3.pos_.x - v1.pos_.x;
+  rx_step = v3.pos_.x - v2.pos_.x;
+  lz_step = v3.pos_.z - v1.pos_.z;
+  rz_step = v3.pos_.z - v2.pos_.z;
 
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lz, dx_rz);
+  if (math::FNotZero(dy1y3)) {
+    lz_step /= dy1y3;
+    lx_step /= dy1y3;
   }
-    
-  // Now we should draw traingle from bottom to middle (from y3 to y2)
 
-  x_lhs = (float)x3;
-  x_rhs = (float)x3;
-  
-  // Clip top and bottom
+  if (math::FNotZero(dy2y3)) {
+    rx_step /= dy2y3;
+    rz_step /= dy2y3;
+  }
 
-  int y_bot_clip {0};                   // here we calc how mush pixels
-  if (y3+1 < 0)                         //  is out of screen from bottom
-    y_bot_clip = std::abs(y3+1);
-  
-  x_lhs += dx_lhs * y_bot_clip;         // expand left and right curr coords
-  x_rhs += dx_rhs * y_bot_clip;
+  // Now make new x2 point and new interpolants for triangle borders
 
-  y_bot = std::max(0, y3+1);            // new drawable top and bottom
-  y_top = std::min(y2, buf.Height()-1);
+  float new_x {};
+  float new_z {};
+
+  if (lx_step > rx_step) {
+    new_x = v1.pos_.x + (iy1 - iy2) * lx_step;
+    new_z = v1.pos_.z + (iy1 - iy2) * lz_step;
+    x_lhs = new_x;
+    x_rhs = v2.pos_.x;
+    z_lhs = new_z;
+    z_rhs = v2.pos_.z;
+  }
+  else if (lx_step < rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    new_x = v1.pos_.x + (iy1 - iy2) * rx_step;
+    new_z = v1.pos_.z + (iy1 - iy2) * rz_step;    
+    x_lhs = v2.pos_.x;
+    x_rhs = new_x;
+    z_lhs = v2.pos_.z;
+    z_rhs = new_z;
+  }
+
+  // Clip bottom triangle
+
+  y_top_clip = iy2 - sbuf_h + 1;
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
 
   // Draw bottom triangle
 
-  for (int y = y_bot; y < y_top; ++y)
+  y_top = std::min(iy2, sbuf_h-1);
+  y_bot = std::max(0, iy3);
+
+  for (int y = y_top; y >= y_bot; --y)
   {
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
+    // Convert most left and most right x pixels
 
-    int dy = y - y3;                    // we need real dy, not clipped
+    int xlb = math::Ceil(x_lhs);
+    int xrb = math::Ceil(x_rhs) - 1;           // fill convention
 
-    // Compute differentials of 1/z coords on the left and right edges
+    // Compute how much pixels we should clip from left
 
-    float x_lz = z3 + (dx_lz * dy);
-    float x_rz = z3 + (dx_rz * dy);
-
-    // Compute x border coords for left edge and right edges
-
-    int xlb = std::floor(x_lhs);
-    int xrb = std::ceil(x_rhs);
-
-    // Compute color offset from left screen border if face would be clipped
-    
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Compute 1/z differential between edges at the current y before clipping
-    // left and right sides
+    // Make 1/z interpolant from left side with clipping
 
-    float  dx_currx_z {};
+    float z_step {};
     if ((xrb - xlb) != 0)
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1)- xlb);
+    float z_curr = z_lhs + (z_step * xl_dx);
    
-    // Clip left and right lines of face
+    // Clip x interpolant
 
     xlb = std::max(0, xlb);
-    xrb = std::min(buf.Width()-1, xrb);
+    xrb = std::min(sbuf_w - 1, xrb);
 
-    // Interpolate color and 1/z coordinate for each pixel    
-    
-    for (int x = xlb; x < xrb; ++x)
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (color.a_ < 1.0f)
     {
-      int dx = x - xlb;
-      float curr_z = x_lz + (dx_currx_z * dx);
-      if (curr_z > zbuf(x,y)) {
-        raster::Point(x, y, color, buf);
-        zbuf(x,y) = curr_z;
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};
+          color::ShiftRight(buf_color, 1);
+          s_buf[idx] = curr_color + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
+        }
+        ++idx;
+        z_curr += z_step;
       }
     }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          s_buf[idx] = curr_color;
+          z_buf[idx] = z_curr;
+        }
+        ++idx;
+        z_curr += z_step;        
+      }
+    }
+    
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
   }
 }
 
-// Draws gourang solid triangle. The proccess of drawing is similar
-// to the draw::SolidTriangle, but here we interpolate vertexes colors
-// (gradient).
-// This is the version that uses ZBuffer and Vertexes as arguments 
+// Draws solid triangle with gourang shading using 1/z buffer with
+// fast 50% alpha blending if alpha blending is defined
 
 void raster_tri::SolidGR(
-    cVertex& v1, cVertex& v2, cVertex& v3,
-    ZBuffer& zbuf, Buffer& buf)
+    Vertex v1, Vertex v2, Vertex v3,
+    ZBuffer& zbuffer, Buffer& sbuffer)
 {
-  // Convert float to int
+  // Prepare fast buffers access
 
-  int x1 = std::floor(v1.pos_.x);
-  int x2 = std::floor(v2.pos_.x);
-  int x3 = std::floor(v3.pos_.x);
-  int y1 = std::floor(v1.pos_.y);
-  int y2 = std::floor(v2.pos_.y);
-  int y3 = std::floor(v3.pos_.y);
-  
-  // Get 1/z coords
+  int sbuf_w = sbuffer.Width();
+  int sbuf_h = sbuffer.Height();
+  auto* s_buf = sbuffer.GetPointer();
+  auto* z_buf = zbuffer.GetPointer();
 
-  float z1 = 1.0f / v1.pos_.z;
-  float z2 = 1.0f / v2.pos_.z;
-  float z3 = 1.0f / v3.pos_.z;
+  // Prepare order of vertices from top to bottom 
 
-  // Prepare colors
+  raster_helpers::SortVertices(v1, v2, v3);
+  v1.pos_.z = 1.0f / v1.pos_.z;
+  v2.pos_.z = 1.0f / v2.pos_.z;
+  v3.pos_.z = 1.0f / v3.pos_.z;
 
-  FColor c1 {v1.color_};
+  // Prepare color and alpha blending of current color
+
+  FColor c1 {v1.color_};    // todo: we can don`t copy this colors
   FColor c2 {v2.color_};
   FColor c3 {v3.color_};
 
-  // Make y1 as top point and y3 as bottom point, y2 is middle
-
-  if (y2 < y3) {
-    std::swap(x2, x3);
-    std::swap(y2, y3);
-    std::swap(z2, z3);
-    std::swap(c2, c3);
-  }
-  if ((y1 < y2) && (y1 > y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(c1, c2);
-  }
-  else if ((y1 < y2) && (y1 <= y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(c1, c2);
-    std::swap(x3, x2);
-    std::swap(y3, y2);
-    std::swap(z3, z2);
-    std::swap(c3, c2);
+  if (c1.a_ < 1.0f) {
+    c1 *= c1.a_;                  // we don`t support gradient alpha
+    c2 *= c1.a_;
+    c3 *= c1.a_;
   }
 
-  // If polygon is flat bottom, sort left to right
+  // Part 1 : draw top part of triangle (using top left filling convention)
 
-  if (math::Feq(y2, y3) && x2 > x3) {
-    std::swap(x2, x3);
-    std::swap(z2, z3);
-    std::swap(c2, c3);
-  }
+  int iy1 = math::Ceil(v1.pos_.y);
+  int iy2 = math::Ceil(v2.pos_.y) + 1;         // fill convention
+  int iy3 = math::Ceil(v3.pos_.y) + 1;         // fill convention
 
-  // If polygon is flat top, sort left to right
-
-  if (math::Feq(y1, y2) && x1 > x2) {
-    std::swap(x1, x2);
-    std::swap(z1, z2);
-    std::swap(c1, c2);
-  }
-
-  // Part 1 : draw top part of triangle (from top to middle)
-  // Note that 0;0 point is placed in left-bottom corner
-
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
-
-  float dx_lhs {0.0f};
-  float dx_rhs {0.0f};
-
-  float dy2y1 = std::abs(y2-y1);
-  float dy3y1 = std::abs(y3-y1);
-
-  if (math::FNotZero(dy2y1))
-    dx_lhs = (float)(x2-x1) / dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rhs = (float)(x3-x1) / dy3y1;
-
-  // Here we calc 1/z coordinate for left and right edges
-
-  float dx_lz {z2 - z1};
-  float dx_rz {z3 - z1};
-  
-  if (math::FNotZero(dy2y1))
-    dx_lz /= dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rz /= dy3y1;
-
-  // Calc side colors differential (from top to left bottom and to right bottom)
-
-  FColor dx_lc {c2 - c1};
-  FColor dx_rc {c3 - c1};
-  if (math::FNotZero(dy2y1))
-    dx_lc /= std::abs(y2-y1);
-  if (math::FNotZero(dy3y1))
-    dx_rc /= std::abs(y3-y1);
-  
-  // Now choose, where really placed left and right side step
-
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lc, dx_rc);
-    std::swap(dx_lz, dx_rz);
-  }
-
-  // Now we should draw triangle from top to middle (from y1 to y2)
-
-  float x_lhs {(float)x1};                // float curr x coord left
-  float x_rhs {(float)x1};                // float curr x coord right
-
-  // Clip top and bottom
-
-  if (y1 < 0 || y3 >= buf.Height())       // if triangle is full out of screen
+  if (iy1 < 0 || iy3 >= sbuf_h)               // full out of screen
     return;
 
-  int y_top_clip = y1 - buf.Height() + 1; // how much pixels is clipped 
-  y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
+  // Precompute dy for sides (we need full differential, not cutted)
 
-  x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
-  x_rhs += dx_rhs * y_top_clip;           //  coords if y1 is out of screen
+  int dy2y1 = iy1 - (iy2 - 1);
+  int dy3y1 = iy1 - (iy3 - 1);
 
-  int y_top = y1 - y_top_clip;            // define new drawable top
-  int y_bot = std::max(0, y2);            //  and bottom
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
 
-  // Draw top triangle
+  float lx_step {v2.pos_.x - v1.pos_.x};
+  float rx_step {v3.pos_.x - v1.pos_.x};
+  float lz_step {v2.pos_.z - v1.pos_.z};
+  float rz_step {v3.pos_.z - v1.pos_.z};
+  FColor lc_step {c2 - c1};
+  FColor rc_step {c3 - c1};
+
+  if (math::FNotZero(dy2y1)) {
+    lx_step /= dy2y1;
+    lz_step /= dy2y1;
+    lc_step /= dy2y1;
+  }
+  if (math::FNotZero(dy3y1)) {
+    rx_step /= dy3y1;
+    rz_step /= dy3y1;
+    rc_step /= dy3y1;
+  }
+
+  // Swap interpolants if our suppose was wrong
+
+  if (lx_step > rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lc_step, rc_step);
+  }
+
+  // Prepare vars for x, 1/z and vxs colors on the borders of triangle
+
+  float x_lhs {v1.pos_.x};
+  float x_rhs {x_lhs};
+  float z_lhs {v1.pos_.z};
+  float z_rhs {z_lhs};
+  FColor c_rhs {c1};
+  FColor c_lhs {c1};
+
+  // Clip top triangle
+
+  int y_top_clip = iy1 - sbuf_h + 1; 
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  c_lhs += lc_step * y_top_clip;
+  c_rhs += rc_step * y_top_clip;
+
+  // Draw top triangle (note that 0-0 is in left bottom corner of screen)
+
+  int y_top = iy1 - y_top_clip;
+  int y_bot = std::max(0, iy2);
 
   for (int y = y_top; y >= y_bot; --y)
   {
-    int dy = y1 - y;                      // we need real dy, not clipped
+    // Convert most left and most right x pixels
 
-    // Compute differentials of 1/z coords on the left and right edges
+    int xlb = math::Ceil(x_lhs);
+    int xrb = math::Ceil(x_rhs) - 1;           // fill convention
 
-    float x_lz = z1 + (dx_lz * dy);
-    float x_rz = z1 + (dx_rz * dy);
-    
-    // Compute differentials of colors on the left and right edges
-    
-    FColor x_lc = c1 + (dx_lc * dy);
-    FColor x_rc = c1 + (dx_rc * dy);
-
-    // Compute x border coords for left edge and right edges
-
-    int xlb = std::floor(x_lhs);
-    int xrb = std::ceil(x_rhs);
-        
-    // Compute x offset from left screen border if face would be clipped
+    // Compute how much pixels we should clip from left
 
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Compute colors and 1/z differentials between edges at the current y
-    // before clipping left and right sides
+    // Make 1/z interpolant and clip it from left side
 
-    FColor dx_currx_c {c1};
-    float  dx_currx_z {};
-
-    if ((xrb - xlb) != 0)
-    {
-      dx_currx_c = (x_rc - x_lc) / (xrb - xlb);
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
+    float z_step {};
+    FColor c_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+      c_step = (c_rhs - c_lhs) / ((x_rhs + 1) - xlb);
     }
+    float z_curr = z_lhs + (z_step * xl_dx);
+    FColor c_curr = c_lhs + (c_step * xl_dx);
    
-    // Clip left and right lines of face
+    // Clip x interpolant
 
     xlb = std::max(0, xlb);
-    xrb = std::min(buf.Width() - 1, xrb);
-    
-    // Interpolate color and 1/z coordinate for each pixel    
+    xrb = std::min(sbuf_w - 1, xrb);
 
-    for (int x = xlb; x < xrb; ++x)
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (c1.a_ < 1.0f)
     {
-      int dx = x - xlb;
-      
-      FColor curr_c = x_lc + (dx_currx_c * dx);
-      float  curr_z = x_lz + (dx_currx_z * dx);
-
-      if (curr_z > zbuf(x,y))
+      for (int x = xlb; x <= xrb; ++x)
       {
-        raster::Point(x, y, curr_c.GetARGB(), buf);
-        zbuf(x,y) = curr_z;
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};
+          color::ShiftRight(buf_color, 1);
+          s_buf[idx] = c_curr.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
+        }
+        ++idx;
+        z_curr += z_step;
+        c_curr += c_step;
+      }
+    }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          s_buf[idx] = c_curr.GetARGB();
+          z_buf[idx] = z_curr;
+        }
+        ++idx;
+        z_curr += z_step;
+        c_curr += c_step;
       }
     }
     
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    c_lhs += lc_step;
+    c_rhs += rc_step;
   }
 
-  // Part 2 : draw bottom side of triangle (from bottom to middle)
-  // Note that 0;0 point is placed in left-bottom corner
+  // Part 2 : draw bottom part of triangle (0-0 is the left bottom)
 
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
+  // Down middle pixel as it was drawn
 
-  float dy1y3 = std::abs(y1-y3);
-  float dy2y3 = std::abs(y2-y3);
+  iy2 = iy2 - 1;
 
-  if (math::FNotZero(dy1y3)) 
-    dx_lhs = (float)(x1-x3) / dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rhs = (float)(x2-x3) / dy2y3;
+  // Precompute dy for sides (we need full differential, not cutted)
 
-  // Here we calc 1/z coordinate for left and right edges
+  int dy1y3 = iy1 - (iy3 - 1);
+  int dy2y3 = iy2 - (iy3 - 1);
 
-  dx_lz = z1 - z3;
-  dx_rz = z2 - z3;
-  
-  if (math::FNotZero(dy1y3))
-    dx_lz /= dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rz /= dy2y3;
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
 
-  // Calc side colors differential (from top to left bottom and to right bottom)
+  lx_step = v3.pos_.x - v1.pos_.x;
+  rx_step = v3.pos_.x - v2.pos_.x;
+  lz_step = v3.pos_.z - v1.pos_.z;
+  rz_step = v3.pos_.z - v2.pos_.z;
+  lc_step = c3 - c1;
+  rc_step = c3 - c2;
 
-  dx_lc = c1 - c3;
-  dx_rc = c2 - c3;
-  if (math::FNotZero(dy1y3))
-    dx_lc /= dy1y3 - 1;           // -1 since we go -1 step less than diff
-  if (math::FNotZero(dy2y3))
-    dx_rc /= dy2y3 - 1;           // in loop when we would draw triangle
-  
-  // Determine which is really left step and really is right step
-
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lc, dx_rc);
-    std::swap(dx_lz, dx_rz);
+  if (math::FNotZero(dy1y3)) {
+    lz_step /= dy1y3;
+    lx_step /= dy1y3;
+    lc_step /= dy1y3;
   }
-    
-  // Now we should draw traingle from bottom to middle (from y3 to y2)
 
-  x_lhs = (float)x3;
-  x_rhs = (float)x3;
-  
-  // Clip top and bottom
+  if (math::FNotZero(dy2y3)) {
+    rx_step /= dy2y3;
+    rz_step /= dy2y3;
+    rc_step /= dy2y3;
+  }
 
-  int y_bot_clip {0};                   // here we calc how mush pixels
-  if (y3+1 < 0)                         //  is out of screen from bottom
-    y_bot_clip = std::abs(y3+1);
-  
-  x_lhs += dx_lhs * y_bot_clip;         // expand left and right curr coords
-  x_rhs += dx_rhs * y_bot_clip;
+  // Now make new x2 point and new interpolants for triangle borders
 
-  y_bot = std::max(0, y3+1);            // new drawable top and bottom
-  y_top = std::min(y2, buf.Height()-1);
+  float new_x {};
+  float new_z {};
+  FColor new_c {};
+  int dy_passed {iy1 - iy2};
+
+  if (lx_step > rx_step) {
+    new_x = v1.pos_.x + (dy_passed * lx_step);
+    new_z = v1.pos_.z + (dy_passed * lz_step);
+    new_c = c1 + (lc_step * dy_passed);
+    x_lhs = new_x;
+    x_rhs = v2.pos_.x;
+    z_lhs = new_z;
+    z_rhs = v2.pos_.z;
+    c_lhs = new_c;
+    c_rhs = c2;
+  }
+  else if (lx_step < rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lc_step, rc_step);
+    new_x = v1.pos_.x + (dy_passed * rx_step);
+    new_z = v1.pos_.z + (dy_passed * rz_step);
+    new_c = c1 + (rc_step * dy_passed);    
+    x_lhs = v2.pos_.x;
+    x_rhs = new_x;
+    z_lhs = v2.pos_.z;
+    z_rhs = new_z;
+    c_lhs = c2;
+    c_rhs = new_c;
+  }
+
+  // Clip bottom triangle
+
+  y_top_clip = iy2 - sbuf_h + 1;
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  c_lhs += lc_step * y_top_clip;
+  c_rhs += rc_step * y_top_clip;
 
   // Draw bottom triangle
 
-  for (int y = y_bot; y < y_top; ++y)
+  y_top = std::min(iy2, sbuf_h-1);
+  y_bot = std::max(0, iy3);
+
+  for (int y = y_top; y >= y_bot; --y)
   {
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
+    // Convert most left and most right x pixels
 
-    int dy = y - y3;                    // we need real dy, not clipped
+    int xlb = math::Ceil(x_lhs);
+    int xrb = math::Ceil(x_rhs) - 1;           // fill convention
 
-    // Compute differentials of 1/z coords on the left and right edges
+    // Compute how much pixels we should clip from left
 
-    float x_lz = z3 + (dx_lz * dy);
-    float x_rz = z3 + (dx_rz * dy);
-
-    // Compute differentials of colors on the left and right edges
-    
-    FColor x_lc = c3 + (dx_lc * dy);    // find colors on the edges
-    FColor x_rc = c3 + (dx_rc * dy);
-
-    // Compute x border coords for left edge and right edges
-
-    int xlb = std::floor(x_lhs);
-    int xrb = std::ceil(x_rhs);
-
-    // Compute color offset from left screen border if face would be clipped
-    
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Compute colors and 1/z differentials between edges at the current y
-    // before clipping left and right sides
+    // Make 1/z interpolant from left side with clipping
 
-    FColor dx_currx_c {c3};
-    float  dx_currx_z {};
-
-    if ((xrb - xlb) != 0)
-    {
-      dx_currx_c = (x_rc - x_lc) / (xrb - xlb);
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
-    }
+    float z_step {};
+    FColor c_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);
+      c_step = (c_rhs - c_lhs) / ((x_rhs + 1) - xlb);
+    }    
+    float z_curr = z_lhs + (z_step * xl_dx);
+    FColor c_curr = c_lhs + (c_step * xl_dx);
    
-    // Clip left and right lines of face
+    // Clip x interpolant
 
     xlb = std::max(0, xlb);
-    xrb = std::min(buf.Width()-1, xrb);
-    
-    // Interpolate color and 1/z coordinate for each pixel    
-    
-    for (int x = xlb; x < xrb; ++x)
+    xrb = std::min(sbuf_w - 1, xrb);
+
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (c1.a_ < 1.0f)
     {
-      int dx = x - xlb;
-
-      FColor curr_c = x_lc + (dx_currx_c * dx);
-      float  curr_z = x_lz + (dx_currx_z * dx);
-
-      if (curr_z > zbuf(x,y))
+      for (int x = xlb; x <= xrb; ++x)
       {
-        raster::Point(x, y, curr_c.GetARGB(), buf);
-        zbuf(x,y) = curr_z;        
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};
+          color::ShiftRight(buf_color, 1);
+          s_buf[idx] = c_curr.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
+        }
+        ++idx;
+        z_curr += z_step;
+        c_curr += c_step;
       }
     }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          s_buf[idx] = c_curr.GetARGB();
+          z_buf[idx] = z_curr;
+        }
+        ++idx;
+        z_curr += z_step;
+        c_curr += c_step;
+      }
+    }
+    
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    c_lhs += lc_step;
+    c_rhs += rc_step;
   }
 }
 
@@ -2685,441 +2702,443 @@ int raster_tri::TexturedPerspective(
   return total_drawn;
 }
 
-// Draws textured triangle with flat lighting and with correct perspective
-// using 1/z interpolating and returns number of drawn pixels
+// Draws textured triangle with flat shading using 1/z buffer with
+// correct perspective and fast 50% alpha blending if alpha blending is defined
 
 int raster_tri::TexturedPerspectiveFL(
-    cVertex& p1, cVertex& p2, cVertex& p3,
-    cFColor& fcolor, Bitmap* bmp, ZBuffer& zbuf, Buffer& scr_buf)
+    Vertex v1, Vertex v2, Vertex v3,
+    cFColor& fcolor, Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf)
 {
-  uint color = fcolor.GetARGB();
   int total_drawn {};
 
-  // Prepare fast screen buffer, texture and z-buffer access
+  // Prepare fast buffers access
 
-  auto scr_ptr = scr_buf.GetPointer();
-  int  scr_width = scr_buf.Width();
-  int  scr_height = scr_buf.Height();
-  auto tex_ptr = bmp->GetPointer();
+  int sbuf_w = sbuf.Width();
+  int sbuf_h = sbuf.Height();
   auto tex_width = bmp->GetRowIncrement();
   auto tex_texel_width = bmp->GetBytesPerPixel();
-  auto* z_ptr = zbuf.GetPointer();
-  auto  z_width = zbuf.Width();
+  auto* s_buf = sbuf.GetPointer();
+  auto* z_buf = zbuf.GetPointer();
+  auto* tex_ptr = bmp->GetPointer();
 
-  // Convert flat light color to Color<>
+  // Prepare order of vertices from top to bottom 
 
-  Color<> light_color {color};
+  raster_helpers::SortVertices(v1, v2, v3);
 
-  // Convert float to int for vertex positions
+  // Prepare light color and alpha blending
 
-  int x1 = math::Floor(p1.pos_.x);
-  int x2 = math::Floor(p2.pos_.x);
-  int x3 = math::Floor(p3.pos_.x);
-  int y1 = math::Floor(p1.pos_.y);
-  int y2 = math::Floor(p2.pos_.y);
-  int y3 = math::Floor(p3.pos_.y);
+  bool alpha {false};
+  if (v1.color_.a_ < 1.0f)
+    alpha = true;
+  uint light_color {fcolor.GetARGB()};
 
-  // Extract 1/z coordinates
-  
-  float z1 = p1.pos_.z;    // 1/z as we use 1/z buffer
-  float z2 = p2.pos_.z;
-  float z3 = p3.pos_.z;
-  
-  // Extract texture coordinates
+  // Part 1 : draw top part of triangle (using top left filling convention)
 
-  float u1 = p1.texture_.x;
-  float u2 = p2.texture_.x;
-  float u3 = p3.texture_.x;
-  float v1 = p1.texture_.y;
-  float v2 = p2.texture_.y;
-  float v3 = p3.texture_.y;
+  int iy1 = math::Ceil(v1.pos_.y);
+  int iy2 = math::Ceil(v2.pos_.y) + 1;         // fill convention
+  int iy3 = math::Ceil(v3.pos_.y) + 1;         // fill convention
 
-  // Make y1 as top point and y3 as bottom point, y2 is middle
+  if (iy1 < 0 || iy3 >= sbuf_h)               // full out of screen
+    return total_drawn;
 
-  if (y2 < y3) {
-    std::swap(x2, x3);
-    std::swap(y2, y3);
-    std::swap(z2, z3);
-    std::swap(u2, u3);
-    std::swap(v2, v3);
-  }
-  if ((y1 < y2) && (y1 > y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
-    std::swap(v1, v2);
-  }
-  else if ((y1 < y2) && (y1 <= y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
-    std::swap(v1, v2);
-    std::swap(x3, x2);
-    std::swap(y3, y2);
-    std::swap(z3, z2);
-    std::swap(u3, u2);
-    std::swap(v3, v2);
-  }
+  // Precompute dy for sides (we need full differential, not cutted)
 
-  // If polygon is flat bottom, sort left to right
+  int dy2y1 = iy1 - (iy2 - 1);
+  int dy3y1 = iy1 - (iy3 - 1);
 
-  if (math::Feq(y2, y3) && x2 > x3) {
-    std::swap(x2, x3);
-    std::swap(z2, z3);
-    std::swap(u2, u3);
-    std::swap(v2, v3);
-  }
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
 
-  // If polygon is flat top, sort left to right
-
-  if (math::Feq(y1, y2) && x1 > x2) {
-    std::swap(x1, x2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
-    std::swap(v1, v2);
-  }
-
-  // Part 1 : draw top part of triangle (from top to middle)
-  // Note that 0;0 point is placed in left-bottom corner, but texture`s 0;0
-  // is placed in left-top corner
-
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
-
-  float dx_lhs {0.0f};                          // dx - diff, lhs - left hand side
-  float dx_rhs {0.0f};
-  
-  float dy2y1 = std::abs(y2-y1);
-  float dy3y1 = std::abs(y3-y1);
-
-  if (math::FNotZero(dy2y1))
-    dx_lhs = (float)(x2-x1) / dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rhs = (float)(x3-x1) / dy3y1;
-
-  // Calc side textures differential (from top to left bottom and to right
-  // bottom). Note that we need 4 differentials, for x and y from top to left
-  // and for x and y from top to right.
-  // Since we want perspective correct texture, we calc u/z and v/z coordinates
-
-  float dx_lu {u2/z2 - u1/z1};
-  float dx_lv {v2/z2 - v1/z1};
-  float dx_ru {u3/z3 - u1/z1};
-  float dx_rv {v3/z3 - v1/z1};
+  float lx_step {v2.pos_.x - v1.pos_.x};
+  float rx_step {v3.pos_.x - v1.pos_.x};
+  float lz_step {1.0f / v2.pos_.z - 1.0f / v1.pos_.z};
+  float rz_step {1.0f / v3.pos_.z - 1.0f / v1.pos_.z};
+  float lu_step {v2.texture_.x / v2.pos_.z - v1.texture_.x / v1.pos_.z};
+  float lv_step {v2.texture_.y / v2.pos_.z - v1.texture_.y / v1.pos_.z};
+  float ru_step {v3.texture_.x / v3.pos_.z - v1.texture_.x / v1.pos_.z};
+  float rv_step {v3.texture_.y / v3.pos_.z - v1.texture_.y / v1.pos_.z};
 
   if (math::FNotZero(dy2y1)) {
-    dx_lu /= dy2y1;
-    dx_lv /= dy2y1;
+    lx_step /= dy2y1;
+    lz_step /= dy2y1;
+    lu_step /= dy2y1;
+    lv_step /= dy2y1;
   }
   if (math::FNotZero(dy3y1)) {
-    dx_ru /= dy3y1;
-    dx_rv /= dy3y1;
+    rx_step /= dy3y1;
+    rz_step /= dy3y1;
+    ru_step /= dy3y1;
+    rv_step /= dy3y1;
   }
 
-  // Here we calc 1/z coordinate for left and right edges
+  // Swap interpolants if our suppose was wrong
 
-  float dx_lz {1.0f/z2 - 1.0f/z1};
-  float dx_rz {1.0f/z3 - 1.0f/z1};
-  
-  if (math::FNotZero(dy2y1))
-    dx_lz /= dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rz /= dy3y1;
-  
-  // Now choose, where really placed left and right side step
-
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lu, dx_ru);
-    std::swap(dx_lv, dx_rv);
-    std::swap(dx_lz, dx_rz);
+  if (lx_step > rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lu_step, ru_step);
+    std::swap(lv_step, rv_step);
   }
 
-  // Now we should draw triangle from top to middle (from y1 to y2)
+  // Prepare vars for x, 1/z and tex coords on the borders of triangle
 
-  float x_lhs {(float)x1};                // float curr x coord left
-  float x_rhs {(float)x1};                // float curr x coord right
+  float x_lhs {v1.pos_.x};
+  float x_rhs {x_lhs};
+  float z_lhs {1.0f / v1.pos_.z};
+  float z_rhs {z_lhs};
+  float u_lhs {v1.texture_.x / v1.pos_.z};
+  float u_rhs {u_lhs};
+  float v_lhs {v1.texture_.y / v1.pos_.z};
+  float v_rhs {v_lhs};
 
-  // Clip top and bottom
+  // Clip top triangle
 
-  if (y1 < 0 || y3 >= scr_height)       // if triangle is full out of screen
-    return 0;
+  int y_top_clip = iy1 - sbuf_h + 1; 
+  y_top_clip = std::max(0, y_top_clip);
 
-  int y_top_clip = y1 - scr_height + 1; // how much pixels is clipped 
-  y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
+  // Forward interpolants if triangle is clipped
 
-  x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
-  x_rhs += dx_rhs * y_top_clip;           //  coords if y1 is out of screen
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  u_lhs += lu_step * y_top_clip;
+  u_rhs += ru_step * y_top_clip;
+  v_lhs += lv_step * y_top_clip;
+  v_rhs += rv_step * y_top_clip;
 
-  int y_top = y1 - y_top_clip;            // define new drawable top
-  int y_bot = std::max(0, y2);            //  and bottom
+  // Draw top triangle (note that 0-0 is in left bottom corner of screen)
 
-  // Prepare start values of interpolants
+  int y_top = iy1 - y_top_clip;
+  int y_bot = std::max(0, iy2);
 
-  float x_u_start = u1/z1;
-  float x_v_start = v1/z1;
-  float x_z_start = 1.0f/z1;
-
-  // Draw top triangle
-
-  Color<> tex_color {};                 // texture and its light color
-  Color<> total_color {};               //  to interpolate it inside x row loop
+  int xlb {};
+  int xrb {};
 
   for (int y = y_top; y >= y_bot; --y)
   {
-    // Compute differentials of texture coords on the left and right edges
+    // Convert most left and most right x pixels
 
-    int dy = y1 - y;                        // we need real dy, not clipped
-    
-    float x_lu = x_u_start + (dx_lu * dy);  // find tex_coords on the edges
-    float x_lv = x_v_start + (dx_lv * dy);
-    float x_ru = x_u_start + (dx_ru * dy);
-    float x_rv = x_v_start + (dx_rv * dy);
+    if (alpha) {
+      xlb = math::Ceil(x_lhs);
+      xrb = math::Ceil(x_rhs) - 1;            // fill convention
+    }
+    else {
+      xlb = math::Floor(x_lhs);
+      xrb = math::Ceil(x_rhs);                // guarantee no gaps   
+    }
 
-    // Compute differentials of 1/z coords on the left and right edges
-
-    float x_lz = x_z_start + (dx_lz * dy);
-    float x_rz = x_z_start + (dx_rz * dy);
-
-    // Compute x for left edge and right edges
-
-    int xlb = math::Floor(x_lhs);          // xlb - x left border
-    int xrb = math::Ceil(x_rhs);
-    
-    // Compute texture offset from left screen border if face would be clipped
+    // Compute how much pixels we should clip from left
 
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Compute differential between edges of tex coords at the current y
-    // before clipping left and right sides
+    // Make 1/z interpolant and clip it from left side
 
-    float dx_currx_u {};                   // find dx between left and right
-    float dx_currx_v {};
-    float dx_currx_z {};
-
-    if ((xrb - xlb) != 0)
-    {
-      dx_currx_u = (x_ru - x_lu) / (xrb - xlb);
-      dx_currx_v = (x_rv - x_lv) / (xrb - xlb);
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
+    float z_step {};
+    float u_step {};
+    float v_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+      u_step = (u_rhs - u_lhs) / ((x_rhs + 1) - xlb);
+      v_step = (v_rhs - v_lhs) / ((x_rhs + 1) - xlb);
     }
-
-    // Clip left and right lines of face
+    float z_curr = z_lhs + (z_step * xl_dx);
+    float u_curr = u_lhs + (u_step * xl_dx);
+    float v_curr = v_lhs + (v_step * xl_dx);
+   
+    // Clip x interpolant
 
     xlb = std::max(0, xlb);
-    xrb = std::min(scr_width - 1, xrb);
+    xrb = std::min(sbuf_w - 1, xrb);
 
-    // Interpolate texture coordinate for each pixel
+    // Iterate over x line and draw pixels (alpha or not cases)
 
-    for (int x = xlb; x < xrb; ++x)
+    if (alpha)
     {
-      int dx = x - xlb + xl_dx;           // we need real dx, not clipped
-      float curr_z = x_lz + (dx_currx_z * dx);
-      
-      if (curr_z > z_ptr[y * z_width + x])
+      for (int x = xlb; x <= xrb; ++x)
       {
-        // Get real texture coordinates
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};     // blend background
+          color::ShiftRight(buf_color, 1);
 
-        float curr_u = x_lu + (dx_currx_u * dx);
-        float curr_v = x_lv + (dx_currx_v * dx);
-        int u = std::abs((int)(curr_u / curr_z));
-        int v = std::abs((int)(curr_v / curr_z));
-      
-        // Get texture pixel. This is same as call to call
-        // this function: bmp->get_pixel(u, v, r, g, b);
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr; 
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {light_color};
+          total.Modulate(tex_color);
 
-        int offset = (v * tex_width) + (u * tex_texel_width);
-        tex_color.r_ = tex_ptr[offset + 2];
-        tex_color.g_ = tex_ptr[offset + 1];
-        tex_color.b_ = tex_ptr[offset + 0];
-      
-        // Modulate light and color
+          color::ShiftRight(total, 1);
 
-        Color<> total {light_color};
-        total.Modulate(tex_color);
+          s_buf[idx] = total.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
 
-        // Draw point
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+      }
+    }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr;
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {light_color};
+          total.Modulate(tex_color);
 
-        scr_ptr[x + y * scr_width] = total.GetARGB();
-        z_ptr[y * z_width + x] = curr_z;
-        ++total_drawn;
+          s_buf[idx] = total.GetARGB();
+          z_buf[idx] = z_curr;
+
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
       }
     }
     
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    u_lhs += lu_step;
+    u_rhs += ru_step;
+    v_lhs += lv_step;
+    v_rhs += rv_step;
   }
 
-  // Part 2 : draw bottom side of triangle (from bottom to middle)
-  // Note that 0;0 point is placed in left-bottom corner
+  // Part 2 : draw bottom part of triangle (0-0 is the left bottom)
 
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
+  // Down middle pixel as it was drawn
 
-  float dy1y3 = std::abs(y1-y3);
-  float dy2y3 = std::abs(y2-y3);
+  iy2 = iy2 - 1;
 
-  if (math::FNotZero(dy1y3)) 
-    dx_lhs = (float)(x1-x3) / dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rhs = (float)(x2-x3) / dy2y3;
+  // Precompute dy for sides (we need full differential, not cutted)
 
-  // Calc side textures differential (from bottom to left top and to right
-  // top). Note that we need 4 differentials, for x and y from top to left
-  // and for x and y from top to right
-  // Since we want perspective correct texture, we calc u/z and v/z coordinates
-  
-  dx_lu = u1/z1 - u3/z3;
-  dx_lv = v1/z1 - v3/z3;
-  dx_ru = u2/z2 - u3/z3;
-  dx_rv = v2/z2 - v3/z3;
+  int dy1y3 = iy1 - (iy3 - 1);
+  int dy2y3 = iy2 - (iy3 - 1);
+
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
+
+  lx_step = v3.pos_.x - v1.pos_.x;
+  rx_step = v3.pos_.x - v2.pos_.x;
+  lz_step = 1.0f / v3.pos_.z - 1.0f / v1.pos_.z;
+  rz_step = 1.0f / v3.pos_.z - 1.0f / v2.pos_.z;
+  lu_step = v3.texture_.x / v3.pos_.z - v1.texture_.x / v1.pos_.z;
+  lv_step = v3.texture_.y / v3.pos_.z - v1.texture_.y / v1.pos_.z;
+  ru_step = v3.texture_.x / v3.pos_.z - v2.texture_.x / v2.pos_.z;
+  rv_step = v3.texture_.y / v3.pos_.z - v2.texture_.y / v2.pos_.z;
 
   if (math::FNotZero(dy1y3)) {
-    dx_lu /= dy1y3;
-    dx_lv /= dy1y3;
+    lx_step /= dy1y3;
+    lz_step /= dy1y3;
+    lu_step /= dy1y3;
+    lv_step /= dy1y3;
   }
   if (math::FNotZero(dy2y3)) {
-    dx_ru /= dy2y3;
-    dx_rv /= dy2y3;
+    rx_step /= dy2y3;
+    rz_step /= dy2y3;
+    ru_step /= dy2y3;
+    rv_step /= dy2y3;
   }
 
-  // Here we calc 1/z coordinate for left and right edges
+  // Now make new x2 point and new interpolants for triangle borders
 
-  dx_lz = 1.0f/z1 - 1.0f/z3;
-  dx_rz = 1.0f/z2 - 1.0f/z3;
-  
-  if (math::FNotZero(dy1y3))
-    dx_lz /= dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rz /= dy2y3;
-  
-  // Determine which is really left side step and really is right side step
+  float new_x {};
+  float new_z {};
+  float new_u {};
+  float new_v {};
+  int dy_passed {iy1 - iy2};
 
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lu, dx_ru);
-    std::swap(dx_lv, dx_rv);
-    std::swap(dx_lz, dx_rz);
+  if (lx_step > rx_step) {
+    new_x = v1.pos_.x + (dy_passed * lx_step);
+    new_z = (1.0f / v1.pos_.z) + (dy_passed * lz_step);
+    new_u = (v1.texture_.x / v1.pos_.z) + (lu_step * dy_passed);
+    new_v = (v1.texture_.y / v1.pos_.z) + (lv_step * dy_passed);
+    x_lhs = new_x;
+    x_rhs = v2.pos_.x;
+    z_lhs = new_z;
+    z_rhs = 1.0f / v2.pos_.z;
+    u_lhs = new_u;
+    u_rhs = v2.texture_.x / v2.pos_.z;
+    v_lhs = new_v;
+    v_rhs = v2.texture_.y / v2.pos_.z;
   }
-    
-  // Now we should draw traingle from bottom to middle (from y3 to y2)
+  else if (lx_step < rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lu_step, ru_step);
+    std::swap(lv_step, rv_step);
+    new_x = v1.pos_.x + (dy_passed * rx_step);
+    new_z = (1.0f / v1.pos_.z) + (dy_passed * rz_step);
+    new_u = (v1.texture_.x / v1.pos_.z) + (ru_step * dy_passed);
+    new_v = (v1.texture_.y / v1.pos_.z) + (rv_step * dy_passed);
+    x_lhs = v2.pos_.x;
+    x_rhs = new_x;
+    z_lhs = 1.0f / v2.pos_.z;
+    z_rhs = new_z;
+    u_lhs = v2.texture_.x / v2.pos_.z;
+    u_rhs = new_u;
+    v_lhs = v2.texture_.y / v2.pos_.z;
+    v_rhs = new_v;
+  }
 
-  x_lhs = (float)x3;
-  x_rhs = (float)x3;
+  // Clip bottom triangle
+
+  y_top_clip = iy2 - sbuf_h + 1;
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  u_lhs += lu_step * y_top_clip;
+  u_rhs += ru_step * y_top_clip;
+  v_lhs += lv_step * y_top_clip;
+  v_rhs += rv_step * y_top_clip;
+
+  // Draw bottom triangle (note that 0-0 is in left bottom corner of screen)
+
+  y_top = std::min(iy2, sbuf_h-1);
+  y_bot = std::max(0, iy3);
   
-  // Clip top and bottom
-
-  int y_bot_clip {0};                   // here we calc how mush pixels
-  if (y3+1 < 0)                         //  is out of screen from bottom
-    y_bot_clip = std::abs(y3+1);
-  
-  x_lhs += dx_lhs * y_bot_clip;         // expand left and right curr coords
-  x_rhs += dx_rhs * y_bot_clip;
-
-  y_bot = std::max(0, y3+1);            // new drawable top and bottom
-  y_top = std::min(y2, scr_height-1);
-
-  // Prepare start values of interpolants
-
-  x_u_start = u3/z3;
-  x_v_start = v3/z3;
-  x_z_start = 1.0f/z3;
-
-  // Draw bottom triangle
-
-  tex_color = Color<> {};               // texture and its light color
-  total_color = Color<> {};             //  to interpolate it inside x row loop
-
-  for (int y = y_bot; y < y_top; ++y)
+  for (int y = y_top; y >= y_bot; --y)
   {
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
+    // Convert most left and most right x pixels
 
-    // Compute differentials of texture coords on the left and right edges
+    if (alpha) {
+      xlb = math::Ceil(x_lhs);
+      xrb = math::Ceil(x_rhs) - 1;            // fill convention
+    }
+    else {
+      xlb = math::Floor(x_lhs);
+      xrb = math::Ceil(x_rhs);                // guarantee no gaps
+    }
 
-    int dy = y - y3;                        // we need real dy, not clipped
-
-    float x_lu = x_u_start + (dx_lu * dy);  // find tex_coords on the edges
-    float x_lv = x_v_start + (dx_lv * dy);
-    float x_ru = x_u_start + (dx_ru * dy);
-    float x_rv = x_v_start + (dx_rv * dy);
-
-    // Compute differentials of 1/z coords on the left and right edges
-
-    float x_lz = x_z_start + (dx_lz * dy);
-    float x_rz = x_z_start + (dx_rz * dy);
-
-    // Compute x for left edge and right edge
-
-    int xlb = math::Floor(x_lhs);          // xlb - x left border
-    int xrb = math::Ceil(x_rhs);
-
-    // Compute texture offset from left screen border if face would be clipped
+    // Compute how much pixels we should clip from left
 
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Compute differential between edges of tex coords at the current y
-    // before clipping left and right sides
+    // Make 1/z interpolant and clip it from left side
 
-    float dx_currx_u {};                   // find dx between left and right
-    float dx_currx_v {};
-    float dx_currx_z {};
-
-    if ((xrb - xlb) != 0)
-    {
-      dx_currx_u = (x_ru - x_lu) / (xrb - xlb);
-      dx_currx_v = (x_rv - x_lv) / (xrb - xlb);
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
+    float z_step {};
+    float u_step {};
+    float v_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+      u_step = (u_rhs - u_lhs) / ((x_rhs + 1) - xlb);
+      v_step = (v_rhs - v_lhs) / ((x_rhs + 1) - xlb);
     }
+    float z_curr = z_lhs + (z_step * xl_dx);
+    float u_curr = u_lhs + (u_step * xl_dx);
+    float v_curr = v_lhs + (v_step * xl_dx);
+   
+    // Clip x interpolant
 
-    // Clip left and right
+    xlb = std::max(0, xlb);
+    xrb = std::min(sbuf_w - 1, xrb);
 
-    xlb = std::max(0, xlb);               // clip left and right lines
-    xrb = std::min(scr_width - 1, xrb);
-    
-    // Interpolate texture coordinate for each pixel
-    
-    for (int x = xlb; x < xrb; ++x)        // for each pixel interpolate color
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (alpha)
     {
-      int dx = x - xlb + xl_dx;
-      float curr_z = x_lz + (dx_currx_z * dx);
-      
-      if (curr_z > z_ptr[y * z_width + x])
+      for (int x = xlb; x <= xrb; ++x)
       {
-        // Get real texture coordinates
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};     // blend background
+          color::ShiftRight(buf_color, 1);
+
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr; 
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
         
-        float curr_u = x_lu + (dx_currx_u * dx);
-        float curr_v = x_lv + (dx_currx_v * dx);
-        int u = std::abs((int)(curr_u / curr_z));   // (int) - fast floor
-        int v = std::abs((int)(curr_v / curr_z));
+          Color<> total {light_color};
+          total.Modulate(tex_color);
 
-        // Get texture pixel. This is same as call to call
-        // this function: bmp->get_pixel(u, v, r, g, b);
+          color::ShiftRight(total, 1);
 
-        int offset = (v * tex_width) + (u * tex_texel_width);
-        tex_color.r_ = tex_ptr[offset + 2];
-        tex_color.g_ = tex_ptr[offset + 1];
-        tex_color.b_ = tex_ptr[offset + 0];
-      
-        // Modulate light and color
+          s_buf[idx] = total.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
 
-        Color<> total {light_color};
-        total.Modulate(tex_color);
-        
-        // Draw point
-
-        scr_ptr[x + y * scr_width] = total.GetARGB();
-        z_ptr[y * z_width + x] = curr_z;
-        ++total_drawn;
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
       }
     }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr;
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {light_color};
+          total.Modulate(tex_color);
+
+          s_buf[idx] = total.GetARGB();
+          z_buf[idx] = z_curr;
+
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+      }
+    }
+    
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    u_lhs += lu_step;
+    u_rhs += ru_step;
+    v_lhs += lv_step;
+    v_rhs += rv_step;
   }
+
   return total_drawn;
 }
 
@@ -3127,485 +3146,485 @@ int raster_tri::TexturedPerspectiveFL(
 // using 1/z interpolating and returns number of drawn pixels
 
 int raster_tri::TexturedPerspectiveGR(
-    cVertex& p1, cVertex& p2, cVertex& p3,
-    Bitmap* bmp, ZBuffer& zbuf, Buffer& scr_buf)
+    Vertex v1, Vertex v2, Vertex v3,
+    Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf)
 {
-  // Debug variables
-  
   int total_drawn {};
 
-  // Prepare fast screen buffer, texture and z-buffer access
+  // Prepare fast buffers access
 
-  auto scr_ptr = scr_buf.GetPointer();
-  int  scr_width = scr_buf.Width();
-  int  scr_height = scr_buf.Height();
-  auto tex_ptr = bmp->GetPointer();
+  int sbuf_w = sbuf.Width();
+  int sbuf_h = sbuf.Height();
   auto tex_width = bmp->GetRowIncrement();
   auto tex_texel_width = bmp->GetBytesPerPixel();
-  auto* z_ptr = zbuf.GetPointer();
-  auto  z_width = zbuf.Width();
+  auto* s_buf = sbuf.GetPointer();
+  auto* z_buf = zbuf.GetPointer();
+  auto* tex_ptr = bmp->GetPointer();
 
-  // Convert float to int for vertex positions
+ // Prepare order of vertices from top to bottom 
 
-  int x1 = math::Floor(p1.pos_.x);
-  int x2 = math::Floor(p2.pos_.x);
-  int x3 = math::Floor(p3.pos_.x);
-  int y1 = math::Floor(p1.pos_.y);
-  int y2 = math::Floor(p2.pos_.y);
-  int y3 = math::Floor(p3.pos_.y);
+  raster_helpers::SortVertices(v1, v2, v3);
 
-  // Extract 1/z coordinates
-  
-  float z1 = p1.pos_.z;    // 1/z as we use 1/z buffer
-  float z2 = p2.pos_.z;
-  float z3 = p3.pos_.z;
-  
-  // Extract texture coordinates
+  // Prepare color and alpha blending of current color
 
-  float u1 = p1.texture_.x;
-  float u2 = p2.texture_.x;
-  float u3 = p3.texture_.x;
-  float v1 = p1.texture_.y;
-  float v2 = p2.texture_.y;
-  float v3 = p3.texture_.y;
+  FColor c1 {v1.color_};    // todo: we can don`t copy this colors
+  FColor c2 {v2.color_};
+  FColor c3 {v3.color_};
 
-  // Prepare colors  
-
-  FColor c1 {p1.color_};
-  FColor c2 {p2.color_};
-  FColor c3 {p3.color_};
-
-  // Make y1 as top point and y3 as bottom point, y2 is middle
-
-  if (y2 < y3) {
-    std::swap(x2, x3);
-    std::swap(y2, y3);
-    std::swap(z2, z3);
-    std::swap(u2, u3);
-    std::swap(v2, v3);
-    std::swap(c2, c3);    
-  }
-  if ((y1 < y2) && (y1 > y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
-    std::swap(v1, v2);
-    std::swap(c1, c2);    
-  }
-  else if ((y1 < y2) && (y1 <= y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
-    std::swap(v1, v2);
-    std::swap(c1, c2);    
-    std::swap(x3, x2);
-    std::swap(y3, y2);
-    std::swap(z3, z2);
-    std::swap(u3, u2);
-    std::swap(v3, v2);
-    std::swap(c3, c2);    
+  bool alpha {false};
+  if (c1.a_ < 1.0f) {
+    c1 *= c1.a_;                  // we don`t support gradient alpha
+    c2 *= c1.a_;
+    c3 *= c1.a_;
+    alpha = true;
   }
 
-  // If polygon is flat bottom, sort left to right
+  // Part 1 : draw top part of triangle (using top left filling convention)
 
-  if (math::Feq(y2, y3) && x2 > x3) {
-    std::swap(x2, x3);
-    std::swap(z2, z3);
-    std::swap(u2, u3);
-    std::swap(v2, v3);
-    std::swap(c2, c3);    
-  }
+  int iy1 = math::Ceil(v1.pos_.y);
+  int iy2 = math::Ceil(v2.pos_.y) + 1;         // fill convention
+  int iy3 = math::Ceil(v3.pos_.y) + 1;         // fill convention
 
-  // If polygon is flat top, sort left to right
-
-  if (math::Feq(y1, y2) && x1 > x2) {
-    std::swap(x1, x2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
-    std::swap(v1, v2);
-    std::swap(c1, c2);    
-  }
-
-  // Part 1 : draw top part of triangle (from top to middle)
-  // Note that 0;0 point is placed in left-bottom corner, but texture`s 0;0
-  // is placed in left-top corner
-
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
-
-  float dx_lhs {0.0f};                          // dx - diff, lhs - left hand side
-  float dx_rhs {0.0f};
-  
-  float dy2y1 = std::abs(y2-y1);
-  float dy3y1 = std::abs(y3-y1);
-
-  if (math::FNotZero(dy2y1))
-    dx_lhs = (float)(x2-x1) / dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rhs = (float)(x3-x1) / dy3y1;
-
-  // Calc side textures differential (from top to left bottom and to right
-  // bottom). Note that we need 4 differentials, for x and y from top to left
-  // and for x and y from top to right.
-  // Since we want perspective correct texture, we calc u/z and v/z coordinates
-
-  float dx_lu {u2/z2 - u1/z1};
-  float dx_lv {v2/z2 - v1/z1};
-  float dx_ru {u3/z3 - u1/z1};
-  float dx_rv {v3/z3 - v1/z1};
-
-  if (math::FNotZero(dy2y1)) {
-    dx_lu /= dy2y1;
-    dx_lv /= dy2y1;
-  }
-  if (math::FNotZero(dy3y1)) {
-    dx_ru /= dy3y1;
-    dx_rv /= dy3y1;
-  }
-
-  // Here we calc 1/z coordinate for left and right edges
-
-  float dx_lz {1.0f/z2 - 1.0f/z1};
-  float dx_rz {1.0f/z3 - 1.0f/z1};
-  
-  if (math::FNotZero(dy2y1))
-    dx_lz /= dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rz /= dy3y1;
-  
-  // Calc side colors differential (from top to left bottom and to right bottom)
-
-  FColor dx_lc {c2 - c1};
-  FColor dx_rc {c3 - c1};
-  if (math::FNotZero(dy2y1))
-    dx_lc /= std::abs(y2-y1);
-  if (math::FNotZero(dy3y1))
-    dx_rc /= std::abs(y3-y1);
-
-  // Now choose, where really placed left and right side step
-
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lu, dx_ru);
-    std::swap(dx_lv, dx_rv);
-    std::swap(dx_lz, dx_rz);
-    std::swap(dx_lc, dx_rc);    
-  }
-
-  // Now we should draw triangle from top to middle (from y1 to y2)
-
-  float x_lhs {(float)x1};                // float curr x coord left
-  float x_rhs {(float)x1};                // float curr x coord right
-
-  // Clip top and bottom
-
-  if (y1 < 0 || y3 >= scr_height)       // if triangle is full out of screen
+  if (iy1 < 0 || iy3 >= sbuf_h)               // full out of screen
     return total_drawn;
 
-  int y_top_clip = y1 - scr_height + 1; // how much pixels is clipped 
-  y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
+  // Precompute dy for sides (we need full differential, not cutted)
 
-  x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
-  x_rhs += dx_rhs * y_top_clip;           //  coords if y1 is out of screen
+  int dy2y1 = iy1 - (iy2 - 1);
+  int dy3y1 = iy1 - (iy3 - 1);
 
-  int y_top = y1 - y_top_clip;            // define new drawable top
-  int y_bot = std::max(0, y2);            //  and bottom
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
 
-  // Prepare start values of interpolants
+  float lx_step {v2.pos_.x - v1.pos_.x};
+  float rx_step {v3.pos_.x - v1.pos_.x};
+  float lz_step {1.0f / v2.pos_.z - 1.0f / v1.pos_.z};
+  float rz_step {1.0f / v3.pos_.z - 1.0f / v1.pos_.z};
+  float lu_step {v2.texture_.x / v2.pos_.z - v1.texture_.x / v1.pos_.z};
+  float lv_step {v2.texture_.y / v2.pos_.z - v1.texture_.y / v1.pos_.z};
+  float ru_step {v3.texture_.x / v3.pos_.z - v1.texture_.x / v1.pos_.z};
+  float rv_step {v3.texture_.y / v3.pos_.z - v1.texture_.y / v1.pos_.z};
+  FColor lc_step {c2 - c1};
+  FColor rc_step {c3 - c1};
 
-  float x_u_start = u1/z1;
-  float x_v_start = v1/z1;
-  float x_z_start = 1.0f/z1;
+  if (math::FNotZero(dy2y1)) {
+    lx_step /= dy2y1;
+    lz_step /= dy2y1;
+    lu_step /= dy2y1;
+    lv_step /= dy2y1;
+    lc_step /= dy2y1;
+  }
+  if (math::FNotZero(dy3y1)) {
+    rx_step /= dy3y1;
+    rz_step /= dy3y1;
+    ru_step /= dy3y1;
+    rv_step /= dy3y1;
+    rc_step /= dy3y1;
+  }
 
-  // Draw top triangle
+  // Swap interpolants if our suppose was wrong
 
-  FColor tex_color {};                 // texture and its light color
-  FColor total_color {};               //  to interpolate it inside x row loop
+  if (lx_step > rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lu_step, ru_step);
+    std::swap(lv_step, rv_step);
+    std::swap(lc_step, rc_step);
+  }
+
+  // Prepare vars for x, 1/z, tex coords and color on the borders of triangle
+
+  float x_lhs {v1.pos_.x};
+  float x_rhs {x_lhs};
+  float z_lhs {1.0f / v1.pos_.z};
+  float z_rhs {z_lhs};
+  float u_lhs {v1.texture_.x / v1.pos_.z};
+  float u_rhs {u_lhs};
+  float v_lhs {v1.texture_.y / v1.pos_.z};
+  float v_rhs {v_lhs};
+  FColor c_rhs {c1};
+  FColor c_lhs {c1};
+
+  // Clip top triangle
+
+  int y_top_clip = iy1 - sbuf_h + 1; 
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  u_lhs += lu_step * y_top_clip;
+  u_rhs += ru_step * y_top_clip;
+  v_lhs += lv_step * y_top_clip;
+  v_rhs += rv_step * y_top_clip;
+  c_lhs += lc_step * y_top_clip;
+  c_rhs += rc_step * y_top_clip;
+
+  // Draw top triangle (note that 0-0 is in left bottom corner of screen)
+
+  int y_top = iy1 - y_top_clip;
+  int y_bot = std::max(0, iy2);
+
+  int xlb {};
+  int xrb {};
 
   for (int y = y_top; y >= y_bot; --y)
   {
-    // Compute differentials of texture coords on the left and right edges
+    // Convert most left and most right x pixels
 
-    int dy = y1 - y;                        // we need real dy, not clipped
-    
-    float x_lu = x_u_start + (dx_lu * dy);  // find tex_coords on the edges
-    float x_lv = x_v_start + (dx_lv * dy);
-    float x_ru = x_u_start + (dx_ru * dy);
-    float x_rv = x_v_start + (dx_rv * dy);
+    if (alpha) {
+      xlb = math::Ceil(x_lhs);
+      xrb = math::Ceil(x_rhs) - 1;            // fill convention
+    }
+    else {
+      xlb = math::Floor(x_lhs);
+      xrb = math::Ceil(x_rhs);                // guarantee no gaps   
+    }
 
-    // Compute differentials of 1/z coords on the left and right edges
-
-    float x_lz = x_z_start + (dx_lz * dy);
-    float x_rz = x_z_start + (dx_rz * dy);
-
-    // Compute differentials of colors on the left and right edges
-    
-    FColor x_lc {c1 + (dx_lc * dy)};
-    FColor x_rc {c1 + (dx_rc * dy)};
-
-    // Compute x for left edge and right edges
-
-    int xlb = math::Floor(x_lhs);          // xlb - x left border
-    int xrb = math::Ceil(x_rhs);
-    
-    // Compute texture offset from left screen border if face would be clipped
+    // Compute how much pixels we should clip from left
 
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Compute differential between edges of tex coords at the current y
-    // before clipping left and right sides
+    // Make 1/z interpolant and clip it from left side
 
-    float dx_currx_u {};                   // find dx between left and right
-    float dx_currx_v {};
-    float dx_currx_z {};
-    FColor dx_currx_c {c1};    
-
-    if ((xrb - xlb) != 0)
-    {
-      dx_currx_u = (x_ru - x_lu) / (xrb - xlb);
-      dx_currx_v = (x_rv - x_lv) / (xrb - xlb);
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
-      dx_currx_c = (x_rc - x_lc) / (xrb - xlb);      
+    float z_step {};
+    float u_step {};
+    float v_step {};
+    FColor c_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+      u_step = (u_rhs - u_lhs) / ((x_rhs + 1) - xlb);
+      v_step = (v_rhs - v_lhs) / ((x_rhs + 1) - xlb);
+      c_step = (c_rhs - c_lhs) / ((x_rhs + 1) - xlb);
     }
-
-    // Clip left and right lines of face
+    float z_curr = z_lhs + (z_step * xl_dx);
+    float u_curr = u_lhs + (u_step * xl_dx);
+    float v_curr = v_lhs + (v_step * xl_dx);
+    FColor c_curr = c_lhs + (c_step * xl_dx);
+   
+    // Clip x interpolant
 
     xlb = std::max(0, xlb);
-    xrb = std::min(scr_width - 1, xrb);
+    xrb = std::min(sbuf_w - 1, xrb);
 
-    // Interpolate texture coordinate for each pixel
+    // Iterate over x line and draw pixels (alpha or not cases)
 
-    for (int x = xlb; x < xrb; ++x)
+    if (alpha)
     {
-      int dx = x - xlb + xl_dx;           // we need real dx, not clipped
-      float curr_z = x_lz + (dx_currx_z * dx);
-      FColor curr_c = x_lc + (dx_currx_c * dx);      
-      
-      if (curr_z > z_ptr[y * z_width + x])
+      for (int x = xlb; x <= xrb; ++x)
       {
-        // Get real texture coordinates
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};     // blend background
+          color::ShiftRight(buf_color, 1);
 
-        float curr_u = x_lu + (dx_currx_u * dx);
-        float curr_v = x_lv + (dx_currx_v * dx);
-        int u = std::abs((int)(curr_u / curr_z));
-        int v = std::abs((int)(curr_v / curr_z));
-      
-        // Get texture pixel. This is same as call to call
-        // this function: bmp->get_pixel(u, v, r, g, b);
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr; 
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {c_curr.GetARGB()};
+          total.Modulate(tex_color);
 
-        int offset = (v * tex_width) + (u * tex_texel_width);
-        tex_color.r_ = tex_ptr[offset + 2];
-        tex_color.g_ = tex_ptr[offset + 1];
-        tex_color.b_ = tex_ptr[offset + 0];
-      
-        // Modulate light and color
+          color::ShiftRight(total, 1);
 
-        FColor total {curr_c};
-        total.Modulate(tex_color);
+          s_buf[idx] = total.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
 
-        // Draw point
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+        c_curr += c_step;        
+      }
+    }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr;
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {c_curr.GetARGB()};
+          total.Modulate(tex_color);
 
-        scr_ptr[x + y * scr_width] = total.GetARGB();
-        z_ptr[y * z_width + x] = curr_z;
-        ++total_drawn;
+          s_buf[idx] = total.GetARGB();
+          z_buf[idx] = z_curr;
+
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+        c_curr += c_step;        
       }
     }
     
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    u_lhs += lu_step;
+    u_rhs += ru_step;
+    v_lhs += lv_step;
+    v_rhs += rv_step;
+    c_lhs += lc_step;
+    c_rhs += rc_step;
   }
 
-  // Part 2 : draw bottom side of triangle (from bottom to middle)
-  // Note that 0;0 point is placed in left-bottom corner
+  // Part 2 : draw bottom part of triangle (0-0 is the left bottom)
 
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
+  // Down middle pixel as it was drawn
 
-  float dy1y3 = std::abs(y1-y3);
-  float dy2y3 = std::abs(y2-y3);
+  iy2 = iy2 - 1;
 
-  if (math::FNotZero(dy1y3)) 
-    dx_lhs = (float)(x1-x3) / dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rhs = (float)(x2-x3) / dy2y3;
+  // Precompute dy for sides (we need full differential, not cutted)
 
-  // Calc side textures differential (from bottom to left top and to right
-  // top). Note that we need 4 differentials, for x and y from top to left
-  // and for x and y from top to right
-  // Since we want perspective correct texture, we calc u/z and v/z coordinates
-  
-  dx_lu = u1/z1 - u3/z3;
-  dx_lv = v1/z1 - v3/z3;
-  dx_ru = u2/z2 - u3/z3;
-  dx_rv = v2/z2 - v3/z3;
+  int dy1y3 = iy1 - (iy3 - 1);
+  int dy2y3 = iy2 - (iy3 - 1);
+
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
+
+  lx_step = v3.pos_.x - v1.pos_.x;
+  rx_step = v3.pos_.x - v2.pos_.x;
+  lz_step = 1.0f / v3.pos_.z - 1.0f / v1.pos_.z;
+  rz_step = 1.0f / v3.pos_.z - 1.0f / v2.pos_.z;
+  lu_step = v3.texture_.x / v3.pos_.z - v1.texture_.x / v1.pos_.z;
+  lv_step = v3.texture_.y / v3.pos_.z - v1.texture_.y / v1.pos_.z;
+  ru_step = v3.texture_.x / v3.pos_.z - v2.texture_.x / v2.pos_.z;
+  rv_step = v3.texture_.y / v3.pos_.z - v2.texture_.y / v2.pos_.z;
+  lc_step = c3 - c1;
+  rc_step = c3 - c2;
 
   if (math::FNotZero(dy1y3)) {
-    dx_lu /= dy1y3;
-    dx_lv /= dy1y3;
+    lx_step /= dy1y3;
+    lz_step /= dy1y3;
+    lu_step /= dy1y3;
+    lv_step /= dy1y3;
+    lc_step /= dy1y3;
   }
   if (math::FNotZero(dy2y3)) {
-    dx_ru /= dy2y3;
-    dx_rv /= dy2y3;
+    rx_step /= dy2y3;
+    rz_step /= dy2y3;
+    ru_step /= dy2y3;
+    rv_step /= dy2y3;
+    rc_step /= dy2y3;
   }
 
-  // Here we calc 1/z coordinate for left and right edges
+  // Now make new x2 point and new interpolants for triangle borders
 
-  dx_lz = 1.0f/z1 - 1.0f/z3;
-  dx_rz = 1.0f/z2 - 1.0f/z3;
-  
-  if (math::FNotZero(dy1y3))
-    dx_lz /= dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rz /= dy2y3;
-  
-  // Calc side colors differential (from top to left bottom and to right bottom)
+  float new_x {};
+  float new_z {};
+  float new_u {};
+  float new_v {};
+  FColor new_c {};
+  int dy_passed {iy1 - iy2};
 
-  dx_lc = c1 - c3;
-  dx_rc = c2 - c3;
-  if (math::FNotZero(dy1y3))
-    dx_lc /= dy1y3 - 1;           // -1 since we go -1 step less than diff
-  if (math::FNotZero(dy2y3))
-    dx_rc /= dy2y3 - 1;           // in loop when we would draw triangle
-
-  // Determine which is really left side step and really is right side step
-
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lu, dx_ru);
-    std::swap(dx_lv, dx_rv);
-    std::swap(dx_lz, dx_rz);
-    std::swap(dx_lc, dx_rc);    
+  if (lx_step > rx_step) {
+    new_x = v1.pos_.x + (dy_passed * lx_step);
+    new_z = (1.0f / v1.pos_.z) + (dy_passed * lz_step);
+    new_u = (v1.texture_.x / v1.pos_.z) + (lu_step * dy_passed);
+    new_v = (v1.texture_.y / v1.pos_.z) + (lv_step * dy_passed);
+    new_c = c1 + (lc_step * dy_passed);
+    x_lhs = new_x;
+    x_rhs = v2.pos_.x;
+    z_lhs = new_z;
+    z_rhs = 1.0f / v2.pos_.z;
+    u_lhs = new_u;
+    u_rhs = v2.texture_.x / v2.pos_.z;
+    v_lhs = new_v;
+    v_rhs = v2.texture_.y / v2.pos_.z;
+    c_lhs = new_c;
+    c_rhs = c2;
   }
-    
-  // Now we should draw traingle from bottom to middle (from y3 to y2)
+  else if (lx_step < rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lu_step, ru_step);
+    std::swap(lv_step, rv_step);
+    std::swap(lc_step, rc_step);
+    new_x = v1.pos_.x + (dy_passed * rx_step);
+    new_z = (1.0f / v1.pos_.z) + (dy_passed * rz_step);
+    new_u = (v1.texture_.x / v1.pos_.z) + (ru_step * dy_passed);
+    new_v = (v1.texture_.y / v1.pos_.z) + (rv_step * dy_passed);
+    new_c = c1 + (rc_step * dy_passed);    
+    x_lhs = v2.pos_.x;
+    x_rhs = new_x;
+    z_lhs = 1.0f / v2.pos_.z;
+    z_rhs = new_z;
+    u_lhs = v2.texture_.x / v2.pos_.z;
+    u_rhs = new_u;
+    v_lhs = v2.texture_.y / v2.pos_.z;
+    v_rhs = new_v;
+    c_lhs = c2;
+    c_rhs = new_c;
+  }
 
-  x_lhs = (float)x3;
-  x_rhs = (float)x3;
+  // Clip bottom triangle
+
+  y_top_clip = iy2 - sbuf_h + 1;
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  u_lhs += lu_step * y_top_clip;
+  u_rhs += ru_step * y_top_clip;
+  v_lhs += lv_step * y_top_clip;
+  v_rhs += rv_step * y_top_clip;
+  c_lhs += lc_step * y_top_clip;
+  c_rhs += rc_step * y_top_clip;
+
+  // Draw bottom triangle (note that 0-0 is in left bottom corner of screen)
+
+  y_top = std::min(iy2, sbuf_h-1);
+  y_bot = std::max(0, iy3);
   
-  // Clip top and bottom
-
-  int y_bot_clip {0};                   // here we calc how mush pixels
-  if (y3+1 < 0)                         //  is out of screen from bottom
-    y_bot_clip = std::abs(y3+1);
-  
-  x_lhs += dx_lhs * y_bot_clip;         // expand left and right curr coords
-  x_rhs += dx_rhs * y_bot_clip;
-
-  y_bot = std::max(0, y3+1);            // new drawable top and bottom
-  y_top = std::min(y2, scr_height-1);
-
-  // Prepare start values of interpolants
-
-  x_u_start = u3/z3;
-  x_v_start = v3/z3;
-  x_z_start = 1.0f/z3;
-
-  // Draw bottom triangle
-
-  tex_color = FColor {};               // texture and its light color
-  total_color = FColor {};             //  to interpolate it inside x row loop
-
-  for (int y = y_bot; y < y_top; ++y)
+  for (int y = y_top; y >= y_bot; --y)
   {
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
+    // Convert most left and most right x pixels
 
-    // Compute differentials of texture coords on the left and right edges
-
-    int dy = y - y3;                        // we need real dy, not clipped
-
-    float x_lu = x_u_start + (dx_lu * dy);  // find tex_coords on the edges
-    float x_lv = x_v_start + (dx_lv * dy);
-    float x_ru = x_u_start + (dx_ru * dy);
-    float x_rv = x_v_start + (dx_rv * dy);
-
-    // Compute differentials of 1/z coords on the left and right edges
-
-    float x_lz = x_z_start + (dx_lz * dy);
-    float x_rz = x_z_start + (dx_rz * dy);
-
-    // Compute differentials of colors on the left and right edges
+    if (alpha) {
+      xlb = math::Ceil(x_lhs);
+      xrb = math::Ceil(x_rhs) - 1;            // fill convention
+    }
+    else {
+      xlb = math::Floor(x_lhs);
+      xrb = math::Ceil(x_rhs);                // guarantee no gaps   
+    }
     
-    FColor x_lc = c3 + (dx_lc * dy);    // find colors on the edges
-    FColor x_rc = c3 + (dx_rc * dy);
-
-    // Compute x for left edge and right edge
-
-    int xlb = math::Floor(x_lhs);          // xlb - x left border
-    int xrb = math::Ceil(x_rhs);
-
-    // Compute texture offset from left screen border if face would be clipped
+    // Compute how much pixels we should clip from left
 
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Compute differential between edges of tex coords at the current y
-    // before clipping left and right sides
+    // Make 1/z interpolant and clip it from left side
 
-    float dx_currx_u {};                   // find dx between left and right
-    float dx_currx_v {};
-    float dx_currx_z {};
-    FColor dx_currx_c {c3};    
-
-    if ((xrb - xlb) != 0)
-    {
-      dx_currx_u = (x_ru - x_lu) / (xrb - xlb);
-      dx_currx_v = (x_rv - x_lv) / (xrb - xlb);
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
-      dx_currx_c = (x_rc - x_lc) / (xrb - xlb);      
+    float z_step {};
+    float u_step {};
+    float v_step {};
+    FColor c_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+      u_step = (u_rhs - u_lhs) / ((x_rhs + 1) - xlb);
+      v_step = (v_rhs - v_lhs) / ((x_rhs + 1) - xlb);
+      c_step = (c_rhs - c_lhs) / ((x_rhs + 1) - xlb);
     }
+    float z_curr = z_lhs + (z_step * xl_dx);
+    float u_curr = u_lhs + (u_step * xl_dx);
+    float v_curr = v_lhs + (v_step * xl_dx);
+    FColor c_curr = c_lhs + (c_step * xl_dx);
+   
+    // Clip x interpolant
 
-    // Clip left and right
+    xlb = std::max(0, xlb);
+    xrb = std::min(sbuf_w - 1, xrb);
 
-    xlb = std::max(0, xlb);               // clip left and right lines
-    xrb = std::min(scr_width - 1, xrb);
-    
-    // Interpolate texture coordinate for each pixel
-    
-    for (int x = xlb; x < xrb; ++x)        // for each pixel interpolate color
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (alpha)
     {
-      int dx = x - xlb + xl_dx;
-      float curr_z = x_lz + (dx_currx_z * dx);
-      FColor curr_c = x_lc + (dx_currx_c * dx);      
-      
-      if (curr_z > z_ptr[y * z_width + x])
+      for (int x = xlb; x <= xrb; ++x)
       {
-        // Get real texture coordinates
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};     // blend background
+          color::ShiftRight(buf_color, 1);
+
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr; 
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
         
-        float curr_u = x_lu + (dx_currx_u * dx);
-        float curr_v = x_lv + (dx_currx_v * dx);
-        int u = std::abs((int)(curr_u / curr_z));   // (int) - fast floor
-        int v = std::abs((int)(curr_v / curr_z));
+          Color<> total {c_curr.GetARGB()};
+          total.Modulate(tex_color);
 
-        // Get texture pixel. This is same as call to call
-        // this function: bmp->get_pixel(u, v, r, g, b);
+          color::ShiftRight(total, 1);
 
-        int offset = (v * tex_width) + (u * tex_texel_width);
-        tex_color.r_ = tex_ptr[offset + 2];
-        tex_color.g_ = tex_ptr[offset + 1];
-        tex_color.b_ = tex_ptr[offset + 0];
-      
-        // Modulate light and color
+          s_buf[idx] = total.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
 
-        FColor total {curr_c};
-        total.Modulate(tex_color);
-        
-        // Draw point
-
-        scr_ptr[x + y * scr_width] = total.GetARGB();
-        z_ptr[y * z_width + x] = curr_z;
-        ++total_drawn;
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+        c_curr += c_step;        
       }
     }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr;
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {c_curr.GetARGB()};
+          total.Modulate(tex_color);
+
+          s_buf[idx] = total.GetARGB();
+          z_buf[idx] = z_curr;
+
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+        c_curr += c_step;        
+      }
+    }
+    
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    u_lhs += lu_step;
+    u_rhs += ru_step;
+    v_lhs += lv_step;
+    v_rhs += rv_step;
+    c_lhs += lc_step;
+    c_rhs += rc_step;
   }
+
   return total_drawn;
 }
-
 
 // Draws textured (affine) triangle with gourang shading using 1/z buffer and
 // returns number of drawn pixels. This function works slightly fast in
@@ -3613,478 +3632,522 @@ int raster_tri::TexturedPerspectiveGR(
 // when rasterizes each pixel
 
 int raster_tri::TexturedAffineGR(
-    cVertex& p1, cVertex& p2, cVertex& p3,
-    Bitmap* bmp, ZBuffer& zbuf, Buffer& scr_buf)
+    Vertex v1, Vertex v2, Vertex v3,
+    Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf)
 {
-  // Debug variables
-  
   int total_drawn {};
 
-  // Prepare fast screen buffer, texture and z-buffer access
+  // Prepare fast buffers access
 
-  auto scr_ptr = scr_buf.GetPointer();
-  int  scr_width = scr_buf.Width();
-  int  scr_height = scr_buf.Height();
-  auto tex_ptr = bmp->GetPointer();
+  int sbuf_w = sbuf.Width();
+  int sbuf_h = sbuf.Height();
   auto tex_width = bmp->GetRowIncrement();
   auto tex_texel_width = bmp->GetBytesPerPixel();
-  auto* z_ptr = zbuf.GetPointer();
-  auto  z_width = zbuf.Width();
+  auto* s_buf = sbuf.GetPointer();
+  auto* z_buf = zbuf.GetPointer();
+  auto* tex_ptr = bmp->GetPointer();
 
-  // Convert float to int for vertex positions
+  // Prepare order of vertices from top to bottom 
 
-  int x1 = math::Floor(p1.pos_.x);
-  int x2 = math::Floor(p2.pos_.x);
-  int x3 = math::Floor(p3.pos_.x);
-  int y1 = math::Floor(p1.pos_.y);
-  int y2 = math::Floor(p2.pos_.y);
-  int y3 = math::Floor(p3.pos_.y);
+  // int old_v1 = v1.pos_.x + v1.pos_.y;
+  // int old_v2 = v2.pos_.x + v2.pos_.y;
+  // int old_v3 = v3.pos_.x + v3.pos_.y;
+  raster_helpers::SortVertices(v1, v2, v3);
 
-  // Extract 1/z coordinates
+  // Prepare color and alpha blending of current color
+
+  FColor c1 {v1.color_};    // todo: we can don`t copy this colors
+  FColor c2 {v2.color_};
+  FColor c3 {v3.color_};
+
+  bool alpha {false};
+  if (c1.a_ < 1.0f) {
+    c1 *= c1.a_;                  // we don`t support gradient alpha
+    c2 *= c1.a_;
+    c3 *= c1.a_;
+    alpha = true;
+  }
+
+  // Part 1 : draw top part of triangle (using top left filling convention)
+
+  int iy1 = math::Ceil(v1.pos_.y);
+  int iy2 = math::Ceil(v2.pos_.y) + 1;         // fill convention
+  int iy3 = math::Ceil(v3.pos_.y) + 1;         // fill convention
+
+  if (iy1 < 0 || iy3 >= sbuf_h)               // full out of screen
+    return total_drawn;
+
+  // Precompute dy for sides (we need full differential, not cutted)
+
+  int dy2y1 = iy1 - (iy2 - 1);
+  int dy3y1 = iy1 - (iy3 - 1);
+
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
+
+  float lx_step {v2.pos_.x - v1.pos_.x};
+  float rx_step {v3.pos_.x - v1.pos_.x};
+  float lz_step {1.0f / v2.pos_.z - 1.0f / v1.pos_.z};
+  float rz_step {1.0f / v3.pos_.z - 1.0f / v1.pos_.z};
+  float lu_step {v2.texture_.x - v1.texture_.x};
+  float lv_step {v2.texture_.y - v1.texture_.y};
+  float ru_step {v3.texture_.x - v1.texture_.x};
+  float rv_step {v3.texture_.y - v1.texture_.y};
+  FColor lc_step {c2 - c1};
+  FColor rc_step {c3 - c1};
+
+  if (math::FNotZero(dy2y1)) {
+    lx_step /= dy2y1;
+    lz_step /= dy2y1;
+    lu_step /= dy2y1;
+    lv_step /= dy2y1;
+    lc_step /= dy2y1;
+  }
+  if (math::FNotZero(dy3y1)) {
+    rx_step /= dy3y1;
+    rz_step /= dy3y1;
+    ru_step /= dy3y1;
+    rv_step /= dy3y1;
+    rc_step /= dy3y1;
+  }
+
+  // Swap interpolants if our suppose was wrong
+
+  if (lx_step > rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lu_step, ru_step);
+    std::swap(lv_step, rv_step);
+    std::swap(lc_step, rc_step);
+  }
+
+  // Prepare vars for x, 1/z, tex coords and color on the borders of triangle
+
+  float x_lhs {v1.pos_.x};
+  float x_rhs {x_lhs};
+  float z_lhs {1.0f / v1.pos_.z};
+  float z_rhs {z_lhs};
+  float u_lhs {v1.texture_.x};
+  float u_rhs {u_lhs};
+  float v_lhs {v1.texture_.y};
+  float v_rhs {v_lhs};
+  FColor c_rhs {c1};
+  FColor c_lhs {c1};
+
+  // Clip top triangle
+
+  int y_top_clip = iy1 - sbuf_h + 1; 
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  u_lhs += lu_step * y_top_clip;
+  u_rhs += ru_step * y_top_clip;
+  v_lhs += lv_step * y_top_clip;
+  v_rhs += rv_step * y_top_clip;
+  c_lhs += lc_step * y_top_clip;
+  c_rhs += rc_step * y_top_clip;
+
+  // Draw top triangle (note that 0-0 is in left bottom corner of screen)
+
+  int y_top = iy1 - y_top_clip;
+  int y_bot = std::max(0, iy2);
+
+  int xlb {};
+  int xrb {};
+
+  for (int y = y_top; y >= y_bot; --y)
+  {
+    // Convert most left and most right x pixels
+
+    if (alpha) {
+      xlb = math::Ceil(x_lhs);
+      xrb = math::Ceil(x_rhs) - 1;          // fill convention
+    }
+    else {
+      xlb = math::Floor(x_lhs);
+      xrb = math::Ceil(x_rhs);              // guarantee no gaps      
+    }
+
+    // Compute how much pixels we should clip from left
+
+    int xl_dx = 0 + xlb;
+    xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
+
+    // Make 1/z interpolant and clip it from left side
+
+    float z_step {};
+    float u_step {};
+    float v_step {};
+    FColor c_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+      u_step = (u_rhs - u_lhs) / ((x_rhs + 1) - xlb);
+      v_step = (v_rhs - v_lhs) / ((x_rhs + 1) - xlb);
+      c_step = (c_rhs - c_lhs) / ((x_rhs + 1) - xlb);
+    }
+    float z_curr = z_lhs + (z_step * xl_dx);
+    float u_curr = u_lhs + (u_step * xl_dx);
+    float v_curr = v_lhs + (v_step * xl_dx);
+    FColor c_curr = c_lhs + (c_step * xl_dx);
+   
+    // Clip x interpolant
+
+    xlb = std::max(0, xlb);
+    xrb = std::min(sbuf_w - 1, xrb);
+
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (alpha)
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};     // blend background
+          color::ShiftRight(buf_color, 1);
+
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int offset = ((int)v_curr * tex_width) + ((int)u_curr * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {c_curr.GetARGB()};
+          total.Modulate(tex_color);
+
+          color::ShiftRight(total, 1);
+
+          s_buf[idx] = total.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
+
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+        c_curr += c_step;        
+      }
+    }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int offset = ((int)v_curr * tex_width) + ((int)u_curr * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {c_curr.GetARGB()};
+          total.Modulate(tex_color);
+
+          s_buf[idx] = total.GetARGB();
+          z_buf[idx] = z_curr;
+
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+        c_curr += c_step;        
+      }
+    }
+    
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    u_lhs += lu_step;
+    u_rhs += ru_step;
+    v_lhs += lv_step;
+    v_rhs += rv_step;
+    c_lhs += lc_step;
+    c_rhs += rc_step;
+  }
+
+  // Part 2 : draw bottom part of triangle (0-0 is the left bottom)
+
+  // Down middle pixel as it was drawn
+
+  iy2 = iy2 - 1;
+
+  // Precompute dy for sides (we need full differential, not cutted)
+
+  int dy1y3 = iy1 - (iy3 - 1);
+  int dy2y3 = iy2 - (iy3 - 1);
+
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
+
+  lx_step = v3.pos_.x - v1.pos_.x;
+  rx_step = v3.pos_.x - v2.pos_.x;
+  lz_step = 1.0f / v3.pos_.z - 1.0f / v1.pos_.z;
+  rz_step = 1.0f / v3.pos_.z - 1.0f / v2.pos_.z;
+  lu_step = v3.texture_.x - v1.texture_.x;
+  lv_step = v3.texture_.y - v1.texture_.y;
+  ru_step = v3.texture_.x - v2.texture_.x;
+  rv_step = v3.texture_.y - v2.texture_.y;
+  lc_step = c3 - c1;
+  rc_step = c3 - c2;
+
+  if (math::FNotZero(dy1y3)) {
+    lx_step /= dy1y3;
+    lz_step /= dy1y3;
+    lu_step /= dy1y3;
+    lv_step /= dy1y3;
+    lc_step /= dy1y3;
+  }
+  if (math::FNotZero(dy2y3)) {
+    rx_step /= dy2y3;
+    rz_step /= dy2y3;
+    ru_step /= dy2y3;
+    rv_step /= dy2y3;
+    rc_step /= dy2y3;
+  }
+
+  // Now make new x2 point and new interpolants for triangle borders
+
+  float new_x {};
+  float new_z {};
+  float new_u {};
+  float new_v {};
+  FColor new_c {};
+  int dy_passed {iy1 - iy2};
+
+  if (lx_step > rx_step) {
+    new_x = v1.pos_.x + (dy_passed * lx_step);
+    new_z = (1.0f / v1.pos_.z) + (dy_passed * lz_step);
+    new_u = (v1.texture_.x) + (lu_step * dy_passed);
+    new_v = (v1.texture_.y) + (lv_step * dy_passed);
+    new_c = c1 + (lc_step * dy_passed);
+    x_lhs = new_x;
+    x_rhs = v2.pos_.x;
+    z_lhs = new_z;
+    z_rhs = 1.0f / v2.pos_.z;
+    u_lhs = new_u;
+    u_rhs = v2.texture_.x;
+    v_lhs = new_v;
+    v_rhs = v2.texture_.y;
+    c_lhs = new_c;
+    c_rhs = c2;
+  }
+  else if (lx_step < rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lu_step, ru_step);
+    std::swap(lv_step, rv_step);
+    std::swap(lc_step, rc_step);
+    new_x = v1.pos_.x + (dy_passed * rx_step);
+    new_z = (1.0f / v1.pos_.z) + (dy_passed * rz_step);
+    new_u = (v1.texture_.x) + (ru_step * dy_passed);
+    new_v = (v1.texture_.y) + (rv_step * dy_passed);
+    new_c = c1 + (rc_step * dy_passed);    
+    x_lhs = v2.pos_.x;
+    x_rhs = new_x;
+    z_lhs = 1.0f / v2.pos_.z;
+    z_rhs = new_z;
+    u_lhs = v2.texture_.x;
+    u_rhs = new_u;
+    v_lhs = v2.texture_.y;
+    v_rhs = new_v;
+    c_lhs = c2;
+    c_rhs = new_c;
+  }
+
+  // Clip bottom triangle
+
+  y_top_clip = iy2 - sbuf_h + 1;
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  u_lhs += lu_step * y_top_clip;
+  u_rhs += ru_step * y_top_clip;
+  v_lhs += lv_step * y_top_clip;
+  v_rhs += rv_step * y_top_clip;
+  c_lhs += lc_step * y_top_clip;
+  c_rhs += rc_step * y_top_clip;
+
+  // Draw bottom triangle (note that 0-0 is in left bottom corner of screen)
+
+  y_top = std::min(iy2, sbuf_h-1);
+  y_bot = std::max(0, iy3);
   
-  float z1 = p1.pos_.z;    // 1/z as we use 1/z buffer
-  float z2 = p2.pos_.z;
-  float z3 = p3.pos_.z;
+  for (int y = y_top; y >= y_bot; --y)
+  {
+    // Convert most left and most right x pixels
+
+    if (alpha) {
+      xlb = math::Ceil(x_lhs);
+      xrb = math::Ceil(x_rhs) - 1;            // fill convention
+    }
+    else {
+      xlb = math::Floor(x_lhs);
+      xrb = math::Ceil(x_rhs);                // guarantee no gaps      
+    }
+
+    // Compute how much pixels we should clip from left
+
+    int xl_dx = 0 + xlb;
+    xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
+
+    // Make 1/z interpolant and clip it from left side
+
+    float z_step {};
+    float u_step {};
+    float v_step {};
+    FColor c_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+      u_step = (u_rhs - u_lhs) / ((x_rhs + 1) - xlb);
+      v_step = (v_rhs - v_lhs) / ((x_rhs + 1) - xlb);
+      c_step = (c_rhs - c_lhs) / ((x_rhs + 1) - xlb);
+    }
+    float z_curr = z_lhs + (z_step * xl_dx);
+    float u_curr = u_lhs + (u_step * xl_dx);
+    float v_curr = v_lhs + (v_step * xl_dx);
+    FColor c_curr = c_lhs + (c_step * xl_dx);
+   
+    // Clip x interpolant
+
+    xlb = std::max(0, xlb);
+    xrb = std::min(sbuf_w - 1, xrb);
+
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (alpha)
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};     // blend background
+          color::ShiftRight(buf_color, 1);
+
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int offset = ((int)v_curr * tex_width) + ((int)u_curr * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {c_curr.GetARGB()};
+          total.Modulate(tex_color);
+
+          color::ShiftRight(total, 1);
+
+          s_buf[idx] = total.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
+
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+        c_curr += c_step;        
+      }
+    }
+    else
+    {
+      for (int x = xlb; x <= xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int offset = ((int)v_curr * tex_width) + ((int)u_curr * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {c_curr.GetARGB()};
+          total.Modulate(tex_color);
+
+          s_buf[idx] = total.GetARGB();
+          z_buf[idx] = z_curr;
+
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+        c_curr += c_step;        
+      }
+    }
+    
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    u_lhs += lu_step;
+    u_rhs += ru_step;
+    v_lhs += lv_step;
+    v_rhs += rv_step;
+    c_lhs += lc_step;
+    c_rhs += rc_step;
+  }
   
-  // Extract texture coordinates
+  // int new_v1 = v1.pos_.x + v1.pos_.y;
+  // int new_v2 = v2.pos_.x + v2.pos_.y;
+  // int new_v3 = v3.pos_.x + v3.pos_.y;
+  
+  // if (old_v1 == new_v1 && old_v2 == new_v3)
+  //   std::swap(v2, v3);
+  // else if (old_v1 == new_v2 && old_v3 == new_v3)
+  //   std::swap(v1, v2);
+  // else if (old_v1 == new_v3 && old_v2 == new_v1) {   
+  //   std::swap(v1, v3);
+  //   std::swap(v2, v3);
+  // }
+  // else if (old_v1 == new_v2 && old_v3 == new_v1) {   
+  //   std::swap(v1, v2);
+  //   std::swap(v2, v3);
+  // }
+  // else if (old_v1 == new_v3 && old_v3 == new_v1)
 
-  float u1 = p1.texture_.x;
-  float u2 = p2.texture_.x;
-  float u3 = p3.texture_.x;
-  float v1 = p1.texture_.y;
-  float v2 = p2.texture_.y;
-  float v3 = p3.texture_.y;
+  return total_drawn;
+}
 
-  // Prepare colors  
+void raster_helpers::SortVertices(Vertex& v1, Vertex& v2, Vertex& v3)
+{
+  // Make v1 as top, v2 as middle, v3 as bottom
 
-  FColor c1 {p1.color_};
-  FColor c2 {p2.color_};
-  FColor c3 {p3.color_};
-
-  // Make y1 as top point and y3 as bottom point, y2 is middle
-
-  if (y2 < y3) {
-    std::swap(x2, x3);
-    std::swap(y2, y3);
-    std::swap(z2, z3);
-    std::swap(u2, u3);
+  if (v2.pos_.y < v3.pos_.y)
     std::swap(v2, v3);
-    std::swap(c2, c3);    
-  }
-  if ((y1 < y2) && (y1 > y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
+  if ((v1.pos_.y < v2.pos_.y) && (v1.pos_.y > v3.pos_.y))
     std::swap(v1, v2);
-    std::swap(c1, c2);    
-  }
-  else if ((y1 < y2) && (y1 <= y3)) {
-    std::swap(x1, x2);
-    std::swap(y1, y2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
+  else if ((v1.pos_.y < v2.pos_.y) && 
+           (v1.pos_.y < v3.pos_.y || math::Feq(v1.pos_.y, v3.pos_.y))) {
     std::swap(v1, v2);
-    std::swap(c1, c2);    
-    std::swap(x3, x2);
-    std::swap(y3, y2);
-    std::swap(z3, z2);
-    std::swap(u3, u2);
-    std::swap(v3, v2);
-    std::swap(c3, c2);    
+    std::swap(v3, v2);  
   }
 
   // If polygon is flat bottom, sort left to right
 
-  if (math::Feq(y2, y3) && x2 > x3) {
-    std::swap(x2, x3);
-    std::swap(z2, z3);
-    std::swap(u2, u3);
+  if (math::Feq(v2.pos_.y, v3.pos_.y) && v2.pos_.x > v3.pos_.x)
     std::swap(v2, v3);
-    std::swap(c2, c3);    
-  }
 
   // If polygon is flat top, sort left to right
 
-  if (math::Feq(y1, y2) && x1 > x2) {
-    std::swap(x1, x2);
-    std::swap(z1, z2);
-    std::swap(u1, u2);
+  if (math::Feq(v1.pos_.y, v2.pos_.y) && v1.pos_.x > v2.pos_.x)
     std::swap(v1, v2);
-    std::swap(c1, c2);    
-  }
-
-  // Part 1 : draw top part of triangle (from top to middle)
-  // Note that 0;0 point is placed in left-bottom corner, but texture`s 0;0
-  // is placed in left-top corner
-
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
-
-  float dx_lhs {0.0f};                          // dx - diff, lhs - left hand side
-  float dx_rhs {0.0f};
-  
-  float dy2y1 = std::abs(y2-y1);
-  float dy3y1 = std::abs(y3-y1);
-
-  if (math::FNotZero(dy2y1))
-    dx_lhs = (float)(x2-x1) / dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rhs = (float)(x3-x1) / dy3y1;
-
-  // Calc side textures differential (from top to left bottom and to right
-  // bottom). Note that we need 4 differentials, for x and y from top to left
-  // and for x and y from top to right.
-  // Since we want perspective correct texture, we calc u/z and v/z coordinates
-
-  float dx_lu {u2 - u1};
-  float dx_lv {v2 - v1};
-  float dx_ru {u3 - u1};
-  float dx_rv {v3 - v1};
-
-  if (math::FNotZero(dy2y1)) {
-    dx_lu /= dy2y1;
-    dx_lv /= dy2y1;
-  }
-  if (math::FNotZero(dy3y1)) {
-    dx_ru /= dy3y1;
-    dx_rv /= dy3y1;
-  }
-
-  // Here we calc 1/z coordinate for left and right edges
-
-  float dx_lz {1.0f/z2 - 1.0f/z1};
-  float dx_rz {1.0f/z3 - 1.0f/z1};
-  
-  if (math::FNotZero(dy2y1))
-    dx_lz /= dy2y1;
-  if (math::FNotZero(dy3y1))
-    dx_rz /= dy3y1;
-  
-  // Calc side colors differential (from top to left bottom and to right bottom)
-
-  FColor dx_lc {c2 - c1};
-  FColor dx_rc {c3 - c1};
-  if (math::FNotZero(dy2y1))
-    dx_lc /= std::abs(y2-y1);
-  if (math::FNotZero(dy3y1))
-    dx_rc /= std::abs(y3-y1);
-
-  // Now choose, where really placed left and right side step
-
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lu, dx_ru);
-    std::swap(dx_lv, dx_rv);
-    std::swap(dx_lz, dx_rz);
-    std::swap(dx_lc, dx_rc);    
-  }
-
-  // Now we should draw triangle from top to middle (from y1 to y2)
-
-  float x_lhs {(float)x1};                // float curr x coord left
-  float x_rhs {(float)x1};                // float curr x coord right
-
-  // Clip top and bottom
-
-  if (y1 < 0 || y3 >= scr_height)       // if triangle is full out of screen
-    return total_drawn;
-
-  int y_top_clip = y1 - scr_height + 1; // how much pixels is clipped 
-  y_top_clip = std::max(0, y_top_clip);   //  from the top of screen
-
-  x_lhs += dx_lhs * y_top_clip;           // forward x left and x right curr
-  x_rhs += dx_rhs * y_top_clip;           //  coords if y1 is out of screen
-
-  int y_top = y1 - y_top_clip;            // define new drawable top
-  int y_bot = std::max(0, y2);            //  and bottom
-
-  // Prepare start values of interpolants
-
-  float x_z_start = 1.0f/z1;
-
-  // Draw top triangle
-
-  FColor tex_color {};                 // texture and its light color
-  FColor curr_color {};               //  to interpolate it inside x row loop
-
-  for (int y = y_top; y >= y_bot; --y)
-  {
-    // Compute differentials of texture coords on the left and right edges
-
-    int dy = y1 - y;                        // we need real dy, not clipped
-    
-    float x_lu = u1 + (dx_lu * dy);  // find tex_coords on the edges
-    float x_lv = v1 + (dx_lv * dy);
-    float x_ru = u1 + (dx_ru * dy);
-    float x_rv = v1 + (dx_rv * dy);
-
-    // Compute differentials of 1/z coords on the left and right edges
-
-    float x_lz = x_z_start + (dx_lz * dy);
-    float x_rz = x_z_start + (dx_rz * dy);
-
-    // Compute differentials of colors on the left and right edges
-    
-    FColor x_lc {c1 + (dx_lc * dy)};
-    FColor x_rc {c1 + (dx_rc * dy)};
-
-    // Compute x for left edge and right edges
-
-    int xlb = math::Floor(x_lhs);          // xlb - x left border
-    int xrb = math::Ceil(x_rhs);
-    
-    // Compute texture offset from left screen border if face would be clipped
-
-    int xl_dx = 0 + xlb;
-    xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
-
-    // Compute differential between edges of tex coords at the current y
-    // before clipping left and right sides
-
-    float dx_currx_u {};                   // find dx between left and right
-    float dx_currx_v {};
-    float dx_currx_z {};
-    FColor dx_currx_c {c1};    
-
-    if ((xrb - xlb) != 0)
-    {
-      dx_currx_u = (x_ru - x_lu) / (xrb - xlb);
-      dx_currx_v = (x_rv - x_lv) / (xrb - xlb);
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
-      dx_currx_c = (x_rc - x_lc) / (xrb - xlb);      
-    }
-
-    // Clip left and right lines of face
-
-    xlb = std::max(0, xlb);
-    xrb = std::min(scr_width - 1, xrb);
-
-    // Interpolate texture coordinate for each pixel
-
-    for (int x = xlb; x < xrb; ++x)
-    {
-      int dx = x - xlb + xl_dx;           // we need real dx, not clipped
-      float curr_z = x_lz + (dx_currx_z * dx);
-      curr_color = x_lc + (dx_currx_c * dx);      
-
-      if (curr_z > z_ptr[y * z_width + x])
-      {
-        // Get real texture coordinates
-
-        float curr_u = x_lu + (dx_currx_u * dx);
-        float curr_v = x_lv + (dx_currx_v * dx);
-        int u = std::abs((int)(curr_u));
-        int v = std::abs((int)(curr_v));
-      
-        // Get texture pixel. This is same as call to call
-        // this function: bmp->get_pixel(u, v, r, g, b);
-
-        int offset = (v * tex_width) + (u * tex_texel_width);
-        tex_color.r_ = tex_ptr[offset + 2];
-        tex_color.g_ = tex_ptr[offset + 1];
-        tex_color.b_ = tex_ptr[offset + 0];
-      
-        // Modulate light and color
-
-        curr_color.Modulate(tex_color);
-
-        // Draw point
-
-        scr_ptr[x + y * scr_width] = curr_color.GetARGB();
-        z_ptr[y * z_width + x] = curr_z;
-        ++total_drawn;
-      }
-    }
-    
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
-  }
-
-  // Part 2 : draw bottom side of triangle (from bottom to middle)
-  // Note that 0;0 point is placed in left-bottom corner
-
-  // Define step of left and right side (if perpendicular, then step = 0)
-  // Here we just suppose where left and right side
-
-  float dy1y3 = std::abs(y1-y3);
-  float dy2y3 = std::abs(y2-y3);
-
-  if (math::FNotZero(dy1y3)) 
-    dx_lhs = (float)(x1-x3) / dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rhs = (float)(x2-x3) / dy2y3;
-
-  // Calc side textures differential (from bottom to left top and to right
-  // top). Note that we need 4 differentials, for x and y from top to left
-  // and for x and y from top to right
-  // Since we want perspective correct texture, we calc u/z and v/z coordinates
-  
-  dx_lu = u1 - u3;
-  dx_lv = v1 - v3;
-  dx_ru = u2 - u3;
-  dx_rv = v2 - v3;
-
-  if (math::FNotZero(dy1y3)) {
-    dx_lu /= dy1y3;
-    dx_lv /= dy1y3;
-  }
-  if (math::FNotZero(dy2y3)) {
-    dx_ru /= dy2y3;
-    dx_rv /= dy2y3;
-  }
-
-  // Here we calc 1/z coordinate for left and right edges
-
-  dx_lz = 1.0f/z1 - 1.0f/z3;
-  dx_rz = 1.0f/z2 - 1.0f/z3;
-  
-  if (math::FNotZero(dy1y3))
-    dx_lz /= dy1y3;
-  if (math::FNotZero(dy2y3))
-    dx_rz /= dy2y3;
-  
-  // Calc side colors differential (from top to left bottom and to right bottom)
-
-  dx_lc = c1 - c3;
-  dx_rc = c2 - c3;
-
-  if (math::FNotZero(dy1y3))
-    dx_lc /= dy1y3 - 1;           // -1 since we go -1 step less than diff
-  if (math::FNotZero(dy2y3))
-    dx_rc /= dy2y3 - 1;           // in loop when we would draw triangle
-
-  // Determine which is really left side step and really is right side step
-
-  if (dx_lhs > dx_rhs)
-  {
-    std::swap(dx_lhs, dx_rhs);
-    std::swap(dx_lu, dx_ru);
-    std::swap(dx_lv, dx_rv);
-    std::swap(dx_lz, dx_rz);
-    std::swap(dx_lc, dx_rc);    
-  }
-    
-  // Now we should draw traingle from bottom to middle (from y3 to y2)
-
-  x_lhs = (float)x3;
-  x_rhs = (float)x3;
-  
-  // Clip top and bottom
-
-  int y_bot_clip {0};                   // here we calc how mush pixels
-  if (y3+1 < 0)                         //  is out of screen from bottom
-    y_bot_clip = std::abs(y3+1);
-  
-  x_lhs += dx_lhs * y_bot_clip;         // expand left and right curr coords
-  x_rhs += dx_rhs * y_bot_clip;
-
-  y_bot = std::max(0, y3+1);            // new drawable top and bottom
-  y_top = std::min(y2, scr_height-1);
-
-  // Prepare start values of interpolants
-
-  x_z_start = 1.0f/z3;
-
-  // Draw bottom triangle
-
-  tex_color = FColor {};               // texture and its light color
-  curr_color = FColor {};             //  to interpolate it inside x row loop
-
-  for (int y = y_bot; y < y_top; ++y)
-  {
-    x_lhs += dx_lhs;
-    x_rhs += dx_rhs;
-
-    // Compute differentials of texture coords on the left and right edges
-
-    int dy = y - y3;                        // we need real dy, not clipped
-
-    float x_lu = u3 + (dx_lu * dy);  // find tex_coords on the edges
-    float x_lv = v3 + (dx_lv * dy);
-    float x_ru = u3 + (dx_ru * dy);
-    float x_rv = v3 + (dx_rv * dy);
-
-    // Compute differentials of 1/z coords on the left and right edges
-
-    float x_lz = x_z_start + (dx_lz * dy);
-    float x_rz = x_z_start + (dx_rz * dy);
-
-    // Compute differentials of colors on the left and right edges
-    
-    FColor x_lc = c3 + (dx_lc * dy);    // find colors on the edges
-    FColor x_rc = c3 + (dx_rc * dy);
-
-    // Compute x for left edge and right edge
-
-    int xlb = math::Floor(x_lhs);          // xlb - x left border
-    int xrb = math::Ceil(x_rhs);
-
-    // Compute texture offset from left screen border if face would be clipped
-
-    int xl_dx = 0 + xlb;
-    xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
-
-    // Compute differential between edges of tex coords at the current y
-    // before clipping left and right sides
-
-    float dx_currx_u {};                   // find dx between left and right
-    float dx_currx_v {};
-    float dx_currx_z {};
-    FColor dx_currx_c {c3};    
-
-    if ((xrb - xlb) != 0)
-    {
-      dx_currx_u = (x_ru - x_lu) / (xrb - xlb);
-      dx_currx_v = (x_rv - x_lv) / (xrb - xlb);
-      dx_currx_z = (x_rz - x_lz) / (xrb - xlb);
-      dx_currx_c = (x_rc - x_lc) / (xrb - xlb);      
-    }
-
-    // Clip left and right
-
-    xlb = std::max(0, xlb);               // clip left and right lines
-    xrb = std::min(scr_width - 1, xrb);
-    
-    // Interpolate texture coordinate for each pixel
-    
-    for (int x = xlb; x < xrb; ++x)        // for each pixel interpolate color
-    {
-      int dx = x - xlb + xl_dx;
-      float curr_z = x_lz + (dx_currx_z * dx);
-      curr_color = x_lc + (dx_currx_c * dx);      
-      
-      if (curr_z > z_ptr[y * z_width + x])
-      {
-        // Get real texture coordinates
-        
-        float curr_u = x_lu + (dx_currx_u * dx);
-        float curr_v = x_lv + (dx_currx_v * dx);
-        int u = std::abs((int)(curr_u));   // (int) - fast floor
-        int v = std::abs((int)(curr_v));
-
-        // Get texture pixel. This is same as call to call
-        // this function: bmp->get_pixel(u, v, r, g, b);
-
-        int offset = (v * tex_width) + (u * tex_texel_width);
-        tex_color.r_ = tex_ptr[offset + 2];
-        tex_color.g_ = tex_ptr[offset + 1];
-        tex_color.b_ = tex_ptr[offset + 0];
-      
-        // Modulate light and color
-
-        curr_color.Modulate(tex_color);
-        
-        // Draw point
-
-        scr_ptr[x + y * scr_width] = curr_color.GetARGB();
-        z_ptr[y * z_width + x] = curr_z;
-        ++total_drawn;
-      }
-    }
-  }
-  return total_drawn;
 }
 
 } // namespace anshub

@@ -48,8 +48,9 @@ struct Vector
   float w;   // see note #2 after code
 
   float Length() const;
-  float SquareLength() const;  // used to exclude sqrt in some calculations
+  float SquareLength() const;
   void  Normalize();
+  bool  IsNormalized() const;
 
   void  Zero() { x = 0.0f; y = 0.0f; z = 0.0f; w = 1.0f; }
   bool  IsZero() const;
@@ -160,15 +161,12 @@ inline float Vector::SquareLength() const
 
 inline void Vector::Normalize()
 {
-  float length = SquareLength();
-
-  if (!(length - 1.0f < math::kEpsilon))
+  if (!IsNormalized())
   {
-    length = Length();
-    
-    if (math::Fzero(length)) {
+    float length = Length();    
+    if (math::Fzero(length))
       throw MathExcept("vector::Normalize - zero length vector");
-    }
+
     float p = 1.0f / length;
     x *= p;
     y *= p;
@@ -176,11 +174,15 @@ inline void Vector::Normalize()
   }
 }
 
+inline bool Vector::IsNormalized() const
+{
+  return math::Fzero(SquareLength() - 1.0f);  
+}
+
 inline bool Vector::IsZero() const
 { 
   return math::Fzero(x) && math::Fzero(y) && math::Fzero(z);
 }
-
 
 //****************************************************************************
 // INLINE HELPER FUNCTIONS IMPLEMENTATION
@@ -193,7 +195,6 @@ inline void vector::ConvertFromHomogeneous(Vector& v)
   v /= v.w;
   v.w = 1.0f;
 }
-
 
 // Returns dot product (scalar) (evaluated by coordinates)
 // If result > 0, then angle between v1 && v2 from 0 to 90 degree
