@@ -82,7 +82,6 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
 
   if (!on_ground_)
   {
-    std::cerr << "sa\n";
     ProcessGravity();
   }
 

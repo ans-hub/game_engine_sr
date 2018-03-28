@@ -114,15 +114,31 @@ int main(int argc, const char** argv)
     {0.0f, 0.0f, 10.0f},    // world pos
     {0.0f, 0.0f, 0.0f}      // initial rotate
   );
-  for (auto& vx : obj_1.vxs_local_)
-    vx.color_.a_ = 40.0f;
+
+  if (!obj_1.textured_)
+  {
+    for (auto& vx : obj_1.vxs_local_)
+    {
+      vx.color_ = FColor{color::Blue};
+      vx.color_.a_ = 0.5f;
+    }
+  }
+  else
+  {
+    for (auto& vx : obj_1.vxs_local_)
+      vx.color_.a_ = 0.5f;
+  }
 
   auto obj_2 = object::Make(
     obj2_fname, trig, 
     {2.0f, 2.0f, 2.0f},     // initial scale
-    {2.0f, 5.0f, 20.0f},    // world pos
+    {2.0f, 5.0f, 30.0f},    // world pos
     {0.0f, 0.0f, 0.0f}      // initial rotate
   );
+  auto obj_3 (obj_2);
+  obj_3.world_pos_.z = 0.0f;
+  obj_3.world_pos_.y -= 5.0f;
+  V_GlObject objs {obj_2, obj_3};
 
   // Camera
 
@@ -160,9 +176,7 @@ int main(int argc, const char** argv)
   FColor kBlue   {0.0f, 0.0f, 255.0f};
 
   lights.ambient_.emplace_back(kWhite, 0.3f);
-  lights.infinite_.emplace_back(kWhite, 0.7f, Vector{-1.0f, -2.0f, 0.3f});
-  lights.point_.emplace_back(kBlue, 0.6f, 
-    Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
+  lights.infinite_.emplace_back(kWhite, 0.7f, Vector{-1.0f, -2.0f, -0.9f});
 
   // Other stuff
 
@@ -171,7 +185,6 @@ int main(int argc, const char** argv)
   render_ctx.is_wired_ = false;
   render_ctx.is_alpha_ = true;
   render_ctx.clarity_  = 50.0f;
-  render_ctx.alpha_lut_ = AlphaLut(5);
 
   GlText  text {win};
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};
@@ -204,27 +217,28 @@ int main(int argc, const char** argv)
     obj_1.SetCoords(Coords::TRANS);
     object::Translate(obj_1, obj_1.world_pos_);
 
-    obj_2.SetCoords(Coords::LOCAL);
-    obj_2.CopyCoords(Coords::LOCAL, Coords::TRANS);
-    obj_2.SetCoords(Coords::TRANS);
-    object::Translate(obj_2, obj_2.world_pos_);
-    
+    objects::SetCoords(objs, Coords::LOCAL);
+    objects::CopyCoords(objs, Coords::LOCAL, Coords::TRANS);
+    objects::SetCoords(objs, Coords::TRANS);
+    for (auto& obj : objs)
+      object::Translate(obj, obj.world_pos_);
+
     // Culling
 
     object::ResetAttributes(obj_1);
-    object::ResetAttributes(obj_2);
+    objects::ResetAttributes(objs);
 
     auto hidden = object::RemoveHiddenSurfaces(obj_1, cam);
-    hidden += object::RemoveHiddenSurfaces(obj_2, cam);
+    hidden += objects::RemoveHiddenSurfaces(objs, cam);
 
     // Light objects
 
     object::ComputeFaceNormals(obj_1);
-    object::ComputeFaceNormals(obj_2);
+    objects::ComputeFaceNormals(objs);
     object::ComputeVertexNormalsV2(obj_1);
-    object::ComputeVertexNormalsV2(obj_2);
+    objects::ComputeVertexNormalsV2(objs);
     light::Object(obj_1, lights);
-    light::Object(obj_2, lights);
+    light::Objects(objs, lights);
 
     // Camera routines (go to cam coords)
 
@@ -246,15 +260,15 @@ int main(int argc, const char** argv)
     }
 
     object::ApplyMatrix(mx_cam, obj_1);
-    object::ApplyMatrix(mx_cam, obj_2);
+    objects::ApplyMatrix(mx_cam, objs);
 
     // Make triangles
 
     tris_base.resize(0);
     tris_ptrs.resize(0);
     triangles::AddFromObject(obj_1, tris_base);
-    triangles::AddFromObject(obj_2, tris_base);
-    auto culled = triangles::CullAndClip(tris_base, cam);    
+    triangles::AddFromObjects(objs, tris_base);
+    auto culled = triangles::CullAndClip(tris_base, cam);
     triangles::MakePointers(tris_base, tris_ptrs);
     triangles::SortZAvg(tris_ptrs);
     
@@ -265,6 +279,7 @@ int main(int argc, const char** argv)
 
     // Draw
 
+    render_ctx.is_alpha_ = true;
     render::Context(tris_ptrs, render_ctx);
     
     // Print fps and other info

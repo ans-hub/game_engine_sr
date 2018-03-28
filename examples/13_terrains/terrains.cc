@@ -120,7 +120,7 @@ int main(int argc, const char** argv)
   CameraOperator cam {
     fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z
   };
-  cam.SetClarity(cfg.GetFloat("cam_clarity"));
+  // cam.SetClarity();
   cam.SetPrevMousePos(win.ReadMousePos());
   cam.SetLeftButton(KbdBtn::A);
   cam.SetRightButton(KbdBtn::D);
@@ -286,7 +286,7 @@ int main(int argc, const char** argv)
     else
     {
       buf.Clear();
-      render::Solid(tris_ptrs, zbuf, cam.GetClarity(), buf);
+      render::Solid(tris_ptrs, zbuf, cfg.GetFloat("cam_clarity"), buf);
     }
     buf.SendDataToFB();
     fps.Count();
