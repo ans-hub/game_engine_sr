@@ -257,7 +257,7 @@ int main(int argc, const char** argv)
 
     tris_base.resize(0);
     tris_ptrs.resize(0);
-    // triangles::AddFromObjects(ground, tris_base);
+    triangles::AddFromObjects(ground, tris_base);
     triangles::AddFromObject(obj, tris_base);
     auto culled = triangles::CullAndClip(tris_base, cam);    
     triangles::MakePointers(tris_base, tris_ptrs);
@@ -273,9 +273,6 @@ int main(int argc, const char** argv)
     buf.Clear();
     zbuf.Clear();
     draw_triangles::Solid(tris_ptrs, zbuf, buf);
-    // for (auto* tri : tris_ptrs)
-    //   tri->color_ = FColor{color::White};
-    // draw_triangles::Wired(tris_ptrs, buf);
     buf.SendDataToFB();
 
     // Print fps and other info
