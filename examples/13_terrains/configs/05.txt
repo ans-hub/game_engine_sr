@@ -21,6 +21,7 @@ f cam_gravity 0.04
 f cam_jump 0.6
 f cam_height 4.0
 f cam_speed_up 3.0
+f cam_fly_mode 0
 f ter_chunk 17
 f ter_divider 4
 a ter_detalization 50.0 80.0 120.0

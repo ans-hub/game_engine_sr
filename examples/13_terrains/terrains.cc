@@ -13,6 +13,7 @@
 
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
+#include "lib/draw/gl_render_ctx.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_triangle.h"
@@ -120,7 +121,6 @@ int main(int argc, const char** argv)
   CameraOperator cam {
     fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z
   };
-  // cam.SetClarity();
   cam.SetPrevMousePos(win.ReadMousePos());
   cam.SetLeftButton(KbdBtn::A);
   cam.SetRightButton(KbdBtn::D);
@@ -134,7 +134,9 @@ int main(int argc, const char** argv)
   cam.SetZoomOutButton(KbdBtn::NUM0);
   cam.SetSwitchRollButton(KbdBtn::L);
   cam.SetWiredModeButton(KbdBtn::T);
-  cam.SetOnGround(false);
+  cam.SetOperatorHeight(cfg.GetFloat("cam_height"));
+  cam.SetFlyMode(cfg.GetFloat("cam_fly_mode"));
+  cam.SetOnGround(cfg.GetFloat("cam_fly_mode"));
   cam.SetMoveVelocity({0.0f, 0.0f, cfg.GetFloat("cam_velocity")});
 
   // Create skybox
@@ -155,10 +157,13 @@ int main(int argc, const char** argv)
   terrain.SetDetalization(cfg.GetVectorF("ter_detalization"));
   auto& terrain_chunks = terrain.GetChunks();
 
-  // Other stuff
+  // Create render context
 
-  Buffer  buf (kWinWidth, kWinHeight, color::Black);
-  ZBuffer zbuf (kWinWidth, kWinHeight);
+  RenderContext render_ctx(kWinWidth, kWinHeight, color::Black);
+  render_ctx.is_zbuf_  = true;
+  render_ctx.is_wired_ = false;
+  render_ctx.is_alpha_ = false;
+  render_ctx.clarity_  = cfg.GetFloat("cam_clarity");
   
   // Make triangles arrays
 
@@ -188,6 +193,7 @@ int main(int argc, const char** argv)
     float ground = terrain.FindGroundPosition(cam);
     cam.ProcessInput(win);
     cam.SetGroundPosition(ground);
+    render_ctx.is_wired_ = cam.IsWired();
 
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);
@@ -277,18 +283,7 @@ int main(int argc, const char** argv)
 
     // Draw triangles
 
-    zbuf.Clear();
-    if (cam.IsWired())
-    {
-      buf.Clear();
-      render::Wired(tris_ptrs, buf);
-    }
-    else
-    {
-      buf.Clear();
-      render::Solid(tris_ptrs, zbuf, cfg.GetFloat("cam_clarity"), buf);
-    }
-    buf.SendDataToFB();
+    render::Context(tris_ptrs, render_ctx);
     fps.Count();
 
     win.Render();

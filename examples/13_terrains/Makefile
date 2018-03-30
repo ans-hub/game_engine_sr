@@ -23,7 +23,7 @@ CXXLIBS  += -L $(LIBDRAW) -L $(LIBSYSTEM)
 CXXLIBS  += -L /usr/local/lib/
 CXXFLAGS += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
-DBGFLAGS += -pg -no-pie
+# DBGFLAGS += -pg -no-pie
 RLSFLAGS  = -O2
 
 # Setup objects
