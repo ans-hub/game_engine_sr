@@ -160,8 +160,8 @@ int main(int argc, const char** argv)
 
   lights.ambient_.emplace_back(white, 0.2f);
   lights.infinite_.emplace_back(yellow, 0.6f, Vector{0.0f, -1.0f, 0.0f});
-  // lights.point_.emplace_back(yellow, 0.6f, 
-  //   Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
+  lights.point_.emplace_back(yellow, 0.6f, 
+    Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
 
   // Other stuff
 
