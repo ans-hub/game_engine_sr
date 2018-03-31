@@ -163,6 +163,7 @@ int main(int argc, const char** argv)
   render_ctx.is_zbuf_  = true;
   render_ctx.is_wired_ = false;
   render_ctx.is_alpha_ = false;
+  render_ctx.is_bifiltering_ = true;
   render_ctx.clarity_  = cfg.GetFloat("cam_clarity");
   
   // Make triangles arrays

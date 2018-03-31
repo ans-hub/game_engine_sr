@@ -37,11 +37,11 @@ CameraOperator::CameraOperator(
   , wired_mode_{false}
   , fly_mode_{false}
   , speed_up_mode_{false}
-  , speed_up_val_{this->kSpeedUpDefault}
+  , speed_up_val_{cam_operator_consts::kSpeedUpDefault}
   , prev_mouse_pos_{-1,-1}
-  , operator_height_{this->kOperatorHeightDefault}
+  , operator_height_{cam_operator_consts::kOperatorHeightDefault}
   , on_ground_{true}
-  , gravity_ {this->kGravityDefault}
+  , gravity_ {cam_operator_consts::kGravityDefault}
 { }
 
 void CameraOperator::ProcessInput(const BaseWindow& win)

@@ -15,7 +15,7 @@ v cam_pos -1.5 30.0 0.0
 v cam_dir -2.0 7.0 0.0
 f cam_nearz 2.0
 f cam_farz 600.0
-f cam_clarity 50.0
+f cam_clarity 5.0
 f cam_velocity 0.08
 f cam_gravity 0.04
 f cam_jump 0.6

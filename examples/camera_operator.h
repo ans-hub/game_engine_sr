@@ -77,10 +77,14 @@ private:
   bool    on_ground_;
   Vector  gravity_;
 
-  const Vector kGravityDefault {0.0f, -0.04f, 0.0f};
-  const float  kSpeedUpDefault {3.0f};
-  const float  kOperatorHeightDefault {4.0f};
-
 }; // class CameraOperator 
 
-}  // namespace anshub
+namespace cam_operator_consts {
+
+  const Vector kGravityDefault {0.0f, -0.04f, 0.0f};
+  const float kSpeedUpDefault {3.0f};
+  const float kOperatorHeightDefault {4.0f};
+
+} // namespace cam_operator_consts
+
+} // namespace anshub

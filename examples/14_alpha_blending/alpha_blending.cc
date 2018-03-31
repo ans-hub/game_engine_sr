@@ -188,7 +188,7 @@ int main(int argc, const char** argv)
   render_ctx.is_zbuf_  = true;
   render_ctx.is_wired_ = false;
   render_ctx.is_alpha_ = true;
-  render_ctx.clarity_  = 50.0f;
+  render_ctx.clarity_  = 0.0f;
 
   GlText  text {win};
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};
