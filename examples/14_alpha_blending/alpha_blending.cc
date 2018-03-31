@@ -18,6 +18,7 @@
 #include "lib/math/vector.h"
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
+#include "lib/draw/gl_render_ctx.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
 #include "lib/draw/gl_lights.cc"
@@ -115,6 +116,8 @@ int main(int argc, const char** argv)
     {0.0f, 0.0f, 0.0f}      // initial rotate
   );
 
+  // Make object 1 transparent
+  
   if (!obj_1.textured_)
   {
     for (auto& vx : obj_1.vxs_local_)
@@ -166,6 +169,7 @@ int main(int argc, const char** argv)
   cam.SetWiredModeButton(KbdBtn::T);
   cam.SetSwitchTypeButton(KbdBtn::ENTER);
   cam.SetMoveVelocity({0.0f, 0.0f, 0.2f});
+  cam.SetFlyMode(true);
 
   // Prepare lights sources
  
@@ -178,7 +182,7 @@ int main(int argc, const char** argv)
   lights.ambient_.emplace_back(kWhite, 0.3f);
   lights.infinite_.emplace_back(kWhite, 0.7f, Vector{-1.0f, -2.0f, -0.9f});
 
-  // Other stuff
+  // Create render context
 
   RenderContext render_ctx(kWidth, kHeight, color::Black);
   render_ctx.is_zbuf_  = true;
@@ -279,7 +283,6 @@ int main(int argc, const char** argv)
 
     // Draw
 
-    render_ctx.is_alpha_ = true;
     render::Context(tris_ptrs, render_ctx);
     
     // Print fps and other info
