@@ -49,11 +49,10 @@ void triangles::AddFromObject(GlObject& obj, V_Triangle& triangles)
     return;
 
   auto& vxs = obj.GetCoords();
-  Bitmap* tex = obj.textured_ ? obj.texture_.get() : nullptr;
  
   for (auto& face : obj.faces_)
     if (face.active_)
-      triangles.emplace_back(vxs, obj.shading_, face, tex);
+      triangles.emplace_back(vxs, obj.shading_, face, obj.textures_);
 }
 
 // Add references to triangles from objects to triangles container
@@ -66,11 +65,10 @@ void triangles::AddFromObjects(V_GlObject& arr, V_Triangle& triangles)
       continue;
 
     auto& vxs = obj.GetCoords();
-    Bitmap* tex = obj.textured_ ? obj.texture_.get() : nullptr;
   
     for (auto& face : obj.faces_)
       if (face.active_)
-        triangles.emplace_back(vxs, obj.shading_, face, tex);
+        triangles.emplace_back(vxs, obj.shading_, face, obj.textures_);
   }
 }
 

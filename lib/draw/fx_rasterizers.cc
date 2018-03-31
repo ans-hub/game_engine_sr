@@ -614,7 +614,7 @@ void raster_tri::TexturedAffine(
     cVector& t1, cVector& t2, cVector& t3,
     Bitmap* bmp, Buffer& buf)
 {
-    // Convert float to int for vertex positions
+  // Convert float to int for vertex positions
 
   int x1 = floor(p1.x);
   int x2 = floor(p2.x);
@@ -623,14 +623,14 @@ void raster_tri::TexturedAffine(
   int y2 = floor(p2.y);
   int y3 = floor(p3.y);
   
-  // Aliases to texture coordinates
+  // Unnormalize texture coords
 
-  float u1 = t1.x;
-  float u2 = t2.x;
-  float u3 = t3.x;
-  float v1 = t1.y;
-  float v2 = t2.y;
-  float v3 = t3.y;
+  float u1 = t1.x * bmp->width();
+  float u2 = t2.x * bmp->width();
+  float u3 = t3.x * bmp->width();
+  float v1 = t1.y * bmp->height();
+  float v2 = t2.y * bmp->height();
+  float v3 = t3.y * bmp->height();
 
   // Make y1 as top point and y3 as bottom point, y2 is middle
 
@@ -929,14 +929,14 @@ void raster_tri::TexturedAffineFL(
   int y2 = math::Floor(p2.y);
   int y3 = math::Floor(p3.y);
   
-  // Aliases to texture coordinates
+  // Unnormalize texture coords
 
-  float u1 = t1.x;
-  float u2 = t2.x;
-  float u3 = t3.x;
-  float v1 = t1.y;
-  float v2 = t2.y;
-  float v3 = t3.y;
+  float u1 = t1.x * bmp->width();
+  float u2 = t2.x * bmp->width();
+  float u3 = t3.x * bmp->width();
+  float v1 = t1.y * bmp->height();
+  float v2 = t2.y * bmp->height();
+  float v3 = t3.y * bmp->height();
 
   // Make y1 as top point and y3 as bottom point, y2 is middle
 
@@ -1281,14 +1281,14 @@ void raster_tri::TexturedAffineGR(
   int y2 = math::Floor(p2.y);
   int y3 = math::Floor(p3.y);
   
-  // Extract texture coordinates
+  // Unnormalize texture coordinates
 
-  float u1 = t1.x;
-  float u2 = t2.x;
-  float u3 = t3.x;
-  float v1 = t1.y;
-  float v2 = t2.y;
-  float v3 = t3.y;
+  float u1 = t1.x * bmp->width();
+  float u2 = t2.x * bmp->width();
+  float u3 = t3.x * bmp->width();
+  float v1 = t1.y * bmp->height();
+  float v2 = t2.y * bmp->height();
+  float v3 = t3.y * bmp->height();
 
   // Prepare colors  
 
@@ -2337,6 +2337,7 @@ int raster_tri::TexturedPerspective(
   // Prepare order of vertices from top to bottom 
 
   raster_helpers::SortVertices(v1, v2, v3);
+  raster_helpers::UnnormalizeTexture(v1, v2, v3, bmp->width(), bmp->height());
 
   // Prepare light color and alpha blending
 
@@ -2782,6 +2783,7 @@ int raster_tri::TexturedPerspectiveFL(
   // Prepare order of vertices from top to bottom 
 
   raster_helpers::SortVertices(v1, v2, v3);
+  raster_helpers::UnnormalizeTexture(v1, v2, v3, bmp->width(), bmp->height());
 
   // Prepare light color and alpha blending
 
@@ -2901,9 +2903,9 @@ int raster_tri::TexturedPerspectiveFL(
     float u_step {};
     float v_step {};
     if ((xrb - xlb) != 0) {
-      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
-      u_step = (u_rhs - u_lhs) / ((x_rhs + 1) - xlb);
-      v_step = (v_rhs - v_lhs) / ((x_rhs + 1) - xlb);
+      z_step = (z_rhs - z_lhs) / dx_curr;    
+      u_step = (u_rhs - u_lhs) / dx_curr;
+      v_step = (v_rhs - v_lhs) / dx_curr;
     }
     float z_curr = z_lhs + (z_step * xl_dx);
     float u_curr = u_lhs + (u_step * xl_dx);
@@ -3166,7 +3168,7 @@ int raster_tri::TexturedPerspectiveFL(
         int idx = y * sbuf_w + x;
         if (z_curr > z_buf[idx])
         {
-          Color<> tex_color {};                  // bmp->get_pixel(u, v, r, g, b)
+          Color<> tex_color {};       // bmp->get_pixel(u, v, r, g, b)
           int u = u_curr / z_curr;    // real tex coords
           int v = v_curr / z_curr; 
           int offset = (v * tex_width) + (u * tex_texel_width);
@@ -3197,7 +3199,7 @@ int raster_tri::TexturedPerspectiveFL(
     v_lhs += lv_step;
     v_rhs += rv_step;
   }
-
+  return total_drawn;
 }
 
 // Draws textured triangle with gouraud lighting and with correct perspective
@@ -3222,8 +3224,6 @@ int raster_tri::TexturedPerspectiveGR(
 
   int sbuf_w = sbuf.Width();
   int sbuf_h = sbuf.Height();
-  int tex_w = bmp->width();
-  int tex_h = bmp->width();
   auto tex_width = bmp->GetRowIncrement();
   auto tex_texel_width = bmp->GetBytesPerPixel();
   auto* s_buf = sbuf.GetPointer();
@@ -3233,6 +3233,7 @@ int raster_tri::TexturedPerspectiveGR(
  // Prepare order of vertices from top to bottom 
 
   raster_helpers::SortVertices(v1, v2, v3);
+  raster_helpers::UnnormalizeTexture(v1, v2, v3, bmp->width(), bmp->height());
 
   // Prepare color and alpha blending of current color
 
@@ -3738,6 +3739,7 @@ int raster_tri::TexturedAffineGR(
   // Prepare order of vertices from top to bottom 
 
   raster_helpers::SortVertices(v1, v2, v3);
+  raster_helpers::UnnormalizeTexture(v1, v2, v3, bmp->width(), bmp->height());
 
   // Prepare color and alpha blending of current color
 
@@ -4243,6 +4245,7 @@ int raster_tri::TexturedAffineGRBF(
   // Prepare order of vertices from top to bottom 
 
   raster_helpers::SortVertices(v1, v2, v3);
+  raster_helpers::UnnormalizeTexture(v1, v2, v3, bmp->width(), bmp->height());
 
   // Prepare color and alpha blending of current color
 
@@ -4786,31 +4789,6 @@ int raster_tri::TexturedAffineGRBF(
   }
 
   return total_drawn;
-}
-
-void raster_helpers::SortVertices(Vertex& v1, Vertex& v2, Vertex& v3)
-{
-  // Make v1 as top, v2 as middle, v3 as bottom
-
-  if (v2.pos_.y < v3.pos_.y)
-    std::swap(v2, v3);
-  if ((v1.pos_.y < v2.pos_.y) && (v1.pos_.y > v3.pos_.y))
-    std::swap(v1, v2);
-  else if ((v1.pos_.y < v2.pos_.y) && 
-           (v1.pos_.y < v3.pos_.y || math::Feq(v1.pos_.y, v3.pos_.y))) {
-    std::swap(v1, v2);
-    std::swap(v3, v2);  
-  }
-
-  // If polygon is flat bottom, sort left to right
-
-  if (math::Feq(v2.pos_.y, v3.pos_.y) && v2.pos_.x > v3.pos_.x)
-    std::swap(v2, v3);
-
-  // If polygon is flat top, sort left to right
-
-  if (math::Feq(v1.pos_.y, v2.pos_.y) && v1.pos_.x > v2.pos_.x)
-    std::swap(v1, v2);
 }
 
 } // namespace anshub

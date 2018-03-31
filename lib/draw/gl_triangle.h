@@ -34,9 +34,9 @@ struct Triangle
   , vxs_{}
   , normal_{}
   , color_{}
-  , texture_{} { }
+  , textures_{nullptr} { }
 
-  Triangle(const V_Vertex& vxs, Shading shading, const Face& f, Bitmap* tex)
+  Triangle(const V_Vertex& vxs, Shading shading, const Face& f, V_Bitmap& tex)
   : active_{true}
   , shading_{shading}
   , vxs_{ {
@@ -44,7 +44,7 @@ struct Triangle
     } }
   , normal_{f.normal_}
   , color_{f.color_}
-  , texture_{tex} { }
+  , textures_{&tex} { }
 
   Vertex& operator[](int f) { return vxs_[f]; }
   cVertex& operator[](int f) const { return vxs_[f]; }
@@ -54,7 +54,7 @@ struct Triangle
   A3_Vertex vxs_;
   Vector    normal_;
   FColor    color_;
-  Bitmap*   texture_;
+  V_Bitmap* textures_;     // yes, ugly... but very fast
 
 }; // struct Triangle
 

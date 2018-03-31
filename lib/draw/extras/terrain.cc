@@ -18,8 +18,8 @@ Terrain::Terrain(
   , tx_h_{}
   , obj_w_{obj_width}
   , obj_h_{obj_width}
-  , texture_{nullptr}
-  , heightmap_{nullptr}
+  , texture_{}
+  , heightmap_{}
   , vxs_{}
   , chunks_{}
   , shading_{shading}
@@ -145,9 +145,9 @@ void Terrain::LoadTexture(const char* fname)
 
 void Terrain::LoadHeightmap(const char* fname)
 {
-  heightmap_ = std::make_unique<Bitmap>(fname);
-  hm_h_ = heightmap_->height();
-  hm_w_ = heightmap_->width();
+  heightmap_ = Bitmap{fname};
+  hm_h_ = heightmap_.height();
+  hm_w_ = heightmap_.width();
 
   if (hm_h_ == 0 || hm_w_ == 0)
     throw DrawExcept("Heighmap width or height is zero");
@@ -171,8 +171,8 @@ void Terrain::ComputeAllVertices(int div_factor)
    
   // Compute step of texture for each height map pixel
 
-  float dx_u = (float)(tx_w_) / (float)(hm_w_);
-  float dx_v = (float)(tx_h_) / (float)(hm_h_); 
+  float u_step = 1.0f / hm_w_;
+  float v_step = 1.0f / hm_h_; 
 
   // Filling
 
@@ -184,10 +184,10 @@ void Terrain::ComputeAllVertices(int div_factor)
       // Make position and texture vectors
 
       float vx = (float)(x - half_w);
-      float vy = (float)(heightmap_->red_channel(x,z) / div_factor);
+      float vy = (float)(heightmap_.red_channel(x,z) / div_factor);
       float vz = (float)(-(z - half_h));
       Vector pos {vx, vy, vz};
-      Vector tex {x*dx_u, z*dx_v, 0.0f};
+      Vector tex {x*u_step, z*v_step, 0.0f};    // interval would be 0-1 for all mesh
 
       // Fill and place vertex
 
@@ -253,8 +253,7 @@ void Terrain::MakeChunks(int vxs_in_row)
       // Create chunk
       
       Chunk obj {vxs, ln, rn, tn, bn};
-      obj.textured_ = true;
-      obj.texture_ = texture_;
+      obj.textures_.emplace_back(texture_);
       obj.shading_ = shading_;
       chunks_.push_back(obj);
     }

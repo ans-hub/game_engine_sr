@@ -49,30 +49,31 @@ namespace raster_tri {
 
   // Triangle rasterizers without 1/z buffering
 
-  void SolidFL(
+  void SolidFL(                                 // v1
       float px1, float px2, float px3,
       float py1, float py2, float py3,
       uint color, Buffer&
   );
-  void SolidGR(
+  void SolidGR(                                 // v1
       float x1, float x2, float x3, 
       float y1, float y2, float y3, 
-      uint color1, uint color2, uint color3, Buffer&
+      uint c1, uint c2, uint c3, Buffer&
   );
-  void TexturedAffine(
+  void TexturedAffine(                          // v1
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
     Bitmap*, Buffer&
   );
-  void TexturedAffineFL(
+  void TexturedAffineFL(                        // v1
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
     uint color, Bitmap*, Buffer&
   );
-  void TexturedAffineGR(
+  void TexturedAffineGR(                        // v1
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
-    uint c1, uint c2, uint c3, Bitmap*, Buffer&
+    uint c1, uint c2, uint c3, Bitmap*,
+    Buffer&
   );
 
   // Rasterizes triangle with 1/z-buffering
@@ -116,6 +117,7 @@ namespace raster_tri {
 namespace raster_helpers {
 
   void SortVertices(Vertex&, Vertex&, Vertex&);
+  void UnnormalizeTexture(Vertex&, Vertex&, Vertex&, int w, int h);
 
 } // namespace raster_helpers
 
@@ -141,6 +143,46 @@ inline void raster::HorizontalLine(int y, int x1, int x2, int color, Buffer& buf
 {
   auto* ptr = buf.GetPointer();
   std::fill_n(ptr + x1 + y * buf.Width(), x2-x1, color);
+}
+
+// Sort vertices in order - v1 is the most top and v3 is the bottom
+
+inline void raster_helpers::SortVertices(Vertex& v1, Vertex& v2, Vertex& v3)
+{
+  // Make v1 as top, v2 as middle, v3 as bottom
+
+  if (v2.pos_.y < v3.pos_.y)
+    std::swap(v2, v3);
+  if ((v1.pos_.y < v2.pos_.y) && (v1.pos_.y > v3.pos_.y))
+    std::swap(v1, v2);
+  else if ((v1.pos_.y < v2.pos_.y) && 
+           (v1.pos_.y < v3.pos_.y || math::Feq(v1.pos_.y, v3.pos_.y))) {
+    std::swap(v1, v2);
+    std::swap(v3, v2);  
+  }
+
+  // If polygon is flat bottom, sort left to right
+
+  if (math::Feq(v2.pos_.y, v3.pos_.y) && v2.pos_.x > v3.pos_.x)
+    std::swap(v2, v3);
+
+  // If polygon is flat top, sort left to right
+
+  if (math::Feq(v1.pos_.y, v2.pos_.y) && v1.pos_.x > v2.pos_.x)
+    std::swap(v1, v2);
+}
+
+// Get real texture coordinates from normalized coordinates
+
+inline void raster_helpers::UnnormalizeTexture(
+  Vertex& v1, Vertex& v2, Vertex& v3, int w, int h)
+{
+  v1.texture_.x *= w-1;
+  v2.texture_.x *= w-1;
+  v3.texture_.x *= w-1;
+  v1.texture_.y *= h-1;
+  v2.texture_.y *= h-1;
+  v3.texture_.y *= h-1;
 }
 
 } // namespace anshub

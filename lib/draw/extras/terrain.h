@@ -8,6 +8,8 @@
 #ifndef GL_EXTRAS_TERRAIN_H
 #define GL_EXTRAS_TERRAIN_H
 
+#include <memory>
+
 #include "../exceptions.h"
 #include "../gl_aliases.h"
 #include "../gl_object.h"
@@ -53,10 +55,10 @@ private:
   int       hm_h_;                  // heightmap height
   int       tx_w_;                  // texture width
   int       tx_h_;                  // texture height
-  int       obj_w_;                 // object array width
+  int       obj_w_;                 // object array width (how many vertices in width)
   int       obj_h_;                 // object array height
-  psBitmap  texture_;
-  puBitmap  heightmap_;
+  P_Bitmap texture_;
+  Bitmap    heightmap_;
   V_Vertex  vxs_;                   // vertices for all mesh
   V_Chunk   chunks_;                // chunks of terrain
   Shading   shading_;

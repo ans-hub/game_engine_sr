@@ -118,7 +118,7 @@ int main(int argc, const char** argv)
 
   // Make object 1 transparent
   
-  if (!obj_1.textured_)
+  if (!obj_1.textures_.empty())
   {
     for (auto& vx : obj_1.vxs_local_)
     {

@@ -12,6 +12,12 @@
 #include <functional>
 #include <memory>
 
+// Names convention:
+//  - prefix V_Element - std::vector<Element>
+//  - prefix P_Element - std::unique_ptr<Element> (sometimes shared_ptr)
+//  - prefix cElement  - const Element
+//  - prefix A3_Element - std::array<Element, 3>
+
 namespace anshub {
 
   // Forward declarations
@@ -39,8 +45,7 @@ namespace anshub {
 
   // Pointer aliases
 
-  using psBitmap = std::shared_ptr<Bitmap>;
-  using puBitmap = std::unique_ptr<Bitmap>;
+  using P_Bitmap = std::shared_ptr<Bitmap>;
 
   // Containers aliases
 
@@ -61,6 +66,7 @@ namespace anshub {
   using V_GlObject = std::vector<GlObject>;
   using V_FColor = std::vector<Color<float>>;
   using V_Color = std::vector<Color<uchar>>;
+  using V_Bitmap = std::vector<P_Bitmap>;
   
   // Const containers aliases
 

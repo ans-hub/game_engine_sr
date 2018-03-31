@@ -81,12 +81,12 @@ int draw_object::Solid(const GlObject& obj, Buffer& buf)
     
     // Draw textured object
 
-    if (obj.textured_)
+    if (!obj.textures_.empty())
     {
+      auto* tex = obj.textures_.front().get();
       auto& t1 = vxs[f[0]].texture_;
       auto& t2 = vxs[f[1]].texture_;
       auto& t3 = vxs[f[2]].texture_;
-      auto* tex = obj.texture_.get();
       
       if (obj.shading_ == Shading::CONST)
       {
@@ -210,12 +210,12 @@ int draw_triangles::Solid(const V_TrianglePtr& arr, Buffer& buf)
 
     // Draw textured triangle
 
-    if (t->texture_ != nullptr)
+    if (!t->textures_->empty())
     {
       auto& t1 = t->vxs_[0].texture_;
       auto& t2 = t->vxs_[1].texture_;
       auto& t3 = t->vxs_[2].texture_;
-      auto* tex = t->texture_;
+      auto* tex = t->textures_->front().get();
 
       if (t->shading_ == Shading::CONST)
       {
@@ -280,9 +280,9 @@ int draw_triangles::Solid(const V_TrianglePtr& arr, ZBuffer& zbuf, Buffer& buf)
     auto& v2 = t->vxs_[1];
     auto& v3 = t->vxs_[2];
 
-    if (t->texture_ != nullptr)
+    if (!t->textures_->empty())
     {
-      auto* tex = t->texture_;
+      auto* tex = t->textures_->front().get();
 
       if (t->shading_ == Shading::CONST)
         raster_tri::TexturedPerspective(v1, v2, v3, tex, zbuf, buf);
@@ -326,6 +326,8 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx)
   
   ctx.sbuf_.SendDataToFB();
   ctx.pixels_drawn_ = drawn;
+  
+  return drawn;
 }
 
 // Renders triangles and uses dist as chooser between affine and perspective
@@ -352,9 +354,9 @@ int render::Solid(
 
     // Draw textured triangle
 
-    if (t->texture_ != nullptr)
+    if (!t->textures_->empty())
     {
-      auto* tex = t->texture_;
+      auto* tex = t->textures_->front().get();
 
       if (t->shading_ == Shading::CONST)
         raster_tri::TexturedPerspective(v1, v2, v3, tex, zbuf, buf);
@@ -432,9 +434,9 @@ int render::SolidWithAlpha(
     
     // Draw textured triangle
 
-    if (t->texture_ != nullptr)
+    if (!t->textures_->empty())
     {
-      auto* tex = t->texture_;
+      auto* tex = t->textures_->front().get();
 
       if (t->shading_ == Shading::CONST)
         raster_tri::TexturedPerspective(v1, v2, v3, tex, zbuf, sbuf);

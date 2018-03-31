@@ -16,8 +16,7 @@ GlObject::GlObject()
   , vxs_trans_{}
   , current_vxs_{Coords::LOCAL}
   , faces_{}
-  , texture_{nullptr}
-  , textured_{false}
+  , textures_{}
   , id_{}
   , active_{true}
   , shading_{Shading::CONST}
@@ -36,8 +35,7 @@ GlObject::GlObject(
   , vxs_trans_{}
   , current_vxs_{Coords::LOCAL}  
   , faces_{}
-  , texture_{nullptr}
-  , textured_{false}
+  , textures_{}
   , id_{}
   , active_{true}
   , shading_{}  
@@ -181,33 +179,34 @@ GlObject object::Make(const char* ply_fname)
 
   if (textured)
   {
-    obj.textured_ = true;
-
     // Load texture in memory (we suppose that texture name is the same as
     // object file name, but with different extension)
     
     std::string bmp_fname {ply_fname};
     str::Replace(bmp_fname, ".ply", ".bmp");
-    obj.texture_ = std::make_shared<Bitmap>(bmp_fname);
+    
+    Bitmap texture (bmp_fname);
+    obj.textures_.emplace_back(std::make_shared<Bitmap>(texture));
+    // object::CreateMipmaps(obj.textures_, texture);
+    
+    // Fill vertices texture coordinate (unnormalized)
 
-    // Fill vertices texture coordinate and unnormalize them
-
-    auto tex_w = obj.texture_->width() - 1;
-    auto tex_h = obj.texture_->height() - 1;
+    auto tex_w = obj.textures_[0]->width() - 1;
+    auto tex_h = obj.textures_[0]->height() - 1;
 
     if (tex_w == 0 || tex_h == 0)
-      obj.textured_ = false;
+      obj.textures_.resize(0);
     else {
-      
+
       // Fill texture coords and make all vertices white color for lighting
 
       for (std::size_t i = 0; i < obj.vxs_local_.size(); ++i)
       {
-        obj.vxs_local_[i].texture_.x = texels[i][0] * tex_w;
-        obj.vxs_local_[i].texture_.y = texels[i][1] * tex_h;
+        obj.vxs_local_[i].texture_.x = texels[i][0];
+        obj.vxs_local_[i].texture_.y = texels[i][1];
         obj.vxs_local_[i].color_ = FColor{color::White};
       }
-      
+
       // Make all faces white for fast texture lighting
 
       for (auto& face : obj.faces_)

@@ -44,8 +44,7 @@ struct GlObject
   V_Vertex  vxs_trans_;     // transformed vertices
   Coords    current_vxs_;   // chooser between coords type
   V_Face    faces_;         // faces based on coords above
-  psBitmap  texture_;       // texture struct
-  bool      textured_;      // is object textured
+  V_Bitmap  textures_;      // textures struct
 
   // Data members: helpers
 
