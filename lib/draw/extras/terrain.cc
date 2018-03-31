@@ -111,10 +111,14 @@ float Terrain::FindGroundPosition(const GlCamera& cam)
   int lb = lt + hm_w_;
   int rb = lb + 1;
 
-  float y_tside = vxs_[lt].pos_.y + ((vxs_[rt].pos_.y - vxs_[lt].pos_.y) * tx);
-  float y_bside = vxs_[lb].pos_.y + ((vxs_[rb].pos_.y - vxs_[lb].pos_.y) * tx);
-
-  return y_tside + ((y_bside - y_tside) * tz);
+  if (lt < vxs_.size() && lb < vxs_.size() && rt < vxs_.size() && rb < vxs_.size())
+  {
+    float y_tside = vxs_[lt].pos_.y + ((vxs_[rt].pos_.y - vxs_[lt].pos_.y) * tx);
+    float y_bside = vxs_[lb].pos_.y + ((vxs_[rb].pos_.y - vxs_[lb].pos_.y) * tx);
+    return y_tside + ((y_bside - y_tside) * tz);
+  }
+  else
+    return 0;
 }
 
 //****************************************************************************
@@ -167,8 +171,8 @@ void Terrain::ComputeAllVertices(int div_factor)
    
   // Compute step of texture for each height map pixel
 
-  float dx_u = (float)(tx_w_) / (float)(hm_w_ - 1);
-  float dx_v = (float)(tx_h_) / (float)(hm_h_ - 1); 
+  float dx_u = (float)(tx_w_) / (float)(hm_w_);
+  float dx_v = (float)(tx_h_) / (float)(hm_h_); 
 
   // Filling
 
