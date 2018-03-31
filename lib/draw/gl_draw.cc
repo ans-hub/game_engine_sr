@@ -318,9 +318,11 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx)
   else if (!ctx.is_zbuf_)
     drawn += render::Solid(triangles, ctx.sbuf_);
   else if (ctx.is_zbuf_ && !ctx.is_alpha_)
-    drawn += render::Solid(triangles, ctx.zbuf_, ctx.clarity_, ctx.sbuf_);
+    drawn += render::Solid(
+      triangles, ctx.zbuf_, ctx.clarity_, ctx.sbuf_, ctx.is_bifiltering_);
   else if (ctx.is_zbuf_ && ctx.is_alpha_)
-    drawn += render::SolidWithAlpha(triangles, ctx.zbuf_, ctx.clarity_, ctx.sbuf_);
+    drawn += render::SolidWithAlpha(
+      triangles, ctx.zbuf_, ctx.clarity_, ctx.sbuf_, ctx.is_bifiltering_);
   
   ctx.sbuf_.SendDataToFB();
   ctx.pixels_drawn_ = drawn;
@@ -330,7 +332,7 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx)
 // correct texturing
 
 int render::Solid(
-  const V_TrianglePtr& arr, ZBuffer& zbuf, float dist, Buffer& buf)
+  const V_TrianglePtr& arr, ZBuffer& zbuf, float dist, Buffer& buf, bool bifilter)
 {
   // Debug variables (we collect drawn pixels only from heavy weight functions)
 
@@ -362,6 +364,8 @@ int render::Solid(
       {
         if (v1.pos_.z < dist)
           raster_tri::TexturedPerspectiveGR(v1, v2, v3, tex, zbuf, buf);
+        else if (bifilter)
+          raster_tri::TexturedAffineGRBF(v1, v2, v3, tex, zbuf, buf);
         else
           raster_tri::TexturedAffineGR(v1, v2, v3, tex, zbuf, buf);
       }
@@ -383,7 +387,7 @@ int render::Solid(
 // correct texturing, and use alpha blending
 
 int render::SolidWithAlpha(
-  const V_TrianglePtr& arr, ZBuffer& zbuf, float dist, Buffer& sbuf)
+  const V_TrianglePtr& arr, ZBuffer& zbuf, float dist, Buffer& sbuf, bool bifilter)
 {
   // Debug variables (we collect drawn pixels only from heavy weight functions)
 
@@ -440,6 +444,8 @@ int render::SolidWithAlpha(
       {
         if (v1.pos_.z < dist)
           raster_tri::TexturedPerspectiveGR(v1, v2, v3, tex, zbuf, sbuf);
+        else if (bifilter)
+          raster_tri::TexturedAffineGRBF(v1, v2, v3, tex, zbuf, sbuf);
         else
           raster_tri::TexturedAffineGR(v1, v2, v3, tex, zbuf, sbuf);
       }

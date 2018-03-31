@@ -60,8 +60,10 @@ namespace render {
 
   // Regular functions
 
-  int  Solid(const V_TrianglePtr&, ZBuffer&, float dist, Buffer&);
-  int  SolidWithAlpha(const V_TrianglePtr&, ZBuffer&, float dist, Buffer&);
+  int  Solid(
+    const V_TrianglePtr&, ZBuffer&, float dist, Buffer&, bool bifilter = false);
+  int  SolidWithAlpha(
+    const V_TrianglePtr&, ZBuffer&, float dist, Buffer&, bool bifilter = false);
 
 } // namespace render
 

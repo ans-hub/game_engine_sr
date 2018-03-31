@@ -22,6 +22,7 @@ struct RenderContext
     : is_wired_{false}
     , is_alpha_{false}
     , is_zbuf_{true}
+    , is_bifiltering_{false}
     , clarity_{}
     , pixels_drawn_{}
     , sbuf_{w, h, color}
@@ -33,6 +34,7 @@ struct RenderContext
   bool is_wired_;
   bool is_alpha_;
   bool is_zbuf_;
+  bool is_bifiltering_;
   int  clarity_;
   int  pixels_drawn_;
 

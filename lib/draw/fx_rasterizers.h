@@ -23,6 +23,7 @@ namespace anshub {
 // Used function name prefixes:
 //  - FL - flat shading (also used for const shading)
 //  - GR - gouraud shading
+//  - BF - bilinear texture filtering
 
 //****************************************************************************
 // POINT and LINES RASTERIZERS
@@ -76,11 +77,11 @@ namespace raster_tri {
 
   // Rasterizes triangle with 1/z-buffering
 
-  int SolidFL(                                 // v2, optimized +
+  int SolidFL(                                  // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     cFColor& color, ZBuffer&, Buffer&
   );
-  int SolidGR(                                 // v2, optimized +
+  int SolidGR(                                  // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     ZBuffer&, Buffer&
   );
@@ -97,6 +98,10 @@ namespace raster_tri {
     Bitmap*, ZBuffer&, Buffer&
   );
   int TexturedAffineGR(                         // v2, optimized +
+    Vertex v1, Vertex v2, Vertex v3,
+    Bitmap*, ZBuffer&, Buffer&    
+  );
+  int TexturedAffineGRBF(                       // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     Bitmap*, ZBuffer&, Buffer&    
   );
