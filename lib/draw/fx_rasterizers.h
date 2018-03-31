@@ -22,7 +22,7 @@ namespace anshub {
 
 // Used function name prefixes:
 //  - FL - flat shading (also used for const shading)
-//  - GR - gourang shading
+//  - GR - gouraud shading
 
 //****************************************************************************
 // POINT and LINES RASTERIZERS
@@ -76,27 +76,27 @@ namespace raster_tri {
 
   // Rasterizes triangle with 1/z-buffering
 
-  void SolidFL(                                 // v2, optimized
+  int SolidFL(                                 // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     cFColor& color, ZBuffer&, Buffer&
   );
-  void SolidGR(                                 // v2, optimized
+  int SolidGR(                                 // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     ZBuffer&, Buffer&
   );
-  int TexturedPerspective(
-    cVertex& v1, cVertex& v2, cVertex& v3,
+  int TexturedPerspective(                      // v2, optimized +
+    Vertex v1, Vertex v2, Vertex v3,
     Bitmap*, ZBuffer&, Buffer&
   );
-  int TexturedPerspectiveFL(                    // v2, optimized
+  int TexturedPerspectiveFL(                    // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     cFColor& color, Bitmap*, ZBuffer&, Buffer&
   );
-  int TexturedPerspectiveGR(                    // v2, optimized
+  int TexturedPerspectiveGR(                    // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     Bitmap*, ZBuffer&, Buffer&
   );
-  int TexturedAffineGR(                         // v2, optimized
+  int TexturedAffineGR(                         // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     Bitmap*, ZBuffer&, Buffer&    
   );
