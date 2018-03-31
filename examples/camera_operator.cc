@@ -35,21 +35,14 @@ CameraOperator::CameraOperator(
   , switch_wired_ {KbdBtn::NONE}
   , roll_mode_{false}
   , wired_mode_{false}
+  , fly_mode_{false}
   , speed_up_mode_{false}
-  , speed_up_val_{3.0f}
+  , speed_up_val_{this->kSpeedUpDefault}
   , prev_mouse_pos_{-1,-1}
-  , operator_height_{4.0f}
+  , operator_height_{this->kOperatorHeightDefault}
   , on_ground_{true}
-  , gravity_ {0.0f, -0.04f, 0.0f}
+  , gravity_ {this->kGravityDefault}
 { }
-
-// Apply gravity vector to velocity vector (should be used every frame
-// after camera movements)
-
-void CameraOperator::ProcessGravity()
-{
-  vel_ += gravity_;
-}
 
 void CameraOperator::ProcessInput(const BaseWindow& win)
 {
@@ -69,9 +62,9 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
   if (win.IsKeyboardBtnPressed(move_down_)) this->MoveDown();
   if (win.IsKeyboardBtnPressed(zoom_in_)) this->ChangeFov(this->fov_ - 1.0f);
   if (win.IsKeyboardBtnPressed(zoom_out_)) this->ChangeFov(this->fov_ + 1.0f);
-  if (win.IsKeyboardBtnPressed(jump_) && on_ground_)
+  if (win.IsKeyboardBtnPressed(jump_) && !fly_mode_ && on_ground_)
   {
-    this->vel_.y = 0.6f;
+    this->vel_.y = 0.6f;    // todo : magic const
     on_ground_ = false;
   }
 
@@ -81,9 +74,7 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
     vel_.z /= speed_up_val_;
 
   if (!on_ground_)
-  {
     ProcessGravity();
-  }
 
   // Handle swithching camera type
 
@@ -118,17 +109,30 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
   prev_mouse_pos_ = mpos;
 }
 
+// Set position of camera on the given ypos
+
 void CameraOperator::SetGroundPosition(float ypos)
 {
-  this->vrp_.y += this->vel_.y;
-  if (this->vrp_.y < ypos + operator_height_)
+  if (!fly_mode_)
   {
-    this->vrp_.y = ypos + operator_height_;
-    this->vel_.y = 0.0f;
-    on_ground_ = true;
+    this->vrp_.y += this->vel_.y;
+    if (this->vrp_.y < ypos + operator_height_)
+    {
+      this->vrp_.y = ypos + operator_height_;
+      this->vel_.y = 0.0f;
+      on_ground_ = true;
+    }
+    else
+      on_ground_ = false;
   }
-  else
-    on_ground_ = false;
+}
+
+// Apply gravity vector to velocity vector (should be used every frame
+// after camera movements)
+
+void CameraOperator::ProcessGravity()
+{
+  vel_ += gravity_;
 }
 
 }  // namespace anshub
