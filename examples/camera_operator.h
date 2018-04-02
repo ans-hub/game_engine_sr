@@ -46,6 +46,7 @@ struct CameraOperator : public GlCamera
   void SetGroundPosition(float ypos);
   void SetOnGround(bool s) { on_ground_ = s; }
   void SetOperatorHeight(float v) { operator_height_ = v; }
+  void SetSpeedUpValue(float s) { speed_up_val_ = s; }
   void SetGravity(const Vector& g) { gravity_ = g; }
   void SetFlyMode(bool m) { fly_mode_ = m; }
 
