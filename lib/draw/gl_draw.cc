@@ -318,11 +318,9 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx)
   else if (!ctx.is_zbuf_)
     drawn += render::Solid(triangles, ctx.sbuf_);
   else if (ctx.is_zbuf_ && !ctx.is_alpha_)
-    drawn += render::Solid(
-      triangles, ctx.zbuf_, ctx.clarity_, ctx.sbuf_, ctx.is_bifiltering_);
+    drawn += render::Solid(triangles, ctx);
   else if (ctx.is_zbuf_ && ctx.is_alpha_)
-    drawn += render::SolidWithAlpha(
-      triangles, ctx.zbuf_, ctx.clarity_, ctx.sbuf_, ctx.is_bifiltering_);
+    drawn += render::SolidWithAlpha(triangles, ctx);
   
   ctx.sbuf_.SendDataToFB();
   ctx.pixels_drawn_ = drawn;
@@ -333,13 +331,14 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx)
 // Renders triangles and uses dist as chooser between affine and perspective
 // correct texturing
 
-int render::Solid(
-  const V_TrianglePtr& arr, ZBuffer& zbuf, float dist, Buffer& buf, bool bifilter)
+int render::Solid(const V_TrianglePtr& arr, RenderContext& ctx)
 {
-  // Debug variables (we collect drawn pixels only from heavy weight functions)
-
-  int total_px {0};     // total pixels drawn
-  int total_tris {0};   // total triangles drawn
+  // Access variables
+  
+  int total_px {0};       // total pixels drawn
+  int total_tris {0};     // total triangles drawn
+  auto& zbuf = ctx.zbuf_;
+  auto& sbuf = ctx.sbuf_;
 
   for (auto* t : arr)
   {
@@ -356,28 +355,33 @@ int render::Solid(
 
     if (!t->textures_->empty())
     {
-      auto* tex = t->textures_->front().get();
+      auto* tex = render_helpers::ChooseMipmapLevel(t, ctx);
 
       if (t->shading_ == Shading::CONST)
-        raster_tri::TexturedPerspective(v1, v2, v3, tex, zbuf, buf);
+        raster_tri::TexturedPerspective(v1, v2, v3, tex, zbuf, sbuf);
       else if (t->shading_ == Shading::FLAT)
-        raster_tri::TexturedPerspectiveFL(v1, v2, v3, t->color_, tex, zbuf, buf);
+      {
+        if (ctx.is_bifiltering_)
+          raster_tri::TexturedPerspectiveFLBF(v1, v2, v3, t->color_, tex, zbuf, sbuf);
+        else
+          raster_tri::TexturedPerspectiveFL(v1, v2, v3, t->color_, tex, zbuf, sbuf);
+      }
       else if (t->shading_ == Shading::GOURANG)
       {
-        if (v1.pos_.z < dist)
-          raster_tri::TexturedPerspectiveGR(v1, v2, v3, tex, zbuf, buf);
-        else if (bifilter)
-          raster_tri::TexturedAffineGRBF(v1, v2, v3, tex, zbuf, buf);
+        if (v1.pos_.z < ctx.clarity_)
+          raster_tri::TexturedPerspectiveGR(v1, v2, v3, tex, zbuf, sbuf);
+        else if (ctx.is_bifiltering_)
+          raster_tri::TexturedAffineGRBF(v1, v2, v3, tex, zbuf, sbuf);
         else
-          raster_tri::TexturedAffineGR(v1, v2, v3, tex, zbuf, buf);
+          raster_tri::TexturedAffineGR(v1, v2, v3, tex, zbuf, sbuf);
       }
     }
     else
     {
       if (t->shading_ == Shading::CONST || t->shading_ == Shading::FLAT)
-        raster_tri::SolidFL(v1, v2, v3, t->color_, zbuf, buf);
+        raster_tri::SolidFL(v1, v2, v3, t->color_, zbuf, sbuf);
       else if (t->shading_ == Shading::GOURANG)
-        raster_tri::SolidGR(v1, v2, v3, zbuf, buf);
+        raster_tri::SolidGR(v1, v2, v3, zbuf, sbuf);
     }
     ++total_tris;
   }
@@ -388,13 +392,14 @@ int render::Solid(
 // Renders triangles, uses dist as chooser between affine and perspective
 // correct texturing, and use alpha blending
 
-int render::SolidWithAlpha(
-  const V_TrianglePtr& arr, ZBuffer& zbuf, float dist, Buffer& sbuf, bool bifilter)
+int render::SolidWithAlpha(const V_TrianglePtr& arr, RenderContext& ctx)
 {
   // Debug variables (we collect drawn pixels only from heavy weight functions)
 
   int total_px {0};               // total pixels drawn
   int total_tris {0};             // total triangles drawn
+  auto& zbuf = ctx.zbuf_;
+  auto& sbuf = ctx.sbuf_;
   std::vector<int> alpha_tris {}; // indicies to transparent triangles
 
   // Draws first not transparent triangles, and then transparent when
@@ -431,22 +436,26 @@ int render::SolidWithAlpha(
     auto& v2 = t->vxs_[1];
     auto& v3 = t->vxs_[2];
 
-    
     // Draw textured triangle
 
     if (!t->textures_->empty())
     {
-      auto* tex = t->textures_->front().get();
+      auto* tex = render_helpers::ChooseMipmapLevel(t, ctx);
 
       if (t->shading_ == Shading::CONST)
         raster_tri::TexturedPerspective(v1, v2, v3, tex, zbuf, sbuf);
       else if (t->shading_ == Shading::FLAT)
-        raster_tri::TexturedPerspectiveFL(v1, v2, v3, t->color_, tex, zbuf, sbuf);
+      {
+        if (ctx.is_bifiltering_)
+          raster_tri::TexturedPerspectiveFLBF(v1, v2, v3, t->color_, tex, zbuf, sbuf);
+        else
+          raster_tri::TexturedPerspectiveFL(v1, v2, v3, t->color_, tex, zbuf, sbuf);
+      }
       else if (t->shading_ == Shading::GOURANG)
       {
-        if (v1.pos_.z < dist)
+        if (v1.pos_.z < ctx.clarity_)
           raster_tri::TexturedPerspectiveGR(v1, v2, v3, tex, zbuf, sbuf);
-        else if (bifilter)
+        else if (ctx.is_bifiltering_)
           raster_tri::TexturedAffineGRBF(v1, v2, v3, tex, zbuf, sbuf);
         else
           raster_tri::TexturedAffineGR(v1, v2, v3, tex, zbuf, sbuf);
@@ -467,6 +476,19 @@ int render::SolidWithAlpha(
   }
 
   return total_tris;
+}
+
+// Returns best mipmap texture based on simplified distance choosing
+
+Bitmap* render_helpers::ChooseMipmapLevel(Triangle* t, const RenderContext& ctx)
+{
+  int mipmap {0};
+  if (ctx.is_mipmapping_ && t->textures_->size() > 1)
+  {
+    mipmap = (t->vxs_[0].pos_.z / (ctx.mipmap_dist_ / t->textures_->size())) - 1;
+    mipmap = std::min(mipmap, (int)t->textures_->size() - 1);
+  }
+  return (*t->textures_)[mipmap].get();
 }
 
 } // namespace anshub

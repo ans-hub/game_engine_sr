@@ -23,20 +23,28 @@ struct RenderContext
     , is_alpha_{false}
     , is_zbuf_{true}
     , is_bifiltering_{false}
+    , is_mipmapping_{false}
     , clarity_{}
+    , mipmap_dist_{}    
     , pixels_drawn_{}
+    , triangles_drawn_{}
+    , mipmaps_squares_{}
     , sbuf_{w, h, color}
     , zbuf_{w, h}
   { }
 
   // Context members
 
-  bool is_wired_;
-  bool is_alpha_;
-  bool is_zbuf_;
-  bool is_bifiltering_;
-  int  clarity_;
-  int  pixels_drawn_;
+  bool    is_wired_;
+  bool    is_alpha_;
+  bool    is_zbuf_;
+  bool    is_bifiltering_;
+  bool    is_mipmapping_;
+  int     clarity_;
+  int     mipmap_dist_;
+  int     pixels_drawn_;
+  int     triangles_drawn_;
+  V_Uint  mipmaps_squares_;
 
   // Context entities
 

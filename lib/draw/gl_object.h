@@ -40,22 +40,23 @@ struct GlObject
 {
   // Data members: coordinates and colors
 
-  V_Vertex  vxs_local_;     // local vertices
-  V_Vertex  vxs_trans_;     // transformed vertices
-  Coords    current_vxs_;   // chooser between coords type
-  V_Face    faces_;         // faces based on coords above
-  V_Bitmap  textures_;      // textures struct
+  V_Vertex  vxs_local_;       // local vertices
+  V_Vertex  vxs_trans_;       // transformed vertices
+  Coords    current_vxs_;     // chooser between coords type
+  V_Face    faces_;           // faces based on coords above
+  V_Bitmap  textures_;        // textures struct
+  V_Uint    mipmaps_squares_; // array of mipmap squares
 
   // Data members: helpers
 
-  int       id_;            // object id  
-  bool      active_;        // object state
-  Shading   shading_;       // shading type
-  Vector    world_pos_;     // position of obj center in world`s coords
-  Vector    v_orient_x_;    // 
-  Vector    v_orient_y_;    // orientation vectors  
-  Vector    v_orient_z_;    //
-  float     sphere_rad_;    // bounding sphere radius
+  int       id_;              // object id  
+  bool      active_;          // object state
+  Shading   shading_;         // shading type
+  Vector    world_pos_;       // position of obj center in world`s coords
+  Vector    v_orient_x_;      // 
+  Vector    v_orient_y_;      // orientation vectors  
+  Vector    v_orient_z_;      //
+  float     sphere_rad_;      // bounding sphere radius
   
   // Constructors
 
@@ -133,6 +134,8 @@ namespace object {
   float     FindFarthestCoordinate(const GlObject&);
   void      RefreshOrientation(GlObject&, const MatrixRotateEul&);
   float     ComputeBoundingSphereRadius(V_Vertex& vxs, Axis);
+  void      CreateMipmaps(V_Bitmap&, const Bitmap&);
+  void      FillMipmapSquares(const V_Bitmap&, V_Uint&);
 
   // Debug purposes
 

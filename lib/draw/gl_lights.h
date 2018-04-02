@@ -24,6 +24,10 @@ namespace anshub {
 
 struct Lights
 {
+  void AddAmbient(cFColor&, float intense);
+  void AddInfinite(cFColor&, float intense, cVector& dir);
+  void AddPoint(cFColor&, float intense, cVector& pos, cVector& dir);
+
   std::vector<LightAmbient>   ambient_;
   std::vector<LightInfinite>  infinite_;
   std::vector<LightPoint>     point_;
@@ -43,6 +47,23 @@ namespace light {
 
 } // namespace light
   
+// Implementation of inline member functions
+
+inline void Lights::AddAmbient(cFColor& c, float intense)
+{
+  ambient_.emplace_back(c, intense);
+}
+
+inline void Lights::AddInfinite(cFColor& c, float intense, cVector& dir)
+{
+  infinite_.emplace_back(c, intense, dir);
+}
+
+inline void Lights::AddPoint(cFColor& c, float intense, cVector& pos, cVector& dir)
+{
+  point_.emplace_back(c, intense, pos, dir);
+}
+
 } // namespace anshub
 
 #endif  // GL_LIGHTS_H

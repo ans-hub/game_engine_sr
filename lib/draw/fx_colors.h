@@ -70,6 +70,10 @@ namespace color {
   constexpr uint Green  {0x00ff0001};
   constexpr uint Cyan   {0xffff0001};
   constexpr uint Black  {0x00000001};
+  const FColor fWhite  {255.0f, 255.0f, 255.0f};
+  const FColor fBlack  {0.0f, 0.0f, 0.0f};
+  const FColor fYellow {255.0f, 255.0f, 0.0f};
+  const FColor fBlue   {0.0f, 0.0f, 255.0f};
 
   // Helpers functions
 

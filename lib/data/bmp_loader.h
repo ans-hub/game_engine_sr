@@ -97,6 +97,7 @@ public:
    // Was added by Ans 12.03.2018 for fast buffer access
 
    auto* GetPointer() const { return data_.data(); }
+   auto* GetPointer() { return data_.data(); }
    unsigned int GetRowIncrement() const { return row_increment_; }
    unsigned int GetBytesPerPixel() const { return bytes_per_pixel_; }
    

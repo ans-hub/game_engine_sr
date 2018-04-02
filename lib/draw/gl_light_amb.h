@@ -18,25 +18,32 @@ namespace anshub {
 
 struct LightAmbient
 {
-  LightAmbient(FColor& c, float i)
-  : color_{c}
-  , intense_{i}
-  {
-    math::Clamp(intense_, 0.0f, 1.0f);      
-  }
-
-  LightAmbient(FColor&& c, float i)
-    : LightAmbient(c, i) { }
-
-  FColor Illuminate(cFColor& base_color)
-  {
-    return (base_color * color_ * intense_) / 256.0f;
-  }
+  LightAmbient(cFColor& c, float i);
+  LightAmbient(cFColor&& c, float i);
+  FColor Illuminate(cFColor& base_color);
 
   FColor  color_;
   float   intense_; 
 
 }; // struct LightAmbient
+
+// Implementation of member functions
+
+inline LightAmbient::LightAmbient(cFColor& c, float i)
+  : color_{c}
+  , intense_{i}
+{
+  math::Clamp(intense_, 0.0f, 1.0f);      
+}
+
+inline LightAmbient::LightAmbient(cFColor&& c, float i)
+  : LightAmbient(c, i)
+{ }
+
+FColor LightAmbient::Illuminate(cFColor& base_color)
+{
+  return (base_color * color_ * intense_) / 256.0f;
+}
 
 }  // namespace anshub
 

@@ -40,8 +40,6 @@
 using namespace anshub;
 using namespace helpers;
 
-// Creates array of rectangles (w_cnt * h_cnt size) 
-
 void PrintInfo(
   GlText& text, FpsCounter& fps, 
   const Vector& obj_pos, const Vector& obj_rot, 
@@ -138,10 +136,12 @@ int main(int argc, const char** argv)
     {2.0f, 5.0f, 30.0f},    // world pos
     {0.0f, 0.0f, 0.0f}      // initial rotate
   );
-  auto obj_3 (obj_2);
-  obj_3.world_pos_.z = 0.0f;
-  obj_3.world_pos_.y -= 5.0f;
-  V_GlObject objs {obj_2, obj_3};
+  V_GlObject objs {};
+  obj_2.world_pos_.z = 0.0f;
+  objs.push_back(obj_2);
+  obj_2.world_pos_.z = 30.0f;
+  obj_2.world_pos_.y -= 5.0f;
+  objs.push_back(obj_2);
 
   // Camera
 
@@ -174,13 +174,9 @@ int main(int argc, const char** argv)
   // Prepare lights sources
  
   Lights lights {};
-  FColor kWhite  {255.0f, 255.0f, 255.0f};
-  FColor kBlack  {0.0f, 0.0f, 0.0f};
-  FColor kYellow {255.0f, 255.0f, 0.0f};
-  FColor kBlue   {0.0f, 0.0f, 255.0f};
-
-  lights.ambient_.emplace_back(kWhite, 0.3f);
-  lights.infinite_.emplace_back(kWhite, 0.7f, Vector{-1.0f, -2.0f, -0.9f});
+  lights.AddAmbient(color::fWhite, 0.3f);
+  lights.AddInfinite(color::fWhite, 0.7f, {-1.0f, -2.0f, -0.9f});
+  lights.AddPoint(color::fBlue, 0.6f, {0.0f, 3.0f, 5.0f}, {0.0f, 0.0f, -1.0f});
 
   // Create render context
 
@@ -188,7 +184,7 @@ int main(int argc, const char** argv)
   render_ctx.is_zbuf_  = true;
   render_ctx.is_wired_ = false;
   render_ctx.is_alpha_ = true;
-  render_ctx.clarity_  = 0.0f;
+  render_ctx.clarity_  = cam.z_far_;
 
   GlText  text {win};
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};

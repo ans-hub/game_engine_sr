@@ -94,6 +94,10 @@ namespace raster_tri {
     Vertex v1, Vertex v2, Vertex v3,
     cFColor& color, Bitmap*, ZBuffer&, Buffer&
   );
+  int TexturedPerspectiveFLBF(                  // v2, optimized +
+    Vertex v1, Vertex v2, Vertex v3,
+    cFColor& color, Bitmap*, ZBuffer&, Buffer&
+  );
   int TexturedPerspectiveGR(                    // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
     Bitmap*, ZBuffer&, Buffer&

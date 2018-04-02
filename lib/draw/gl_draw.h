@@ -48,24 +48,27 @@ namespace draw_triangles {
 
 namespace render {
 
-  // Main function to rendering triangles
-
-  int  Context(const V_TrianglePtr&, RenderContext&);
-
   // Just adaptors to legacy functions
   
   int  Wired(const V_TrianglePtr& t, Buffer&b);
   int  Solid(const V_TrianglePtr&, Buffer&);
   int  Solid(const V_TrianglePtr&, ZBuffer&, Buffer&);
 
-  // Regular functions
+  // Main function to rendering triangles
 
-  int  Solid(
-    const V_TrianglePtr&, ZBuffer&, float dist, Buffer&, bool bifilter = false);
-  int  SolidWithAlpha(
-    const V_TrianglePtr&, ZBuffer&, float dist, Buffer&, bool bifilter = false);
+  int  Context(const V_TrianglePtr&, RenderContext&);
+  int  Solid(const V_TrianglePtr&, RenderContext&);
+  int  SolidWithAlpha(const V_TrianglePtr&, RenderContext&);
 
 } // namespace render
+
+// Render helpers
+
+namespace render_helpers {
+
+  Bitmap* ChooseMipmapLevel(Triangle*, const RenderContext&);
+
+}
 
 // Inline functions (adaptors) implementation
 

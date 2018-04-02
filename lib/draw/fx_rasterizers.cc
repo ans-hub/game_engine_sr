@@ -1660,8 +1660,10 @@ void raster_tri::TexturedAffineGR(
   }
 }
 
-// Draws solid triangle with flat shading using 1/z buffer with
-// fast 50% alpha blending if alpha blending is defined
+// Draws solid triangle and returns numbers of drawn pixels:
+//  - flat shading
+//  - 1/z buffer
+//  - 50% fast alpha blending
 
 int raster_tri::SolidFL(
     Vertex v1, Vertex v2, Vertex v3,
@@ -1963,8 +1965,10 @@ int raster_tri::SolidFL(
   return total_drawn;  
 }
 
-// Draws solid triangle with gouraud shading using 1/z buffer with
-// fast 50% alpha blending if alpha blending is defined
+// Draws solid triangle and returns numbers of drawn pixels:
+//  - gouraud shading
+//  - 1/z buffer
+//  - 50% fast alpha blending
 
 int raster_tri::SolidGR(
     Vertex v1, Vertex v2, Vertex v3,
@@ -2306,8 +2310,11 @@ int raster_tri::SolidGR(
   return total_drawn;
 }
 
-// Draws textured triangle without lighting, but with correct perspective
-// using 1/z interpolating and returns total amount of drawn pixels
+// Draws textured (perspective correct) triangle and returns numbers of drawn
+// pixels:
+//  - const shading (without lighting)
+//  - 1/z buffer
+//  - 50% fast alpha blending
 
 int raster_tri::TexturedPerspective(
     Vertex v1, Vertex v2, Vertex v3,
@@ -2752,8 +2759,11 @@ int raster_tri::TexturedPerspective(
   return total_drawn;
 }
 
-// Draws textured triangle with flat shading using 1/z buffer with
-// correct perspective and fast 50% alpha blending if alpha blending is defined
+// Draws textured (perspective correct) triangle and returns numbers of drawn
+// pixels:
+//  - flat shading
+//  - 1/z buffer
+//  - 50% fast alpha blending
 
 int raster_tri::TexturedPerspectiveFL(
     Vertex v1, Vertex v2, Vertex v3,
@@ -3202,8 +3212,561 @@ int raster_tri::TexturedPerspectiveFL(
   return total_drawn;
 }
 
-// Draws textured triangle with gouraud lighting and with correct perspective
-// using 1/z interpolating and returns number of drawn pixels
+// Draws textured (perspective correct) triangle and returns numbers of drawn
+// pixels:
+//  - flat shading
+//  - 1/z buffer
+//  - 50% fast alpha blending
+//  - billinear texture filtering
+
+int raster_tri::TexturedPerspectiveFLBF(
+    Vertex v1, Vertex v2, Vertex v3,
+    cFColor& fcolor, Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf)
+{
+  int total_drawn {};
+
+  // Cull impossible triangles
+
+  if (v1.pos_.x == v2.pos_.x && v1.pos_.y == v2.pos_.y)
+    return total_drawn;
+  if (v1.pos_.x == v3.pos_.x && v1.pos_.y == v3.pos_.y)
+    return total_drawn;
+  if (v2.pos_.x == v3.pos_.x && v2.pos_.y == v3.pos_.y)
+    return total_drawn;
+
+  // Prepare fast buffers access
+
+  int sbuf_w = sbuf.Width();
+  int sbuf_h = sbuf.Height();
+  auto tex_width = bmp->GetRowIncrement();
+  auto tex_texel_width = bmp->GetBytesPerPixel();
+  auto* s_buf = sbuf.GetPointer();
+  auto* z_buf = zbuf.GetPointer();
+  auto* tex_ptr = bmp->GetPointer();
+  int tex_w = bmp->width();
+  int tex_h = bmp->height();
+
+  // Prepare order of vertices from top to bottom 
+
+  raster_helpers::SortVertices(v1, v2, v3);
+  raster_helpers::UnnormalizeTexture(v1, v2, v3, bmp->width(), bmp->height());
+
+  // Prepare light color and alpha blending
+
+  bool alpha {false};
+  if (v1.color_.a_ < 1.0f)
+    alpha = true;
+  uint light_color {fcolor.GetARGB()};
+
+  // Part 1 : draw top part of triangle (using top left filling convention)
+
+  int iy1 = ceil(v1.pos_.y);
+  int iy2 = ceil(v2.pos_.y) + 1;         // fill convention
+  int iy3 = ceil(v3.pos_.y) + 1;         // fill convention
+
+  if (iy1 < 0 || iy3 >= sbuf_h)               // full out of screen
+    return 0;
+
+  // Precompute dy for sides (we need full differential, not cutted)
+
+  int dy2y1 = iy1 - (iy2 - 1);
+  int dy3y1 = iy1 - (iy3 - 1);
+
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
+
+  float lx_step {v2.pos_.x - v1.pos_.x};
+  float rx_step {v3.pos_.x - v1.pos_.x};
+  float lz_step {1.0f / v2.pos_.z - 1.0f / v1.pos_.z};
+  float rz_step {1.0f / v3.pos_.z - 1.0f / v1.pos_.z};
+  float lu_step {v2.texture_.x / v2.pos_.z - v1.texture_.x / v1.pos_.z};
+  float lv_step {v2.texture_.y / v2.pos_.z - v1.texture_.y / v1.pos_.z};
+  float ru_step {v3.texture_.x / v3.pos_.z - v1.texture_.x / v1.pos_.z};
+  float rv_step {v3.texture_.y / v3.pos_.z - v1.texture_.y / v1.pos_.z};
+
+  if (math::FNotZero(dy2y1)) {
+    lx_step /= dy2y1;
+    lz_step /= dy2y1;
+    lu_step /= dy2y1;
+    lv_step /= dy2y1;
+  }
+  if (math::FNotZero(dy3y1)) {
+    rx_step /= dy3y1;
+    rz_step /= dy3y1;
+    ru_step /= dy3y1;
+    rv_step /= dy3y1;
+  }
+
+  // Swap interpolants if our suppose was wrong
+
+  if (lx_step > rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lu_step, ru_step);
+    std::swap(lv_step, rv_step);
+  }
+  else if (lx_step == rx_step)
+    return 0;
+
+  // Prepare vars for x, 1/z and tex coords on the borders of triangle
+
+  float x_lhs {v1.pos_.x};
+  float x_rhs {x_lhs};
+  float z_lhs {1.0f / v1.pos_.z};
+  float z_rhs {z_lhs};
+  float u_lhs {v1.texture_.x / v1.pos_.z};
+  float u_rhs {u_lhs};
+  float v_lhs {v1.texture_.y / v1.pos_.z};
+  float v_rhs {v_lhs};
+
+  // Clip top triangle
+
+  int y_top_clip = iy1 - (sbuf_h - 1); 
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  u_lhs += lu_step * y_top_clip;
+  u_rhs += ru_step * y_top_clip;
+  v_lhs += lv_step * y_top_clip;
+  v_rhs += rv_step * y_top_clip;
+
+  // Draw top triangle (note that 0-0 is in left bottom corner of screen)
+
+  int y_top = iy1 - y_top_clip;
+  int y_bot = std::max(0, iy2);
+
+  int xlb {};
+  int xrb {};
+  int dx_curr {};  
+
+  for (int y = y_top; y >= y_bot; --y)
+  {
+    // Convert most left and most right x pixels
+
+    if (alpha) {
+      xlb = ceil(x_lhs);
+      xrb = ceil(x_rhs);            // fill convention
+    }
+    else {
+      xlb = floor(x_lhs);
+      xrb = ceil(x_rhs);                // guarantee no gaps   
+    }
+    dx_curr = xrb - xlb;
+
+    // Compute how much pixels we should clip from left
+
+    int xl_dx = 0 + xlb;
+    xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
+
+    // Make 1/z interpolant and clip it from left side
+
+    float z_step {};
+    float u_step {};
+    float v_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / dx_curr;    
+      u_step = (u_rhs - u_lhs) / dx_curr;
+      v_step = (v_rhs - v_lhs) / dx_curr;
+    }
+    float z_curr = z_lhs + (z_step * xl_dx);
+    float u_curr = u_lhs + (u_step * xl_dx);
+    float v_curr = v_lhs + (v_step * xl_dx);
+   
+    // Clip x interpolant
+
+    xlb = std::max(0, xlb);
+    xrb = std::min(sbuf_w - 1, xrb);
+
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (alpha)
+    {
+      for (int x = xlb; x < xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};     // blend background
+          color::ShiftRight(buf_color, 1);
+
+          Color<> tex_color {};               // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;            // real tex coords
+          int v = v_curr / z_curr; 
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {light_color};
+          total.Modulate(tex_color);
+
+          color::ShiftRight(total, 1);
+
+          s_buf[idx] = total.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
+
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+      }
+    }
+    else
+    {
+      for (int x = xlb; x < xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          // Get real u and v tex coords and diff from rounding for bifiltering
+
+          float free_u = u_curr / z_curr;
+          float free_v = v_curr / z_curr;
+          int u = free_u;
+          int v = free_v;
+          float du = free_u - u;
+          float dv = free_v - v;
+
+          // Offsets to left-top, left-right, left-bottom and right-bottom texels
+
+          int offset_lt = (v * tex_width) + (u * tex_texel_width);
+          int offset_rt = offset_lt + tex_texel_width;
+          int offset_lb = offset_lt + tex_width;
+          int offset_rb = offset_lb + tex_texel_width;
+
+          FColor tex_lt {};
+          FColor tex_rt {};
+          FColor tex_lb {};
+          FColor tex_rb {};
+
+          tex_lt.r_ = tex_ptr[offset_lt + 2];       // get origin texel
+          tex_lt.g_ = tex_ptr[offset_lt + 1];
+          tex_lt.b_ = tex_ptr[offset_lt + 0];
+
+          if (u < tex_w-1)                          // get right top texel
+          {
+            tex_rt.r_ = tex_ptr[offset_rt + 2];
+            tex_rt.g_ = tex_ptr[offset_rt + 1];
+            tex_rt.b_ = tex_ptr[offset_rt + 0];
+          }
+          if (v < tex_h-1)                          // get left bottom texel
+          {
+            tex_lb.r_ = tex_ptr[offset_lb + 2];
+            tex_lb.g_ = tex_ptr[offset_lb + 1];
+            tex_lb.b_ = tex_ptr[offset_lb + 0];
+          }
+          if (v < tex_h-1 && u < tex_w-1)           // get left bottom texel
+          {
+            tex_rb.r_ = tex_ptr[offset_rb + 2];
+            tex_rb.g_ = tex_ptr[offset_rb + 1];
+            tex_rb.b_ = tex_ptr[offset_rb + 0];
+          }
+        
+          // Mix neighboring texels to get average texel
+
+          FColor tex_total {};
+          tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
+          tex_total += tex_rt*(du)*(1.0f-dv);
+          tex_total += tex_lb*(1.0f-du)*(dv);
+          tex_total += tex_rb*(du)*(dv);
+        
+          if (v >= tex_h-1 || u >= tex_w-1)         // special case rb texel
+            tex_total = tex_lt;
+
+          FColor total {light_color};
+          total.Modulate(tex_total);
+
+          s_buf[idx] = total.GetARGB();
+          z_buf[idx] = z_curr;
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+      }
+    }
+    
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    u_lhs += lu_step;
+    u_rhs += ru_step;
+    v_lhs += lv_step;
+    v_rhs += rv_step;
+  }
+
+  // Part 2 : draw bottom part of triangle (0-0 is the left bottom)
+
+  // Down middle pixel as it was drawn
+
+  iy2 = iy2 - 1;
+
+  // Precompute dy for sides (we need full differential, not cutted)
+
+  int dy1y3 = iy1 - (iy3 - 1);
+  int dy2y3 = iy2 - (iy3 - 1);
+
+  // Compute x interpolants for left and right sides (we just suppose that
+  // this side left and right)
+
+  lx_step = v3.pos_.x - v1.pos_.x;
+  rx_step = v3.pos_.x - v2.pos_.x;
+  lz_step = 1.0f / v3.pos_.z - 1.0f / v1.pos_.z;
+  rz_step = 1.0f / v3.pos_.z - 1.0f / v2.pos_.z;
+  lu_step = v3.texture_.x / v3.pos_.z - v1.texture_.x / v1.pos_.z;
+  lv_step = v3.texture_.y / v3.pos_.z - v1.texture_.y / v1.pos_.z;
+  ru_step = v3.texture_.x / v3.pos_.z - v2.texture_.x / v2.pos_.z;
+  rv_step = v3.texture_.y / v3.pos_.z - v2.texture_.y / v2.pos_.z;
+
+  if (math::FNotZero(dy1y3)) {
+    lx_step /= dy1y3;
+    lz_step /= dy1y3;
+    lu_step /= dy1y3;
+    lv_step /= dy1y3;
+  }
+  if (math::FNotZero(dy2y3)) {
+    rx_step /= dy2y3;
+    rz_step /= dy2y3;
+    ru_step /= dy2y3;
+    rv_step /= dy2y3;
+  }
+
+  // Now make new x2 point and new interpolants for triangle borders
+
+  float new_x {};
+  float new_z {};
+  float new_u {};
+  float new_v {};
+  int dy_passed {iy1 - iy2};
+
+  if (lx_step > rx_step) {
+    new_x = v1.pos_.x + (dy_passed * lx_step);
+    new_z = (1.0f / v1.pos_.z) + (dy_passed * lz_step);
+    new_u = (v1.texture_.x / v1.pos_.z) + (lu_step * dy_passed);
+    new_v = (v1.texture_.y / v1.pos_.z) + (lv_step * dy_passed);
+    x_lhs = new_x;
+    x_rhs = v2.pos_.x;
+    z_lhs = new_z;
+    z_rhs = 1.0f / v2.pos_.z;
+    u_lhs = new_u;
+    u_rhs = v2.texture_.x / v2.pos_.z;
+    v_lhs = new_v;
+    v_rhs = v2.texture_.y / v2.pos_.z;
+  }
+  else if (lx_step < rx_step) {
+    std::swap(lx_step, rx_step);
+    std::swap(lz_step, rz_step);
+    std::swap(lu_step, ru_step);
+    std::swap(lv_step, rv_step);
+    new_x = v1.pos_.x + (dy_passed * rx_step);
+    new_z = (1.0f / v1.pos_.z) + (dy_passed * rz_step);
+    new_u = (v1.texture_.x / v1.pos_.z) + (ru_step * dy_passed);
+    new_v = (v1.texture_.y / v1.pos_.z) + (rv_step * dy_passed);
+    x_lhs = v2.pos_.x;
+    x_rhs = new_x;
+    z_lhs = 1.0f / v2.pos_.z;
+    z_rhs = new_z;
+    u_lhs = v2.texture_.x / v2.pos_.z;
+    u_rhs = new_u;
+    v_lhs = v2.texture_.y / v2.pos_.z;
+    v_rhs = new_v;
+  }
+
+  // Clip bottom triangle
+
+  y_top_clip = iy2 - (sbuf_h - 1);
+  y_top_clip = std::max(0, y_top_clip);
+
+  // Forward interpolants if triangle is clipped
+
+  x_lhs += lx_step * y_top_clip;
+  x_rhs += rx_step * y_top_clip;
+  z_lhs += lz_step * y_top_clip;
+  z_rhs += rz_step * y_top_clip;
+  u_lhs += lu_step * y_top_clip;
+  u_rhs += ru_step * y_top_clip;
+  v_lhs += lv_step * y_top_clip;
+  v_rhs += rv_step * y_top_clip;
+
+  // Draw bottom triangle (note that 0-0 is in left bottom corner of screen)
+
+  y_top = std::min(iy2, sbuf_h-1);
+  y_bot = std::max(0, iy3);
+  
+  for (int y = y_top; y >= y_bot; --y)
+  {
+    // Convert most left and most right x pixels
+
+    if (alpha) {
+      xlb = ceil(x_lhs);
+      xrb = ceil(x_rhs);            // fill convention
+    }
+    else {
+      xlb = floor(x_lhs);
+      xrb = ceil(x_rhs);                // guarantee no gaps
+    }
+    dx_curr = xrb - xlb;
+
+    // Compute how much pixels we should clip from left
+
+    int xl_dx = 0 + xlb;
+    xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
+
+    // Make 1/z interpolant and clip it from left side
+
+    float z_step {};
+    float u_step {};
+    float v_step {};
+    if ((xrb - xlb) != 0) {
+      z_step = (z_rhs - z_lhs) / ((x_rhs + 1) - xlb);    
+      u_step = (u_rhs - u_lhs) / ((x_rhs + 1) - xlb);
+      v_step = (v_rhs - v_lhs) / ((x_rhs + 1) - xlb);
+    }
+    float z_curr = z_lhs + (z_step * xl_dx);
+    float u_curr = u_lhs + (u_step * xl_dx);
+    float v_curr = v_lhs + (v_step * xl_dx);
+   
+    // Clip x interpolant
+
+    xlb = std::max(0, xlb);
+    xrb = std::min(sbuf_w - 1, xrb);
+
+    // Iterate over x line and draw pixels (alpha or not cases)
+
+    if (alpha)
+    {
+      for (int x = xlb; x < xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          Color<> buf_color {s_buf[idx]};         // blend background
+          color::ShiftRight(buf_color, 1);
+
+          Color<> tex_color {};                   // bmp->get_pixel(u, v, r, g, b)
+          int u = u_curr / z_curr;    // real tex coords
+          int v = v_curr / z_curr;
+          int offset = (v * tex_width) + (u * tex_texel_width);
+          tex_color.r_ = tex_ptr[offset + 2];
+          tex_color.g_ = tex_ptr[offset + 1];
+          tex_color.b_ = tex_ptr[offset + 0];
+        
+          Color<> total {light_color};
+          total.Modulate(tex_color);
+
+          color::ShiftRight(total, 1);
+
+          s_buf[idx] = total.GetARGB() + buf_color.GetARGB();
+          z_buf[idx] = z_curr;
+
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+      }
+    }
+    else
+    {
+      for (int x = xlb; x < xrb; ++x)
+      {
+        int idx = y * sbuf_w + x;
+        if (z_curr > z_buf[idx])
+        {
+          // Get real u and v tex coords and diff from rounding for bifiltering
+
+          float free_u = u_curr / z_curr;
+          float free_v = v_curr / z_curr;
+          int u = free_u;
+          int v = free_v;
+          float du = free_u - u;
+          float dv = free_v - v;
+
+          // Offsets to left-top, left-right, left-bottom and right-bottom texels
+
+          int offset_lt = (v * tex_width) + (u * tex_texel_width);
+          int offset_rt = offset_lt + tex_texel_width;
+          int offset_lb = offset_lt + tex_width;
+          int offset_rb = offset_lb + tex_texel_width;
+
+          FColor tex_lt {};
+          FColor tex_rt {};
+          FColor tex_lb {};
+          FColor tex_rb {};
+
+          tex_lt.r_ = tex_ptr[offset_lt + 2];       // get origin texel
+          tex_lt.g_ = tex_ptr[offset_lt + 1];
+          tex_lt.b_ = tex_ptr[offset_lt + 0];
+
+          if (u < tex_w-1)                          // get right top texel
+          {
+            tex_rt.r_ = tex_ptr[offset_rt + 2];
+            tex_rt.g_ = tex_ptr[offset_rt + 1];
+            tex_rt.b_ = tex_ptr[offset_rt + 0];
+          }
+          if (v < tex_h-1)                          // get left bottom texel
+          {
+            tex_lb.r_ = tex_ptr[offset_lb + 2];
+            tex_lb.g_ = tex_ptr[offset_lb + 1];
+            tex_lb.b_ = tex_ptr[offset_lb + 0];
+          }
+          if (v < tex_h-1 && u < tex_w-1)           // get left bottom texel
+          {
+            tex_rb.r_ = tex_ptr[offset_rb + 2];
+            tex_rb.g_ = tex_ptr[offset_rb + 1];
+            tex_rb.b_ = tex_ptr[offset_rb + 0];
+          }
+        
+          // Mix neighboring texels to get average texel
+
+          FColor tex_total {};
+          tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
+          tex_total += tex_rt*(du)*(1.0f-dv);
+          tex_total += tex_lb*(1.0f-du)*(dv);
+          tex_total += tex_rb*(du)*(dv);
+        
+          if (v >= tex_h-1 || u >= tex_w-1)         // special case rb texel
+            tex_total = tex_lt;
+
+          FColor total {light_color};
+          total.Modulate(tex_total);
+
+          s_buf[idx] = total.GetARGB();
+          z_buf[idx] = z_curr;
+          ++total_drawn;
+        }
+        ++idx;
+        z_curr += z_step;
+        u_curr += u_step;
+        v_curr += v_step;
+      }
+    }
+    
+    x_lhs += lx_step;
+    x_rhs += rx_step;
+    z_lhs += lz_step;
+    z_rhs += rz_step;
+    u_lhs += lu_step;
+    u_rhs += ru_step;
+    v_lhs += lv_step;
+    v_rhs += rv_step;
+  }
+  return total_drawn;
+}
+
+// Draws textured (perspective correct) triangle and returns numbers of drawn
+// pixels:
+//  - gouraud shading
+//  - 1/z buffer
+//  - 50% fast alpha blending
 
 int raster_tri::TexturedPerspectiveGR(
     Vertex v1, Vertex v2, Vertex v3,
@@ -4375,7 +4938,7 @@ int raster_tri::TexturedAffineGRBF(
     int xl_dx = 0 + xlb;
     xl_dx = xl_dx > 0 ? 0 : std::abs(xl_dx);
 
-    // Make 1/z interpolant and clip it from left side
+    // Make 1/z, u && v interpolants and clip them from left side
 
     float z_step {};
     float u_step {};
@@ -4443,10 +5006,14 @@ int raster_tri::TexturedAffineGRBF(
         int idx = y * sbuf_w + x;
         if (z_curr > z_buf[idx])
         {
+          // Get real u and v tex coords and diff from rounding for bifiltering
+
           int u = u_curr;
           int v = v_curr;
           float du = u_curr - u;
           float dv = v_curr - v;
+
+          // Offsets to left-top, left-right, left-bottom and right-bottom texels
 
           int offset_lt = (v * tex_width) + (u * tex_texel_width);
           int offset_rt = offset_lt + tex_texel_width;
@@ -4481,13 +5048,15 @@ int raster_tri::TexturedAffineGRBF(
             tex_rb.b_ = tex_ptr[offset_rb + 0];
           }
         
+          // Mix neighboring texels to get average texel
+
           FColor tex_total {};
           tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
           tex_total += tex_rt*(du)*(1.0f-dv);
-          tex_total += tex_lb*(du)*(dv);
-          tex_total += tex_rb*(1.0f-du)*(dv);
+          tex_total += tex_lb*(1.0f-du)*(dv);
+          tex_total += tex_rb*(du)*(dv);
         
-          if (v >= tex_h-1 || u >= tex_w-1)
+          if (v >= tex_h-1 || u >= tex_w-1)         // special case rb texel
             tex_total = tex_lt;
 
           FColor total {c_curr.GetARGB()};
@@ -4714,10 +5283,14 @@ int raster_tri::TexturedAffineGRBF(
         int idx = y * sbuf_w + x;
         if (z_curr > z_buf[idx])
         {
+          // Get real u and v tex coords and diff from rounding for bifiltering
+          
           int u = u_curr;
           int v = v_curr;
           float du = u_curr - u;
           float dv = v_curr - v;
+
+          // Offsets to left-top, left-right, left-bottom and right-bottom texels
 
           int offset_lt = (v * tex_width) + (u * tex_texel_width);
           int offset_rt = offset_lt + tex_texel_width;
@@ -4751,14 +5324,16 @@ int raster_tri::TexturedAffineGRBF(
             tex_rb.g_ = tex_ptr[offset_rb + 1];
             tex_rb.b_ = tex_ptr[offset_rb + 0];
           }
+
+          // Mix neighboring texels to get average texel
           
           FColor tex_total {};
           tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
           tex_total += tex_rt*(du)*(1.0f-dv);
-          tex_total += tex_lb*(du)*(dv);
-          tex_total += tex_rb*(1.0f-du)*(dv);
+          tex_total += tex_lb*(1.0f-du)*(dv);
+          tex_total += tex_rb*(du)*(dv);
 
-          if (v >= tex_h-1 || u >= tex_w-1)
+          if (v >= tex_h-1 || u >= tex_w-1)         // special case rb texel
             tex_total = tex_lt;
         
           FColor total {c_curr.GetARGB()};

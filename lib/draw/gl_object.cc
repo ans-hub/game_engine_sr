@@ -17,6 +17,7 @@ GlObject::GlObject()
   , current_vxs_{Coords::LOCAL}
   , faces_{}
   , textures_{}
+  , mipmaps_squares_{}
   , id_{}
   , active_{true}
   , shading_{Shading::CONST}
@@ -36,6 +37,7 @@ GlObject::GlObject(
   , current_vxs_{Coords::LOCAL}  
   , faces_{}
   , textures_{}
+  , mipmaps_squares_{}  
   , id_{}
   , active_{true}
   , shading_{}  
@@ -186,8 +188,8 @@ GlObject object::Make(const char* ply_fname)
     str::Replace(bmp_fname, ".ply", ".bmp");
     
     Bitmap texture (bmp_fname);
-    obj.textures_.emplace_back(std::make_shared<Bitmap>(texture));
-    // object::CreateMipmaps(obj.textures_, texture);
+    object::CreateMipmaps(obj.textures_, texture);
+    object::FillMipmapSquares(obj.textures_, obj.mipmaps_squares_);
     
     // Fill vertices texture coordinate (unnormalized)
 
@@ -826,6 +828,110 @@ V_Vertex object::ComputeDrawableVxsNormals(const GlObject& obj, float scale)
     norms.emplace_back(end);
   }
   return norms;
+}
+
+// Creates mipmaps
+
+void object::CreateMipmaps(V_Bitmap& arr, const Bitmap& tex)
+{
+  // Prepare variables for fast access
+
+  constexpr float kGamma {1.01f};
+  int w = tex.width();
+  int h = tex.height();
+  int bmp_pitch_w = tex.GetRowIncrement();
+  int bmp_texel_w = tex.GetBytesPerPixel();
+
+  // Generate mipmaps for textures which dimension is factor of 2
+
+  if (math::IsAbsFactorOfTwo(w) && math::IsAbsFactorOfTwo(h))
+  {
+    // Make top level
+
+    arr.emplace_back(std::make_shared<Bitmap>(tex));
+
+    
+    // Prepare interpolants
+
+    int curr_w = w;
+    int curr_h = h;
+    int smaller = std::min(w, h);       // since w and h may be not eq
+    int levels = std::log2(smaller);
+    
+    // Create bmp`s for each level and fill them
+
+    for (int i = 0; i < levels - 1; ++i)
+    {
+      // Interpolate to current level
+
+      curr_w >>= 1;
+      curr_h >>= 1;
+      smaller >>= 1;
+      bmp_pitch_w >>= 1;
+
+      // Add current bmp to array and get pointers
+
+      auto* prev_tex = arr.back().get()->GetPointer();
+      arr.emplace_back(std::make_shared<Bitmap>(curr_w, curr_h));
+      auto* curr_tex = arr.back().get()->GetPointer();
+
+      // Iterate through curr bmp, and take average values of previous
+
+      FColor lt {};
+      FColor rt {};
+      FColor lb {};
+      FColor rb {};
+      int offset {};
+
+      for (int y = 0; y < curr_h; ++y)
+      {
+        for (int x = 0; x < curr_w; ++x)
+        {
+          offset = ((y*2) * bmp_pitch_w*2) + ((x*2) * bmp_texel_w);
+          lt.r_ = prev_tex[offset + 2];
+          lt.g_ = prev_tex[offset + 1];
+          lt.b_ = prev_tex[offset + 0];
+
+          offset = ((y*2) * bmp_pitch_w*2) + ((x*2+1) * bmp_texel_w);
+          rt.r_ = prev_tex[offset + 2];
+          rt.g_ = prev_tex[offset + 1];
+          rt.b_ = prev_tex[offset + 0];
+          
+          offset = ((y*2+1) * bmp_pitch_w*2) + ((x*2) * bmp_texel_w);
+          lb.r_ = prev_tex[offset + 2];
+          lb.g_ = prev_tex[offset + 1];
+          lb.b_ = prev_tex[offset + 0];
+
+          offset = ((y*2+1) * bmp_pitch_w*2) + ((x*2+1) * bmp_texel_w);
+          rb.r_ = prev_tex[offset + 2];
+          rb.g_ = prev_tex[offset + 1];
+          rb.b_ = prev_tex[offset + 0];
+
+          FColor total {(lt + rt + lb + rb) / 4};
+          total *= kGamma;
+          total.r_ += 0.5f;
+          total.g_ += 0.5f;
+          total.b_ += 0.5f;
+
+          offset = y * bmp_pitch_w + x * bmp_texel_w; 
+          curr_tex[offset + 2] = std::floor(total.r_);
+          curr_tex[offset + 1] = std::floor(total.g_);
+          curr_tex[offset + 0] = std::floor(total.b_);
+        }
+      }
+    }
+  }
+  else
+    arr.emplace_back(std::make_shared<Bitmap>(tex));    
+}
+
+// Calculates squares of each mipmap and place them in array for fast
+// access in render functions
+
+void object::FillMipmapSquares(const V_Bitmap& arr, V_Uint& squares)
+{
+  for (auto& bmp : arr)
+    squares.push_back(bmp->width() * bmp->height());
 }
 
 //*************************************************************************
