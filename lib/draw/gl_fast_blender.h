@@ -52,15 +52,15 @@ private:
 
 namespace fast_blender {
 
-  inline void fx_000(Color<>&);
-  inline void fx_125(Color<>&);
-  inline void fx_250(Color<>&);
-  inline void fx_375(Color<>&);
-  inline void fx_500(Color<>&);
-  inline void fx_625(Color<>&);
-  inline void fx_750(Color<>&);
-  inline void fx_875(Color<>&);
-  inline void fx_1000(Color<>&);
+  void fx_000(Color<>&);
+  void fx_125(Color<>&);
+  void fx_250(Color<>&);
+  void fx_375(Color<>&);
+  void fx_500(Color<>&);
+  void fx_625(Color<>&);
+  void fx_750(Color<>&);
+  void fx_875(Color<>&);
+  void fx_1000(Color<>&);
 
 } // namespace fast_blender
 
@@ -112,55 +112,55 @@ inline FastBlender::FxBlend FastBlender::GetSecondBlender()
 
 // Implementation of helper functions
 
-inline void fx_000 (Color<>& c)
+inline void fast_blender::fx_000 (Color<>& c)
 { 
   c.r_ = 0; c.g_ = 0; c.b_ = 0;
 }
 
-inline void fx_125(Color<>& c)
+inline void fast_blender::fx_125(Color<>& c)
 { 
   c.r_ >>= 3; c.g_ >>= 3; c.b_ >>= 3;
 }
 
-inline void fx_250(Color<>& c)
+inline void fast_blender::fx_250(Color<>& c)
 { 
   c.r_ >>= 2; c.g_ >>= 2; c.b_ >>= 2;
 }
 
-inline void fx_375(Color<>& c)
+inline void fast_blender::fx_375(Color<>& c)
 {
   c.r_ = (c.r_ >> 2) + (c.r_ >> 3);
   c.g_ = (c.g_ >> 2) + (c.g_ >> 3);
   c.b_ = (c.b_ >> 2) + (c.b_ >> 3);
 }
 
-inline void fx_500(Color<>& c)
+inline void fast_blender::fx_500(Color<>& c)
 {
   c.r_ >>= 1; c.g_ >>= 1; c.b_ >>= 1;
 }
 
-inline void fx_625(Color<>& c)
+inline void fast_blender::fx_625(Color<>& c)
 {
   c.r_ = (c.r_ >> 1) + (c.r_ >> 3);
   c.g_ = (c.g_ >> 1) + (c.g_ >> 3);
   c.b_ = (c.b_ >> 1) + (c.b_ >> 3);
 }
 
-inline void fx_750(Color<>& c)
+inline void fast_blender::fx_750(Color<>& c)
 {
   c.r_ = (c.r_ >> 1) + (c.r_ >> 2);
   c.g_ = (c.g_ >> 1) + (c.g_ >> 2);
   c.b_ = (c.b_ >> 1) + (c.b_ >> 2);
 }
 
-inline void fx_875(Color<>& c)
+inline void fast_blender::fx_875(Color<>& c)
 {
   c.r_ = (c.r_ >> 1) + (c.r_ >> 2) + (c.r_ >> 3);
   c.g_ = (c.g_ >> 1) + (c.r_ >> 2) + (c.g_ >> 3);
   c.b_ = (c.b_ >> 1) + (c.r_ >> 2) + (c.b_ >> 3);
 }
 
-inline void fx_1000(Color<>&) {}
+inline void fast_blender::fx_1000(Color<>&) {}
 
 }  // namespace anshub
 

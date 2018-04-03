@@ -18,7 +18,8 @@ enum class Shading
   CONST     = 1 << 1,
   FLAT      = 1 << 2,
   PHONG     = 1 << 3,
-  GOURANG   = 1 << 4
+  GOURANG   = 1 << 4,       // I have left this error to compatibility
+  GOURAUD   = 1 << 4
 
 }; // enum class Shading
 

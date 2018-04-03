@@ -28,7 +28,6 @@ struct RenderContext
     , mipmap_dist_{}    
     , pixels_drawn_{}
     , triangles_drawn_{}
-    , mipmaps_squares_{}
     , sbuf_{w, h, color}
     , zbuf_{w, h}
   { }
@@ -44,7 +43,6 @@ struct RenderContext
   int     mipmap_dist_;
   int     pixels_drawn_;
   int     triangles_drawn_;
-  V_Uint  mipmaps_squares_;
 
   // Context entities
 
