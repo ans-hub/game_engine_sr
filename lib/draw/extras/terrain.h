@@ -25,7 +25,7 @@ namespace anshub {
 // from this struct, and several faces, that represents levels of
 // detalization
 
-// Shorteners: hm - heightmap, tex - texture 
+// Shorteners: hm - heightmap, tx - texture 
 
 struct Terrain
 {
@@ -36,6 +36,7 @@ struct Terrain
     cChar* hm_fname, cChar* tex_fname, int div_factor, int obj_width, Shading);
   
   auto& GetChunks() { return chunks_; }
+  int   GetHmWidth() const { return hm_w_; }
   void  SetShading(Shading);
   void  SetDetalization(const V_Float&);
   void  ProcessDetalization(const GlCamera&);
@@ -57,7 +58,7 @@ private:
   int       tx_h_;                  // texture height
   int       obj_w_;                 // object array width (how many vertices in width)
   int       obj_h_;                 // object array height
-  P_Bitmap texture_;
+  P_Bitmap  texture_;
   Bitmap    heightmap_;
   V_Vertex  vxs_;                   // vertices for all mesh
   V_Chunk   chunks_;                // chunks of terrain

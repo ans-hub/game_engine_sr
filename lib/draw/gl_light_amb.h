@@ -40,7 +40,7 @@ inline LightAmbient::LightAmbient(cFColor&& c, float i)
   : LightAmbient(c, i)
 { }
 
-FColor LightAmbient::Illuminate(cFColor& base_color)
+inline FColor LightAmbient::Illuminate(cFColor& base_color)
 {
   return (base_color * color_ * intense_) / 256.0f;
 }
