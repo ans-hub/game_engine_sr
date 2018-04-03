@@ -25,3 +25,4 @@ f ter_shading 4   # 2 - const, 4 - flat, 16 - gourang
 s ter_sky ../00_data/skyboxes/cube_skybox2.ply
 s ter_hm ../00_data/terrains/terrain_hm2.bmp
 s ter_tx ../00_data/terrains/terrain_tx2.bmp
+f ter_water_level 1.4

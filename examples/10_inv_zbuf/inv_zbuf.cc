@@ -138,7 +138,7 @@ int main(int argc, const char** argv)
     fname, trig, 
     {2.0f, 2.0f, 2.0f},     // initial scale
     {0.0f, 0.0f, 10.0f},    // world pos
-    {0.0f, 0.0f, 0.0f}    // initial rotate
+    {0.0f, 0.0f, 0.0f}      // initial rotate
   );
   auto ground = CreateGround(20, trig);
 

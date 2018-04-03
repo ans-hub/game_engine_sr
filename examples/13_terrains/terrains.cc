@@ -22,8 +22,9 @@
 #include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_z_buffer.h"
-#include "lib/draw/extras/terrain.h"
 #include "lib/draw/extras/skybox.h"
+#include "lib/draw/extras/terrain.h"
+#include "lib/draw/extras/water.h"
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
@@ -92,9 +93,6 @@ int main(int argc, const char** argv)
 
   const int kWinWidth {cfg.GetFloat("win_w")};
   const int kWinHeight {cfg.GetFloat("win_h")};
-  std::string kSkyboxFname {cfg.GetString("ter_sky")};
-  std::string kTerrainHmFname {cfg.GetString("ter_hm")};
-  std::string kTerrainTxFname {cfg.GetString("ter_tx")};
 
   FColor kWhite  {255.0f, 255.0f, 255.0f};
   FColor kYellow {255.0f, 255.0f, 0.0f};
@@ -151,18 +149,27 @@ int main(int argc, const char** argv)
     cfg.GetString("ter_hm").c_str(),
     cfg.GetString("ter_tx").c_str(),
     cfg.GetFloat("ter_divider"),
-    cfg.GetFloat("ter_chunk"), 
+    cfg.GetFloat("ter_chunk"),
     static_cast<Shading>(cfg.GetFloat("ter_shading"))
   );
   terrain.SetDetalization(cfg.GetVectorF("ter_detalization"));
   auto& terrain_chunks = terrain.GetChunks();
+
+  // Make water
+  
+  Water water {
+    terrain.GetHmWidth() - 1,
+    cfg.GetFloat("ter_water_level"),
+    color::fOceanBlue,
+    Shading::GOURAUD
+  };
 
   // Create render context
 
   RenderContext render_ctx(kWinWidth, kWinHeight, color::Black);
   render_ctx.is_zbuf_  = true;
   render_ctx.is_wired_ = false;
-  render_ctx.is_alpha_ = false;
+  render_ctx.is_alpha_ = true;
   render_ctx.is_bifiltering_ = false;
   render_ctx.clarity_  = cfg.GetFloat("cam_clarity");
   
@@ -177,11 +184,11 @@ int main(int argc, const char** argv)
   DayTime day_time (0.1f, 0.7f, 0.0009f);
 
   Lights lights_all {};
-  lights_all.ambient_.emplace_back(kWhite, 0.2f);
-  lights_all.infinite_.emplace_back(kWhite, 0.7f, Vector{-1.0f, -1.0f, 0.0f});
+  lights_all.AddAmbient(color::fWhite, 0.2f);
+  lights_all.AddInfinite(color::fWhite, 0.7f, {-1.0f, -1.0f, 0.0f});
 
   Lights lights_sky {};
-  lights_sky.ambient_.emplace_back(kWhite, 0.7f);
+  lights_sky.AddAmbient(color::fWhite, 0.7f);
   
   // Main loop
 
@@ -214,6 +221,19 @@ int main(int argc, const char** argv)
     auto hidden = object::RemoveHiddenSurfaces(skybox, cam);
     object::Translate(skybox, skybox.world_pos_);
     light::Object(skybox, lights_sky);
+
+    // Process water
+
+    water.SetCoords(Coords::TRANS);
+    water.CopyCoords(Coords::LOCAL, Coords::TRANS);
+    object::ResetAttributes(water);
+    object::ComputeFaceNormals(water, true);
+    object::RemoveHiddenSurfaces(water, cam);
+    object::Translate(water, water.world_pos_);
+    object::CullZ(water, cam);
+    object::CullX(water, cam);
+    object::CullY(water, cam);
+    object::VerticesNormals2Camera(water, cam);
 
     // Cull terrain chunks by world pos
 
@@ -259,6 +279,7 @@ int main(int argc, const char** argv)
       if (chunk.active_)
         triangles::AddFromObject(chunk, tris_base);
     }
+    triangles::AddFromObject(water, tris_base);
     triangles::World2Camera(tris_base, cam);
     auto tri_culled = triangles::CullAndClip(tris_base, cam);
     
@@ -272,10 +293,10 @@ int main(int argc, const char** argv)
 
     triangles::AddFromObject(skybox, tris_sky);
     tri_culled += triangles::CullAndClip(tris_sky, cam);
+    triangles::AddFromTriangles(tris_sky, tris_base);
 
     // Triangles merging
 
-    triangles::AddFromTriangles(tris_sky, tris_base);
     triangles::MakePointers(tris_base, tris_ptrs);
     triangles::SortZAvg(tris_ptrs);
 
