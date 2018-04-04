@@ -62,7 +62,11 @@ struct GlObject
 
   GlObject();
   GlObject(cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs);
-  virtual ~GlObject() {}
+  GlObject(const GlObject&) =default;
+  GlObject& operator=(const GlObject&) =default;
+  GlObject(GlObject&&) =default;
+  GlObject& operator=(GlObject&&) =default;
+  virtual ~GlObject() noexcept {}
 
   // Coordinates routines
 

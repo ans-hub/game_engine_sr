@@ -72,7 +72,11 @@ private:
 struct Terrain::Chunk : GlObject
 {
   Chunk(const V_Vertex& vxs, int ln, int rn, int tn, int bn);
-  ~Chunk() { }
+  Chunk(const Chunk&) =default;
+  Chunk& operator=(const Chunk&) =default;
+  Chunk(Chunk&&) =default;
+  Chunk& operator=(Chunk&&) =default;
+  ~Chunk() noexcept override { }
 
   bool SetFace(int face_num);
   int  DetLevels() const { return det_faces_.size(); }

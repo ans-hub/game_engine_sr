@@ -32,7 +32,11 @@ public:
   Matrix();                               // for zero matrix creating
   explicit Matrix(Type);                  // for identity matrix creating
   Matrix(std::initializer_list<float>);   // for custom matrix creating
-  virtual ~Matrix() { }
+  Matrix(const Matrix&) =default;
+  Matrix& operator=(const Matrix&) =default;
+  Matrix(Matrix&&) =default;
+  Matrix& operator=(Matrix&&) =default;
+  virtual ~Matrix() noexcept { }
 
   std::size_t Rows() const { return r_; }
   std::size_t Cols() const { return c_; }

@@ -56,9 +56,9 @@ namespace render {
 
   // Main function to rendering triangles
 
-  int  Context(const V_TrianglePtr&, RenderContext&);
-  int  Solid(const V_TrianglePtr&, RenderContext&);
-  int  SolidWithAlpha(const V_TrianglePtr&, RenderContext&);
+  int  Context(const V_TrianglePtr&, RenderContext&) noexcept;
+  int  Solid(const V_TrianglePtr&, RenderContext&) noexcept;
+  int  SolidWithAlpha(const V_TrianglePtr&, RenderContext&) noexcept;
 
 } // namespace render
 

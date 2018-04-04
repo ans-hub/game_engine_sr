@@ -306,7 +306,7 @@ int draw_triangles::Solid(const V_TrianglePtr& arr, ZBuffer& zbuf, Buffer& buf)
 
 // Draws triangles using information from rendering context
 
-int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx)
+int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx) noexcept
 {
   ctx.sbuf_.Clear();
   if (ctx.is_zbuf_)
@@ -331,7 +331,7 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx)
 // Renders triangles and uses dist as chooser between affine and perspective
 // correct texturing
 
-int render::Solid(const V_TrianglePtr& arr, RenderContext& ctx)
+int render::Solid(const V_TrianglePtr& arr, RenderContext& ctx) noexcept
 {
   // Access variables
   
@@ -392,7 +392,7 @@ int render::Solid(const V_TrianglePtr& arr, RenderContext& ctx)
 // Renders triangles, uses dist as chooser between affine and perspective
 // correct texturing, and use alpha blending
 
-int render::SolidWithAlpha(const V_TrianglePtr& arr, RenderContext& ctx)
+int render::SolidWithAlpha(const V_TrianglePtr& arr, RenderContext& ctx) noexcept
 {
   // Debug variables (we collect drawn pixels only from heavy weight functions)
 

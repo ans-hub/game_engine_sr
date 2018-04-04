@@ -48,6 +48,10 @@ struct GlCamera
     const Vector& vrp, const Vector& dir,
     float z_near, float z_far
   );
+  GlCamera(const GlCamera&) =default;
+  GlCamera& operator=(const GlCamera&) =default;
+  GlCamera(GlCamera&&) =default;
+  GlCamera& operator=(GlCamera&&) =default;
   virtual ~GlCamera() noexcept { }
   
   void  SetMoveVelocity(cVector& vel) { vel_ = vel; }

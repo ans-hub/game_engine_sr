@@ -19,7 +19,7 @@ f cam_clarity 5.0
 f cam_velocity 0.08
 f cam_gravity 0.04
 f cam_jump 0.6
-f cam_height 4.0
+f cam_height 1.0
 f cam_speed_up 3.0
 f cam_fly_mode 0
 f ter_chunk 17

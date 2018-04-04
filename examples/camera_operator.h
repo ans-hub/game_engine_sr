@@ -19,6 +19,10 @@ struct CameraOperator : public GlCamera
     const Vector& vrp, const Vector& dir,
     float z_near, float z_far
   );
+  CameraOperator(const CameraOperator&) =default;
+  CameraOperator& operator=(const CameraOperator&) =default;
+  CameraOperator(CameraOperator&&) =default;
+  CameraOperator& operator=(CameraOperator&&) =default;
   ~CameraOperator() noexcept override { }
   
   void ProcessInput(const BaseWindow&);
