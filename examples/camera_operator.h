@@ -53,6 +53,7 @@ struct CameraOperator : public GlCamera
   void SetSpeedUpValue(float s) { speed_up_val_ = s; }
   void SetGravity(const Vector& g) { gravity_ = g; }
   void SetFlyMode(bool m) { fly_mode_ = m; }
+  void SetMouseSensitive(int s) { mouse_sensitive_ = s; }
 
 private:
 
@@ -81,6 +82,7 @@ private:
   float   prev_ypos_;
   bool    on_ground_;
   Vector  gravity_;
+  int     mouse_sensitive_;
 
 }; // class CameraOperator 
 

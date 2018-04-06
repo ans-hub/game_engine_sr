@@ -42,6 +42,7 @@ CameraOperator::CameraOperator(
   , operator_height_{cam_operator_consts::kOperatorHeightDefault}
   , on_ground_{true}
   , gravity_ {cam_operator_consts::kGravityDefault}
+  , mouse_sensitive_{1}
 { }
 
 void CameraOperator::ProcessInput(const BaseWindow& win)
@@ -99,13 +100,15 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
   // Handle camera rotating
 
   auto mpos = win.ReadMousePos();
+  if (prev_mouse_pos_.x != -1 && prev_mouse_pos_.y != -1)
+  {
+    if (roll_mode_)
+      this->dir_.z -= (prev_mouse_pos_.x - mpos.x) / mouse_sensitive_;
+    else
+      this->dir_.y -= (prev_mouse_pos_.x - mpos.x) / mouse_sensitive_;
 
-  if (roll_mode_)
-    this->dir_.z -= (prev_mouse_pos_.x - mpos.x) / 2;
-  else
-    this->dir_.y -= (prev_mouse_pos_.x - mpos.x) / 2;
-
-  this->dir_.x -= (prev_mouse_pos_.y - mpos.y) / 2;
+    this->dir_.x -= (prev_mouse_pos_.y - mpos.y) / mouse_sensitive_;
+  }
   prev_mouse_pos_ = mpos;
 }
 
