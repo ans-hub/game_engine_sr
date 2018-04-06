@@ -1,0 +1,53 @@
+# Jeep ride level settings file
+
+#   f - number value
+#   v - 3d vector value
+#   a - std::vector<float> value
+#   s - std::string
+
+# Window settings
+
+f win_w             1366
+f win_h             768
+f win_fs            1 # fullscreen (1 on, 0 off)
+f win_fps           1000
+
+# Camera settings
+
+f cam_dov           1.0
+f cam_fov           75.0
+v cam_pos           -81.0 153.0 245.0
+v cam_dir           358.0 492.0 0.0
+f cam_nearz         0.1
+f cam_farz          1200.0
+f cam_clarity       50.0
+f cam_velocity      1.2
+f cam_fly_mode      0
+f cam_gravity       -0.4
+f cam_jump          0.6
+f cam_height        8.0
+f cam_speed_up      6.0
+
+# Terrain settings
+
+f ter_chunk         17
+f ter_divider       1
+a ter_detaliz       0 0 0 200 300 500 900
+f ter_shading       16
+s ter_sky           ../00_data/skyboxes/cube_skybox.ply
+s ter_hm            levels/res/mountain_hm.bmp
+s ter_tx            levels/res/mountain_tx.bmp
+s ter_objs          levels/res/mountain_objs.bmp
+f ter_water_lvl     -1000.0
+
+# Lights settings
+
+f light_amb_int     0.3
+f light_inf_int     0.2
+f light_pnt_int     12.8
+f light_sky_int     0.4
+
+s light_amb_color   blue    
+s light_inf_color   blue
+s light_pnt_color   yellow
+s light_sky_color   white
