@@ -198,7 +198,7 @@ int main(int argc, const char** argv)
 
     // Handle camera
 
-    float ground = terrain.FindGroundPosition(cam);
+    float ground = terrain.FindGroundPosition(cam.vrp_);
     cam.ProcessInput(win);
     cam.SetGroundPosition(ground);
     render_ctx.is_wired_ = cam.IsWired();

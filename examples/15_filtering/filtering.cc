@@ -124,7 +124,7 @@ int main(int argc, const char** argv)
   float    fov     {75.0f};
   Vector   cam_pos {3.0f, 3.45f, 3.65f};
   Vector   cam_dir {27.0f, -31.0f, 0.0f};
-  float    near_z  {dov};
+  float    near_z  {0.1f};
   float    far_z   {500};
 
   CameraOperator cam {
