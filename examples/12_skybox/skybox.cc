@@ -120,41 +120,15 @@ using vector::operator<<;
     horizont.CopyCoords(Coords::LOCAL, Coords::TRANS);
     object::ResetAttributes(horizont);
 
-    std::cerr << "St0:\n";
-    auto& vxs = horizont.GetCoords();
-    for (auto& f : horizont.faces_)
-    {
-      std::cerr << vxs[f[0]].pos_.z << ' ' << vxs[f[1]].pos_.z << ' ' << vxs[f[2]].pos_.z << '\n'; 
-    }
     auto hidden = object::RemoveHiddenSurfaces(horizont, cam);
     object::World2Camera(horizont, cam);
-    std::cerr << "St1:\n";
-    std::cerr << "Cam_vrp: " << cam.vrp_ << '\n';
-    std::cerr << "Cam_dir: " << cam.dir_ << '\n';
-    for (auto& f : horizont.faces_)
-    {
-      std::cerr << vxs[f[0]].pos_.z << ' ' << vxs[f[1]].pos_.z << ' ' << vxs[f[2]].pos_.z << '\n'; 
-    }
 
     // Make triangles
 
     tris_base.resize(0);
     tris_ptrs.resize(0);
     triangles::AddFromObject(horizont, tris_base);
-    std::cerr << "St2:\n";
-    for (auto& tri : tris_base)
-    {
-      std::cerr << tri[0].pos_.z << ' ' << tri[1].pos_.z << ' ' << tri[2].pos_.z << '\n'; 
-    }
     auto culled = triangles::CullAndClip(tris_base, cam);
-    std::cerr << "Co:\n";
-    for (auto& tri : tris_base)
-    {
-      if (!tri.active_)
-        std::cerr << "excluded\n";
-      else
-        std::cerr << tri[0].pos_.z << ' ' << tri[1].pos_.z << ' ' << tri[2].pos_.z << '\n'; 
-    }
     triangles::MakePointers(tris_base, tris_ptrs);
     triangles::SortZAvg(tris_ptrs);
     triangles::Camera2Persp(tris_base, cam);
