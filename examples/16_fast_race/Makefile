@@ -1,6 +1,6 @@
 # Builds main app
 
-APPNAME = bike_ride
+APPNAME = fast_race
 ROOTDIR = ../../
 
 # Setup libraries pathes and flags

@@ -1,5 +1,5 @@
 // *************************************************************
-// File:    bike_ride.cc
+// File:    fast_race.cc
 // Descr:   example of terrain generation
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
