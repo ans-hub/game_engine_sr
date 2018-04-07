@@ -9,6 +9,8 @@
 #define GL_FXCOLORS_H
 
 #include <iostream>
+#include <string>
+#include <map>
 #include <cmath>
 
 #include "gl_aliases.h"
@@ -57,6 +59,20 @@ struct Color
 }; // struct Color
 
 //***************************************************************************
+// Interface to Color table
+//***************************************************************************
+
+struct ColorTable
+{
+  ColorTable();
+  FColor operator[](const std::string&);
+
+private:
+  std::map<std::string, FColor> data_;
+
+}; // struct ColorTable
+
+//***************************************************************************
 // Interface to Color helper functions
 //***************************************************************************
 
@@ -79,11 +95,11 @@ namespace color {
 
   // Helpers functions
 
-  int   MakeARGB(uchar a, uchar r, uchar g, uchar b);
-  void  SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a);
-  void  SplitARGB(int color, uint& b, uint& g, uint& r, uint& a);
-  int   IncreaseBrightness(int color, float k);
-  void  ShiftRight(Color<uint>&, uint cnt);
+  int     MakeARGB(uchar a, uchar r, uchar g, uchar b);
+  void    SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a);
+  void    SplitARGB(int color, uint& b, uint& g, uint& r, uint& a);
+  int     IncreaseBrightness(int color, float k);
+  void    ShiftRight(Color<uint>&, uint cnt);
 
   // Output functions
 

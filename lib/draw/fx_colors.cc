@@ -9,6 +9,27 @@
 
 namespace anshub {
 
+// Constructs color table
+
+ColorTable::ColorTable()
+{
+  data_["white"] = {255.0f, 255.0f, 255.0f};
+  data_["black"] = {0.0f, 0.0f, 0.0f};
+  data_["yellow"] = {255.0f, 255.0f, 0.0f};
+  data_["blue"] = {0.0f, 0.0f, 255.0f};
+  data_["cyan"] = {0.0f, 255.0f, 255.0f};
+  data_["oceanblue"] = {143.0f, 175.0f, 201.0f};
+}
+
+// Returns color by its name. This is not const function, since
+// if we have not requested color, we create default color inside
+// map and return it
+
+FColor ColorTable::operator[](const std::string& name)
+{
+  return data_[name];
+}
+
 // Increase brightness of rgba color (given in word-order)
 // todo: very-very low perfomance function now!
 
