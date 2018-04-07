@@ -24,13 +24,18 @@ struct LightPoint
   void    Reset();
   void    World2Camera(const GlCamera&);
   FColor  Illuminate(cFColor& base_color, cVector& normal, cVector& dest);
+  auto    GetPosition() const { return position_; }
+  auto    GetDirection() const { return direction_; }
+  void    SetPosition(cVector&);
+  void    SetDirection(cVector&);
 
-private:
   FColor  color_;
   float   intense_;
+
+private:
   Vector  position_;          // direction of light source
-  Vector  position_copy_;     // used to recover direction after frame 
   Vector  direction_;         // direction of light source
+  Vector  position_copy_;     // used to recover direction after frame 
   Vector  direction_copy_;    // used to recover direction after frame 
   float   kc_;
   float   kl_;

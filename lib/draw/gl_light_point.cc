@@ -13,9 +13,12 @@ LightPoint::LightPoint(cFColor& c, float i, cVector& pos, cVector& dir)
   : color_{c}
   , intense_{i}
   , position_{pos}
-  , position_copy_{}
   , direction_{dir}
+  , position_copy_{}
   , direction_copy_{}
+  , kc_{1.0f}
+  , kl_{1.0f}
+  , kq_{0.0f}
 {
   direction_.Normalize();
 
@@ -23,9 +26,6 @@ LightPoint::LightPoint(cFColor& c, float i, cVector& pos, cVector& dir)
   position_copy_ = position_;
   
   math::Clamp(intense_, 0.0f, 1.0f);
-  kc_ = 1.0f;
-  kl_ = 1.0f;
-  kq_ = 0.0f;
 }
 
 LightPoint::LightPoint(cFColor&& c, float i, cVector&& pos, cVector& dir)
@@ -66,6 +66,19 @@ FColor LightPoint::Illuminate(
   auto k = (color_ * intense_) / (kc_ + kl_ * len + kq_ * len * len);
 
   return (base_color * prod * k) / 256.0f;
+}
+
+void LightPoint::SetPosition(cVector& pos)
+{
+  position_ = pos;
+  position_copy_ = position_;
+}
+
+void LightPoint::SetDirection(cVector& dir)
+{ 
+  direction_ = dir;
+  direction_.Normalize();
+  direction_copy_ = direction_;
 }
 
 }  // namespace anshub

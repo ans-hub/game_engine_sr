@@ -41,4 +41,11 @@ FColor LightInfinite::Illuminate(cFColor& base_color, cVector& normal)
   return (base_color * color_ * intense_ * prod) / 256.0f;
 }
 
+void LightInfinite::SetDirection(cVector& dir)
+{
+  direction_ = dir;
+  direction_.Normalize();
+  direction_copy_ = direction_;
+}
+
 }  // namespace anshub

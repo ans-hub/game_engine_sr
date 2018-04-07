@@ -26,10 +26,13 @@ struct LightInfinite
   void    Reset() { direction_ = direction_copy_; };
   void    World2Camera(const GlCamera&);
   FColor  Illuminate(cFColor& base_color, cVector& normal);
+  auto    GetDirection() const { return direction_; }  
+  void    SetDirection(cVector&);
 
-// private:
   FColor  color_;
   float   intense_;
+
+private:
   Vector  direction_;       // direction of light source
   Vector  direction_copy_;  // used to recover direction after frame 
 
