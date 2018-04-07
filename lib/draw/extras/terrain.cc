@@ -98,18 +98,32 @@ void Terrain::ProcessDetalization(const GlCamera& cam)
   }
 }
 
-float Terrain::FindGroundPosition(const GlCamera& cam)
+// Searches Y ground position of given point. Note the following:
+// - step between vertices is equal 1.0f, thus all calculations is based on this fact
+//  - most left x is -A and most right x is +A
+//  - most forward z is +B and most bottom z is -B
+//  - 0.0 is the middle of the terrain mesh 
+
+float Terrain::FindGroundPosition(const Vector& pos) const
 {
-  float row_float = vxs_[0].pos_.z - cam.vrp_.z;
-  float col_float = cam.vrp_.x - vxs_[0].pos_.x;
+  // Compute number of vertex under the camera
+
+  float row_float = vxs_[0].pos_.z - pos.z;
+  float col_float = pos.x - vxs_[0].pos_.x;
+
+  // Make rounding of position above
 
   float tz = row_float - math::Floor(row_float);
   float tx = col_float - math::Floor(col_float);
   
-  int lt = (int)row_float * hm_w_ + (int)col_float;
-  int rt = lt + 1;
-  int lb = lt + hm_w_;
-  int rb = lb + 1;
+  // Get neighboring vertices
+
+  uint lt = (uint)row_float * hm_w_ + (uint)col_float;
+  uint rt = lt + 1;
+  uint lb = lt + hm_w_;
+  uint rb = lb + 1;
+
+  // If all vertices is inside mesh, then make average value of Y
 
   if (lt < vxs_.size() && lb < vxs_.size() && rt < vxs_.size() && rb < vxs_.size())
   {
