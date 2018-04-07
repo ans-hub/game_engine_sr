@@ -212,7 +212,7 @@ Btn BaseWindow::ReadMouseBtn(BtnType t) const
   long type = 1L << static_cast<int>(t);              // see note #2  
   if (XCheckWindowEvent(disp_, self_, type, &event)) // see note #3
   {
-    buf = static_cast<Btn>(event_.xbutton.button + kMouseBtnOffset);
+    buf = static_cast<Btn>(event.xbutton.button + kMouseBtnOffset);
   }
   return buf;
 }
