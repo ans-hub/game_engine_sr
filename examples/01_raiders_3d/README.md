@@ -8,6 +8,8 @@ Simple 3d shoter with music and sounds with manual 3d transformations
   $ ./raiders
 ```
 
+## See gameplay on youtube:
+
 <div style="text-align: center;" markdown="1" />
-<img src="screenshot.png" style="width: 600px;" />
+<a href="https://youtu.be/oSR6u2OJAjo"><img src="screenshot.png" style="width: 600px;" /></a>
 </div>
