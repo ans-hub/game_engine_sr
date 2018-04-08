@@ -1,17 +1,30 @@
-# Executables
-*.out
-*.app
+# Ignore all files
 
-# Temporary
-*.tmp
-*.ghc
+*
 
-# Objects
-*.o
-*.obj
-*.d
-*.dep
+# Unignore common source files
 
-# Libraries
-*.a
-*.so
+!*.h
+!*.cc
+!*.c
+!*.asm
+
+# Unignore common image files
+
+!*.bmp
+!*.jpg
+!*.png
+
+# Unignore common data files
+
+!*.dae
+!*.blender
+!*.max
+!*.3ds
+!*.ply
+
+# Unignore other
+
+!Makefile
+!*.md
+!LICENSE
