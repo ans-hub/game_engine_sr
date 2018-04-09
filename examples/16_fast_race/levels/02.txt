@@ -7,9 +7,9 @@
 
 # Window settings
 
-f win_w             1366
-f win_h             768
-f win_fs            1 # fullscreen (1 on, 0 off)
+f win_w             800
+f win_h             600
+f win_fs            0 # fullscreen (1 on, 0 off)
 f win_fps           1000
 
 # Camera settings
@@ -26,9 +26,9 @@ f cam_fly_mode      0
 f cam_gravity       -0.1
 f cam_jump          0.0
 f cam_accel         0.1
-f cam_frict         0.8
+f cam_frict         0.7
 f cam_height        8.0
-f cam_speed_up      6.0
+f cam_speed_up      2.0
 
 # Terrain settings
 

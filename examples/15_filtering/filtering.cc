@@ -124,7 +124,7 @@ int main(int argc, const char** argv)
   float    fov     {75.0f};
   Vector   cam_pos {3.0f, 3.45f, 3.65f};
   Vector   cam_dir {27.0f, -31.0f, 0.0f};
-  float    near_z  {0.1f};
+  float    near_z  {1.5f};
   float    far_z   {500};
 
   CameraOperator cam {
@@ -143,7 +143,7 @@ int main(int argc, const char** argv)
   cam.SetSwitchRollButton(KbdBtn::L);
   cam.SetWiredModeButton(KbdBtn::T);
   cam.SetSwitchTypeButton(KbdBtn::ENTER);
-  cam.SetAcceleration(0.05f);
+  cam.SetAcceleration(0.01f);
   cam.SetFriction(0.8f);
   cam.SetSpeedUpValue(6.0f);
   cam.SetFlyMode(true);

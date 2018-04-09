@@ -5,10 +5,10 @@ Example of different terrains generating with skyboxes. Here I decide to use dif
 ## Usage:
 ```bash
   $ make
-  $ ./terrains configs/01.txt
-  $ ./terrains configs/02.txt
-  $ ./terrains configs/03.txt
-  $ ./terrains configs/04.txt
+  $ ./terrains levels/01.txt
+  $ ./terrains levels/02.txt
+  $ ./terrains levels/03.txt
+  $ ./terrains levels/04.txt
   ...
 ```
 ## Subdirectories:

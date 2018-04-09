@@ -54,18 +54,28 @@ struct GlCamera
   GlCamera& operator=(GlCamera&&) =default;
   virtual ~GlCamera() noexcept { }
   
+  // Setters
+
   void  SetAcceleration(float accel) { accel_factor_ = accel; }
   void  SetFriction(float frict) { frict_factor_ = frict; }
+  void  SetGravity(float gravity) { gravity_factor_ = gravity; }
   
+  // Process movements
+
   void  MoveLeft();
   void  MoveRight();
   void  MoveForward();
   void  MoveBackward();
   void  MoveUp();
   void  MoveDown();
+  void  ProcessVelocity(bool fly_mode, bool on_ground);
   
+  // Process rotating
+
   void  RotateYaw(float theta);
   void  RotateRoll(float theta);
+
+  // Other switches
 
   void  SwitchType(Type);
   void  ChangeFov(int new_fov);
@@ -87,7 +97,8 @@ struct GlCamera
   Vector    frict_;     // camera friction vector
   float     frict_factor_;
   float     accel_factor_;
-
+  float     gravity_factor_;
+  
   // Euler specific
 
   Vector  dir_;         // cam direction angles (for Euler model)

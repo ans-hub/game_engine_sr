@@ -26,13 +26,13 @@ f cam_fly_mode      0
 f cam_gravity       -0.1
 f cam_jump          0.0
 f cam_accel         0.1
-f cam_frict         0.8
+f cam_frict         0.7
 f cam_height        8.0
-f cam_speed_up      6.0
+f cam_speed_up      2.0
 
 # Terrain settings
 
-f ter_chunk         17
+f ter_chunk         129
 f ter_divider       1
 a ter_detaliz       0 0 0 200 300 500 900
 f ter_shading       16

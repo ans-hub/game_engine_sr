@@ -151,6 +151,8 @@ int main(int argc, const char** argv)
   float    near_z  {dov};
   float    far_z   {500};
   GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
+  cam.SetAcceleration(0.02f);
+  cam.SetFriction(0.8f);
 
   // Prepare lights sources
  

@@ -14,38 +14,33 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <functional>
 
 #include "3rdparty/bass.h"
-#include "3rdparty/bass_fx.h"
 
 namespace anshub {
 
 class AudioOut
 {
 public:
-  using Handle    = DWORD;
+  using Handle    = HSAMPLE;
   using SampleNfo = BASS_SAMPLE;
   using FileName  = std::string;
   using VHandles  = std::vector<Handle>;
   using VSounds   = std::vector<std::pair<FileName, Handle>>;
   using VStrings  = std::vector<std::string>;
-  using CbRepeat  = std::function<void(HSYNC, DWORD, DWORD, void*)>;
 
   AudioOut();
   virtual ~AudioOut();
 
   bool      Play(const FileName&, bool repeat = false);
   bool      Stop(const FileName&, bool immediately = true);
-  Handle    Load(const FileName&, bool);  // move to private???
+  Handle    Load(const FileName&, bool);
   VStrings  NowPlaying(bool only_repeated) const;
-  // bool      ChangeTempo(const FileName&, unsigned char);
   
 private:
   bool      inited_;        // flag to show is bass lib is inited
   VSounds   loaded_;        // currently loaded samples in memory
   int       channels_cnt_;  // sounds of sample playing at the same time
-  CbRepeat  repeat_func_;   // callback lambda to repeat
   
   Handle    FindLoaded(const FileName&) const;
   VHandles  GetLoadedChannels(const Handle&) const;

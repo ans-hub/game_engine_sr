@@ -108,15 +108,15 @@ int main(int argc, const char** argv)
   if (cfg.GetFloat("win_fs"))
     win.ToggleFullscreen(mode);
 
-  // // Audio
-
-  // AudioOut audio {};
-  // auto ambient = cfg.GetString("ter_ambient_snd");
-  // if (!ambient.empty())
-  // {
-  //   audio.Load(ambient, true);
-  //   audio.Play(ambient);
-  // }
+  // Audio
+  
+  AudioOut audio {};
+  auto ambient = cfg.GetString("ter_ambient_snd");
+  if (!ambient.empty())
+  {
+    audio.Load(ambient, true);
+    audio.Play(ambient);
+  }
 
   // Camera
 
@@ -204,16 +204,6 @@ int main(int argc, const char** argv)
   Lights lights_sky {};
   lights_sky.AddAmbient(color::fWhite, 0.7f);
   
-// Audio
-
-  AudioOut audio {};
-  auto ambient = cfg.GetString("ter_ambient_snd");
-  if (!ambient.empty())
-  {
-    audio.Load(ambient, true);
-    audio.Play(ambient);
-  }
-
   // Main loop
 
   do {

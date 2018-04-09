@@ -38,6 +38,7 @@ void helpers::HandleCamMovement(Btn kbtn, float, GlCamera& cam)
     case Btn::NUM0 : cam.ChangeFov(cam.fov_+1); break;
     default     : break;
   }
+  cam.ProcessVelocity(true, false);  
 }
 
 // Moves camera to given y position (used in movement on the terrains)

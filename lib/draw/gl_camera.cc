@@ -36,6 +36,7 @@ GlCamera::GlCamera
   , frict_{0.0f, 0.0f, 0.0f}
   , frict_factor_{0.8f}
   , accel_factor_{0.01f}
+  , gravity_factor_{0.0f}
   , dir_{dir}
   , view_{0.0f, 0.0f, 1.0f}
   , u_{1.0f, 0.0f, 0.0f}
@@ -48,58 +49,91 @@ void GlCamera::MoveLeft()
 {
   if (type_ == GlCamera::Type::EULER)
   {
-    vrp_.x -= vel_.z * trig_.Cos(dir_.y);
-    vrp_.z += vel_.z * trig_.Sin(dir_.y);
+    accel_.x -= accel_factor_ * trig_.Cos(dir_.y);
+    accel_.z += accel_factor_ * trig_.Sin(dir_.y);
   }
   else
-    vrp_.x -= vel_.z;
-  vrp_.y += vel_.y;  
+    accel_.x -= accel_factor_;
 }
 
 void GlCamera::MoveRight()
-{
+{   
   if (type_ == GlCamera::Type::EULER)
   {
-    vrp_.x += vel_.z * trig_.Cos(dir_.y);
-    vrp_.z -= vel_.z * trig_.Sin(dir_.y);
+    accel_.x += accel_factor_ * trig_.Cos(dir_.y);
+    accel_.z -= accel_factor_ * trig_.Sin(dir_.y);
   }
   else
-    vrp_.x += vel_.z;
-  vrp_.y += vel_.y;
+    accel_.x += accel_factor_;
 }
 
 void GlCamera::MoveForward()
 {
   if (type_ == GlCamera::Type::EULER)
   {
-    vrp_.z += vel_.z * trig_.Cos(dir_.y);
-    vrp_.x += vel_.z * trig_.Sin(dir_.y);
+    accel_.z += accel_factor_ * trig_.Cos(dir_.y);
+    accel_.x += accel_factor_ * trig_.Sin(dir_.y);
   }
   else
-    vrp_.z += vel_.z;
-  vrp_.y += vel_.y;
+    accel_.z += accel_factor_;
 }
 
 void GlCamera::MoveBackward()
 {
   if (type_ == GlCamera::Type::EULER)
   {
-    vrp_.z -= vel_.z * trig_.Cos(dir_.y);
-    vrp_.x -= vel_.z * trig_.Sin(dir_.y);
+    accel_.z -= accel_factor_ * trig_.Cos(dir_.y);
+    accel_.x -= accel_factor_ * trig_.Sin(dir_.y);
   }
   else
-    vrp_.z -= vel_.z;
-  vrp_.y += vel_.y;
+    accel_.z -= accel_factor_;
 }
 
 void GlCamera::MoveUp()
 {
-  vrp_.y += vel_.z;
+  accel_.y += accel_factor_;
 }
 
 void GlCamera::MoveDown()
 {
-  vrp_.y -= vel_.z;
+  accel_.y -= accel_factor_;
+}
+
+// Apply velocity in each frame after all movements
+
+void GlCamera::ProcessVelocity(bool fly_mode, bool on_ground)
+{
+  if (!on_ground || !vel_.IsZero() || !accel_.IsZero())
+  {
+    // When in fly mode, we apply all velocity vector
+
+    if (fly_mode)
+    {
+      accel_ *= frict_factor_;
+      vel_ += accel_;
+      vel_ *= frict_factor_;
+      vrp_ += vel_;
+    }
+
+    // But if not in fly mode, we apply gravity and friction separately
+
+    else {
+      accel_.x *= frict_factor_;
+      accel_.z *= frict_factor_;
+      vel_ += accel_;
+      vel_.x *= frict_factor_;
+      vel_.z *= frict_factor_;
+      vrp_ += vel_;
+
+      if (!on_ground)
+        vel_.y += gravity_factor_;     // process gravity
+    }
+  }
+  else 
+  {
+    vel_.Zero();
+    accel_.Zero();
+  }
 }
 
 void GlCamera::RotateYaw(float theta)

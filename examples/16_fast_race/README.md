@@ -9,8 +9,9 @@ Simple game with different levels represents racing in the mountains. First leve
   $ ./fast_race levels/02.txt
   ...
 ```
-## Subdirectories:
+
+## See gameplay on youtube:
 
 <div style="text-align: center;" markdown="1" />
-<img src="screenshot.png" style="width: 600px;" />
+<a href="https://youtu.be/XOewYQkJghY"><img src="screenshot.png" style="width: 600px;" /></a>
 </div>

@@ -51,15 +51,11 @@ struct CameraOperator : public GlCamera
   void SetOnGround(bool s) { on_ground_ = s; }
   void SetOperatorHeight(float v) { operator_height_ = v; }
   void SetSpeedUpValue(float s) { speed_up_val_ = s; }
-  void SetGravity(float g) { gravity_ = g; }
   void SetJumpHeight(float h) { jump_height_ = h; }
   void SetFlyMode(bool m) { fly_mode_ = m; }
   void SetMouseSensitive(int s) { mouse_sensitive_ = s; }
 
 private:
-
-  void ProcessGravity();
-  void ProcessFriction();
 
   KbdBtn  move_left_;
   KbdBtn  move_right_;
@@ -84,14 +80,12 @@ private:
   float   operator_height_; // distance of camera from the ground
   float   prev_ypos_;
   bool    on_ground_;
-  float   gravity_;
   int     mouse_sensitive_;
 
 }; // class CameraOperator 
 
 namespace cam_operator_consts {
 
-  const float kGravityDefault {-0.04f};
   const float kSpeedUpDefault {3.0f};
   const float kJumpDefault {3.0f};
   const float kOperatorHeightDefault {4.0f};

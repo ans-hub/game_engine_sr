@@ -11,7 +11,7 @@
 #include <string>
 #include <iomanip> 
 
-#include "lib/audio/audio_out.h"
+#include "lib/audio/audio_fx.h"
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
 #include "lib/draw/gl_render_ctx.h"
@@ -77,13 +77,13 @@ int main(int argc, const char** argv)
     win.ToggleFullscreen(mode);
 
   // Audio
-  
-  AudioOut audio {};
+
+  AudioFx audio {};
   auto engine_snd = cfg.GetString("ter_ambient_snd");
   if (!engine_snd.empty())
   {
-    audio.Load(engine_snd, true);
-    audio.Play(engine_snd);
+    audio.LoadFx(engine_snd, true);
+    audio.PlayFx(engine_snd);
   }
   
   // Camera
@@ -103,14 +103,11 @@ int main(int argc, const char** argv)
   cam.SetRightButton(KbdBtn::D);
   cam.SetForwardButton(KbdBtn::W);
   cam.SetBackwardButton(KbdBtn::S);
-  // cam.SetUpButton(KbdBtn::R);
-  // cam.SetDownButton(KbdBtn::F);
-  // cam.SetJumpButton(KbdBtn::SPACE);
-  // cam.SetSpeedUpButton(KbdBtn::LSHIFT);
   cam.SetZoomInButton(KbdBtn::NUM9);
   cam.SetZoomOutButton(KbdBtn::NUM0);
   cam.SetSwitchRollButton(KbdBtn::L);
   cam.SetWiredModeButton(KbdBtn::T);
+  cam.SetSpeedUpButton(KbdBtn::LSHIFT);
   cam.SetOperatorHeight(cfg.GetFloat("cam_height"));
   cam.SetFlyMode(cfg.GetFloat("cam_fly_mode"));
   cam.SetOnGround(cfg.GetFloat("cam_fly_mode"));
@@ -118,7 +115,6 @@ int main(int argc, const char** argv)
   cam.SetAcceleration(cfg.GetFloat("cam_accel"));
   cam.SetFriction(cfg.GetFloat("cam_frict"));
   cam.SetSpeedUpValue(cfg.GetFloat("cam_speed_up"));
-  // cam.SetMoveVelocity({0.0f, 0.0f, cfg.GetFloat("cam_velocity")});
 
   // Create skybox
 
@@ -214,24 +210,6 @@ int main(int argc, const char** argv)
   intense  = cfg.GetFloat("light_sky_int");
   
   lights_sky.AddAmbient(color, intense);
-  
-  // Audio
-
-  // auto func = [](auto, auto channel, auto, auto*)
-  // {
-  //   BASS_ChannelSetPosition(channel, 0, BASS_POS_BYTE); // 0 - start pos
-  // };
-  
-
-  // BASS_Init(-1, 44100, BASS_DEVICE_DEFAULT, 0, 0);
-  // auto ambient = cfg.GetString("ter_ambient_snd");
-  // auto hndl = BASS_StreamCreateFile(FALSE, ambient.c_str(), 0, 0, BASS_STREAM_DECODE);
-
-  // hndl = BASS_FX_TempoCreate(hndl, BASS_FX_FREESOURCE);
-  // BASS_ChannelSetAttribute(hndl, BASS_ATTRIB_TEMPO_PITCH, 0);
-  // auto fend = BASS_StreamGetFilePosition(hndl, BASS_FILEPOS_END);
-  // BASS_ChannelSetSync(hndl, BASS_SYNC_POS | BASS_SYNC_MIXTIME, fend, func, 0);
-  // BASS_ChannelPlay(hndl, FALSE);
 
   // Main loop
 
@@ -251,11 +229,11 @@ int main(int argc, const char** argv)
     helpers::HandleFullscreen(kbtn, mode, win);
 
     // Handle engine speed
-
-    // float vel_f = (cam.vel_.SquareLength() * 2.5f);
-    // vel_f = std::fmod(vel_f, 255.0f);
-    // BASS_ChannelSetAttribute(hndl, BASS_ATTRIB_TEMPO_PITCH, (int)vel_f);
     
+    float vel_f = (cam.vel_.SquareLength() * 10.0f);
+    vel_f = std::fmod(vel_f, 255.0f);
+    audio.ChangeTempoPitch(engine_snd, vel_f);
+
     // Process skybox
   
     skybox.world_pos_ = cam.vrp_;
