@@ -38,6 +38,7 @@ CameraOperator::CameraOperator(
   , fly_mode_{false}
   , speed_up_mode_{false}
   , speed_up_val_{cam_operator_consts::kSpeedUpDefault}
+  , jump_height_{cam_operator_consts::kJumpDefault}
   , prev_mouse_pos_{-1,-1}
   , operator_height_{cam_operator_consts::kOperatorHeightDefault}
   , on_ground_{true}
@@ -47,35 +48,152 @@ CameraOperator::CameraOperator(
 
 void CameraOperator::ProcessInput(const BaseWindow& win)
 {
-  // Start process speed
+
+  // // Start process speed
 
   speed_up_mode_ = win.IsKeyboardBtnPressed(speed_up_);
   if (speed_up_mode_)
-    vel_.z *= speed_up_val_;
+    accel_factor_ *= speed_up_val_;
 
   // Handle movements
+
+  // float accel_factor = accel_factor_;//0.1f;
+  // float frict_factor = frict_factor_;//0.8f;
+  float kMaxAccel = 5.0f;
+
+  if (win.IsKeyboardBtnPressed(move_forward_))
+  {
+    if (type_ == GlCamera::Type::EULER)
+    {
+      accel_.z += accel_factor_ * trig_.Cos(dir_.y);
+      accel_.x += accel_factor_ * trig_.Sin(dir_.y);
+    }
+    else
+      accel_.z += accel_factor_;
+  }
+
+  if (win.IsKeyboardBtnPressed(move_backward_))
+  {
+    if (type_ == GlCamera::Type::EULER)
+    {
+      accel_.z -= accel_factor_ * trig_.Cos(dir_.y);
+      accel_.x -= accel_factor_ * trig_.Sin(dir_.y);
+    }
+    else
+      accel_.z -= accel_factor_;
+  }
+
+  if (win.IsKeyboardBtnPressed(move_left_))
+  {
+    if (type_ == GlCamera::Type::EULER)
+    {
+      accel_.x -= accel_factor_ * trig_.Cos(dir_.y);
+      accel_.z += accel_factor_ * trig_.Sin(dir_.y);
+    }
+    else
+      accel_.x -= accel_factor_;
+  }
+
+  if (win.IsKeyboardBtnPressed(move_right_))
+  {
+    if (type_ == GlCamera::Type::EULER)
+    {
+      accel_.x += accel_factor_ * trig_.Cos(dir_.y);
+      accel_.z -= accel_factor_ * trig_.Sin(dir_.y);
+    }
+    else
+      accel_.x += accel_factor_;
+  }
+
+    if (win.IsKeyboardBtnPressed(move_up_) && fly_mode_)
+  {
+    accel_.y += accel_factor_;
+  }
+
+  if (win.IsKeyboardBtnPressed(move_down_) && fly_mode_)
+  {
+    accel_.y -= accel_factor_;
+  }
+
+  // std::cerr << "Accel (x,z): " << accel_.x << ' ' << accel_.z << '\n';
+  // std::cerr << "Vel   (x,z): " << vel_.x << ' ' << vel_.z << '\n';
+  // std::cerr << "Frict (x,z): " << frict_.x << ' ' << frict_.z << "\n\n";
+
+  // Process velocity
   
-  if (win.IsKeyboardBtnPressed(move_forward_)) this->MoveForward();
-  if (win.IsKeyboardBtnPressed(move_backward_)) this->MoveBackward();
-  if (win.IsKeyboardBtnPressed(move_right_)) this->MoveRight();
-  if (win.IsKeyboardBtnPressed(move_left_)) this->MoveLeft();
-  if (win.IsKeyboardBtnPressed(move_up_)) this->MoveUp();
-  if (win.IsKeyboardBtnPressed(move_down_)) this->MoveDown();
+  // if (!vel_.IsZero())
+  // {
+    if (fly_mode_)
+    {
+      accel_ *= frict_factor_;
+      vel_ += accel_;
+      vel_ *= frict_factor_;
+      vrp_ += vel_;
+    }
+    else {
+      accel_.x *= frict_factor_;
+      accel_.z *= frict_factor_;
+      vel_ += accel_;
+      vel_.x *= frict_factor_;
+      vel_.z *= frict_factor_;
+      vrp_ += vel_;
+
+      if (!on_ground_)
+        vel_.y += gravity_;     // process gravity
+    }
+  // }
+  // else {
+  //   accel_.Zero();
+  //   vel_.Zero();
+  // }
+  // accel_ += frict_;
+  // if (accel_.x < 0.0f || accel_.z < 0.0f)
+  // {
+  //   accel_.Zero();
+  //   frict_.Zero();
+  // }
+  // if (!vel_.IsZero())
+
+  // std::cerr << 
+  
+  // Process friction
+
+  // accel_ *= friction_factor_;
+  // accel_ *= -1.0f;
+  // accel_ *= frict_factor;
+  
+
+
+
+    // vel_.z *= speed_up_val_;
+
+  // // Handle movements
+  
+  // if (win.IsKeyboardBtnPressed(move_forward_)) this->MoveForward();
+  // if (win.IsKeyboardBtnPressed(move_backward_)) this->MoveBackward();
+  // if (win.IsKeyboardBtnPressed(move_right_)) this->MoveRight();
+  // if (win.IsKeyboardBtnPressed(move_left_)) this->MoveLeft();
+  // if (win.IsKeyboardBtnPressed(move_up_)) this->MoveUp();
+  // if (win.IsKeyboardBtnPressed(move_down_)) this->MoveDown();
   if (win.IsKeyboardBtnPressed(zoom_in_)) this->ChangeFov(this->fov_ - 1.0f);
   if (win.IsKeyboardBtnPressed(zoom_out_)) this->ChangeFov(this->fov_ + 1.0f);
   if (win.IsKeyboardBtnPressed(jump_) && !fly_mode_ && on_ground_)
   {
-    this->vel_.y = 0.6f;    // todo : magic const
+    vel_.y = jump_height_;    // todo : magic const
     on_ground_ = false;
   }
 
   // End speed-up
 
   if (speed_up_mode_)
-    vel_.z /= speed_up_val_;
+    accel_factor_ /= speed_up_val_;  
+    // vel_.z /= speed_up_val_;
 
-  if (!on_ground_)
-    ProcessGravity();
+  // if (!on_ground_)
+  // {
+  //   std::cerr << "PRocGrav\n";
+  //   ProcessGravity();
+  // }
 
   // Handle swithching camera type
 
@@ -135,7 +253,8 @@ void CameraOperator::SetGroundPosition(float ypos)
 
 void CameraOperator::ProcessGravity()
 {
-  vel_ += gravity_;
+  vel_.y += gravity_;
+  std::cerr << vel_.y << '\n';
 }
 
 }  // namespace anshub

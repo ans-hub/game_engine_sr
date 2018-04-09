@@ -5,28 +5,38 @@
 #   a - std::vector<float> value
 #   s - std::string
 
-f win_w 800
-f win_h 600
-f win_fs 1    # fullscreen (1 on, 0 off)
-f win_fps 1000
-f cam_dov 1.0
-f cam_fov 75.0
-v cam_pos -1.5 30.0 0.0
-v cam_dir -2.0 7.0 0.0
-f cam_nearz 0.1
-f cam_farz 600.0
-f cam_clarity 5.0
-f cam_velocity 0.08
-f cam_gravity 0.04
-f cam_jump 0.6
-f cam_height 4.0
-f cam_speed_up 3.0
-f cam_fly_mode 0
-f ter_chunk 17
-f ter_divider 4
-a ter_detalization 50.0 80.0 120.0
-f ter_shading 16   # 2 - const, 4 - flat, 16 - gourang 
-s ter_sky ../00_data/skyboxes/cube_skybox2.ply
-s ter_hm ../00_data/terrains/map_hm_3.bmp
-s ter_tx ../00_data/terrains/map_tx_3.bmp
-f ter_water_level 17.5
+# Window settings
+
+f win_w             800
+f win_h             600
+f win_fs            0
+f win_fps           1000
+
+# Camera settings
+
+f cam_dov           1.0
+f cam_fov           75.0
+v cam_pos           -1.5 30.0 0.0
+v cam_dir           -2.0 7.0 0.0
+f cam_nearz          0.1
+f cam_farz          600.0
+f cam_clarity       5.0
+f cam_fly_mode      0
+f cam_gravity       -0.07
+f cam_jump          1.0
+f cam_accel         0.01
+f cam_frict         0.8
+f cam_height        4.0
+f cam_speed_up      3.0
+
+# Terrain settings
+
+f ter_chunk         17
+f ter_divider       4
+a ter_detaliz       50.0 80.0 120.0
+f ter_shading       16
+s ter_sky           ../00_data/skyboxes/cube_skybox2.ply
+s ter_hm            ../00_data/terrains/map_hm_3.bmp
+s ter_tx            ../00_data/terrains/map_tx_3.bmp
+f ter_water_lvl     17.5
+s ter_ambient_snd   ../00_data/sounds/mountain.ogg

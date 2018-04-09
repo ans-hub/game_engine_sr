@@ -11,6 +11,7 @@
 #include <string>
 #include <iomanip> 
 
+#include "lib/audio/audio_out.h"
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
 #include "lib/draw/gl_render_ctx.h"
@@ -107,6 +108,16 @@ int main(int argc, const char** argv)
   if (cfg.GetFloat("win_fs"))
     win.ToggleFullscreen(mode);
 
+  // // Audio
+
+  // AudioOut audio {};
+  // auto ambient = cfg.GetString("ter_ambient_snd");
+  // if (!ambient.empty())
+  // {
+  //   audio.Load(ambient, true);
+  //   audio.Play(ambient);
+  // }
+
   // Camera
 
   float    dov     {cfg.GetFloat("cam_dov")};
@@ -119,7 +130,6 @@ int main(int argc, const char** argv)
   CameraOperator cam {
     fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z
   };
-  cam.SetPrevMousePos(win.ReadMousePos());
   cam.SetLeftButton(KbdBtn::A);
   cam.SetRightButton(KbdBtn::D);
   cam.SetForwardButton(KbdBtn::W);
@@ -134,8 +144,12 @@ int main(int argc, const char** argv)
   cam.SetWiredModeButton(KbdBtn::T);
   cam.SetOperatorHeight(cfg.GetFloat("cam_height"));
   cam.SetFlyMode(cfg.GetFloat("cam_fly_mode"));
-  cam.SetOnGround(cfg.GetFloat("cam_fly_mode"));
-  cam.SetMoveVelocity({0.0f, 0.0f, cfg.GetFloat("cam_velocity")});
+  cam.SetOnGround(!cfg.GetFloat("cam_fly_mode"));
+  cam.SetGravity(cfg.GetFloat("cam_gravity"));
+  cam.SetJumpHeight(cfg.GetFloat("cam_jump"));
+  cam.SetAcceleration(cfg.GetFloat("cam_accel"));
+  cam.SetFriction(cfg.GetFloat("cam_frict"));
+  cam.SetSpeedUpValue(cfg.GetFloat("cam_speed_up"));
 
   // Create skybox
 
@@ -152,14 +166,14 @@ int main(int argc, const char** argv)
     cfg.GetFloat("ter_chunk"),
     static_cast<Shading>(cfg.GetFloat("ter_shading"))
   );
-  terrain.SetDetalization(cfg.GetVectorF("ter_detalization"));
+  terrain.SetDetalization(cfg.GetVectorF("ter_detaliz"));
   auto& terrain_chunks = terrain.GetChunks();
 
   // Make water
   
   Water water {
     terrain.GetHmWidth() - 1,
-    cfg.GetFloat("ter_water_level"),
+    cfg.GetFloat("ter_water_lvl"),
     color::fOceanBlue,
     Shading::GOURAUD
   };
@@ -190,6 +204,16 @@ int main(int argc, const char** argv)
   Lights lights_sky {};
   lights_sky.AddAmbient(color::fWhite, 0.7f);
   
+// Audio
+
+  AudioOut audio {};
+  auto ambient = cfg.GetString("ter_ambient_snd");
+  if (!ambient.empty())
+  {
+    audio.Load(ambient, true);
+    audio.Play(ambient);
+  }
+
   // Main loop
 
   do {

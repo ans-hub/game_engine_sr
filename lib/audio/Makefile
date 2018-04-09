@@ -21,7 +21,7 @@ $(LIBNAME) : $(SRCFILES:%.cc=%.o)
 	ranlib $(LIBNAME)
 
 %.o : %.cc %.h
-	$(CXX) $(CXXFLAGS) $(RLSFLAGS) -c $< -o $@ -lbass
+	$(CXX) $(CXXFLAGS) $(RLSFLAGS) -c $< -o $@ -lbass -lbass_fx
 
 # Build library (debug version)
 
@@ -30,7 +30,7 @@ debug	: $(SRCFILES:%.cc=%dbg.o)
 	ranlib $(LIBNAME)
 
 %dbg.o : %.cc %.h
-	$(CXX) $(CXXFLAGS) $(DBGFLAGS) -c $< -o $@ -lbass
+	$(CXX) $(CXXFLAGS) $(DBGFLAGS) -c $< -o $@ -lbass -lbass_fx
 
 ##############################################################################
 

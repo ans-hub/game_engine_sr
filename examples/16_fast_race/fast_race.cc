@@ -11,6 +11,7 @@
 #include <string>
 #include <iomanip> 
 
+#include "lib/audio/audio_out.h"
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
 #include "lib/draw/gl_render_ctx.h"
@@ -75,6 +76,16 @@ int main(int argc, const char** argv)
   if (cfg.GetFloat("win_fs"))
     win.ToggleFullscreen(mode);
 
+  // Audio
+  
+  AudioOut audio {};
+  auto engine_snd = cfg.GetString("ter_ambient_snd");
+  if (!engine_snd.empty())
+  {
+    audio.Load(engine_snd, true);
+    audio.Play(engine_snd);
+  }
+  
   // Camera
 
   float    dov     {cfg.GetFloat("cam_dov")};
@@ -92,19 +103,22 @@ int main(int argc, const char** argv)
   cam.SetRightButton(KbdBtn::D);
   cam.SetForwardButton(KbdBtn::W);
   cam.SetBackwardButton(KbdBtn::S);
-  cam.SetUpButton(KbdBtn::R);
-  cam.SetDownButton(KbdBtn::F);
-  cam.SetJumpButton(KbdBtn::SPACE);
-  cam.SetSpeedUpButton(KbdBtn::LSHIFT);
+  // cam.SetUpButton(KbdBtn::R);
+  // cam.SetDownButton(KbdBtn::F);
+  // cam.SetJumpButton(KbdBtn::SPACE);
+  // cam.SetSpeedUpButton(KbdBtn::LSHIFT);
   cam.SetZoomInButton(KbdBtn::NUM9);
   cam.SetZoomOutButton(KbdBtn::NUM0);
   cam.SetSwitchRollButton(KbdBtn::L);
   cam.SetWiredModeButton(KbdBtn::T);
-  cam.SetGravity({0.0f, cfg.GetFloat("cam_gravity"), 0.0f});
   cam.SetOperatorHeight(cfg.GetFloat("cam_height"));
   cam.SetFlyMode(cfg.GetFloat("cam_fly_mode"));
   cam.SetOnGround(cfg.GetFloat("cam_fly_mode"));
-  cam.SetMoveVelocity({0.0f, 0.0f, cfg.GetFloat("cam_velocity")});
+  cam.SetGravity(cfg.GetFloat("cam_gravity"));
+  cam.SetAcceleration(cfg.GetFloat("cam_accel"));
+  cam.SetFriction(cfg.GetFloat("cam_frict"));
+  cam.SetSpeedUpValue(cfg.GetFloat("cam_speed_up"));
+  // cam.SetMoveVelocity({0.0f, 0.0f, cfg.GetFloat("cam_velocity")});
 
   // Create skybox
 
@@ -188,8 +202,8 @@ int main(int argc, const char** argv)
 
   color   = color_table[cfg.GetString("light_pnt_color")];
   intense = cfg.GetFloat("light_pnt_int");
-  ldir    = {0.0f, 0.0f, 1.0f};
-  lpos    = {0.0f, 13.0f, 36.0f};
+  ldir    = cfg.GetVector3d("light_pnt_dir"); 
+  lpos    = cfg.GetVector3d("light_pnt_pos");
 
   if (intense)
     lights_all.AddPoint(color, intense, lpos, ldir);
@@ -201,6 +215,24 @@ int main(int argc, const char** argv)
   
   lights_sky.AddAmbient(color, intense);
   
+  // Audio
+
+  // auto func = [](auto, auto channel, auto, auto*)
+  // {
+  //   BASS_ChannelSetPosition(channel, 0, BASS_POS_BYTE); // 0 - start pos
+  // };
+  
+
+  // BASS_Init(-1, 44100, BASS_DEVICE_DEFAULT, 0, 0);
+  // auto ambient = cfg.GetString("ter_ambient_snd");
+  // auto hndl = BASS_StreamCreateFile(FALSE, ambient.c_str(), 0, 0, BASS_STREAM_DECODE);
+
+  // hndl = BASS_FX_TempoCreate(hndl, BASS_FX_FREESOURCE);
+  // BASS_ChannelSetAttribute(hndl, BASS_ATTRIB_TEMPO_PITCH, 0);
+  // auto fend = BASS_StreamGetFilePosition(hndl, BASS_FILEPOS_END);
+  // BASS_ChannelSetSync(hndl, BASS_SYNC_POS | BASS_SYNC_MIXTIME, fend, func, 0);
+  // BASS_ChannelPlay(hndl, FALSE);
+
   // Main loop
 
   do {
@@ -218,6 +250,12 @@ int main(int argc, const char** argv)
     helpers::HandlePause(kbtn, win);
     helpers::HandleFullscreen(kbtn, mode, win);
 
+    // Handle engine speed
+
+    // float vel_f = (cam.vel_.SquareLength() * 2.5f);
+    // vel_f = std::fmod(vel_f, 255.0f);
+    // BASS_ChannelSetAttribute(hndl, BASS_ATTRIB_TEMPO_PITCH, (int)vel_f);
+    
     // Process skybox
   
     skybox.world_pos_ = cam.vrp_;
@@ -320,6 +358,7 @@ int main(int argc, const char** argv)
 
     triangles::ComputeNormals(tris_base);
 
+    // auto& flash = lights_all.point_.front();
     // Vector pos {flash.GetPosition()};
     // Vector dir {flash.GetDirection()};
     
@@ -329,28 +368,29 @@ int main(int argc, const char** argv)
     if (!lights_all.point_.empty())
       lights_all.point_.front().Reset();
 
-/*
-    if (kbtn == Btn::NUM6)
-      pos.y += 1.0f;
-    if (kbtn == Btn::NUM7)
-      pos.y -= 1.0f;
-    if (kbtn == Btn::Y)
-      pos.z += 1.0f;
-    if (kbtn == Btn::U)
-      pos.z -= 1.0f;
-    if (kbtn == Btn::H)
-      dir.y += 1.0f;
-    if (kbtn == Btn::J)
-      dir.y -= 1.0f;
-    if (kbtn == Btn::B)
-      dir.z += 1.0f;
-    if (kbtn == Btn::M)
-      dir.z -= 1.0f;
-    if (kbtn == Btn::C)
-      flash.intense_ += 1.0f;
-    if (kbtn == Btn::V)
-      flash.intense_ -= 1.0f;
-*/
+    // if (kbtn == Btn::NUM6)
+    //   pos.y += 1.0f;
+    // if (kbtn == Btn::NUM7)
+    //   pos.y -= 1.0f;
+    // if (kbtn == Btn::Y)
+    //   pos.z += 1.0f;
+    // if (kbtn == Btn::U)
+    //   pos.z -= 1.0f;
+    // if (kbtn == Btn::H)
+    //   dir.y += 1.0f;
+    // if (kbtn == Btn::J)
+    //   dir.y -= 1.0f;
+    // if (kbtn == Btn::B)
+    //   dir.z += 1.0f;
+    // if (kbtn == Btn::M)
+    //   dir.z -= 1.0f;
+    // if (kbtn == Btn::C)
+    //   flash.intense_ += 1.0f;
+    // if (kbtn == Btn::V)
+    //   flash.intense_ -= 1.0f;
+
+// std::cerr << pos << '\n';
+// std::cerr << dir << '\n';
       
     // flash.SetPosition(pos);
     // flash.SetDirection(dir);

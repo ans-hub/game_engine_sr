@@ -54,7 +54,8 @@ struct GlCamera
   GlCamera& operator=(GlCamera&&) =default;
   virtual ~GlCamera() noexcept { }
   
-  void  SetMoveVelocity(cVector& vel) { vel_ = vel; }
+  void  SetAcceleration(float accel) { accel_factor_ = accel; }
+  void  SetFriction(float frict) { frict_factor_ = frict; }
   
   void  MoveLeft();
   void  MoveRight();
@@ -69,7 +70,6 @@ struct GlCamera
   void  SwitchType(Type);
   void  ChangeFov(int new_fov);
   void  RefreshViewVector();
-  void  ProcessGravity();
   
   TrigTable trig_;
   Type      type_;      // camera type    
@@ -83,7 +83,10 @@ struct GlCamera
   float     ar_;        // aspect ratio
   Vector    vrp_;       // view reference point (world pos in world coords)
   Vector    vel_;       // camera velocity (z - forward, x - left/right, y - up/down)
-  Vector    gravity_;
+  Vector    accel_;     // camera acceleration vector
+  Vector    frict_;     // camera friction vector
+  float     frict_factor_;
+  float     accel_factor_;
 
   // Euler specific
 

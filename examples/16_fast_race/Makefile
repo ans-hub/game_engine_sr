@@ -5,26 +5,27 @@ ROOTDIR = ../../
 
 # Setup libraries pathes and flags
 
-LIBDIR 		= $(ROOTDIR)lib
-LIBWINDOW = $(LIBDIR)/window
-LIBMATH 	= $(LIBDIR)/math
+LIBDIR		= $(ROOTDIR)lib
+LIBWINDOW 	= $(LIBDIR)/window
+LIBMATH		= $(LIBDIR)/math
 LIBDRAW 	= $(LIBDIR)/draw
-LIBSYSTEM = $(LIBDIR)/system
-LDFLAGS 	= -lwindow  -ldraw -lmath -lsystem
-LDFLAGS  += -lX11 -lGL -lGLU -lXrandr
+LIBSYSTEM 	= $(LIBDIR)/system
+LIBAUDIO 	= $(LIBDIR)/audio
+LDFLAGS 	= -lwindow  -ldraw -lmath -lsystem -laudio
+LDFLAGS		+= -lX11 -lGL -lGLU -lXrandr -lbass -lbass_fx
 
 # Setup compiler
 
-CXX 			= g++
+CXX 		= g++
 CXXFLAGS 	= -I $(ROOTDIR) -I .
-CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
-CXXLIBS  += -L $(LIBWINDOW) -L $(LIBMATH)
-CXXLIBS  += -L $(LIBDRAW) -L $(LIBSYSTEM)
-CXXLIBS  += -L /usr/local/lib/
-CXXFLAGS += -MP -MMD
-DBGFLAGS  = -ggdb3 -DDEBUG -O0
+CXXFLAGS 	+= -ansi -pedantic -Wall -Wextra -std=c++14
+CXXLIBS  	+= -L $(LIBWINDOW) -L $(LIBMATH)
+CXXLIBS  	+= -L $(LIBDRAW) -L $(LIBSYSTEM) -L $(LIBAUDIO)
+CXXLIBS  	+= -L /usr/local/lib/
+CXXFLAGS 	+= -MP -MMD
+DBGFLAGS  	= -ggdb3 -DDEBUG -O0
 # DBGFLAGS += -pg -no-pie
-RLSFLAGS  = -O2
+RLSFLAGS  	= -O2
 
 # Setup objects
 
@@ -56,6 +57,7 @@ $(APPNAME) : $(APPNAME).cc $(OBJECTS)
 	make -C $(LIBMATH)
 	make -C $(LIBDRAW)
 	make -C $(LIBSYSTEM)
+	make -C $(LIBAUDIO)	
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(RLSFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $@
 
 # Builds main app (debug)
@@ -65,6 +67,7 @@ debug : $(APPNAME).cc $(OBJECTS)
 	make debug -C $(LIBMATH)
 	make debug -C $(LIBDRAW)
 	make debug -C $(LIBSYSTEM)
+	make debug -C $(LIBAUDIO)	
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(DBGFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $(APPNAME)_$@
 
 #############################################################################
@@ -88,3 +91,4 @@ clean :
 	make clean -C $(LIBMATH)
 	make clean -C $(LIBDRAW)
 	make clean -C $(LIBSYSTEM)
+	make clean -C $(LIBAUDIO)	

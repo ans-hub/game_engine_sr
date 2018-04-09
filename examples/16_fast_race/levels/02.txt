@@ -16,15 +16,17 @@ f win_fps           1000
 
 f cam_dov           1.0
 f cam_fov           75.0
-v cam_pos           -81.0 153.0 245.0
-v cam_dir           358.0 492.0 0.0
+v cam_pos           -81.0  153.0  245.0
+v cam_dir           358.0  492.0  0.0
 f cam_nearz         0.1
 f cam_farz          1200.0
 f cam_clarity       50.0
 f cam_velocity      1.2
 f cam_fly_mode      0
-f cam_gravity       -0.4
-f cam_jump          0.6
+f cam_gravity       -0.1
+f cam_jump          0.0
+f cam_accel         0.1
+f cam_frict         0.8
 f cam_height        8.0
 f cam_speed_up      6.0
 
@@ -39,6 +41,7 @@ s ter_hm            levels/res/mountain_hm.bmp
 s ter_tx            levels/res/mountain_tx.bmp
 s ter_objs          levels/res/mountain_objs.bmp
 f ter_water_lvl     -1000.0
+s ter_ambient_snd   ../00_data/sounds/engine.ogg
 
 # Lights settings
 
@@ -51,3 +54,6 @@ s light_amb_color   blue
 s light_inf_color   blue
 s light_pnt_color   yellow
 s light_sky_color   white
+
+v light_pnt_dir     0.0  -0.38  0.92   # old - 0.0  0.0  1.0
+v light_pnt_pos     0.0    5.0  40.0   # old - 0.0 13.0 36.0

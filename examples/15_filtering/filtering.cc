@@ -143,8 +143,9 @@ int main(int argc, const char** argv)
   cam.SetSwitchRollButton(KbdBtn::L);
   cam.SetWiredModeButton(KbdBtn::T);
   cam.SetSwitchTypeButton(KbdBtn::ENTER);
-  cam.SetMoveVelocity({0.0f, 0.0f, 0.05f});
-  cam.SetSpeedUpValue(3.0f);
+  cam.SetAcceleration(0.05f);
+  cam.SetFriction(0.8f);
+  cam.SetSpeedUpValue(6.0f);
   cam.SetFlyMode(true);
 
   // Prepare lights sources

@@ -31,7 +31,11 @@ GlCamera::GlCamera
   , scr_h_{scr_h}
   , ar_{(float)scr_w_ / (float)scr_h_}
   , vrp_{vrp}
-  , vel_{0.0f, 0.0f, 1.0f}
+  , vel_{0.0f, 0.0f, 0.0f}
+  , accel_{0.0f, 0.0f, 0.0f}
+  , frict_{0.0f, 0.0f, 0.0f}
+  , frict_factor_{0.8f}
+  , accel_factor_{0.01f}
   , dir_{dir}
   , view_{0.0f, 0.0f, 1.0f}
   , u_{1.0f, 0.0f, 0.0f}

@@ -15,11 +15,21 @@ AudioOut::AudioOut()
   : inited_{false}
   , loaded_{ }
   , channels_cnt_{audio_helpers::kChannelsCount}
+  , repeat_func_{}
 {
+  // Initialize library
+
   if (BASS_Init(-1, 44100, BASS_DEVICE_DEFAULT, 0, 0))
     inited_ = true;
   else
     audio_helpers::PrintBassError();
+  
+  // Initialize repeat callback
+
+  constexpr int start_pos {0};
+  repeat_func_ = [](auto, auto channel, auto, auto*) {
+    BASS_ChannelSetPosition(channel, start_pos, BASS_POS_BYTE);
+  };
 }
 
 AudioOut::~AudioOut()
@@ -38,8 +48,8 @@ bool AudioOut::Play(const std::string& fname, bool repeat)
   if (!hndl)
     return audio_helpers::PrintBassError();  
 
-  hndl = BASS_SampleGetChannel(hndl, FALSE);
-  BASS_ChannelSetAttribute(hndl, BASS_ATTRIB_VOL,0.5f);
+  // hndl = BASS_SampleGetChannel(hndl, FALSE);
+  // BASS_ChannelSetAttribute(hndl, BASS_ATTRIB_VOL,0.5f);
 
   if (BASS_ChannelPlay(hndl, FALSE)) 
     return true;
@@ -61,6 +71,39 @@ bool AudioOut::Stop(const std::string& fname, bool immediately)
     return StopPlayingImmediately(hndl);
   else 
     return RemoveLoopFromSample(hndl);
+}
+
+// Loads sample by filename, saves to loaded_ vector and return its handle
+
+AudioOut::Handle AudioOut::Load(const std::string& fname, bool repeat)
+{
+  Handle hndl = FindLoaded(fname);
+
+  if (!hndl) {
+    DWORD flags;
+    // if (repeat) 
+    //   flags = BASS_SAMPLE_LOOP;
+    // else
+    //   flags = BASS_SAMPLE_8BITS + BASS_SAMPLE_OVER_POS;
+
+    hndl = BASS_StreamCreateFile(FALSE, fname.c_str(), 0,0, BASS_STREAM_DECODE);
+    hndl = BASS_FX_TempoCreate(hndl, BASS_FX_FREESOURCE);
+    if (repeat)
+    {
+      auto end = BASS_StreamGetFilePosition(hndl, BASS_FILEPOS_END);
+      auto rep = [](auto, auto channel, auto, auto*) {
+        BASS_ChannelSetPosition(channel, 0, BASS_POS_BYTE);
+      };
+      BASS_ChannelSetSync(hndl, BASS_SYNC_POS | BASS_SYNC_MIXTIME, end, rep, 0);
+    }
+    BASS_ChannelSetAttribute(hndl, BASS_ATTRIB_TEMPO_PITCH, 0);
+    loaded_.push_back(std::make_pair(fname, hndl));
+    // hndl = BASS_SampleLoad(FALSE, fname.c_str(), 0,0,3, flags);
+  }
+  if (!hndl)
+    audio_helpers::PrintBassError();
+
+  return hndl;
 }
 
 // Returns filename of first finded sample which currently is playing
@@ -85,28 +128,6 @@ AudioOut::VStrings AudioOut::NowPlaying(bool only_repeated) const
 }
 
 // IMPLEMENTATION DETAILS
-
-// Loads sample by filename, saves to loaded_ vector and return its handle
-
-AudioOut::Handle AudioOut::Load(const std::string& fname, bool repeat)
-{
-  Handle hndl = FindLoaded(fname);
-
-  if (!hndl) {
-    DWORD flags;
-    if (repeat) 
-      flags = BASS_SAMPLE_LOOP;
-    else
-      flags = BASS_SAMPLE_8BITS + BASS_SAMPLE_OVER_POS;
-
-    hndl = BASS_SampleLoad(FALSE, fname.c_str(), 0,0,3, flags);
-    loaded_.push_back(std::make_pair(fname, hndl));
-  }
-  if (!hndl)
-    audio_helpers::PrintBassError();
-
-  return hndl;
-}
 
 // Returns handle of sample if its were been loaded early
 
