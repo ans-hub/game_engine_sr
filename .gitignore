@@ -23,6 +23,11 @@
 !*.3ds
 !*.ply
 
+# Unignore sounds
+
+!*.mp3
+!*.ogg
+
 # Unignore other
 
 !Makefile
