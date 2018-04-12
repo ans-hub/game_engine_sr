@@ -37,6 +37,8 @@ GlCamera::GlCamera
   , frict_factor_{0.8f}
   , accel_factor_{0.01f}
   , gravity_factor_{0.0f}
+  , max_speed_{10.0f}
+  , curr_speed_{0.0f}
   , dir_{dir}
   , view_{0.0f, 0.0f, 1.0f}
   , u_{1.0f, 0.0f, 0.0f}
@@ -109,9 +111,11 @@ void GlCamera::ProcessVelocity(bool fly_mode, bool on_ground)
 
     if (fly_mode)
     {
-      accel_ *= frict_factor_;
+      accel_ *= frict_factor_;    // we should dec accel
       vel_ += accel_;
-      vel_ *= frict_factor_;
+      if (vel_.SquareLength() > max_speed_)
+        vel_ -= accel_;
+      vel_ *= frict_factor_;      // and dec vel
       vrp_ += vel_;
     }
 
@@ -121,6 +125,8 @@ void GlCamera::ProcessVelocity(bool fly_mode, bool on_ground)
       accel_.x *= frict_factor_;
       accel_.z *= frict_factor_;
       vel_ += accel_;
+      if (vel_.SquareLength() > max_speed_)
+        vel_ -= accel_;
       vel_.x *= frict_factor_;
       vel_.z *= frict_factor_;
       vrp_ += vel_;
@@ -134,6 +140,8 @@ void GlCamera::ProcessVelocity(bool fly_mode, bool on_ground)
     vel_.Zero();
     accel_.Zero();
   }
+
+  curr_speed_ = vel_.SquareLength();
 }
 
 void GlCamera::RotateYaw(float theta)

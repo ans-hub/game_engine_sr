@@ -59,6 +59,7 @@ struct GlCamera
   void  SetAcceleration(float accel) { accel_factor_ = accel; }
   void  SetFriction(float frict) { frict_factor_ = frict; }
   void  SetGravity(float gravity) { gravity_factor_ = gravity; }
+  void  SetMaxSpeed(float max) { max_speed_ = max; }
   
   // Process movements
 
@@ -98,6 +99,8 @@ struct GlCamera
   float     frict_factor_;
   float     accel_factor_;
   float     gravity_factor_;
+  float     max_speed_;
+  float     curr_speed_;
   
   // Euler specific
 

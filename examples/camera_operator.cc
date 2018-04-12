@@ -33,6 +33,7 @@ CameraOperator::CameraOperator(
   , switch_type_ {KbdBtn::NONE}
   , switch_roll_ {KbdBtn::NONE}
   , switch_wired_ {KbdBtn::NONE}
+  , fly_ {KbdBtn::NONE}
   , roll_mode_{false}
   , wired_mode_{false}
   , fly_mode_{false}
@@ -49,21 +50,31 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
 {
   // Start process speed
 
-  speed_up_mode_ = win.IsKeyboardBtnPressed(speed_up_);
+  speed_up_mode_ = IsButtonPressed(win, speed_up_);
   if (speed_up_mode_)
     accel_factor_ *= speed_up_val_;
 
   // Handle movements
   
-  if (win.IsKeyboardBtnPressed(move_forward_)) this->MoveForward();
-  if (win.IsKeyboardBtnPressed(move_backward_)) this->MoveBackward();
-  if (win.IsKeyboardBtnPressed(move_right_)) this->MoveRight();
-  if (win.IsKeyboardBtnPressed(move_left_)) this->MoveLeft();
-  if (win.IsKeyboardBtnPressed(move_up_) && fly_mode_) this->MoveUp();
-  if (win.IsKeyboardBtnPressed(move_down_) && fly_mode_) this->MoveDown();
-  if (win.IsKeyboardBtnPressed(zoom_in_)) this->ChangeFov(this->fov_ - 1.0f);
-  if (win.IsKeyboardBtnPressed(zoom_out_)) this->ChangeFov(this->fov_ + 1.0f);
-  if (win.IsKeyboardBtnPressed(jump_) && !fly_mode_ && on_ground_)
+  if (IsButtonPressed(win, fly_))
+    fly_mode_ = !fly_mode_;  
+  if (IsButtonPressed(win, move_forward_))
+    this->MoveForward();
+  if (IsButtonPressed(win, move_backward_))
+    this->MoveBackward();
+  if (IsButtonPressed(win, move_right_))
+    this->MoveRight();
+  if (IsButtonPressed(win, move_left_))
+    this->MoveLeft();
+  if (fly_mode_ && IsButtonPressed(win, move_up_))
+    this->MoveUp();
+  if (fly_mode_ && IsButtonPressed(win, move_down_))
+    this->MoveDown();
+  if (IsButtonPressed(win, zoom_in_))
+    this->ChangeFov(this->fov_ - 1.0f);
+  if (IsButtonPressed(win, zoom_out_))
+    this->ChangeFov(this->fov_ + 1.0f);
+  if (!fly_mode_ && on_ground_ && IsButtonPressed(win, jump_))
   {
     vel_.y = jump_height_;
     on_ground_ = false;
@@ -83,7 +94,7 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
 
   // Handle swithching camera type
 
-  if (win.IsKeyboardBtnPressed(switch_type_))
+  if (IsButtonPressed(win, switch_type_))
   {
     if (this->type_ == GlCamera::Type::EULER)
       this->SwitchType(GlCamera::Type::UVN);
@@ -93,12 +104,12 @@ void CameraOperator::ProcessInput(const BaseWindow& win)
 
   // Handle switching wired mode
 
-  if (win.IsKeyboardBtnPressed(switch_wired_))
+  if (IsButtonPressed(win, switch_wired_))
     wired_mode_ = !wired_mode_;
 
   // Handle roll mode
 
-  if (win.IsKeyboardBtnPressed(switch_roll_))
+  if (IsButtonPressed(win, switch_roll_))
     roll_mode_ = !roll_mode_;
 
   // Handle camera rotating
@@ -123,7 +134,7 @@ void CameraOperator::SetGroundPosition(float ypos)
   if (!fly_mode_)
   {
     this->vrp_.y += this->vel_.y;
-    if (this->vrp_.y < ypos + operator_height_)
+    if (this->vrp_.y <= ypos + operator_height_)
     {
       this->vrp_.y = ypos + operator_height_;
       this->vel_.y = 0.0f;
