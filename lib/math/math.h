@@ -9,6 +9,7 @@
 #define GM_MATH_H
 
 #include <cmath>
+#include <memory>
 
 #include "constants.h"
 
@@ -27,6 +28,8 @@ namespace math {
   bool  IsAbsFactorOfTwo(int);
   int   Clamp(int, int, int);
   float Clamp(float, float, float);
+  template<class T = float>
+  float LeadToRange(const std::pair<T,T>& src, const std::pair<T,T>& dst, T val);
 
 } // namespace math
 
@@ -78,6 +81,23 @@ inline float math::Clamp(float val, float min, float max)
 {
   float rem = std::fmod(val, max);
   return rem < 0.0f ? max + rem : min + rem;
+}
+
+// Make value from range 1 as value from range 2 
+
+template<class T = float>
+inline float math::LeadToRange(
+  const std::pair<T,T>& range_src, const std::pair<T,T>& range_dest, T val)
+{
+  auto min_src = range_src.first;
+  auto max_src = range_src.second;
+  auto min_dest = range_dest.first;
+  auto max_dest = range_dest.second;
+
+  auto val_pos    = val / (max_src - min_src);
+  auto val_offset = val_pos * (max_dest - min_dest);
+  
+  return min_dest + val_offset;
 }
 
 } // namespace anshub
