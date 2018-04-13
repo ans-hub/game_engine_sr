@@ -31,7 +31,7 @@ RLSFLAGS  	= -O2
 
 VPATH = $(LIBDIR)/data/
 VPATH +=  ../
-OBJECTS = helpers.o camera_operator.o
+OBJECTS = helpers.o camera_operator.o player.o
 
 # Other stuff
 

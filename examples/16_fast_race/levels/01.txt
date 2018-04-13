@@ -25,10 +25,11 @@ f cam_velocity      1.2
 f cam_fly_mode      0
 f cam_gravity       -0.1
 f cam_jump          0.0
-f cam_accel         0.1
+f cam_accel         0.08
 f cam_frict         0.7
+f cam_max_speed     2.5
 f cam_height        8.0
-f cam_speed_up      2.0
+f cam_speed_up      4.0
 
 # Terrain settings
 
@@ -41,7 +42,6 @@ s ter_hm            levels/res/mountain_hm.bmp
 s ter_tx            levels/res/mountain_tx.bmp
 s ter_objs          levels/res/mountain_objs.bmp
 f ter_water_lvl     17.5
-s ter_ambient_snd   ../00_data/sounds/engine.ogg
 
 # Lights settings
 
@@ -54,3 +54,9 @@ s light_amb_color   white
 s light_inf_color   white
 s light_pnt_color   yellow
 s light_sky_color   white
+
+# Sound settings
+
+s snd_engine        ../00_data/sounds/engine.ogg
+f snd_low_pitch     -8.0
+f snd_high_pitch    2.0

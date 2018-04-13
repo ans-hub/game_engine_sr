@@ -31,8 +31,12 @@
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
 #include "lib/math/trig.h"
+#include "lib/math/matrix_rotate_eul.h"
+#include "lib/math/matrix_rotate_uvn.h"
+#include "lib/math/matrix_trans.h"
 
-#include "config.h"
+#include "../player.h"
+#include "../config.h"
 #include "../helpers.h"
 #include "../camera_operator.h"
 
@@ -79,10 +83,16 @@ int main(int argc, const char** argv)
   // Audio
 
   AudioFx audio {};
-  auto engine_snd = cfg.GetString("ter_ambient_snd");
+  auto engine_snd = cfg.GetString("snd_engine");
+  auto engine_mod = AudioFx::Modifier::PITCH;
+
   if (!engine_snd.empty())
   {
+    auto min_pitch = cfg.GetFloat("snd_low_pitch");
+    auto max_pitch = cfg.GetFloat("snd_high_pitch");
     audio.LoadFx(engine_snd, true);
+    audio.SetModifierRange(engine_snd, engine_mod, min_pitch, max_pitch);
+    audio.SetModifierValue(engine_snd, engine_mod, min_pitch);
     audio.PlayFx(engine_snd);
   }
   
@@ -103,10 +113,12 @@ int main(int argc, const char** argv)
   cam.SetRightButton(KbdBtn::D);
   cam.SetForwardButton(KbdBtn::W);
   cam.SetBackwardButton(KbdBtn::S);
+  cam.SetUpButton(KbdBtn::R);
+  cam.SetDownButton(KbdBtn::F);
   cam.SetZoomInButton(KbdBtn::NUM9);
   cam.SetZoomOutButton(KbdBtn::NUM0);
-  cam.SetSwitchRollButton(KbdBtn::L);
-  cam.SetWiredModeButton(KbdBtn::T);
+  cam.SetSwitchRollButton(KbdBtn::L, 10);
+  cam.SetWiredModeButton(KbdBtn::T, 10);
   cam.SetSpeedUpButton(KbdBtn::LSHIFT);
   cam.SetOperatorHeight(cfg.GetFloat("cam_height"));
   cam.SetFlyMode(cfg.GetFloat("cam_fly_mode"));
@@ -114,7 +126,9 @@ int main(int argc, const char** argv)
   cam.SetGravity(cfg.GetFloat("cam_gravity"));
   cam.SetAcceleration(cfg.GetFloat("cam_accel"));
   cam.SetFriction(cfg.GetFloat("cam_frict"));
+  cam.SetMaxSpeed(cfg.GetFloat("cam_max_speed"));  
   cam.SetSpeedUpValue(cfg.GetFloat("cam_speed_up"));
+  cam.SetFlyMode(true);  
 
   // Create skybox
 
@@ -141,17 +155,6 @@ int main(int argc, const char** argv)
   nature.SetObjects(Nature::ROCK_T1, "../00_data/nature/rock_type_1.ply");
   nature.RecognizeObjects();
   auto& nature_objs = nature.GetObjects();
-
-  // Create jeep
-
-  std::string jeep_fname {"../00_data/objects/jeep_front.ply"};
-  auto jeep = object::Make(
-    jeep_fname.c_str(),
-    trig,
-    {9.0f, 9.0f, 9.0f},     // scale
-    {0.0f, -1.8f, 3.5f},    // position
-    {-105.0f, 0.0f, 0.0f}   // rotate
-  );
 
   // Make water
   
@@ -211,28 +214,78 @@ int main(int argc, const char** argv)
   
   lights_sky.AddAmbient(color, intense);
 
+  // Create jeep model
+
+  const char*  kFname     {"../00_data/objects/jeep_front.ply"};
+  const Vector kScale     {9.0f, 9.0f, 9.0f};
+  const Vector kPosition  {cfg.GetVector3d("cam_pos")};
+  const Vector kRotate    {-90.0f, 0.0f, 0.0f};
+  auto model = object::Make(kFname, trig, kScale, kPosition, kRotate);
+
+  // Create player entity
+
+  const float  kPlayerHeight {5.0f};
+  const float  kCameraHeight {2.5f};
+  const Vector kPlayerDir    {0.0f, 125.0f, 0.0f};
+  Player jeep (std::move(model), cam, kPlayerHeight, kCameraHeight, kPlayerDir);
+
+  // Set player controls
+
+  jeep.SetButton(Player::TURN_LEFT, KbdBtn::LEFT);
+  jeep.SetButton(Player::TURN_RIGHT, KbdBtn::RIGHT);
+  jeep.SetButton(Player::MOVE_FORWARD, KbdBtn::UP);
+  jeep.SetButton(Player::MOVE_BACKWARD, KbdBtn::DOWN);
+  jeep.SetButton(Player::LOOK_UP, KbdBtn::B);
+  jeep.SetButton(Player::LOOK_DOWN, KbdBtn::N);
+  jeep.SetButton(Player::SPEED_UP, KbdBtn::LSHIFT);
+  jeep.SetFlyMode(false);
+  cam.SetGravity(cfg.GetFloat("cam_gravity"));
+  cam.SetAcceleration(cfg.GetFloat("cam_accel"));
+  cam.SetFriction(cfg.GetFloat("cam_frict"));
+
+  // Set initial camera position (by using orient_z vector)
+
+  const float kCamOffsetZ {-3.0f};
+  const float kCamPitch {6.5f};
+
+  player::InitCamera(jeep, cam, kCamOffsetZ, kCamPitch);
+  
   // Main loop
 
   do {
     timer.Start();
     win.Clear();
 
-    // Handle camera
+    // Process gameplay input 
 
-    float ground = terrain.FindGroundPosition(cam.vrp_);
-    cam.ProcessInput(win);
-    cam.SetGroundPosition(ground);
-    render_ctx.is_wired_ = cam.IsWired();
+    player::ProcessCameraInput(jeep, cam, win);
+    player::ProcessPlayerInput(jeep, cam, win);
+    player::ProcessGroundPosition(jeep, terrain);
+    player::ProcessGroundDirection(jeep, cam, terrain);
+
+    // Process system input
 
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);
     helpers::HandleFullscreen(kbtn, mode, win);
 
-    // Handle engine speed
+    // Process player transformation
     
-    float vel_f = (cam.vel_.SquareLength() * 10.0f);
-    vel_f = std::fmod(vel_f, 255.0f);
-    audio.ChangeTempoPitch(engine_snd, vel_f);
+    player::ProcessPlayerOrientation(jeep);
+    player::ProcessPlayerRotating(jeep);
+    player::ProcessCameraRotating(jeep, cam);
+    object::Translate(jeep.obj_, jeep.obj_.world_pos_);
+    object::ResetAttributes(jeep.obj_);
+    object::ComputeFaceNormals(jeep.obj_, true);
+    auto hidden = object::RemoveHiddenSurfaces(jeep.obj_, cam);
+
+    // Process player sounds
+
+    auto range_1  = std::make_pair(0.0f, jeep.max_speed_);
+    auto range_2  = audio.GetModifierRange(engine_snd, engine_mod);
+    auto curr_vel = jeep.curr_speed_;
+    auto modifier_val = math::LeadToRange(range_1, range_2, curr_vel);
+    audio.SetModifierValue(engine_snd, engine_mod, modifier_val);
 
     // Process skybox
   
@@ -241,7 +294,7 @@ int main(int argc, const char** argv)
     skybox.CopyCoords(Coords::LOCAL, Coords::TRANS);
     object::Translate(skybox, skybox.world_pos_);
     object::ResetAttributes(skybox);
-    auto hidden = object::RemoveHiddenSurfaces(skybox, cam);
+    hidden = object::RemoveHiddenSurfaces(skybox, cam);
     light::Object(skybox, lights_sky);
 
     // Process water
@@ -256,17 +309,6 @@ int main(int argc, const char** argv)
     object::CullX(water, cam);
     object::CullY(water, cam);
     object::VerticesNormals2Camera(water, cam);
-
-    // Process jeep
-
-    jeep.SetCoords(Coords::TRANS);
-    jeep.CopyCoords(Coords::LOCAL, Coords::TRANS);
-
-    object::Translate(jeep, jeep.world_pos_);
-    object::ResetAttributes(jeep);
-    object::ComputeFaceNormals(jeep, true);
-    //object::RemoveHiddenSurfaces(jeep, cam);  // !!
-    //object::VerticesNormals2Camera(jeep, cam);
 
     // Process nature
 
@@ -328,8 +370,8 @@ int main(int argc, const char** argv)
     }
     triangles::AddFromObject(water, tris_base);
     triangles::AddFromObjects(nature_objs, tris_base);
+    triangles::AddFromObject(jeep.obj_, tris_base);
     triangles::World2Camera(tris_base, cam);
-    triangles::AddFromObject(jeep, tris_base);
     auto tri_culled = triangles::CullAndClip(tris_base, cam);
     
     // Light terrain triangles in world coordinates
@@ -392,6 +434,7 @@ int main(int argc, const char** argv)
 
     // Draw triangles
 
+    render_ctx.is_wired_ = cam.IsWired();
     render::Context(tris_ptrs, render_ctx);
     fps.Count();
 
