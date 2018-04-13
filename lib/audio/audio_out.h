@@ -64,7 +64,8 @@ namespace audio_helpers {
   bool      IsRepeatedSample(const Handle&);
   SampleNfo GetSampleInfo(const Handle&);
   bool      SetSampleInfo(const Handle&, SampleNfo&);
-  bool      PrintBassError();
+  bool      PrintBassError(const std::string& func_name = "unnamed");
+  bool      PrintGeneralError(const std::string& msg);
 
 }  // namespace audio_helpers
 

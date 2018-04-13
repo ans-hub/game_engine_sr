@@ -225,16 +225,19 @@ bool audio_helpers::SetSampleInfo(const Handle& hndl, SampleNfo& nfo)
   return BASS_SampleSetInfo(hndl, &nfo);
 }
 
-bool audio_helpers::PrintBassError()
+bool audio_helpers::PrintBassError(const std::string& func_name)
 {
   auto err = BASS_ErrorGetCode();
-
-#ifdef DEBUG
-  std::cerr << "Audio module: libbass.so error code: " << err << '\n'
-    << "  More at: http://www.un4seen.com/doc/#bass/BASS_ErrorGetCode.html" << '\n';
-#endif
+  if (err)
+    std::cerr << "Audio error code " << err << " in function " << func_name << '\n';
 
   return err ? false : true; 
+}
+
+bool audio_helpers::PrintGeneralError(const std::string& msg)
+{
+  std::cerr << "Audio error: " << msg << '\n';
+  return false;
 }
 
 }  // namespace anshub
