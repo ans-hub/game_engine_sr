@@ -41,6 +41,7 @@ struct Terrain
   void  SetDetalization(const V_Float&);
   void  ProcessDetalization(const GlCamera&);
   float FindGroundPosition(const Vector&) const;
+  Vector FindGroundNormal(const Vector&) const;
 
 private:
 

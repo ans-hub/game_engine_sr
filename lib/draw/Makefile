@@ -25,8 +25,8 @@ RLSFLAGS = -O2
 # Setup objects
 
 VPATH =  $(DATADIR):$(EXTRASDIR)
-OBJECTS = ply_loader.o terrain.o skybox.o water.o nature.o
-DBGOBJECTS = ply_loaderdbg.o terraindbg.o skyboxdbg.o waterdbg.o naturedbg.o
+OBJECTS = ply_loader.o terrain.o skybox.o water.o nature.o birds.o
+DBGOBJECTS = ply_loaderdbg.o terraindbg.o skyboxdbg.o waterdbg.o naturedbg.o birdsdbg.o
 
 # Other stuff
 

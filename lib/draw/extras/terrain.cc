@@ -135,6 +135,33 @@ float Terrain::FindGroundPosition(const Vector& pos) const
     return 0;
 }
 
+// The same as above but returns normal of ground inder the position 
+
+Vector Terrain::FindGroundNormal(const Vector& pos) const
+{
+  // Compute number of vertex under the camera
+
+  float row_float = vxs_[0].pos_.z - pos.z;
+  float col_float = pos.x - vxs_[0].pos_.x;
+  
+  // Get neighboring vertices
+
+  uint lt = (uint)row_float * hm_w_ + (uint)col_float;
+  uint rt = lt + 1;
+  uint lb = lt + hm_w_;
+  uint rb = lb + 1;
+
+  // If all vertices is inside mesh, then make average value of Y
+
+  if (lt < vxs_.size() && lb < vxs_.size() && rt < vxs_.size() && rb < vxs_.size())
+  {
+    return (
+      vxs_[lt].normal_ + vxs_[rt].normal_ + vxs_[lb].normal_ + vxs_[rb].normal_) / 4;
+  }
+  else
+    return {};
+}
+
 //****************************************************************************
 // PRIVATE MEMBER FUNCTIONS IMPLEMENTATION
 //****************************************************************************
