@@ -40,4 +40,4 @@ inline MatrixRotateUvn::MatrixRotateUvn(cVector& u, cVector& v, cVector& n)
 
 }  // namespace anshub
 
-#endif  // GC_MATRIX_ROTATE_EUL_H
+#endif  // GC_MATRIX_ROTATE_UVN_H
