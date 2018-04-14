@@ -11,7 +11,7 @@
 #include <string>
 #include <iomanip> 
 
-#include "lib/audio/audio_out.h"
+#include "lib/audio/audio_fx.h"
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
 #include "lib/draw/gl_render_ctx.h"
@@ -25,13 +25,16 @@
 #include "lib/draw/gl_z_buffer.h"
 #include "lib/draw/extras/skybox.h"
 #include "lib/draw/extras/terrain.h"
+#include "lib/draw/extras/birds.h"
 #include "lib/draw/extras/water.h"
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
 #include "lib/math/trig.h"
+#include "lib/math/matrix_rotate_uvn.h"
+#include "lib/math/matrix_trans.h"
 
-#include "config.h"
+#include "../config.h"
 #include "../helpers.h"
 #include "../camera_operator.h"
 
@@ -43,14 +46,15 @@ using namespace helpers;
 struct DayTime
 {
   DayTime(float min_amb, float max_amb, float velocity)
-    : min_amb_{std::min(0.0f, min_amb)}
+    : min_amb_{std::min(-1.0f, min_amb)}
     , max_amb_{std::max(1.0f, max_amb)}
     , velocity_{velocity} { }
 
-  void ProceedAmbientLightChange(Lights& lights)
+  void ProceedInfiniteLightChange(Lights& lights)
   {
-    float& intense = lights.ambient_.back().intense_;
-    intense = this->NextTick(intense);
+    auto dir = lights.infinite_.back().GetDirection();
+    dir.x = this->NextTick(dir.x);
+    lights.infinite_.back().SetDirection(dir);
   }
 
 private:
@@ -94,6 +98,7 @@ int main(int argc, const char** argv)
 
   const int kWinWidth {cfg.GetFloat("win_w")};
   const int kWinHeight {cfg.GetFloat("win_h")};
+  const bool kDebugShow {cfg.GetBool("dbg_show_info")};
 
   FColor kWhite  {255.0f, 255.0f, 255.0f};
   FColor kYellow {255.0f, 255.0f, 0.0f};
@@ -110,13 +115,17 @@ int main(int argc, const char** argv)
 
   // Audio
   
-  AudioOut audio {};
-  auto ambient = cfg.GetString("ter_ambient_snd");
-  if (!ambient.empty())
-  {
-    audio.Load(ambient, true);
-    audio.Play(ambient);
-  }
+  AudioFx audio {};
+  auto snd_ambient = cfg.GetString("snd_ambient");
+  auto snd_steps = cfg.GetString("snd_steps");
+  auto snd_jump = cfg.GetString("snd_jump");
+  auto snd_landing = cfg.GetString("snd_landing");
+  audio.LoadFx(snd_ambient, true);
+  audio.LoadFx(snd_steps, false);
+  audio.LoadFx(snd_jump, false);
+  audio.LoadFx(snd_landing, false);
+
+  audio.Play(snd_ambient);
 
   // Camera
 
@@ -136,12 +145,14 @@ int main(int argc, const char** argv)
   cam.SetBackwardButton(KbdBtn::S);
   cam.SetUpButton(KbdBtn::R);
   cam.SetDownButton(KbdBtn::F);
-  cam.SetJumpButton(KbdBtn::SPACE);
+  cam.SetJumpButton(KbdBtn::SPACE, 10);
   cam.SetSpeedUpButton(KbdBtn::LSHIFT);
+  cam.SetSwitchTypeButton(KbdBtn::ENTER, 10);
   cam.SetZoomInButton(KbdBtn::NUM9);
   cam.SetZoomOutButton(KbdBtn::NUM0);
-  cam.SetSwitchRollButton(KbdBtn::L);
-  cam.SetWiredModeButton(KbdBtn::T);
+  cam.SetSwitchRollButton(KbdBtn::L, 10);
+  cam.SetFlyModeButton(KbdBtn::NUM6, 10);
+  cam.SetWiredModeButton(KbdBtn::T, 10);
   cam.SetOperatorHeight(cfg.GetFloat("cam_height"));
   cam.SetFlyMode(cfg.GetFloat("cam_fly_mode"));
   cam.SetOnGround(!cfg.GetFloat("cam_fly_mode"));
@@ -178,6 +189,20 @@ int main(int argc, const char** argv)
     Shading::GOURAUD
   };
 
+  // Create birds
+
+  int kBirdChangeFly {rand_toolkit::get_rand(100,300)};
+  std::vector<Bird> birds;
+  for (int i = 0; i < 10; ++i)
+  {
+    auto bird_model = object::Make("../00_data/objects/bird.ply");
+    birds.emplace_back(
+      std::move(bird_model),
+      kBirdChangeFly,
+      terrain.GetHmWidth() * 4,
+      terrain.GetHmWidth() * 4);
+  }
+
   // Create render context
 
   RenderContext render_ctx(kWinWidth, kWinHeight, color::Black);
@@ -193,17 +218,45 @@ int main(int argc, const char** argv)
   auto tris_ptrs = triangles::MakePtrsContainer(0);
   auto tris_sky  = triangles::MakeBaseContainer(0);
 
-  // Prepare lights sources
- 
-  DayTime day_time (0.1f, 0.7f, 0.0009f);
+ // Prepare lights sources
 
-  Lights lights_all {};
-  lights_all.AddAmbient(color::fWhite, 0.2f);
-  lights_all.AddInfinite(color::fWhite, 0.7f, {-1.0f, -1.0f, 0.0f});
+  DayTime     day_time (-1.0f, 1.0f, 0.009f);
+  Lights      lights_all {};
+  ColorTable  color_table {};
+
+  auto   color   = color_table[cfg.GetString("light_amb_color")];
+  auto   intense = cfg.GetFloat("light_amb_int");
+  Vector lpos {};
+  Vector ldir {};
+
+  lights_all.AddAmbient(color, intense);
+
+  color   = color_table[cfg.GetString("light_inf_color")];
+  intense = cfg.GetFloat("light_inf_int");
+  ldir    = {-1.0f, -1.0f, 0.0f};
+
+  if (intense)
+    lights_all.AddInfinite(color, intense, ldir);
+
+  color   = color_table[cfg.GetString("light_pnt_color")];
+  intense = cfg.GetFloat("light_pnt_int");
+  ldir    = cfg.GetVector3d("light_pnt_dir"); 
+  lpos    = cfg.GetVector3d("light_pnt_pos");
+
+  if (intense)
+    lights_all.AddPoint(color, intense, lpos, ldir);
 
   Lights lights_sky {};
-  lights_sky.AddAmbient(color::fWhite, 0.7f);
+
+  color    = color_table[cfg.GetString("light_sky_color")];
+  intense  = cfg.GetFloat("light_sky_int");
   
+  lights_sky.AddAmbient(color, intense);
+  
+  // Lookat point
+
+  Vector lookat_point {0.0f, 0.0f, 0.0f};
+
   // Main loop
 
   do {
@@ -217,14 +270,25 @@ int main(int argc, const char** argv)
     cam.SetGroundPosition(ground);
     render_ctx.is_wired_ = cam.IsWired();
 
+    // Handle sytem routines
+
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);
     helpers::HandleFullscreen(kbtn, mode, win);
 
-    // Process ambient intense changing
+    // Handle lookat point
+    
+    helpers::HandleObject(kbtn, lookat_point, cam_pos, cam_dir);
+    if (cam.type_ == GlCamera::Type::UVN)
+    {
+      cam.LookAt(lookat_point);
+      MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
+      cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
+    }
 
-    day_time.ProceedAmbientLightChange(lights_all);
-    day_time.ProceedAmbientLightChange(lights_sky);
+    // Process light intense changing
+
+    day_time.ProceedInfiniteLightChange(lights_all);
     
     // Process skybox
   
@@ -235,6 +299,22 @@ int main(int argc, const char** argv)
     auto hidden = object::RemoveHiddenSurfaces(skybox, cam);
     object::Translate(skybox, skybox.world_pos_);
     light::Object(skybox, lights_sky);
+
+    // Process birds
+
+    for (auto& bird : birds)
+    {
+      bird.Process();
+      bird.SetCoords(Coords::TRANS);
+      bird.CopyCoords(Coords::LOCAL, Coords::TRANS);
+      object::ResetAttributes(bird);
+      object::ComputeFaceNormals(bird, true);
+      object::RemoveHiddenSurfaces(bird, cam);
+      object::Translate(bird, bird.world_pos_);
+      object::CullZ(bird, cam);
+      object::CullX(bird, cam);
+      object::CullY(bird, cam);
+    }
 
     // Process water
 
@@ -279,7 +359,6 @@ int main(int argc, const char** argv)
 
     // Go to camera coords for light and skybox (exclude terrain)
 
-    light::World2Camera(lights_all, cam);
     object::World2Camera(skybox, cam);
 
     // Make triangles from terrain
@@ -293,6 +372,10 @@ int main(int argc, const char** argv)
       if (chunk.active_)
         triangles::AddFromObject(chunk, tris_base);
     }
+    for (auto& bird : birds){
+      if (bird.active_)
+        triangles::AddFromObject(bird, tris_base);
+    }
     triangles::AddFromObject(water, tris_base);
     triangles::World2Camera(tris_base, cam);
     auto tri_culled = triangles::CullAndClip(tris_base, cam);
@@ -300,6 +383,9 @@ int main(int argc, const char** argv)
     // Light terrain triangles in world coordinates
 
     triangles::ComputeNormals(tris_base);
+    light::World2Camera(lights_all, cam);
+    if (!lights_all.point_.empty())     // we use point as flash light
+      lights_all.point_.front().Reset();    
     light::Triangles(tris_base, lights_all);
     light::Reset(lights_all);
 
@@ -325,7 +411,7 @@ int main(int argc, const char** argv)
     win.Render();
     timer.Wait();
     
-    if (fps.Ready())
+    if (kDebugShow && fps.Ready())
     {
       std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
       std::cerr << "Camera position: " << cam.vrp_ << '\n';

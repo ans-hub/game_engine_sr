@@ -140,9 +140,9 @@ int main(int argc, const char** argv)
   cam.SetSpeedUpButton(KbdBtn::LSHIFT);
   cam.SetZoomInButton(KbdBtn::NUM9);
   cam.SetZoomOutButton(KbdBtn::NUM0);
-  cam.SetSwitchRollButton(KbdBtn::L);
-  cam.SetWiredModeButton(KbdBtn::T);
-  cam.SetSwitchTypeButton(KbdBtn::ENTER);
+  cam.SetSwitchRollButton(KbdBtn::L, 20);
+  cam.SetWiredModeButton(KbdBtn::T, 20);
+  cam.SetSwitchTypeButton(KbdBtn::ENTER, 20);
   cam.SetAcceleration(0.01f);
   cam.SetFriction(0.8f);
   cam.SetSpeedUpValue(6.0f);
