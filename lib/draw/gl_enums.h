@@ -10,6 +10,22 @@
 
 namespace anshub {
 
+// Used to define camer actions
+
+// enum class CamAction
+// {
+//   TURN_LEFT,    TURN_RIGHT,
+//   LOOK_UP,      LOOK_DOWN,
+//   MOVE_FORWARD, MOVE_BACKWARD,
+//   MOVE_UP,      MOVE_DOWN,
+//   STRAFE_LEFT,  STRAFE_RIGHT,
+//   TILT_LEFT,    TILT_RIGHT,
+//   SPEED_UP, 
+//   ZOOM_IN,      ZOOM_OUT,
+
+
+// }; // enum class CamActions
+
 // Used to define shading type of surface or object
 
 enum class Shading

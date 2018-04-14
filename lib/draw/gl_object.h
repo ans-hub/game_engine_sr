@@ -137,6 +137,7 @@ namespace object {
 
   float     FindFarthestCoordinate(const GlObject&);
   void      RefreshOrientation(GlObject&, const MatrixRotateEul&);
+  void      RefreshOrientationXYZ(GlObject&, const Vector& dir, TrigTable&);
   float     ComputeBoundingSphereRadius(V_Vertex& vxs, Axis);
   void      CreateMipmaps(V_Bitmap&, const Bitmap&);
   void      FillMipmapSquares(const V_Bitmap&, V_Uint&);

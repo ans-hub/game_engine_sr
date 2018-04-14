@@ -228,6 +228,7 @@ GlObject object::Make(
   object::Scale(obj, scale);
   object::Move(obj, pos);
   object::Rotate(obj, rot, t);
+  // todo: rotate orientation vectors
   return obj;
 }
 
@@ -736,6 +737,22 @@ void object::RefreshOrientation(GlObject& obj, const MatrixRotateEul& mx)
   obj.v_orient_x_ = matrix::Multiplie(obj.v_orient_x_, mx);
   obj.v_orient_y_ = matrix::Multiplie(obj.v_orient_y_, mx);
   obj.v_orient_z_ = matrix::Multiplie(obj.v_orient_z_, mx);
+}
+
+// Refresh object orientation when rotates
+
+void object::RefreshOrientationXYZ(
+  GlObject& obj, const Vector& dir, TrigTable& trig)
+{
+  coords::RotatePitch(obj.v_orient_x_, dir.x, trig);
+  coords::RotateYaw(obj.v_orient_x_, dir.y, trig);
+  coords::RotateRoll(obj.v_orient_x_, dir.z, trig);
+  coords::RotatePitch(obj.v_orient_y_, dir.x, trig);
+  coords::RotateYaw(obj.v_orient_y_, dir.y, trig);
+  coords::RotateRoll(obj.v_orient_y_, dir.z, trig);
+  coords::RotatePitch(obj.v_orient_z_, dir.x, trig);
+  coords::RotateYaw(obj.v_orient_z_, dir.y, trig);
+  coords::RotateRoll(obj.v_orient_z_, dir.z, trig);
 }
 
 // Computes bounding sphere radius using 3 dimensions
