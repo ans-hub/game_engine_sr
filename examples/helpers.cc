@@ -87,10 +87,10 @@ void helpers::HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
 {
   switch(key)
   {
-    case Btn::UP :    vel.y =  0.5f; break;
-    case Btn::DOWN :  vel.y = -0.5f; break;
-    case Btn::LEFT :  vel.x = -0.5f; break;
-    case Btn::RIGHT : vel.x =  0.5f; break;
+    case Btn::UP :    vel.y +=  0.5f; break;
+    case Btn::DOWN :  vel.y += -0.5f; break;
+    case Btn::LEFT :  vel.x += -0.5f; break;
+    case Btn::RIGHT : vel.x +=  0.5f; break;
     case Btn::Z :     rot.x -= 0.5f; break;
     case Btn::X :     rot.x += 0.5f; break;
     case Btn::C :     rot.y -= 0.5f; break;

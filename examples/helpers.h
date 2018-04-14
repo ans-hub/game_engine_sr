@@ -5,6 +5,9 @@
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
+#ifndef GC_HELPERS_CAMERA_H
+#define GC_HELPERS_CAMERA_H
+
 #include <iostream>
 #include <sstream>
 
@@ -47,3 +50,5 @@ namespace helpers {
 } // namespace helpers
 
 } // namespace anshub
+
+#endif // GC_HELPERS_CAMERA_H
