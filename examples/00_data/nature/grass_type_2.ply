@@ -1,0 +1,36 @@
+ply
+format ascii 1.0
+comment Created by Blender 2.79 (sub 0) - www.blender.org, source file: 'plants.blend'
+'plants.blend'
+comment Property "shading" of element "globals_ply_v2"
+comment   0x2  = const shading
+comment   0x4  = flat shading
+comment   0x8  = phong shading
+comment   0x10 = gouraud shading
+element globals_ply_v2 1
+property uint shading
+property uint rt
+property uint gt
+property uint bt
+element vertex 8
+property float x
+property float y
+property float z
+property float s
+property float t
+element face 4
+property list uchar uint vertex_indices
+end_header
+4 255 255 255
+-0.006603 0.000203 0.006559 0.772883 0.246058
+-0.019309 2.780497 -0.057464 0.768641 1.133495
+1.152677 -0.000954 -0.749183 1.148310 0.246058
+-1.165884 -0.000953 -0.749183 0.397455 0.246058
+-1.165884 -0.000953 -0.749183 0.397455 0.246058
+-0.006603 0.000203 0.006559 0.772883 0.246058
+-0.019308 2.780497 -0.057464 0.768641 1.133495
+1.152678 -0.000954 -0.749183 1.148310 0.246058
+3 0 1 2
+3 3 1 0
+3 4 5 6
+3 5 7 6
