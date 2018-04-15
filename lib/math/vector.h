@@ -33,13 +33,13 @@ using   cVector = const Vector;
 
 struct Vector
 {
-  Vector() 
+  constexpr Vector() 
     : x{}, y{}, z{}, w{1.0f} { }
-  Vector(const Vector& v1, const Vector& v2)
+  constexpr Vector(const Vector& v1, const Vector& v2)
     : x{v2.x-v1.x}, y{v2.y-v1.y}, z{v2.z-v1.z}, w{1.0} { }
-  Vector(float ax, float ay) 
+  constexpr Vector(float ax, float ay) 
     : x{ax}, y{ay}, z{}, w{1.0} { }
-  Vector(float ax, float ay, float az) 
+  constexpr Vector(float ax, float ay, float az) 
     : x{ax}, y{ay}, z{az}, w{1.0} { }
   
   float x;

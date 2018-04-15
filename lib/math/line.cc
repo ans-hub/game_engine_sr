@@ -1,5 +1,5 @@
 // *************************************************************
-// File:    line.h
+// File:    line.cc
 // Descr:   represents 2d line entity on the plane
 // Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib

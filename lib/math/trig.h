@@ -31,7 +31,8 @@ namespace trig {
 
   float Rad2deg(float);
   float Deg2rad(float);
-  float CalcOppositeCatet(float adjanced_catet, float theta, TrigTable&);
+  float CalcOppositeCatet(float adjanced_catet, float theta, const TrigTable&);
+  float CalcOppositeCatet(float adjanced_catet, float theta);
 
 } // namespace math
 
@@ -103,11 +104,21 @@ inline float trig::Rad2deg(float rad)
 //  opp = tg_& * adj = (sin_& / cos_&) * adj 
 
 inline float trig::CalcOppositeCatet(
-  float adjanced_catet, float theta, TrigTable& tab)
+  float adjanced_catet, float theta, const TrigTable& trig)
 {
-  float cosine = tab.Cos(theta);
+  float cosine = trig.Cos(theta);
   float hypotenuse = adjanced_catet / cosine;
-  float opposite_catet = tab.Sin(theta) * hypotenuse;
+  float opposite_catet = trig.Sin(theta) * hypotenuse;
+  return opposite_catet;
+}
+
+// The same as above but using std trigonometry functions
+
+inline float trig::CalcOppositeCatet(float adjanced_catet, float theta)
+{
+  float cosine = std::cos(theta);
+  float hypotenuse = adjanced_catet / cosine;
+  float opposite_catet = std::sin(theta) * hypotenuse;
   return opposite_catet;
 }
 

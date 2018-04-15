@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    point.h
-// Descr:   represents 2d-3d point
+// Descr:   represents 2d-3d point (legacy)
 // Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
