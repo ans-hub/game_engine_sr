@@ -1,14 +1,10 @@
 # Software renderer and game console
 
-This repository contains implementation of `game console` suggested by Andre Lamothe in the book [Advanced 3D Graphics and Rasterization](http://a.co/6XNNYrD). The main idea of suggested game console was to study different algorithms (graphics, games, etc), using vurtual linear addressed video buffer. This means that all the manipulations with the graphics (math, transformation, rasterisation, etc.) you must perform manually. And only then you will send data to the video memory.
-
-But in this great book we have a game console written for Windows. Thus for those people who likes this book and want to start to write games and who haven't Windows this may became a problem.
-
-`Note: `This console is under development as I read the book
+This repository contains implementation of software game engine. The main idea of this game engine was to study different algorithms (graphics, games, etc), using vurtual linear addressed video buffer. This means that all the manipulations with the graphics (math, transformation, rasterisation, etc.) you must perform manually. And only then you will send data to the video memory.
 
 ## Linear video buffer implementation
 
-One of the problems that I faced was an implementation of abstract linear addressed video buffer.
+The idea of using abstract linear addressed video buffer was taken from book of Andre LaMothe. And implementation on this buffer under the linux was the problem that I faced.
 
 In my implementation the linear video buffer is an abstraction consisting of an array in the system memory with a step of 4 bytes to store the pixel color in the format `ARGB (byte-ordered)`. Usually buffer has size is evaluated as *window_width x widnow_height x bytes_per_pixel*.
 
@@ -23,11 +19,9 @@ For systems which has only OpenGL ES implementations we have another way to subs
 
 This buffer can be easily reduced to 16 bit or 8 bit color space manually.
 
-## Game console examples
+## Game engine examples
 
-Directory `examples` contains examples based on the game console. Currently there are placed game called `Raiders 3D` which is my implementation of the game originally written by Andre Lamothe.
-
-The main actions is placed in two classes `Logic` and `Scene`. It should be noted that this is an educational implementation, and thus most of the functions which is responsible for the behavior of objects are located in these two classes (`Logic` and `Scene`). Although in a real game it would be better to arrange some of the functions which is responsible for the behavior of objects in the implementation of these objects themselves.
+Directory `examples` contains examples based on the game engine. Currently there are placed game called `Raiders 3D` which is my implementation of the game originally written by Andre LaMothe, draft of the game `Mountain race` and draft of the game like FPS.
 
 <div style="text-align: center;" markdown="1" />
 <img src="screenshot.png" style="width: 600px;" />
@@ -56,15 +50,15 @@ The main actions is placed in two classes `Logic` and `Scene`. It should be note
 
 `draw` - draw functions, which may be used with drawing surface, given by `window` library
 
-`audio` - is a wrapper to BASS audio library
+`audio` - is a wrapper to BASS and BASS_FX audio libraries
 
 `system` - useful system stuffs, such as timer
 
 `data` - data manipulation classes
 
-## Important notes
+`physics` - very simple physics calulations
 
-When I started writing `math` library, I did not supposed that I would be use it not only for 2d but for 3d calculations too. In this case I should warn those who will clone this repository - interface of `math` library will be changed.
+`extras` - addons to draw lib, such as terrains, nature, birds and other
 
 ## Install
 
@@ -79,7 +73,7 @@ Following packages should be installed (example given under Ubuntu 17.10):
  $ sudo apt install libglu1-mesa-dev
 ```
 
-### Install `libbass.so` audio library (for audio module):
+### Install `libbass.so` audio libraries (for audio module):
 
 ```bash
   $ wget http://us.un4seen.com/files/bass24-linux.zip
@@ -90,6 +84,8 @@ Following packages should be installed (example given under Ubuntu 17.10):
   $ rm -rf tmp/ bass24-linux.zip
 ```
 
+Install `libbass_fx.so` - is the same as above
+
 P.S.: if something goes wrong while downloading bass audio library, then the best way is to use [direct link](https://www.un4seen.com/bass.html) for downloading library
 
 ### Finish the installation:
@@ -98,7 +94,9 @@ P.S.: if something goes wrong while downloading bass audio library, then the bes
   $ git clone https://github.com/ans-hub/game_console
 ```
 
-## Notes about installation under cygwin:
+## Notes:
+
+### Note about installation under cygwin:
 
 This packages should be installed to work with video modes:
 
@@ -113,4 +111,8 @@ Also is necessary to add path to environment variable PATH:
   $ export PATH=/usr/local/lib:$PATH
 ```
 
-Installation of bass audio library is similar, but in the case of cygwin we should download windows library (`bass.dll`) and place it in `/usr/local/lib/`
+Installation of bass audio library is similar, but in the case of cygwin we should download windows libraries (`bass.dll` and `bass_fx.dll`) and place it in `/usr/local/lib/`
+
+### Note about disable FPS limiting to 60 fps
+
+When start any example, use `vblank_mode=0 ./some_example`
