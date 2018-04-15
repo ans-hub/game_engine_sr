@@ -1,134 +1,88 @@
 // *************************************************************
 // File:    gl_camera.h
-// Descr:   imitates camera for renderer (euler and uvn)
+// Descr:   camera based on Euler`s angles
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
-// Cameras conventions:
-//  - all rotations in YXZ sequence
-//  - dir_ is vector contains Euler`s x (pitch), y (yaw), z (roll)
-//  - view_ direction vector
+// Notes:
+// - in draw lib all transformations is based on camera direction which
+//   used Euler`s angles. Thus we use Euler`s camera as base camera
+// - all rotations in YXZ sequence
+// - dir_ is vector contains Euler`s x (pitch), y (yaw), z (roll)
+// - view_ is direction vector of camera
+// - view_ vector is computes in reverse order (ZXY)
 
 #ifndef GC_GL_CAMERA_H
 #define GC_GL_CAMERA_H
 
-#include "../math/trig.h"
-#include "../math/vector.h"
-#include "../math/matrix.h"
-#include "../math/matrix_rotate_eul.h"
+#include "lib/draw/gl_aliases.h"
+#include "lib/draw/gl_enums.h"
+
+#include "lib/math/trig.h"
+#include "lib/math/vector.h"
+#include "lib/math/matrix.h"
+#include "lib/math/matrix_rotate_eul.h"
 
 namespace anshub {
 
+//***************************************************************************
+// EULER CAMERA INTERFACE
+//***************************************************************************
+
 struct GlCamera
 {
+  using CamTypes = CamType::Types;
 
-  // HELPER STRUCTS
-
-  struct Gimbal
-  {
-    Gimbal()
-    : steps_{1}, target_{}, velocity_{}, speed_{1} { }
-    int     steps_;
-    Vector  target_;
-    Vector  velocity_;
-    int     speed_;
-
-  }; // struct Gimbal
-
-  enum class Type {
-    EULER,
-    UVN
-  };
-
-  // MEMBER DEFINITIONS
-
-  GlCamera(
-    float fov, float dov, int scr_w, int scr_h,
-    const Vector& vrp, const Vector& dir,
-    float z_near, float z_far
+  GlCamera(float fov, float dov, int scr_w, int scr_h,
+    cVector& vrp, cVector& dir, float z_near, float z_far, cTrigTable&
   );
   GlCamera(const GlCamera&) =default;
   GlCamera& operator=(const GlCamera&) =default;
   GlCamera(GlCamera&&) =default;
   GlCamera& operator=(GlCamera&&) =default;
-  virtual ~GlCamera() noexcept { }
-  
-  // Setters
+  virtual ~GlCamera() { }
 
-  void  SetAcceleration(float accel) { accel_factor_ = accel; }
-  void  SetFriction(float frict) { frict_factor_ = frict; }
-  void  SetGravity(float gravity) { gravity_factor_ = gravity; }
-  void  SetMaxSpeed(float max) { max_speed_ = max; }
-  
-  // Process movements
-
-  void  MoveLeft();
-  void  MoveRight();
-  void  MoveForward();
-  void  MoveBackward();
-  void  MoveUp();
-  void  MoveDown();
-  void  ProcessVelocity(bool fly_mode, bool on_ground);
-  
-  // Process rotating
-
-  void  RotateYaw(float theta);
-  void  RotateRoll(float theta);
-
-  // Other switches
-
-  void  SwitchType(Type);
   void  ChangeFov(int new_fov);
-  void  RefreshViewVector();
-  
-  TrigTable trig_;
-  Type      type_;      // camera type    
-  float     fov_;       // firld of view
-  float     dov_;       // distance of view
-  float     wov_;       // width of view plane
-  float     z_near_;    // near z plane
-  float     z_far_;     // far z plane
-  int       scr_w_;     // screen width
-  int       scr_h_;     // screen height
-  float     ar_;        // aspect ratio
-  Vector    vrp_;       // view reference point (world pos in world coords)
-  Vector    vel_;       // camera velocity (z - forward, x - left/right, y - up/down)
-  Vector    accel_;     // camera acceleration vector
-  Vector    frict_;     // camera friction vector
-  float     frict_factor_;
-  float     accel_factor_;
-  float     gravity_factor_;
-  float     max_speed_;
-  float     curr_speed_;
-  
-  // Euler specific
+  virtual void Preprocess() { }
 
-  Vector  dir_;         // cam direction angles (for Euler model)
-  Vector  view_;        // cam view vector (corresponds to dir_ vector)
-  
-  // UVN specific
+  // General camera`s settings
 
-  void    LookAt(const Vector&, float roll_hint = 0.0f);
-
-  Vector  u_;           //
-  Vector  v_;           // camera basis (as x,y,z) 
-  Vector  n_;           // 
-  Gimbal  gimbal_;      // target point, look-at point
+  float       fov_;       // firld of view
+  float       dov_;       // distance of view
+  float       wov_;       // width of view plane
+  float       z_near_;    // near z plane
+  float       z_far_;     // far z plane
+  int         scr_w_;     // screen width
+  int         scr_h_;     // screen height
+  float       ar_;        // aspect ratio
+  Vector      vrp_;       // view reference point
+  Vector      dir_;       // Euler`s direction angles
+  CamTypes    type_;      // camera type
+  cTrigTable& trig_;
 
 }; // struct GlCamera
 
 //***************************************************************************
-// HELPERS DECLARATION
+// CAMERA HELPERS
 //***************************************************************************
 
-namespace camera {
+namespace camera_helpers {
 
-  constexpr int kDefaultGimbalSpeed = 15;
+  Vector ComputeCamViewVector(cVector& cam_direction, cTrigTable&);
+
+} // namespace camera_helpers
+
+//***************************************************************************
+// CAMERA CONSTANTS
+//***************************************************************************
+
+namespace camera_const {
+
   constexpr int kMinFov = 45;
   constexpr int kMaxFov = 120;
 
-}  // namespace camera
+} // namespace camera_const
 
 //***************************************************************************
 // INLINE IMPLEMENTATION
@@ -136,13 +90,10 @@ namespace camera {
 
 inline void GlCamera::ChangeFov(int fov)
 { 
-  fov_ = std::min(camera::kMaxFov, std::max(camera::kMinFov, fov));
+  fov_ = std::min(camera_const::kMaxFov, std::max(camera_const::kMinFov, fov));
   wov_ = 2 * trig::CalcOppositeCatet(dov_, fov_/2, trig_);
 }
 
-}  // namespace anshub
+} // namespace anshub
 
 #endif  // GC_GL_CAMERA_H
-
-// Note : in educational purposes I don`t separate into different
-// classes Euler and UVN cameras
