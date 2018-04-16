@@ -32,6 +32,14 @@
 #include <string>
 #include <vector>
 
+//****************************************************************************
+// Was added by Ans 18.04.2018 for alpha color settings
+//****************************************************************************
+
+#include "lib/draw/fx_colors.h"
+
+//****************************************************************************
+
 namespace anshub {
 
 class Bitmap
@@ -56,7 +64,9 @@ public:
      row_increment_  (0),
      bytes_per_pixel_(3),
      channel_mode_(bgr_mode)
-   {}
+   {
+     alpha_color_ = FColor(-1.0f, -1.0f, -1.0f);  // 18.04.2018 by Ans
+   }
 
    Bitmap(const std::string& filename)
    : file_name_(filename),
@@ -67,6 +77,7 @@ public:
      channel_mode_(bgr_mode)
    {
       load_bitmap();
+      alpha_color_ = FColor(-1.0f, -1.0f, -1.0f);  // 18.04.2018 by Ans      
    }
 
    Bitmap(const unsigned int width, const unsigned int height)
@@ -78,6 +89,7 @@ public:
      channel_mode_(bgr_mode)
    {
       create_bitmap();
+      alpha_color_ = FColor(-1.0f, -1.0f, -1.0f);  // 18.04.2018 by Ans      
    }
 
    Bitmap(const Bitmap& image)
@@ -90,18 +102,29 @@ public:
    {
       create_bitmap();
       data_ = image.data_;
+      alpha_color_ = image.alpha_color_;  // 18.04.2018 by Ans
    }
 
-   //****************************************************************************
-   
+   //*************************************************************************
    // Was added by Ans 12.03.2018 for fast buffer access
+   //*************************************************************************
 
    auto* GetPointer() const { return data_.data(); }
    auto* GetPointer() { return data_.data(); }
    unsigned int GetRowIncrement() const { return row_increment_; }
    unsigned int GetBytesPerPixel() const { return bytes_per_pixel_; }
    
-   //****************************************************************************
+   //*************************************************************************
+
+   //*************************************************************************
+   // Was added by Ans 18.04.2018 for fast buffer access
+   //*************************************************************************
+
+   void SetAlphaColor(const FColor& color) { alpha_color_ = color; }
+   template<class T>
+   T GetAlphaColor() const { return alpha_color_; }
+   
+   //*************************************************************************
 
    Bitmap& operator=(const Bitmap& image)
    {
@@ -115,6 +138,7 @@ public:
          channel_mode_    = image.channel_mode_;
          create_bitmap();
          data_ = image.data_;
+         alpha_color_ = image.alpha_color_;  // 18.04.2018 by Ans
       }
 
       return *this;
@@ -217,6 +241,7 @@ public:
       }
 
       data_ = image.data_;
+      alpha_color_ = image.alpha_color_;  // 18.04.2018 by Ans      
 
       return true;
    }
@@ -236,6 +261,7 @@ public:
 
          std::copy(itr2, itr2_end, itr1);
       }
+      alpha_color_ = source_image.alpha_color_;  // 18.04.2018 by Ans      
 
       return true;
    }
@@ -1615,6 +1641,15 @@ private:
    unsigned int bytes_per_pixel_;
    channel_mode channel_mode_;
    std::vector<unsigned char> data_;
+
+   //*************************************************************************
+   // Was added by Ans 18.04.2018 for fast buffer access
+   //*************************************************************************
+
+   FColor alpha_color_;
+
+   //*************************************************************************
+
 };
 
 struct rgb_t
@@ -3136,6 +3171,18 @@ inline void sobel_operator(const Bitmap& src_image,
 
    dst_image.import_gray_scale_clamped(&im1(0,0));
 }
+
+//****************************************************************************
+// Was added by Ans 18.04.2018 for alpha color settings
+//****************************************************************************
+
+template<>
+inline Color<> Bitmap::GetAlphaColor() const
+{ 
+  return Color<>(alpha_color_.GetARGB());
+}
+
+//****************************************************************************
 
 enum palette_name
 {

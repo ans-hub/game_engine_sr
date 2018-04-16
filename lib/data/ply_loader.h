@@ -44,10 +44,8 @@ namespace ply {
   }; // struct Header
 
 //************************************************************************
-// Main class Loader for parsing ply files
+// Main class Loader for parsing ascii ply files
 //************************************************************************
-
-  // Loader aliases
 
   using Vector1s  = std::vector<std::string>;
   using cVector1s = const Vector1s;
@@ -64,11 +62,9 @@ namespace ply {
   using MHeader   = std::map<std::string, Header>;
   using cMHeader  = const std::map<std::string, Header>;
 
-  // Loader struct (parse info from stream)
-
   struct Loader
   {
-    bool        Load(std::istream&);  // add arg for name or some sort if id??
+    bool        Load(std::istream&);
     void        LoadHeader(std::istream&);
     cMHeader&   GetHeader() const { return head_; }
     Vector2d    GetLine(const std::string&, cVector1s&);
@@ -94,7 +90,7 @@ namespace ply {
   }; // struct ply::Loader
 
 //************************************************************************
-// Exception helpers struct
+// Exception helper struct
 //************************************************************************
 
 struct Except : std::runtime_error
@@ -126,7 +122,6 @@ namespace helpers {
     else
       return false;
   }
-
 
 } // namespace helpers
 

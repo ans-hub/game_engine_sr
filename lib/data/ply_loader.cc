@@ -9,7 +9,7 @@
 
 namespace ply {
 
-// Main loads procedure (ascii) 
+// Main procedure to load ascii ply 
 
 bool Loader::Load(std::istream& iss)
 {
