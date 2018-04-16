@@ -20,11 +20,13 @@
 #include "gl_render_ctx.h"
 #include "fx_rasterizers.h"
 
-#include "../math/segment.h"
+#include "lib/math/segment.h"
 
 namespace anshub {
 
+//****************************************************************************
 // Functions that draws objects
+//****************************************************************************
 
 namespace draw_object {
 
@@ -70,7 +72,9 @@ namespace render_helpers {
 
 }
 
+//****************************************************************************
 // Inline functions (adaptors) implementation
+//****************************************************************************
 
 inline int render::Wired(const V_TrianglePtr& t, Buffer& b)
 {

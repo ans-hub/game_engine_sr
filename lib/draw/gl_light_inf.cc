@@ -23,13 +23,13 @@ LightInfinite::LightInfinite(cFColor& c, float i, cVector& dir)
 LightInfinite::LightInfinite(cFColor&& c, float i, cVector&& dir)
   : LightInfinite(c, i, dir) { }
 
-void LightInfinite::World2Camera(const GlCamera& cam)
+void LightInfinite::World2Camera(const GlCamera& cam, const TrigTable& trig)
 {
   // Just rotate direction vector
   
-  coords::RotateYaw(direction_, -cam.dir_.y, cam.trig_);
-  coords::RotatePitch(direction_, -cam.dir_.x, cam.trig_);
-  coords::RotateRoll(direction_, -cam.dir_.z, cam.trig_);
+  coords::RotateYaw(direction_, -cam.dir_.y, trig);
+  coords::RotatePitch(direction_, -cam.dir_.x, trig);
+  coords::RotateRoll(direction_, -cam.dir_.z, trig);
   direction_.Normalize();
 }
 

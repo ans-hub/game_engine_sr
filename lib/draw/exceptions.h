@@ -18,6 +18,6 @@ struct DrawExcept : std::logic_error
 
 }; // struct DrawExcept
 
-} // namespace anshub
+}  // namespace anshub
 
 #endif  // GC_DRAW_EXCEPT_H

@@ -15,7 +15,7 @@
 
 #include "gl_aliases.h"
 #include "exceptions.h"
-#include "../math/math.h"
+#include "lib/math/math.h"
 
 namespace anshub {
 
@@ -35,6 +35,8 @@ struct Color
   void  Modulate(const Color&);
   void  Clamp();
 
+  bool   operator==(const Color<T>& rhs) const;
+  bool   operator!=(const Color<T>& rhs) const;
   Color& operator/=(T scalar);
   Color& operator/=(int scalar);
   Color& operator*=(T scalar);
@@ -78,7 +80,7 @@ private:
 
 namespace color {
 
-  // Colors constants
+  // Color constants
 
   constexpr uint White  {0xffffff01};
   constexpr uint Blue   {0xff000001};
@@ -92,8 +94,9 @@ namespace color {
   const FColor fBlue   {0.0f, 0.0f, 255.0f};
   const FColor fCyan   {0.0f, 255.0f, 255.0f};
   const FColor fOceanBlue {143.0f, 175.0f, 201.0f};
+  const FColor fDeepPink {255.0f, 20.0f, 147.0f};
 
-  // Helpers functions
+  // Helper functions
 
   int     MakeARGB(uchar a, uchar r, uchar g, uchar b);
   void    SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a);
@@ -201,6 +204,18 @@ inline void Color<T>::Clamp()
 }
 
 // Other useful member functions implementation
+
+template<class T>
+inline bool Color<T>::operator==(const Color<T>& rhs) const
+{
+  return (this->r_ == rhs.r_) && (this->g_ == rhs.g_) && (this->b_ == rhs.b_);
+}
+
+template<class T>
+inline bool Color<T>::operator!=(const Color<T>& rhs) const
+{
+  return !(*this == rhs);
+}
 
 template<class T>
 inline Color<T>& Color<T>::operator/=(T scalar)

@@ -10,9 +10,9 @@
 
 #include "gl_aliases.h"
 #include "gl_vertex.h"
-#include "../math/trig.h"
-#include "../math/vector.h"
-#include "../math/matrix_rotate_uvn.h"
+#include "lib/math/trig.h"
+#include "lib/math/vector.h"
+#include "lib/math/matrix_rotate_uvn.h"
 
 namespace anshub {
 

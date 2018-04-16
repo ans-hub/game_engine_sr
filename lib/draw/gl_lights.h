@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    gl_lights.h
-// Descr:   represents light
+// Descr:   represents lights container with some features
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -15,12 +15,13 @@
 #include "gl_light_amb.h"
 #include "gl_light_inf.h"
 #include "gl_light_point.h"
-#include "../math/vector.h"
+#include "lib/math/vector.h"
 
 namespace anshub {
 
-// General lighting structure, in the fact - simple container
-// of light sources
+//****************************************************************************
+// General lighting structure
+//****************************************************************************
 
 struct Lights
 {
@@ -34,10 +35,14 @@ struct Lights
 
 }; // struct Lights
 
+//****************************************************************************
+// Helpers
+//****************************************************************************
+
 namespace light {
   
   void Reset(Lights&);
-  void World2Camera(Lights&, const GlCamera&);
+  void World2Camera(Lights&, const GlCamera&, const TrigTable&);
 
   // General lighting functions
 
@@ -47,7 +52,9 @@ namespace light {
 
 } // namespace light
   
+//****************************************************************************
 // Implementation of inline member functions
+//****************************************************************************
 
 inline void Lights::AddAmbient(cFColor& c, float intense)
 {

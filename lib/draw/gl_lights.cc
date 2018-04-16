@@ -19,12 +19,12 @@ void light::Reset(Lights& lights)
 
 // Convert Vectors inside light sources to camera coordinate
 
-void light::World2Camera(Lights& lights, const GlCamera& cam)
+void light::World2Camera(Lights& lights, const GlCamera& cam, cTrigTable& trig)
 {
   for (auto& l : lights.infinite_)
-    l.World2Camera(cam);
+    l.World2Camera(cam, trig);
   for (auto& l : lights.point_)
-    l.World2Camera(cam);
+    l.World2Camera(cam, trig);
 }
 
 // Lights object (in world coordinates)

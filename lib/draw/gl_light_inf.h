@@ -12,7 +12,7 @@
 #include "gl_aliases.h"
 #include "gl_camera.h"
 #include "gl_coords.h"
-#include "../math/vector.h"
+#include "lib/math/vector.h"
 
 namespace anshub {
 
@@ -24,7 +24,7 @@ struct LightInfinite
   LightInfinite(cFColor&& c, float i, cVector&& dir);
 
   void    Reset() { direction_ = direction_copy_; };
-  void    World2Camera(const GlCamera&);
+  void    World2Camera(const GlCamera&, const TrigTable&);
   FColor  Illuminate(cFColor& base_color, cVector& normal);
   auto    GetDirection() const { return direction_; }  
   void    SetDirection(cVector&);

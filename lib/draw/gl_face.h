@@ -1,6 +1,6 @@
 //***********************************************************************
 // File:    gl_face.h
-// Descr:   drawable face struct for object
+// Descr:   face struct for object
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 //***********************************************************************
@@ -11,7 +11,7 @@
 #include "gl_aliases.h"
 #include "fx_colors.h"
 #include "gl_vertex.h"
-#include "../math/vector.h"
+#include "lib/math/vector.h"
 
 namespace anshub {
 

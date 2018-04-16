@@ -29,7 +29,8 @@ namespace anshub {
   struct Triangle;
   struct Vertex;
   struct Face;
-
+  struct TrigTable;
+  
   // Simple aliases
 
   using uint  = unsigned int;
@@ -39,6 +40,7 @@ namespace anshub {
   using cFColor = const Color<float>;
   using cColor = const Color<uchar>;
   using cChar = const char;
+  using cTrigTable = const TrigTable;
   
   using Matrix2d  = std::vector<std::vector<double>>;
   using cMatrix2d = const Matrix2d;

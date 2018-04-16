@@ -17,7 +17,7 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 
-#include "gl_aliases.h"
+#include "lib/draw/gl_aliases.h"
 
 namespace anshub {
 

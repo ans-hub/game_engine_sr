@@ -10,7 +10,7 @@
 
 #include "gl_aliases.h"
 #include "fx_colors.h"
-#include "../math/vector.h"
+#include "lib/math/vector.h"
 
 namespace anshub {
 

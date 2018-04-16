@@ -8,9 +8,8 @@
 #ifndef GL_LIGHT_AMBIENT_H
 #define GL_LIGHT_AMBIENT_H
 
-#include "fx_colors.h"
-#include "gl_aliases.h"
-#include "gl_camera.h"
+#include "lib/draw/fx_colors.h"
+#include "lib/draw/gl_aliases.h"
 
 namespace anshub {
 

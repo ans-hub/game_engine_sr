@@ -12,7 +12,7 @@
 #include "gl_aliases.h"
 #include "gl_camera.h"
 #include "gl_coords.h"
-#include "../math/vector.h"
+#include "lib/math/vector.h"
 
 namespace anshub {
 
@@ -22,7 +22,7 @@ struct LightPoint
   LightPoint(cFColor&& c, float i, cVector&& pos, cVector& dir);
 
   void    Reset();
-  void    World2Camera(const GlCamera&);
+  void    World2Camera(const GlCamera&, const TrigTable&);
   FColor  Illuminate(cFColor& base_color, cVector& normal, cVector& dest);
   auto    GetPosition() const { return position_; }
   auto    GetDirection() const { return direction_; }

@@ -19,9 +19,9 @@
 #include <GL/glu.h>
 #include <GL/glext.h>
 
-#include "../window/gl_window.h"    // todo: avoid ".." by using Makefile
-#include "../window/aliases.h"      // or maybe by excluding dependicies
-#include "../window/exceptions.h"
+#include "lib/window/gl_window.h"
+#include "lib/window/aliases.h"
+#include "lib/window/exceptions.h"
 
 namespace anshub {
 

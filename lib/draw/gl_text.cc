@@ -1,5 +1,5 @@
 // *************************************************************
-// File:    gl_text.h
+// File:    gl_text.cc
 // Descr:   text output for opengl (req <= gl3.0 or comp.mode)
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console

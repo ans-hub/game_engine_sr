@@ -1,32 +1,29 @@
 # Builds static library libdraw.a
-# Dependicies: libwindow.a, libmath.a, lib/data/ply_loader.o)
+# Dependicies: libwindow.a, libmath.a, libdata.a
 
 LIBNAME = libdraw.a
 SRCDIR = ./
-DATADIR = ../data/
-EXTRASDIR = ./extras/
 ROOTDIR = ../../
 
 # Setup dependicies libs
 
 LIBWINDOW = $(ROOTDIR)lib/window
 LIBMATH = $(ROOTDIR)lib/math
-LDFLAGS = -lwindow -lmath
+LIBDATA = $(ROOTDIR)lib/data
+LDFLAGS = -lwindow -lmath -ldata
 
 # Compiler settings
 
 CXX = g++
-CXXFLAGS = -I $(SRCDIR) -I $(EXTRASDIR) -ansi -pedantic -Wall -Wextra -std=c++14 
-CXXFLAGS += -L $(LIBWINDOW) -L $(LIBMATH)
+CXXFLAGS = -I $(SRCDIR) -I $(ROOTDIR) -ansi -pedantic -Wall -Wextra -std=c++14 
+CXXFLAGS += -L $(LIBWINDOW) -L $(LIBMATH) -L $(LIBDATA)
 CXXFLAGS += -MP -MMD
 DBGFLAGS = -ggdb3 -DDEBUG -O0 -pg -no-pie
 RLSFLAGS = -O2
 
 # Setup objects
 
-VPATH =  $(DATADIR):$(EXTRASDIR)
-OBJECTS = ply_loader.o terrain.o skybox.o water.o nature.o birds.o
-DBGOBJECTS = ply_loaderdbg.o terraindbg.o skyboxdbg.o waterdbg.o naturedbg.o birdsdbg.o
+# VPATH = cameras
 
 # Other stuff
 
@@ -37,10 +34,11 @@ SRCFILES = $(wildcard *.cc)
 
 # Build library (release version)
 
-$(LIBNAME) : $(SRCFILES:%.cc=%.o) $(OBJECTS)
+$(LIBNAME) : $(SRCFILES:%.cc=%.o)
 	make -C $(LIBWINDOW)
 	make -C $(LIBMATH)
-	ar crs $(LIBNAME) $(SRCFILES:%.cc=%.o) $(OBJECTS)
+	make -C $(LIBDATA)
+	ar crs $(LIBNAME) $(SRCFILES:%.cc=%.o)
 	ranlib $(LIBNAME)
 
 %.o : %.cc %.h
@@ -48,10 +46,11 @@ $(LIBNAME) : $(SRCFILES:%.cc=%.o) $(OBJECTS)
 
 # Build library (debug version)
 
-debug	: $(SRCFILES:%.cc=%dbg.o) $(DBGOBJECTS)
+debug	: $(SRCFILES:%.cc=%dbg.o)
 	make debug -C $(LIBWINDOW)
 	make debug -C $(LIBMATH)	
-	ar crs $(LIBNAME) $(SRCFILES:%.cc=%dbg.o) $(DBGOBJECTS)
+	make debug -C $(LIBDATA)	
+	ar crs $(LIBNAME) $(SRCFILES:%.cc=%dbg.o)
 	ranlib $(LIBNAME)
 
 %dbg.o : %.cc %.h
@@ -69,3 +68,4 @@ clean :
 	rm -f *.o *.d $(LIBNAME)
 	make clean -C $(LIBWINDOW)
 	make clean -C $(LIBMATH)
+	make clean -C $(LIBDATA)

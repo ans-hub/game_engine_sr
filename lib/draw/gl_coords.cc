@@ -1,5 +1,5 @@
 // *****************************************************************
-// File:    gl_coords.h
+// File:    gl_coords.cc
 // Descr:   functions to convert different coordinates (non-matrices)
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console

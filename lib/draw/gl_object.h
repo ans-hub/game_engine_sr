@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    gl_object.h
-// Descr:   object (drawable) struct for renderer
+// Descr:   object struct for renderer
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -20,20 +20,20 @@
 #include "gl_coords.h"
 #include "gl_face.h"
 #include "exceptions.h"
-#include "../data/ply_loader.h"
-#include "../data/bmp_loader.h"
-#include "../system/strings.h"
-#include "../math/segment.h"
-#include "../math/trig.h"
-#include "../math/vector.h"
-#include "../math/matrix.h"
-#include "../math/matrix_rotate_eul.h"
-#include "../math/matrix_camera.h"
+#include "lib/data/ply_loader.h"
+#include "lib/data/bmp_loader.h"
+#include "lib/system/strings.h"
+#include "lib/math/segment.h"
+#include "lib/math/trig.h"
+#include "lib/math/vector.h"
+#include "lib/math/matrix.h"
+#include "lib/math/matrix_rotate_eul.h"
+#include "lib/math/matrix_camera.h"
 
 namespace anshub {
 
 //***********************************************************************
-// DRAWABLE OBJECT DEFINITION
+// GLOBJECT INTERFACE
 //***********************************************************************
 
 struct GlObject
@@ -53,6 +53,7 @@ struct GlObject
   bool      active_;          // object state
   Shading   shading_;         // shading type
   Vector    world_pos_;       // position of obj center in world`s coords
+  Vector    dir_;             // direction Euler`s angles
   Vector    v_orient_x_;      // 
   Vector    v_orient_y_;      // orientation vectors  
   Vector    v_orient_z_;      //
@@ -105,46 +106,46 @@ namespace object {
 
   // Object attributes manipilation
 
-  bool      Cull(GlObject&, const GlCamera&, const MatrixCamera&);
-  bool      Cull(GlObject&, const GlCamera&);  
-  bool      CullX(GlObject&, const GlCamera&);  
-  bool      CullY(GlObject&, const GlCamera&);  
-  bool      CullZ(GlObject&, const GlCamera&);  
-  int       RemoveHiddenSurfaces(GlObject&, const GlCamera&);
-  void      ResetAttributes(GlObject&);
-  void      ComputeFaceNormals(GlObject&, bool normalize = true);
-  void      ComputeFaceNormalsInv(GlObject&, bool normalize = true);
-  void      ComputeVertexNormalsV1(GlObject&);
-  void      ComputeVertexNormalsV2(GlObject&);
+  bool  Cull(GlObject&, const GlCamera&, const MatrixCamera&);
+  bool  Cull(GlObject&, const GlCamera&, const TrigTable&);  
+  bool  CullX(GlObject&, const GlCamera&, const TrigTable&);  
+  bool  CullY(GlObject&, const GlCamera&, const TrigTable&);  
+  bool  CullZ(GlObject&, const GlCamera&, const TrigTable&);  
+  int   RemoveHiddenSurfaces(GlObject&, const GlCamera&);
+  void  ResetAttributes(GlObject&);
+  void  ComputeFaceNormals(GlObject&, bool normalize = true);
+  void  ComputeFaceNormalsInv(GlObject&, bool normalize = true);
+  void  ComputeVertexNormalsV1(GlObject&);
+  void  ComputeVertexNormalsV2(GlObject&);
  
   // Object transformation
 
-  void      Scale(GlObject&, const Vector&);
-  void      Move(GlObject&, const Vector&);
-  void      Translate(GlObject&, const Vector&);
-  void      Rotate(GlObject&, const Vector&, const TrigTable&);
-  void      ApplyMatrix(const Matrix<4,4>&, GlObject&);
+  void  Scale(GlObject&, const Vector&);
+  void  Move(GlObject&, const Vector&);
+  void  Translate(GlObject&, const Vector&);
+  void  Rotate(GlObject&, const Vector&, const TrigTable&);
+  void  ApplyMatrix(const Matrix<4,4>&, GlObject&);
 
   // Object coords helpers
 
-  void      World2Camera(GlObject&, const GlCamera&);
-  void      Camera2Persp(GlObject&, const GlCamera&);
-  void      Persp2Screen(GlObject&, const GlCamera&);
-  void      Homogenous2Normal(GlObject&);
-  void      VerticesNormals2Camera(GlObject&, const GlCamera&);
+  void  World2Camera(GlObject&, const GlCamera&, const TrigTable& trig);
+  void  Camera2Persp(GlObject&, const GlCamera&);
+  void  Persp2Screen(GlObject&, const GlCamera&);
+  void  Homogenous2Normal(GlObject&);
+  void  VerticesNormals2Camera(GlObject&, const GlCamera&, cTrigTable&);
 
   // Object helpers
 
-  float     FindFarthestCoordinate(const GlObject&);
-  void      RefreshOrientation(GlObject&, const MatrixRotateEul&);
-  void      RefreshOrientationXYZ(GlObject&, const Vector& dir, TrigTable&);
-  float     ComputeBoundingSphereRadius(V_Vertex& vxs, Axis);
-  void      CreateMipmaps(V_Bitmap&, const Bitmap&);
-  void      FillMipmapSquares(const V_Bitmap&, V_Uint&);
+  float FindFarthestCoordinate(const GlObject&);
+  void  RefreshOrientation(GlObject&, const MatrixRotateEul&);
+  void  RefreshOrientationXYZ(GlObject&, const Vector& dir, TrigTable&);
+  float ComputeBoundingSphereRadius(V_Vertex& vxs, Axis);
+  void  CreateMipmaps(V_Bitmap&, const Bitmap&);
+  void  FillMipmapSquares(const V_Bitmap&, V_Uint&);
 
   // Debug purposes
 
-  V_Vertex  ComputeDrawableVxsNormals(const GlObject&, float scale);
+  V_Vertex ComputeDrawableVxsNormals(const GlObject&, float scale);
   
 } // namespace object
 
@@ -156,33 +157,33 @@ namespace objects {
 
   // V_GlObject attributes manipilation
 
-  int       Cull(V_GlObject&, const GlCamera&, const MatrixCamera&);
-  int       Cull(V_GlObject&, const GlCamera&);
-  int       RemoveHiddenSurfaces(V_GlObject&, const GlCamera&);  
-  void      ResetAttributes(V_GlObject&);
-  void      ComputeFaceNormals(V_GlObject&, bool normalize = false);
-  void      ComputeVertexNormalsV1(V_GlObject&);
-  void      ComputeVertexNormalsV2(V_GlObject&);
+  int   Cull(V_GlObject&, const GlCamera&, const MatrixCamera&);
+  int   Cull(V_GlObject&, const GlCamera&, const TrigTable&);
+  int   RemoveHiddenSurfaces(V_GlObject&, const GlCamera&);  
+  void  ResetAttributes(V_GlObject&);
+  void  ComputeFaceNormals(V_GlObject&, bool normalize = false);
+  void  ComputeVertexNormalsV1(V_GlObject&);
+  void  ComputeVertexNormalsV2(V_GlObject&);
 
   // V_GlObject transformation
 
-  void      Translate(V_GlObject&, const Vector&);
-  void      Rotate(V_GlObject&, const Vector&, const TrigTable&);
-  void      Rotate(V_GlObject&, const std::vector<Vector>&, const TrigTable&);
-  void      ApplyMatrix(const Matrix<4,4>&, V_GlObject&);
+  void  Translate(V_GlObject&, const Vector&);
+  void  Rotate(V_GlObject&, const Vector&, const TrigTable&);
+  void  Rotate(V_GlObject&, const std::vector<Vector>&, const TrigTable&);
+  void  ApplyMatrix(const Matrix<4,4>&, V_GlObject&);
   
   // V_GlObject coords helpers
 
-  void      World2Camera(V_GlObject&, const GlCamera&);
-  void      Camera2Persp(V_GlObject&, const GlCamera&);
-  void      Persp2Screen(V_GlObject&, const GlCamera&);
-  void      Homogenous2Normal(V_GlObject&);
+  void  World2Camera(V_GlObject&, const GlCamera&, const TrigTable&);
+  void  Camera2Persp(V_GlObject&, const GlCamera&);
+  void  Persp2Screen(V_GlObject&, const GlCamera&);
+  void  Homogenous2Normal(V_GlObject&);
 
   // V_GlObject helpers
 
-  void      SetCoords(V_GlObject&, Coords);
-  void      CopyCoords(V_GlObject&, Coords, Coords);
-  void      SortZ(V_GlObject&);
+  void  SetCoords(V_GlObject&, Coords);
+  void  CopyCoords(V_GlObject&, Coords, Coords);
+  void  SortZ(V_GlObject&);
   
 } // namespace objects
 

@@ -9,6 +9,28 @@
 
 namespace anshub {
 
+Triangle::Triangle()
+  : active_{false}
+  , shading_{}
+  , vxs_{}
+  , normal_{}
+  , color_{}
+  , textures_{nullptr}
+{ }
+
+Triangle::Triangle(
+  const V_Vertex& vxs, Shading shading, const Face& f, V_Bitmap& tex
+)
+  : active_{true}
+  , shading_{shading}
+  , vxs_{ {
+      vxs[f.vxs_[0]], vxs[f.vxs_[1]], vxs[f.vxs_[2]]
+    } }
+  , normal_{f.normal_}
+  , color_{f.color_}
+  , textures_{&tex}
+{ }
+
 // Makes container of Triangles with supposed capacity. If we would use
 // this container right (i.e. will resize it to 0, but not clear every 
 // loop tick), then start capacity may be 0
@@ -414,9 +436,9 @@ void triangles::ApplyMatrix(const Matrix<4,4>& mx, V_Triangle& arr)
   }
 }
 
-void triangles::World2Camera(V_Triangle& arr, const GlCamera& cam)
+void triangles::World2Camera(
+  V_Triangle& arr, const GlCamera& cam, cTrigTable& trig)
 {
-  auto& trig = cam.trig_;
   auto& cam_dir = cam.dir_;
   auto& cam_pos = cam.vrp_;
 

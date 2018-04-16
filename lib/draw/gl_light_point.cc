@@ -37,21 +37,21 @@ void LightPoint::Reset()
   direction_ = direction_copy_;
 }
 
-void LightPoint::World2Camera(const GlCamera& cam)
+void LightPoint::World2Camera(const GlCamera& cam, const TrigTable& trig)
 {
   // Just rotate direction vector
 
-  coords::RotateYaw(direction_, -cam.dir_.y, cam.trig_);
-  coords::RotatePitch(direction_, -cam.dir_.x, cam.trig_);
-  coords::RotateRoll(direction_, -cam.dir_.z, cam.trig_);
+  coords::RotateYaw(direction_, -cam.dir_.y, trig);
+  coords::RotatePitch(direction_, -cam.dir_.x, trig);
+  coords::RotateRoll(direction_, -cam.dir_.z, trig);
   direction_.Normalize();
 
   // Move and rotate position vector
 
   position_ += cam.vrp_ * (-1.0f);
-  coords::RotateYaw(position_, -cam.dir_.y, cam.trig_);
-  coords::RotatePitch(position_, -cam.dir_.x, cam.trig_);
-  coords::RotateRoll(position_, -cam.dir_.z, cam.trig_);
+  coords::RotateYaw(position_, -cam.dir_.y, trig);
+  coords::RotatePitch(position_, -cam.dir_.x, trig);
+  coords::RotateRoll(position_, -cam.dir_.z, trig);
 }
 
 FColor LightPoint::Illuminate(

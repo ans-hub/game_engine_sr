@@ -15,36 +15,21 @@
 #include "gl_face.h"
 #include "gl_vertex.h"
 #include "gl_object.h"
-#include "../data/bmp_loader.h"
-#include "../math/vector.h"
-#include "../math/plane3d.h"
-#include "../math/parmline3d.h"
+#include "lib/data/bmp_loader.h"
+#include "lib/math/vector.h"
+#include "lib/math/plane3d.h"
+#include "lib/math/parmline3d.h"
 
 namespace anshub {
 
 //***********************************************************************
-// Represents separated drawable triangle struct
+// Represents triangle struct
 //***********************************************************************
 
 struct Triangle
 {
-  Triangle()
-  : active_{false}
-  , shading_{}
-  , vxs_{}
-  , normal_{}
-  , color_{}
-  , textures_{nullptr} { }
-
-  Triangle(const V_Vertex& vxs, Shading shading, const Face& f, V_Bitmap& tex)
-  : active_{true}
-  , shading_{shading}
-  , vxs_{ {
-      vxs[f.vxs_[0]], vxs[f.vxs_[1]], vxs[f.vxs_[2]]
-    } }
-  , normal_{f.normal_}
-  , color_{f.color_}
-  , textures_{&tex} { }
+  Triangle();
+  Triangle(const V_Vertex& vxs, Shading shading, const Face& f, V_Bitmap& tex);
 
   Vertex& operator[](int f) { return vxs_[f]; }
   cVertex& operator[](int f) const { return vxs_[f]; }
@@ -74,36 +59,37 @@ namespace triangles {
 
   V_Triangle    MakeBaseContainer(int capacity);
   V_TrianglePtr MakePtrsContainer(int capacity);
-  void      MakePointers(V_Triangle&, V_TrianglePtr&);
-  void      AddFromObject(GlObject&, V_Triangle&);
-  void      AddFromObjects(V_GlObject&, V_Triangle&);
-  void      AddFromTriangles(cV_Triangle&, V_Triangle&);
+
+  void MakePointers(V_Triangle&, V_TrianglePtr&);
+  void AddFromObject(GlObject&, V_Triangle&);
+  void AddFromObjects(V_GlObject&, V_Triangle&);
+  void AddFromTriangles(cV_Triangle&, V_Triangle&);
 
   // Triangles array attributes manipilation
   
-  int       CullAndClip(V_Triangle&, const GlCamera&);
-  int       RemoveHiddenSurfaces(V_Triangle&, const GlCamera&);
-  void      ResetAttributes(V_Triangle&);
-  void      ComputeNormals(V_Triangle&, bool normalize = true);
+  int  CullAndClip(V_Triangle&, const GlCamera&);
+  int  RemoveHiddenSurfaces(V_Triangle&, const GlCamera&);
+  void ResetAttributes(V_Triangle&);
+  void ComputeNormals(V_Triangle&, bool normalize = true);
   
   // Triangles array transformation
 
-  void      ApplyMatrix(const Matrix<4,4>&, V_Triangle&);
+  void ApplyMatrix(const Matrix<4,4>&, V_Triangle&);
 
   // Triangles coords helpers
 
-  void      World2Camera(V_Triangle&, const GlCamera&);
-  void      Camera2Persp(V_Triangle&, const GlCamera&);
-  void      Persp2Screen(V_Triangle&, const GlCamera&);
-  void      Homogenous2Normal(V_Triangle&);
+  void World2Camera(V_Triangle&, const GlCamera&, const TrigTable&);
+  void Camera2Persp(V_Triangle&, const GlCamera&);
+  void Persp2Screen(V_Triangle&, const GlCamera&);
+  void Homogenous2Normal(V_Triangle&);
 
   // Triangles helpers
 
-  void      SortZAvg(V_TrianglePtr&);
-  void      SortZFar(V_TrianglePtr&);
-  void      SortZNear(V_TrianglePtr&);
-  void      SortZAvgInv(V_TrianglePtr&);
-  void      SortZFarInv(V_TrianglePtr&);
+  void SortZAvg(V_TrianglePtr&);
+  void SortZFar(V_TrianglePtr&);
+  void SortZNear(V_TrianglePtr&);
+  void SortZAvgInv(V_TrianglePtr&);
+  void SortZFarInv(V_TrianglePtr&);
 
 } // namespace triangles
 

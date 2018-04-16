@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    gl_object.cc
-// Descr:   object (drawable) struct for renderer
+// Descr:   object struct for renderer
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -22,6 +22,7 @@ GlObject::GlObject()
   , active_{true}
   , shading_{Shading::CONST}
   , world_pos_{0.0f, 0.0f, 0.0f}
+  , dir_{0.0f, 0.0f, 0.0f}
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
@@ -42,6 +43,7 @@ GlObject::GlObject(
   , active_{true}
   , shading_{}  
   , world_pos_{0.0f, 0.0f, 0.0f}
+  , dir_{0.0f, 0.0f, 0.0f}
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
@@ -92,10 +94,6 @@ void GlObject::CopyCoords(Coords src, Coords dest)
   else if (src == Coords::TRANS && dest == Coords::LOCAL)
     vxs_local_ = vxs_trans_;
 }
-
-//***************************************************************************
-// HELPERS IMPLEMENTATION
-//***************************************************************************
 
 // Makes object from ply file in two ways:
 //  1) custom fields in ply file (with attrs)
@@ -188,6 +186,22 @@ GlObject object::Make(const char* ply_fname)
     str::Replace(bmp_fname, ".ply", ".bmp");
     
     Bitmap texture (bmp_fname);
+
+    // Load transparent color of texture
+
+    if (ply::helpers::IsSinglePropertiesPresent(
+       ply,
+       "globals_ply_v2",
+       {"rt", "gt", "bt"}))
+    {
+      auto tcol = ply.GetLine("globals_ply_v2", {"rt", "gt", "bt"});
+      texture.SetAlphaColor(FColor(tcol[0][0], tcol[0][1], tcol[0][2]));
+    }
+    else
+      texture.SetAlphaColor(FColor(300, 300, 300));  // !!! bad bad bad !!!
+
+    // Create mipmaps
+
     object::CreateMipmaps(obj.textures_, texture);
     object::FillMipmapSquares(obj.textures_, obj.mipmaps_squares_);
     
@@ -426,7 +440,7 @@ bool object::Cull(GlObject& obj, const GlCamera& cam, const MatrixCamera& mx)
 // Make as member function (i.e. if we inherit from object, we can override
 // Cull by own proc)
 
-bool object::Cull(GlObject& obj, const GlCamera& cam)
+bool object::Cull(GlObject& obj, const GlCamera& cam, cTrigTable& trig)
 {
   if (!obj.active_)
     return false;
@@ -436,7 +450,7 @@ bool object::Cull(GlObject& obj, const GlCamera& cam)
   // (i.e. when all objects would be translated in camera coordinates)
   
   Vector obj_pos {obj.world_pos_};
-  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, cam.trig_);
+  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, trig);
 
   // Cull z planes
 
@@ -474,7 +488,7 @@ bool object::Cull(GlObject& obj, const GlCamera& cam)
 // of object and convert it to camera coordinates. Then using radius of bounding 
 // spere we decide if it visible or not
 
-bool object::CullX(GlObject& obj, const GlCamera& cam)
+bool object::CullX(GlObject& obj, const GlCamera& cam, const TrigTable& trig)
 {
   if (!obj.active_)
     return false;
@@ -482,7 +496,7 @@ bool object::CullX(GlObject& obj, const GlCamera& cam)
   // Convert world pos to camera coordinates
 
   Vector obj_pos {obj.world_pos_};
-  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, cam.trig_);
+  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, trig);
 
   // Find max_y coordinate when obj_pos_.z
 
@@ -501,7 +515,7 @@ bool object::CullX(GlObject& obj, const GlCamera& cam)
 // of object and convert it to camera coordinates. Then using radius of bounding 
 // spere we decide if it visible or not
 
-bool object::CullY(GlObject& obj, const GlCamera& cam)
+bool object::CullY(GlObject& obj, const GlCamera& cam, const TrigTable& trig)
 {
   if (!obj.active_)
     return false;
@@ -509,7 +523,7 @@ bool object::CullY(GlObject& obj, const GlCamera& cam)
   // Convert world pos to camera coordinates
 
   Vector obj_pos {obj.world_pos_};
-  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, cam.trig_);
+  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, trig);
   
   // Find max_y coordinate when obj_pos_.z
 
@@ -528,7 +542,7 @@ bool object::CullY(GlObject& obj, const GlCamera& cam)
 // of object and convert it to camera coordinates. Then using radius of bounding 
 // spere we decide if it visible or not
 
-bool object::CullZ(GlObject& obj, const GlCamera& cam)
+bool object::CullZ(GlObject& obj, const GlCamera& cam, const TrigTable& trig)
 {
   if (!obj.active_)
     return false;
@@ -536,7 +550,7 @@ bool object::CullZ(GlObject& obj, const GlCamera& cam)
   // Convert world pos to camera coordinates
 
   Vector obj_pos {obj.world_pos_};
-  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, cam.trig_);
+  coords::World2Camera(obj_pos, cam.vrp_, cam.dir_, trig);
 
   // Project point on the view plane and check
 
@@ -610,10 +624,10 @@ void object::ApplyMatrix(const Matrix<4,4>& mx, GlObject& obj)
 
 // Convert all vertices of object to camera coordinates
 
-void object::World2Camera(GlObject& obj, const GlCamera& cam)
+void object::World2Camera(GlObject& obj, const GlCamera& cam, cTrigTable& trig)
 {
   auto& vxs = obj.GetCoords();
-  coords::World2Camera(vxs, cam.vrp_, cam.dir_, cam.trig_);
+  coords::World2Camera(vxs, cam.vrp_, cam.dir_, trig);
 }
 
 void object::Camera2Persp(GlObject& obj, const GlCamera& cam)
@@ -630,15 +644,16 @@ void object::Persp2Screen(GlObject& obj, const GlCamera& cam)
 
 // Convert vertices normals to camera coordinates
 
-void object::VerticesNormals2Camera(GlObject& obj, const GlCamera& cam)
+void object::VerticesNormals2Camera(
+  GlObject& obj, const GlCamera& cam, cTrigTable& trig)
 {
   auto& vxs = obj.GetCoords();
 
   for (auto& vx : vxs) {
-    coords::RotateYaw(vx.normal_, -cam.dir_.y, cam.trig_);
-    coords::RotatePitch(vx.normal_, -cam.dir_.x, cam.trig_);
-    coords::RotateRoll(vx.normal_, -cam.dir_.z, cam.trig_);
-    // vx.normal_.Normalize();
+    coords::RotateYaw(vx.normal_, -cam.dir_.y, trig);
+    coords::RotatePitch(vx.normal_, -cam.dir_.x, trig);
+    coords::RotateRoll(vx.normal_, -cam.dir_.z, trig);
+    // vx.normal_.Normalize();  // todo: sure?!
   }
 }
 
@@ -858,16 +873,17 @@ void object::CreateMipmaps(V_Bitmap& arr, const Bitmap& tex)
   int h = tex.height();
   int bmp_pitch_w = tex.GetRowIncrement();
   int bmp_texel_w = tex.GetBytesPerPixel();
+  auto transp_color = tex.GetAlphaColor<FColor>();
 
   // Generate mipmaps for textures which dimension is factor of 2
 
   if (math::IsAbsFactorOfTwo(w) && math::IsAbsFactorOfTwo(h))
   {
-    // Make top level
+    // Make top level texture
 
     arr.emplace_back(std::make_shared<Bitmap>(tex));
+    arr.back()->SetAlphaColor(transp_color);
 
-    
     // Prepare interpolants
 
     int curr_w = w;
@@ -890,6 +906,7 @@ void object::CreateMipmaps(V_Bitmap& arr, const Bitmap& tex)
 
       auto* prev_tex = arr.back().get()->GetPointer();
       arr.emplace_back(std::make_shared<Bitmap>(curr_w, curr_h));
+      arr.back()->SetAlphaColor(transp_color);
       auto* curr_tex = arr.back().get()->GetPointer();
 
       // Iterate through curr bmp, and take average values of previous
@@ -938,8 +955,10 @@ void object::CreateMipmaps(V_Bitmap& arr, const Bitmap& tex)
       }
     }
   }
-  else
-    arr.emplace_back(std::make_shared<Bitmap>(tex));    
+  else {
+    arr.emplace_back(std::make_shared<Bitmap>(tex));
+    arr.back()->SetAlphaColor(transp_color);
+  }
 }
 
 // Calculates squares of each mipmap and place them in array for fast
@@ -995,12 +1014,12 @@ int objects::Cull(V_GlObject& arr, const GlCamera& cam, const MatrixCamera& mx)
   return res;
 }
 
-int objects::Cull(V_GlObject& arr, const GlCamera& cam)
+int objects::Cull(V_GlObject& arr, const GlCamera& cam, const TrigTable& trig)
 {
   int res {0};
   for (auto& obj : arr)
   {
-    if (obj.active_ && object::Cull(obj, cam))
+    if (obj.active_ && object::Cull(obj, cam, trig))
       ++res;
   }
   return res;
@@ -1050,7 +1069,7 @@ void objects::Rotate(
   }
 }
 
-// Apply givemn matrixes to onbjects
+// Apply given matrixes to an objects
 
 void objects::ApplyMatrix(const Matrix<4,4>& mx, V_GlObject& arr)
 {
@@ -1058,12 +1077,13 @@ void objects::ApplyMatrix(const Matrix<4,4>& mx, V_GlObject& arr)
     object::ApplyMatrix(mx, obj);
 }
 
-void objects::World2Camera(V_GlObject& arr, const GlCamera& cam)
+void objects::World2Camera(
+  V_GlObject& arr, const GlCamera& cam, cTrigTable& trig)
 {
   for (auto& obj : arr)
   {
     auto& vxs = obj.GetCoords();
-    coords::World2Camera(vxs, cam.vrp_, cam.dir_, cam.trig_);
+    coords::World2Camera(vxs, cam.vrp_, cam.dir_, trig);
   }
 }
 

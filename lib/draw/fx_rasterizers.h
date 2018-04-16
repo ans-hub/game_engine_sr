@@ -10,13 +10,13 @@
 
 #include <cmath>
 
-#include "gl_buffer.h"
-#include "gl_z_buffer.h"
-#include "fx_colors.h"
-#include "gl_vertex.h"
+#include "lib/draw/gl_buffer.h"
+#include "lib/draw/gl_z_buffer.h"
+#include "lib/draw/fx_colors.h"
+#include "lib/draw/gl_vertex.h"
 
-#include "../math/vector.h"
-#include "../data/bmp_loader.h"
+#include "lib/math/vector.h"
+#include "lib/data/bmp_loader.h"
 
 namespace anshub {
 
@@ -196,12 +196,3 @@ inline void raster_helpers::UnnormalizeTexture(
 } // namespace anshub
 
 #endif  // FX_RASTERIZERS_H
-
-// Note : we wouldn`t recieve Face or Triangle to the rasterization functions
-// since we want general way to rasterize triangles (from Object or from V_Triangle) 
-
-// Todo : as class Rasterize.
-// Usage:
-//  raster.Triangle(tri, tri.shading_, );
-//  raster.Point(p1, c1);
-//  raster.Line(p1, p2, c1, c2);

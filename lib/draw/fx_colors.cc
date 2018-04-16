@@ -1,5 +1,5 @@
 // ***********************************************************************
-// File:    fx_colors.h
+// File:    fx_colors.cc
 // Descr:   helpers color functions 
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
@@ -19,6 +19,7 @@ ColorTable::ColorTable()
   data_["blue"] = {0.0f, 0.0f, 255.0f};
   data_["cyan"] = {0.0f, 255.0f, 255.0f};
   data_["oceanblue"] = {143.0f, 175.0f, 201.0f};
+  data_["deeppink"] = {255.0f, 20.0f, 147.0f};
 }
 
 // Returns color by its name. This is not const function, since

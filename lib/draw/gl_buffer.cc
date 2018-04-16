@@ -13,7 +13,7 @@ Buffer::Buffer(int w, int h, int color)
   : w_{w}
   , h_{h}
   , clear_color_{color}
-  , format_{GL_BGRA}                // see note #3
+  , format_{GL_BGRA}                       // see note #3
   , type_{GL_UNSIGNED_INT_8_8_8_8}         // after code
   , ptr_(w_ * h_, clear_color_)
 {
