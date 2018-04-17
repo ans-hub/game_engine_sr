@@ -6,7 +6,7 @@ comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: ''
 comment   0x2  = const shading
 comment   0x4  = flat shading
 comment   0x8  = phong shading
-comment   0x10 = gourang shading
+comment   0x10 = gouraud shading
 element globals_ply_v2 1
 property uint shading
 element vertex 1013

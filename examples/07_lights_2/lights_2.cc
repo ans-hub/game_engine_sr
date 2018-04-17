@@ -1,6 +1,6 @@
 // *************************************************************
-// File:    matrix.cc
-// Descr:   matrix transformation example
+// File:    lights_2.cc
+// Descr:   lighting demo v.2
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -149,7 +149,8 @@ int main(int argc, const char** argv)
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {500};
-  GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
+  auto camman = MakeCameraman(
+    fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig);
 
   // Prepare lights sources
  
@@ -168,8 +169,6 @@ int main(int argc, const char** argv)
   Buffer  buf (kWidth, kHeight, 0);
   GlText  text {win};
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};
-  Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
-  bool    cam_z_mode {false};             // to manage mouse manipulation
 
   // Make triangles arrays
 
@@ -182,22 +181,19 @@ int main(int argc, const char** argv)
 
     // Handle input
 
+    camman.ProcessInput(win);
+    auto& cam = camman.GetCurrentCamera();
+
     auto    kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    auto    mpos = win.ReadMousePos();
     auto    mbtn_pr = win.ReadMouseBtn(BtnType::MS_DOWN);
     auto    mbtn_rl = win.ReadMouseBtn(BtnType::MS_UP);
     if (mbtn_pr == Btn::LMB)
-      cam_z_mode = true;
+      camman.SetState(CamState::ROLL_MODE, true);
     if (mbtn_rl == Btn::LMB)
-      cam_z_mode = false;
-
-    // Controls
+      camman.SetState(CamState::ROLL_MODE, false); 
 
     Vector  obj_vel    {0.0f, 0.0f, 0.0f};
     Vector  obj_scale  {1.0f, 1.0f, 1.0f};
-    HandleCamType(kbtn, cam);
-    HandleCamMovement(kbtn, 1.0f, cam);
-    HandleCamRotate(cam_z_mode, mpos, mpos_prev, cam.dir_);
     HandlePause(kbtn, win);
     HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
 
@@ -232,7 +228,7 @@ int main(int argc, const char** argv)
     // Camera routines (go to cam coords)
 
     MatrixCamera mx_cam {};
-    if (cam.type_ == GlCamera::Type::EULER)
+    if (cam.type_ == CamType::EULER)
     {
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
       MatrixRotateEul   mx_cam_rot    {cam.dir_ * (-1), trig};
@@ -241,11 +237,11 @@ int main(int argc, const char** argv)
     }
     else
     {
-      cam.LookAt(obj.world_pos_);
+      auto& uvn = camman.GetCamera(CamType::Uvn::type);      
+      uvn.LookAt(obj.world_pos_);
       MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
+      MatrixRotateUvn   mx_cam_rot    {uvn.GetU(), uvn.GetV(), uvn.GetN()};
       mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
-      cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
     }
 
     object::ApplyMatrix(mx_cam, obj);

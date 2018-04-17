@@ -1,13 +1,13 @@
 # Lighting example
 
-In this example we can see ambient, infinite and point lighting 
+In this example we can see ambient, infinite and point lighting
 
 ## Usage:
 ```bash
   $ make
-  $ ./lights_2 ../00_data/wheel.ply
+  $ ./lights_2 ../00_data/wheel_flat.ply
   $ ./lights_2 ../00_data/cube_flat.ply  
-  $ ./lights_2 ../00_data/sphere_gourang.ply
+  $ ./lights_2 ../00_data/sphere_gouraud.ply
 ```
 
 <div style="text-align: center;" markdown="1" />

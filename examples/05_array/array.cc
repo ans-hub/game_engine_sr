@@ -126,7 +126,8 @@ int main(int argc, const char** argv)
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {300};
-  GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
+  auto camman = MakeCameraman(
+    fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig);
 
   // Other stuff
 
@@ -143,9 +144,10 @@ int main(int argc, const char** argv)
     win.Clear();
 
     // Handle input
-
+    
+    camman.ProcessInput(win);
+    auto& cam = camman.GetCurrentCamera();
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    helpers::HandleCamMovement(kbtn, 2.0f, cam);
     helpers::HandlePause(kbtn, win);    
 
     // Rotate cubes
@@ -164,7 +166,7 @@ int main(int argc, const char** argv)
 
     objects::ResetAttributes(cubes);
     auto hidden = objects::RemoveHiddenSurfaces(cubes, cam);    
-    objects::World2Camera(cubes, cam);
+    objects::World2Camera(cubes, cam, trig);
     
     // Make triangles from objects. Now all changes go through this array
 

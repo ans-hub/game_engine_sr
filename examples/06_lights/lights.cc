@@ -1,6 +1,6 @@
 // *************************************************************
-// File:    objects.cc
-// Descr:   using objects functions demo
+// File:    lights.cc
+// Descr:   lighting demo 
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -112,7 +112,8 @@ int main(int argc, const char** argv)
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {300};
-  GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
+  auto camman = MakeCameraman(
+    fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig);
 
   // Prepare lights sources
   
@@ -137,8 +138,9 @@ int main(int argc, const char** argv)
 
     // Handle input
 
+    camman.ProcessInput(win);
+    auto& cam = camman.GetCurrentCamera();
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    helpers::HandleCamMovement(kbtn, 0.5f, cam);
     helpers::HandlePause(kbtn, win);
 
     // Rotate cubes
@@ -156,7 +158,7 @@ int main(int argc, const char** argv)
     // Cull hidden surfaces
 
     objects::ResetAttributes(cubes);
-    auto culled = objects::Cull(cubes, cam);
+    auto culled = objects::Cull(cubes, cam, trig);
     auto hidden = objects::RemoveHiddenSurfaces(cubes, cam);
     
     // Light objects
@@ -167,7 +169,7 @@ int main(int argc, const char** argv)
     
     // Finally
 
-    objects::World2Camera(cubes, cam);
+    objects::World2Camera(cubes, cam, trig);
     objects::Camera2Persp(cubes, cam);
     objects::Homogenous2Normal(cubes);
     objects::Persp2Screen(cubes, cam);

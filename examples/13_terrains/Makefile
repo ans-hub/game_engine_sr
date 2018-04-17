@@ -5,37 +5,39 @@ ROOTDIR = ../../
 
 # Setup libraries pathes and flags
 
-LIBDIR 		= $(ROOTDIR)lib
-LIBWINDOW 	= $(LIBDIR)/window
-LIBMATH 	= $(LIBDIR)/math
-LIBDRAW 	= $(LIBDIR)/draw
-LIBSYSTEM 	= $(LIBDIR)/system
-LIBAUDIO 	= $(LIBDIR)/audio
-LDFLAGS 	= -lwindow  -ldraw -lmath -lsystem -laudio
-LDFLAGS  	+= -lX11 -lGL -lGLU -lXrandr -lbass -lbass_fx
+LIBDIR		= $(ROOTDIR)lib
+LIBWINDOW = $(LIBDIR)/window
+LIBMATH   = $(LIBDIR)/math
+LIBDRAW   = $(LIBDIR)/draw
+LIBSYSTEM = $(LIBDIR)/system
+LIBAUDIO  = $(LIBDIR)/audio
+LIBEXTRAS = $(LIBDIR)/extras
+LIBPHYSICS = $(LIBDIR)/physics
+LIBDATA = $(LIBDIR)/data
+LDFLAGS   = -lwindow	-ldraw -lmath -lsystem -laudio -lextras -lphysics -ldata
+LDFLAGS	 += -lX11 -lGL -lGLU -lXrandr -lbass -lbass_fx
 
 # Setup compiler
 
-CXX 			= g++
-CXXFLAGS 	= -I $(ROOTDIR) -I .
-CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
-CXXLIBS  += -L $(LIBWINDOW) -L $(LIBMATH)
-CXXLIBS  += -L $(LIBDRAW) -L $(LIBSYSTEM) -L $(LIBAUDIO)
-CXXLIBS  += -L /usr/local/lib/
-CXXFLAGS += -MP -MMD
+CXX       = g++
+CXXFLAGS  = -I $(ROOTDIR) -I .
+CXXFLAGS  += -ansi -pedantic -Wall -Wextra -std=c++14
+CXXLIBS   += -L $(LIBWINDOW) -L $(LIBMATH) -L $(LIBDRAW) -L $(LIBPHYSICS)
+CXXLIBS   += -L $(LIBSYSTEM) -L $(LIBAUDIO) -L $(LIBEXTRAS) -L $(LIBDATA)
+CXXLIBS   += -L /usr/local/lib/
+CXXFLAGS  += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
-# DBGFLAGS += -pg -no-pie
+# DBGFLAGS	+= -pg -no-pie
 RLSFLAGS  = -O2
 
 # Setup objects
 
-VPATH = $(LIBDIR)/data/
-VPATH +=  ../
-OBJECTS = helpers.o camera_operator.o
+VPATH =	../
+OBJECTS = helpers.o
 
 # Other stuff
 
-SRCFILES 	= $(wildcard *.cc)
+SRCFILES	 = $(wildcard *.cc)
 .PHONY: clean
 
 ##############################################################################
@@ -58,6 +60,9 @@ $(APPNAME) : $(APPNAME).cc $(OBJECTS)
 	make -C $(LIBDRAW)
 	make -C $(LIBSYSTEM)
 	make -C $(LIBAUDIO)
+	make -C $(LIBEXTRAS)
+	make -C $(LIBPHYSICS)
+	make -C $(LIBDATA)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(RLSFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $@
 
 # Builds main app (debug)
@@ -68,6 +73,9 @@ debug : $(APPNAME).cc $(OBJECTS)
 	make debug -C $(LIBDRAW)
 	make debug -C $(LIBSYSTEM)
 	make debug -C $(LIBAUDIO)
+	make debug -C $(LIBEXTRAS)
+	make debug -C $(LIBPHYSICS)
+	make debug -C $(LIBDATA)	
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(DBGFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $(APPNAME)_$@
 
 #############################################################################
@@ -92,3 +100,6 @@ clean :
 	make clean -C $(LIBDRAW)
 	make clean -C $(LIBSYSTEM)
 	make clean -C $(LIBAUDIO)
+	make clean -C $(LIBEXTRAS)
+	make clean -C $(LIBPHYSICS)
+	make clean -C $(LIBDATA)

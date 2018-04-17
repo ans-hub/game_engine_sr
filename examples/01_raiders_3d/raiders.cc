@@ -32,7 +32,7 @@ int main()
   auto mode = io_helpers::FindVideoMode(kWidth, kHeight);
 
   GlWindow win (pos.x, pos.y, kWidth, kHeight, "Raiders 3D");
-  // win.ToggleFullscreen(mode);
+  win.ToggleFullscreen(mode);
   win.HideCursor();
   rand_toolkit::start_rand();
 

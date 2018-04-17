@@ -114,7 +114,8 @@ int main(int argc, const char** argv)
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {300};
-  GlCamera cam (fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z);
+  auto camman = MakeCameraman(
+    fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig);
 
   // Prepare lights sources
   
@@ -145,8 +146,9 @@ int main(int argc, const char** argv)
 
     // Handle input
 
+    camman.ProcessInput(win);
+    auto& cam = camman.GetCurrentCamera();
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    helpers::HandleCamMovement(kbtn, 0.5f, cam);
     helpers::HandlePause(kbtn, win);
 
     // Rotate cubes
@@ -174,7 +176,7 @@ int main(int argc, const char** argv)
     
     // Go to camera coordinates
 
-    objects::World2Camera(cubes, cam);
+    objects::World2Camera(cubes, cam, trig);
 
     // Make triangles
 

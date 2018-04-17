@@ -35,7 +35,6 @@
 #include "lib/math/matrix_camera.h"
 
 #include "../helpers.h"
-#include "../camera_operator.h"
 
 using namespace anshub;
 using namespace helpers;
@@ -46,6 +45,7 @@ void PrintInfo(
   const Vector& cam_pos, const Vector& cam_rot,
   int nfo_culled, int nfo_hidden)
 {
+  using vector::operator<<;
   std::ostringstream oss {};
   
   oss << "FPS: " << fps.ReadPrev()
@@ -116,7 +116,7 @@ int main(int argc, const char** argv)
 
   // Make object 1 transparent
   
-  if (!obj_1.textures_.empty())
+  if (obj_1.textures_.empty())
   {
     for (auto& vx : obj_1.vxs_local_)
     {
@@ -152,26 +152,13 @@ int main(int argc, const char** argv)
   float    near_z  {dov};
   float    far_z   {500};
 
-  CameraOperator cam {
-    fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z
-  };
-  cam.SetPrevMousePos(win.ReadMousePos());
-  cam.SetLeftButton(KbdBtn::A);
-  cam.SetRightButton(KbdBtn::D);
-  cam.SetForwardButton(KbdBtn::W);
-  cam.SetBackwardButton(KbdBtn::S);
-  cam.SetUpButton(KbdBtn::R);
-  cam.SetDownButton(KbdBtn::F);
-  cam.SetSpeedUpButton(KbdBtn::LSHIFT);
-  cam.SetZoomInButton(KbdBtn::NUM9);
-  cam.SetZoomOutButton(KbdBtn::NUM0);
-  cam.SetSwitchRollButton(KbdBtn::L);
-  cam.SetWiredModeButton(KbdBtn::T);
-  cam.SetSwitchTypeButton(KbdBtn::ENTER);
-  cam.SetAcceleration(0.02f);
-  cam.SetFriction(0.8f);
-  cam.SetSpeedUpValue(6.0f);
-  cam.SetFlyMode(true);
+  auto camman = MakeCameraman(
+    fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig);
+
+  camman.SetValue(CamValue::MOUSE_SENSITIVE, 1.0f);
+
+  Dynamics dyn {0.01f, 0.85f, -0.1f, 100.0f};
+  camman.SetDynamics(std::move(dyn));
 
   // Prepare lights sources
  
@@ -186,7 +173,7 @@ int main(int argc, const char** argv)
   render_ctx.is_zbuf_  = true;
   render_ctx.is_wired_ = false;
   render_ctx.is_alpha_ = true;
-  render_ctx.clarity_  = cam.z_far_;
+  render_ctx.clarity_  = far_z;
 
   GlText  text {win};
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};
@@ -202,12 +189,15 @@ int main(int argc, const char** argv)
 
     // Handle input
 
-    Vector  obj_vel    {0.0f, 0.0f, 0.0f};
-    Vector  obj_scale  {1.0f, 1.0f, 1.0f};
-    cam.ProcessInput(win);
-    render_ctx.is_wired_ = cam.IsWired();    
+    auto& cam = camman.GetCurrentCamera();    
+    camman.ProcessInput(win);
+    render_ctx.is_wired_ = camman.GetState(CamState::WIRED_MODE);    
+
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);
+
+    Vector  obj_vel    {0.0f, 0.0f, 0.0f};
+    Vector  obj_scale  {1.0f, 1.0f, 1.0f};
     helpers::HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
     obj_1.world_pos_ += obj_vel;
 
@@ -242,27 +232,13 @@ int main(int argc, const char** argv)
     light::Object(obj_1, lights);
     light::Objects(objs, lights);
 
-    // Camera routines (go to cam coords)
+    // Go to camera coords
 
-    MatrixCamera mx_cam {};
-    if (cam.type_ == GlCamera::Type::EULER)
-    {
-      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      MatrixRotateEul   mx_cam_rot    {cam.dir_ * (-1), trig};
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rot);
-    }
-    else
-    {
-      cam.LookAt(obj_1.world_pos_);
-      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
-      mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
-      cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
-    }
+    if (cam.type_ == CamType::UVN)
+      camman.GetCamera(CamType::Uvn::type).LookAt(obj_1.world_pos_);
 
-    object::ApplyMatrix(mx_cam, obj_1);
-    objects::ApplyMatrix(mx_cam, objs);
+    object::World2Camera(obj_1, cam, trig);
+    objects::World2Camera(objs, cam, trig);
 
     // Make triangles
 

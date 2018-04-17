@@ -23,20 +23,20 @@
 #include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_z_buffer.h"
-#include "lib/draw/extras/skybox.h"
-#include "lib/draw/extras/terrain.h"
-#include "lib/draw/extras/birds.h"
-#include "lib/draw/extras/water.h"
+#include "lib/extras/skybox.h"
+#include "lib/extras/terrain.h"
+#include "lib/extras/birds.h"
+#include "lib/extras/water.h"
+#include "lib/extras/cameraman.h"
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
 #include "lib/math/trig.h"
 #include "lib/math/matrix_rotate_uvn.h"
 #include "lib/math/matrix_trans.h"
+#include "lib/data/cfg_loader.h"
 
-#include "../config.h"
 #include "../helpers.h"
-#include "../camera_operator.h"
 
 using namespace anshub;
 using namespace helpers;
@@ -77,6 +77,8 @@ private:
 
 int main(int argc, const char** argv)
 {
+  using vector::operator<<;
+
   if (argc != 2)
   {
     std::cerr << "You must input config file name" << '\n';
@@ -92,13 +94,13 @@ int main(int argc, const char** argv)
   // Timers
 
   FpsCounter fps {};
-  Timer timer (cfg.GetFloat("win_fps"));
+  Timer timer (cfg.Get<float>("win_fps"));
 
   // Constants
 
-  const int kWinWidth {cfg.GetFloat("win_w")};
-  const int kWinHeight {cfg.GetFloat("win_h")};
-  const bool kDebugShow {cfg.GetBool("dbg_show_info")};
+  const int kWinWidth {cfg.Get<int>("win_w")};
+  const int kWinHeight {cfg.Get<int>("win_h")};
+  const bool kDebugShow {cfg.Get<bool>("dbg_show_info")};
 
   FColor kWhite  {255.0f, 255.0f, 255.0f};
   FColor kYellow {255.0f, 255.0f, 0.0f};
@@ -110,16 +112,16 @@ int main(int argc, const char** argv)
   auto mode = io_helpers::FindVideoMode(kWinWidth, kWinHeight);
   GlWindow win (pos.x, pos.y, kWinWidth, kWinHeight, "Terrain");
   
-  if (cfg.GetFloat("win_fs"))
+  if (cfg.Get<bool>("win_fs"))
     win.ToggleFullscreen(mode);
 
   // Audio
   
   AudioFx audio {};
-  auto snd_ambient = cfg.GetString("snd_ambient");
-  auto snd_steps = cfg.GetString("snd_steps");
-  auto snd_jump = cfg.GetString("snd_jump");
-  auto snd_landing = cfg.GetString("snd_landing");
+  auto snd_ambient = cfg.Get<std::string>("snd_ambient");
+  auto snd_steps = cfg.Get<std::string>("snd_steps");
+  auto snd_jump = cfg.Get<std::string>("snd_jump");
+  auto snd_landing = cfg.Get<std::string>("snd_landing");
   audio.LoadFx(snd_ambient, true);
   audio.LoadFx(snd_steps, false);
   audio.LoadFx(snd_jump, false);
@@ -129,62 +131,73 @@ int main(int argc, const char** argv)
 
   // Camera
 
-  float    dov     {cfg.GetFloat("cam_dov")};
-  float    fov     {cfg.GetFloat("cam_fov")};
-  float    near_z  {cfg.GetFloat("cam_nearz")};
-  float    far_z   {cfg.GetFloat("cam_farz")};
-  Vector   cam_pos {cfg.GetVector3d("cam_pos")};
-  Vector   cam_dir {cfg.GetVector3d("cam_dir")};
+  float    dov     {cfg.Get<float>("cam_dov")};
+  float    fov     {cfg.Get<float>("cam_fov")};
+  float    near_z  {cfg.Get<float>("cam_nearz")};
+  float    far_z   {cfg.Get<float>("cam_farz")};
+  Vector   cam_pos {cfg.Get<Vector>("cam_pos")};
+  Vector   cam_dir {cfg.Get<Vector>("cam_dir")};
   
-  CameraOperator cam {
-    fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z
+  CameraMan camman {
+    fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z, trig
   };
-  cam.SetLeftButton(KbdBtn::A);
-  cam.SetRightButton(KbdBtn::D);
-  cam.SetForwardButton(KbdBtn::W);
-  cam.SetBackwardButton(KbdBtn::S);
-  cam.SetUpButton(KbdBtn::R);
-  cam.SetDownButton(KbdBtn::F);
-  cam.SetJumpButton(KbdBtn::SPACE, 10);
-  cam.SetSpeedUpButton(KbdBtn::LSHIFT);
-  cam.SetSwitchTypeButton(KbdBtn::ENTER, 10);
-  cam.SetZoomInButton(KbdBtn::NUM9);
-  cam.SetZoomOutButton(KbdBtn::NUM0);
-  cam.SetSwitchRollButton(KbdBtn::L, 10);
-  cam.SetFlyModeButton(KbdBtn::NUM6, 10);
-  cam.SetWiredModeButton(KbdBtn::T, 10);
-  cam.SetOperatorHeight(cfg.GetFloat("cam_height"));
-  cam.SetFlyMode(cfg.GetFloat("cam_fly_mode"));
-  cam.SetOnGround(!cfg.GetFloat("cam_fly_mode"));
-  cam.SetGravity(cfg.GetFloat("cam_gravity"));
-  cam.SetJumpHeight(cfg.GetFloat("cam_jump"));
-  cam.SetAcceleration(cfg.GetFloat("cam_accel"));
-  cam.SetFriction(cfg.GetFloat("cam_frict"));
-  cam.SetSpeedUpValue(cfg.GetFloat("cam_speed_up"));
+  camman.SetButton(CamAction::STRAFE_LEFT, KbdBtn::A);
+  camman.SetButton(CamAction::STRAFE_RIGHT, KbdBtn::D);
+  camman.SetButton(CamAction::MOVE_FORWARD, KbdBtn::W);
+  camman.SetButton(CamAction::MOVE_BACKWARD, KbdBtn::S);
+  camman.SetButton(CamAction::MOVE_UP, KbdBtn::R);
+  camman.SetButton(CamAction::MOVE_DOWN, KbdBtn::F);
+  camman.SetButton(CamAction::JUMP, KbdBtn::SPACE);
+  camman.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM9);
+  camman.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM0);
+  camman.SetButton(CamAction::ROLL_MODE, KbdBtn::L, 20);
+  camman.SetButton(CamAction::FLY_MODE, KbdBtn::K, 20);
+  camman.SetButton(CamAction::WIRED, KbdBtn::T, 20);
+  camman.SetButton(CamAction::SWITCH_TYPE, KbdBtn::ENTER, 20);
+  camman.SetButton(CamAction::SPEED_UP, KbdBtn::LSHIFT);
+
+  camman.SetState(CamState::FLY_MODE, cfg.Get<bool>("cam_fly_mode"));
+  camman.SetState(CamState::ON_GROUND, false);
+
+  camman.SetValue(CamValue::OPERATOR_HEIGHT, cfg.Get<float>("cam_height"));
+  camman.SetValue(CamValue::MOUSE_SENSITIVE, cfg.Get<float>("cam_mouse_sens"));
+  camman.SetValue(CamValue::SPEED_UP, cfg.Get<float>("cam_speed_up"));
+  camman.SetValue(CamValue::JUMP_HEIGHT, cfg.Get<float>("cam_jump"));
+
+  Dynamics dyn {
+    cfg.Get<float>("cam_accel"),
+    cfg.Get<float>("cam_frict"),
+    cfg.Get<float>("cam_gravity"),
+    100.0f,
+  };
+  camman.SetDynamics(std::move(dyn));
 
   // Create skybox
 
-  Skybox  skybox (cfg.GetString("ter_sky").c_str(), cam.vrp_);
+  Skybox  skybox (
+    cfg.Get<std::string>("ter_sky").c_str(),
+    cfg.Get<Vector>("cam_pos")
+  );
   object::Scale(skybox, {far_z, far_z, far_z});
   object::Rotate(skybox, {90.0f, 0.0f, 0.0f}, trig);
   
   // Create terrain
 
   Terrain terrain (
-    cfg.GetString("ter_hm").c_str(),
-    cfg.GetString("ter_tx").c_str(),
-    cfg.GetFloat("ter_divider"),
-    cfg.GetFloat("ter_chunk"),
-    static_cast<Shading>(cfg.GetFloat("ter_shading"))
+    cfg.Get<std::string>("ter_hm").c_str(),
+    cfg.Get<std::string>("ter_tx").c_str(),
+    cfg.Get<float>("ter_divider"),
+    cfg.Get<float>("ter_chunk"),
+    static_cast<Shading>(cfg.Get<float>("ter_shading"))
   );
-  terrain.SetDetalization(cfg.GetVectorF("ter_detaliz"));
+  terrain.SetDetalization(cfg.Get<std::vector<float>>("ter_detaliz"));
   auto& terrain_chunks = terrain.GetChunks();
 
   // Make water
   
   Water water {
     terrain.GetHmWidth() - 1,
-    cfg.GetFloat("ter_water_lvl"),
+    cfg.Get<float>("ter_water_lvl"),
     color::fOceanBlue,
     Shading::GOURAUD
   };
@@ -210,7 +223,7 @@ int main(int argc, const char** argv)
   render_ctx.is_wired_ = false;
   render_ctx.is_alpha_ = true;
   render_ctx.is_bifiltering_ = false;
-  render_ctx.clarity_  = cfg.GetFloat("cam_clarity");
+  render_ctx.clarity_  = cfg.Get<float>("cam_clarity");
   
   // Make triangles arrays
 
@@ -224,32 +237,32 @@ int main(int argc, const char** argv)
   Lights      lights_all {};
   ColorTable  color_table {};
 
-  auto   color   = color_table[cfg.GetString("light_amb_color")];
-  auto   intense = cfg.GetFloat("light_amb_int");
+  auto   color   = color_table[cfg.Get<std::string>("light_amb_color")];
+  auto   intense = cfg.Get<float>("light_amb_int");
   Vector lpos {};
   Vector ldir {};
 
   lights_all.AddAmbient(color, intense);
 
-  color   = color_table[cfg.GetString("light_inf_color")];
-  intense = cfg.GetFloat("light_inf_int");
+  color   = color_table[cfg.Get<std::string>("light_inf_color")];
+  intense = cfg.Get<float>("light_inf_int");
   ldir    = {-1.0f, -1.0f, 0.0f};
 
   if (intense)
     lights_all.AddInfinite(color, intense, ldir);
 
-  color   = color_table[cfg.GetString("light_pnt_color")];
-  intense = cfg.GetFloat("light_pnt_int");
-  ldir    = cfg.GetVector3d("light_pnt_dir"); 
-  lpos    = cfg.GetVector3d("light_pnt_pos");
+  color   = color_table[cfg.Get<std::string>("light_pnt_color")];
+  intense = cfg.Get<float>("light_pnt_int");
+  ldir    = cfg.Get<Vector>("light_pnt_dir"); 
+  lpos    = cfg.Get<Vector>("light_pnt_pos");
 
   if (intense)
     lights_all.AddPoint(color, intense, lpos, ldir);
 
   Lights lights_sky {};
 
-  color    = color_table[cfg.GetString("light_sky_color")];
-  intense  = cfg.GetFloat("light_sky_int");
+  color    = color_table[cfg.Get<std::string>("light_sky_color")];
+  intense  = cfg.Get<float>("light_sky_int");
   
   lights_sky.AddAmbient(color, intense);
   
@@ -264,11 +277,12 @@ int main(int argc, const char** argv)
     win.Clear();
 
     // Handle camera
-
+    
+    auto& cam = camman.GetCurrentCamera();
     float ground = terrain.FindGroundPosition(cam.vrp_);
-    cam.ProcessInput(win);
-    cam.SetGroundPosition(ground);
-    render_ctx.is_wired_ = cam.IsWired();
+    camman.SetGroundPosition(ground);
+    camman.ProcessInput(win);
+    render_ctx.is_wired_ = camman.GetState(CamState::WIRED_MODE);
 
     // Handle sytem routines
 
@@ -279,12 +293,8 @@ int main(int argc, const char** argv)
     // Handle lookat point
     
     helpers::HandleObject(kbtn, lookat_point, cam_pos, cam_dir);
-    if (cam.type_ == GlCamera::Type::UVN)
-    {
-      cam.LookAt(lookat_point);
-      MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
-      cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
-    }
+    if (cam.type_ == CamType::UVN)
+      camman.GetCamera(CamType::Uvn::type).LookAt(lookat_point);
 
     // Process light intense changing
 
@@ -311,9 +321,9 @@ int main(int argc, const char** argv)
       object::ComputeFaceNormals(bird, true);
       object::RemoveHiddenSurfaces(bird, cam);
       object::Translate(bird, bird.world_pos_);
-      object::CullZ(bird, cam);
-      object::CullX(bird, cam);
-      object::CullY(bird, cam);
+      object::CullZ(bird, cam, trig);
+      object::CullX(bird, cam, trig);
+      object::CullY(bird, cam, trig);
     }
 
     // Process water
@@ -324,10 +334,10 @@ int main(int argc, const char** argv)
     object::ComputeFaceNormals(water, true);
     object::RemoveHiddenSurfaces(water, cam);
     object::Translate(water, water.world_pos_);
-    object::CullZ(water, cam);
-    object::CullX(water, cam);
-    object::CullY(water, cam);
-    object::VerticesNormals2Camera(water, cam);
+    object::CullZ(water, cam, trig);
+    object::CullX(water, cam, trig);
+    object::CullY(water, cam, trig);
+    object::VerticesNormals2Camera(water, cam, trig);
 
     // Cull terrain chunks by world pos
 
@@ -335,9 +345,9 @@ int main(int argc, const char** argv)
     for (auto& chunk : terrain_chunks)
     {
       object::ResetAttributes(chunk);
-      obj_culled += object::CullZ(chunk, cam);
-      obj_culled += object::CullX(chunk, cam);
-      obj_culled += object::CullY(chunk, cam);
+      obj_culled += object::CullZ(chunk, cam, trig);
+      obj_culled += object::CullX(chunk, cam, trig);
+      obj_culled += object::CullY(chunk, cam, trig);
     }
 
     // Change terrain detalization
@@ -354,12 +364,12 @@ int main(int argc, const char** argv)
 
       object::ComputeFaceNormals(chunk, true);
       hidden += object::RemoveHiddenSurfaces(chunk, cam);
-      object::VerticesNormals2Camera(chunk, cam);
+      object::VerticesNormals2Camera(chunk, cam, trig);
     }
 
     // Go to camera coords for light and skybox (exclude terrain)
 
-    object::World2Camera(skybox, cam);
+    object::World2Camera(skybox, cam, trig);
 
     // Make triangles from terrain
 
@@ -377,13 +387,13 @@ int main(int argc, const char** argv)
         triangles::AddFromObject(bird, tris_base);
     }
     triangles::AddFromObject(water, tris_base);
-    triangles::World2Camera(tris_base, cam);
+    triangles::World2Camera(tris_base, cam, trig);
     auto tri_culled = triangles::CullAndClip(tris_base, cam);
     
     // Light terrain triangles in world coordinates
 
     triangles::ComputeNormals(tris_base);
-    light::World2Camera(lights_all, cam);
+    light::World2Camera(lights_all, cam, trig);
     if (!lights_all.point_.empty())     // we use point as flash light
       lights_all.point_.front().Reset();    
     light::Triangles(tris_base, lights_all);

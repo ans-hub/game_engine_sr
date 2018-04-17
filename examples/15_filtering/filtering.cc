@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    filtering.cc
-// Descr:   filtering example
+// Descr:   bilinear filtering example
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -33,9 +33,9 @@
 #include "lib/math/matrix_view.h"
 #include "lib/math/matrix_scale.h"
 #include "lib/math/matrix_camera.h"
+#include "lib/extras/cameraman.h"
 
 #include "../helpers.h"
-#include "../camera_operator.h"
 
 using namespace anshub;
 using namespace helpers;
@@ -46,6 +46,7 @@ void PrintInfo(
   const Vector& cam_pos, const Vector& cam_rot,
   int nfo_culled, int nfo_hidden, const RenderContext& ctx)
 {
+  using vector::operator<<;
   std::ostringstream oss {};
   
   oss << "FPS: " << fps.ReadPrev()
@@ -127,26 +128,33 @@ int main(int argc, const char** argv)
   float    near_z  {1.5f};
   float    far_z   {500};
 
-  CameraOperator cam {
-    fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z
+  CameraMan camman {
+    fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig
   };
-  cam.SetPrevMousePos(win.ReadMousePos());
-  cam.SetLeftButton(KbdBtn::A);
-  cam.SetRightButton(KbdBtn::D);
-  cam.SetForwardButton(KbdBtn::W);
-  cam.SetBackwardButton(KbdBtn::S);
-  cam.SetUpButton(KbdBtn::R);
-  cam.SetDownButton(KbdBtn::F);
-  cam.SetSpeedUpButton(KbdBtn::LSHIFT);
-  cam.SetZoomInButton(KbdBtn::NUM9);
-  cam.SetZoomOutButton(KbdBtn::NUM0);
-  cam.SetSwitchRollButton(KbdBtn::L, 20);
-  cam.SetWiredModeButton(KbdBtn::T, 20);
-  cam.SetSwitchTypeButton(KbdBtn::ENTER, 20);
-  cam.SetAcceleration(0.01f);
-  cam.SetFriction(0.8f);
-  cam.SetSpeedUpValue(6.0f);
-  cam.SetFlyMode(true);
+  camman.SetButton(CamAction::STRAFE_LEFT, KbdBtn::A);
+  camman.SetButton(CamAction::STRAFE_RIGHT, KbdBtn::D);
+  camman.SetButton(CamAction::MOVE_FORWARD, KbdBtn::W);
+  camman.SetButton(CamAction::MOVE_BACKWARD, KbdBtn::S);
+  camman.SetButton(CamAction::MOVE_UP, KbdBtn::R);
+  camman.SetButton(CamAction::MOVE_DOWN, KbdBtn::F);
+  camman.SetButton(CamAction::JUMP, KbdBtn::SPACE);
+  camman.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM9);
+  camman.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM0);
+  camman.SetButton(CamAction::ROLL_MODE, KbdBtn::L, 20);
+  camman.SetButton(CamAction::WIRED, KbdBtn::T, 20);
+  camman.SetButton(CamAction::BIFILTERING_MODE, KbdBtn::I, 20);
+  camman.SetButton(CamAction::MIPMAP_MODE, KbdBtn::O, 20);
+  camman.SetButton(CamAction::SWITCH_TYPE, KbdBtn::ENTER, 20);
+  camman.SetButton(CamAction::SPEED_UP, KbdBtn::LSHIFT);
+
+  camman.SetState(CamState::FLY_MODE, true);
+  camman.SetState(CamState::BIFILTERING_MODE, true);
+  camman.SetState(CamState::MIPMAP_MODE, true);
+
+  camman.SetValue(CamValue::MOUSE_SENSITIVE, 0.3f);
+
+  Dynamics dyn {0.005f, 0.8f, -0.1f, 100.0f};
+  camman.SetDynamics(std::move(dyn));
 
   // Prepare lights sources
  
@@ -164,7 +172,7 @@ int main(int argc, const char** argv)
   render_ctx.is_bifiltering_ = true;
   render_ctx.is_mipmapping_  = true;
   render_ctx.mipmap_dist_ = 170.0f;
-  render_ctx.clarity_  = cam.z_far_;
+  render_ctx.clarity_  = camman.GetCurrentCamera().z_far_;
 
   GlText  text {win};
   Vector  obj_rot {0.0f, 0.0f, 0.0f};
@@ -180,20 +188,25 @@ int main(int argc, const char** argv)
 
     // Handle input
 
-    Vector  obj_vel    {0.0f, 0.0f, 0.0f};
-    Vector  obj_scale  {1.0f, 1.0f, 1.0f};
+    auto& cam = camman.GetCurrentCamera();    
+    camman.ProcessInput(win);
 
-    cam.ProcessInput(win);
-    render_ctx.is_wired_ = cam.IsWired();    
+    render_ctx.is_wired_ = camman.GetState(CamState::WIRED_MODE);    
+
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);
+
+    Vector  obj_vel    {0.0f, 0.0f, 0.0f};
+    Vector  obj_scale  {1.0f, 1.0f, 1.0f};
     helpers::HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
+
     obj.world_pos_ += obj_vel;
 
-    if (win.IsKeyboardBtnPressed(KbdBtn::I))
-      render_ctx.is_mipmapping_ = !render_ctx.is_mipmapping_;
-    if (win.IsKeyboardBtnPressed(KbdBtn::O))
-      render_ctx.is_bifiltering_ = !render_ctx.is_bifiltering_;
+    render_ctx.is_mipmapping_ = camman.GetState(CamState::MIPMAP_MODE);
+    render_ctx.is_bifiltering_ = camman.GetState(CamState::BIFILTERING_MODE);
+
+    if (cam.type_ == CamType::UVN)
+      camman.GetCamera(CamType::Uvn::type).LookAt(obj.world_pos_);
 
     // Some hand transformation
 
@@ -214,28 +227,9 @@ int main(int argc, const char** argv)
     object::ComputeVertexNormalsV2(obj);
     light::Object(obj, lights);
 
-    // Camera routines (go to cam coords)
-
-    MatrixCamera mx_cam {};
-    if (cam.type_ == GlCamera::Type::EULER)
-    {
-      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      MatrixRotateEul   mx_cam_rot    {cam.dir_ * (-1), trig};
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_trans);
-      mx_cam = matrix::Multiplie(mx_cam, mx_cam_rot);
-    }
-    else
-    {
-      cam.LookAt(obj.world_pos_);
-      MatrixTranslate   mx_cam_trans  {cam.vrp_ * (-1)};
-      MatrixRotateUvn   mx_cam_rot    {cam.u_, cam.v_, cam.n_};
-      mx_cam = matrix::Multiplie(mx_cam_trans, mx_cam_rot);
-      cam.dir_ = coords::RotationMatrix2Euler(mx_cam_rot);
-    }
-    object::ApplyMatrix(mx_cam, obj);
-
     // Make triangles
 
+    object::World2Camera(obj, cam, trig);
     tris_base.resize(0);
     tris_ptrs.resize(0);
     triangles::AddFromObject(obj, tris_base);

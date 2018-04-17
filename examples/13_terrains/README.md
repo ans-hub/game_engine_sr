@@ -1,15 +1,14 @@
 # Terrain and skybox
 
-Example of different terrains generating with skyboxes. Here I decide to use different examples without arguments since we have too many parameters to tune for some terrains.
+Example of different terrains generating with skyboxes.
 
 ## Usage:
 ```bash
   $ make
   $ ./terrains levels/01.txt
   $ ./terrains levels/02.txt
-  $ ./terrains levels/03.txt
-  $ ./terrains levels/04.txt
-  ...
+  $ ./terrains levels/07.txt
+  $ ./terrains levels/08.txt
 ```
 ## Subdirectories:
 

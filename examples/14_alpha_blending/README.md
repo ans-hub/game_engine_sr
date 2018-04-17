@@ -1,4 +1,4 @@
-# Alpha-blending example
+# Alpha blending example
 
 Examples of alpha blending
 

@@ -1,6 +1,6 @@
 # Skybox using inverted cube
 
-Example of inverted cube with texture imitates skybox 
+Example of inverted cube with texture imitates skybox
 
 ## Usage:
 ```bash

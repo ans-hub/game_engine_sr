@@ -11,15 +11,14 @@
 #include <iostream>
 #include <sstream>
 
+#include "lib/math/vector.h"
+#include "lib/physics/dynamics.h"
+#include "lib/extras/cameraman.h"
+#include "lib/draw/gl_text.h"
 #include "lib/window/base_window.h"
 #include "lib/window/gl_window.h"
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
-#include "lib/draw/gl_camera.h"
-#include "lib/draw/gl_text.h"
-#include "lib/math/vector.h"
-
-using anshub::vector::operator<<;
 
 namespace anshub {
 
@@ -27,10 +26,7 @@ namespace helpers {
 
   // Execute helpers
 
-  void HandleCamType(Btn, GlCamera&);
-  void HandleCamMovement(Btn, float, GlCamera&);
-  void HandleCamYPosition(float, GlCamera&);  
-  void HandleCamRotate(bool mode, const Pos&, Pos&, Vector&);
+  template<class ... Args> auto MakeCameraman(Args&&...);
   void HandleFullscreen(Btn, int mode, GlWindow&);
   void HandlePause(Btn, GlWindow&);
   void HandleObject(Btn, Vector&, Vector&, Vector&);
@@ -48,6 +44,37 @@ namespace helpers {
   void PrintFpsOnCmd(FpsCounter&);
 
 } // namespace helpers
+
+// Returns cameraman with predefined keys
+
+template<class ... Args>
+inline auto helpers::MakeCameraman(Args&&... args)
+{
+  CameraMan man (std::forward<Args>(args)...);
+  man.SetButton(CamAction::STRAFE_LEFT, KbdBtn::A);
+  man.SetButton(CamAction::STRAFE_RIGHT, KbdBtn::D);
+  man.SetButton(CamAction::MOVE_FORWARD, KbdBtn::W);
+  man.SetButton(CamAction::MOVE_BACKWARD, KbdBtn::S);
+  man.SetButton(CamAction::MOVE_UP, KbdBtn::R);
+  man.SetButton(CamAction::MOVE_DOWN, KbdBtn::F);
+  man.SetButton(CamAction::JUMP, KbdBtn::SPACE);
+  man.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM9);
+  man.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM0);
+  man.SetButton(CamAction::ROLL_MODE, KbdBtn::L, 20);
+  man.SetButton(CamAction::WIRED, KbdBtn::T, 20);
+  man.SetButton(CamAction::SWITCH_TYPE, KbdBtn::BACKS, 20);
+  man.SetButton(CamAction::SPEED_UP, KbdBtn::LSHIFT);
+
+  man.SetState(CamState::FLY_MODE, true);
+
+  man.SetValue(CamValue::MOUSE_SENSITIVE, 1.0f);  
+  man.SetValue(CamValue::SPEED_UP, 5.0f);  
+
+  Dynamics dyn {0.01f, 0.9f, -0.1f, 100.0f};
+  man.SetDynamics(std::move(dyn));
+
+  return man;
+}
 
 } // namespace anshub
 

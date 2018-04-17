@@ -17,7 +17,7 @@
 #include "lib/draw/fx_colors.h"
 #include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_z_buffer.h"
-#include "lib/draw/extras/skybox.h"
+#include "lib/extras/skybox.h"
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
@@ -81,8 +81,8 @@ int main(int argc, const char** argv)
   Vector   cam_dir {0.0f, 0.0f, 0.0f};
   float    near_z  {dov};
   float    far_z   {300};
-  GlCamera cam (fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z);
-  Pos      mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
+  auto camman = MakeCameraman(
+    fov, dov, kWinWidth, kWinHeight, cam_pos, cam_dir, near_z, far_z, trig);
   
   // Other stuff
 
@@ -107,11 +107,9 @@ using vector::operator<<;
 
     // Handle input
 
+    camman.ProcessInput(win);
+    auto& cam = camman.GetCurrentCamera();
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
-    auto mpos = win.ReadMousePos();
-    helpers::HandleCamMovement(kbtn, 1.0f, cam);
-    helpers::HandleCamType(kbtn, cam);
-    helpers::HandleCamRotate(false, mpos, mpos_prev, cam.dir_);
     helpers::HandlePause(kbtn, win);
 
     // Draw horizont
@@ -121,7 +119,7 @@ using vector::operator<<;
     object::ResetAttributes(horizont);
 
     auto hidden = object::RemoveHiddenSurfaces(horizont, cam);
-    object::World2Camera(horizont, cam);
+    object::World2Camera(horizont, cam, trig);
 
     // Make triangles
 

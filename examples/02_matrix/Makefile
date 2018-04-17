@@ -5,36 +5,39 @@ ROOTDIR = ../../
 
 # Setup libraries pathes and flags
 
-LIBDIR 		= $(ROOTDIR)lib
+LIBDIR		= $(ROOTDIR)lib
 LIBWINDOW = $(LIBDIR)/window
-LIBMATH 	= $(LIBDIR)/math
-LIBDRAW 	= $(LIBDIR)/draw
+LIBMATH   = $(LIBDIR)/math
+LIBDRAW   = $(LIBDIR)/draw
 LIBSYSTEM = $(LIBDIR)/system
-LDFLAGS 	= -lwindow  -ldraw -lmath -lsystem 				# internal
-LDFLAGS  += -lX11 -lGL -lGLU -lXrandr								# external
+LIBAUDIO  = $(LIBDIR)/audio
+LIBEXTRAS = $(LIBDIR)/extras
+LIBPHYSICS = $(LIBDIR)/physics
+LIBDATA = $(LIBDIR)/data
+LDFLAGS   = -lwindow	-ldraw -lmath -lsystem -laudio -lextras -lphysics -ldata
+LDFLAGS	 += -lX11 -lGL -lGLU -lXrandr -lbass -lbass_fx
 
 # Setup compiler
 
-CXX 			= g++
-CXXFLAGS 	= -I $(ROOTDIR) -I .											# see note below
-CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
-CXXLIBS  += -L $(LIBWINDOW) -L $(LIBMATH)
-CXXLIBS  += -L $(LIBDRAW) -L $(LIBSYSTEM)
-CXXLIBS  += -L /usr/local/lib/
-CXXFLAGS += -MP -MMD
+CXX       = g++
+CXXFLAGS  = -I $(ROOTDIR) -I .
+CXXFLAGS  += -ansi -pedantic -Wall -Wextra -std=c++14
+CXXLIBS   += -L $(LIBWINDOW) -L $(LIBMATH) -L $(LIBDRAW) -L $(LIBPHYSICS)
+CXXLIBS   += -L $(LIBSYSTEM) -L $(LIBAUDIO) -L $(LIBEXTRAS) -L $(LIBDATA)
+CXXLIBS   += -L /usr/local/lib/
+CXXFLAGS  += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
-DBGFLAGS += -pg -no-pie															# profiler flags
+# DBGFLAGS	+= -pg -no-pie
 RLSFLAGS  = -O2
 
 # Setup objects
 
-VPATH = $(LIBDIR)/data/
-VPATH +=  ../
+VPATH =	../
 OBJECTS = helpers.o
 
 # Other stuff
 
-SRCFILES 	= $(wildcard *.cc)
+SRCFILES	 = $(wildcard *.cc)
 .PHONY: clean
 
 ##############################################################################
@@ -56,6 +59,10 @@ $(APPNAME) : $(APPNAME).cc $(OBJECTS)
 	make -C $(LIBMATH)
 	make -C $(LIBDRAW)
 	make -C $(LIBSYSTEM)
+	make -C $(LIBAUDIO)
+	make -C $(LIBEXTRAS)
+	make -C $(LIBPHYSICS)
+	make -C $(LIBDATA)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(RLSFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $@
 
 # Builds main app (debug)
@@ -65,6 +72,10 @@ debug : $(APPNAME).cc $(OBJECTS)
 	make debug -C $(LIBMATH)
 	make debug -C $(LIBDRAW)
 	make debug -C $(LIBSYSTEM)
+	make debug -C $(LIBAUDIO)
+	make debug -C $(LIBEXTRAS)
+	make debug -C $(LIBPHYSICS)
+	make debug -C $(LIBDATA)	
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(DBGFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $(APPNAME)_$@
 
 #############################################################################
@@ -76,7 +87,7 @@ debug : $(APPNAME).cc $(OBJECTS)
 # Cleans garbage (local)
 
 lclean :
-	rm -rf gmon.out		# profiler out
+	rm -rf gmon.out
 	rm -rf $(APPNAME) $(APPNAME)_* *.d *.o 
 
 # Cleans garbage (all)
@@ -88,7 +99,7 @@ clean :
 	make clean -C $(LIBMATH)
 	make clean -C $(LIBDRAW)
 	make clean -C $(LIBSYSTEM)
-
-	# Important note: we have 2 include path - root (for including libraries headers
-	# like #include "lib/math/point.h), and current dir (for including game headers
-	# like #include "engine/renderer.h" or alternatively #include "src/raiders/config.h")
+	make clean -C $(LIBAUDIO)
+	make clean -C $(LIBEXTRAS)
+	make clean -C $(LIBPHYSICS)
+	make clean -C $(LIBDATA)

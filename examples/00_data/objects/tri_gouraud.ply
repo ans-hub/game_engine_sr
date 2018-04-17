@@ -1,0 +1,24 @@
+ply
+format ascii 1.0
+comment Property "shading" of element "globals_ply_v2"
+comment   0x2  = const shading
+comment   0x4  = flat shading
+comment   0x8  = phong shading
+comment   0x10 = gouraud shading
+element globals_ply_v2 1
+property uint shading
+element vertex 3
+property float x
+property float y
+property float z
+property uchar red
+property uchar green
+property uchar blue
+element face 1
+property list uchar uint indicies
+end_header
+16
+1.000000 -1.000000 -1.000000 255 0 0
+-1.000000 1.000000 -1.000000 0 255 0
+1.000000 1.000000 -1.000000 0 0 255
+3 0 1 2

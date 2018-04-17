@@ -9,58 +9,6 @@
 
 namespace anshub {
 
-// Specialized camera function that changes camera type
-
-void helpers::HandleCamType(Btn kbtn, GlCamera& cam)
-{
-  if (kbtn == Btn::ENTER)
-  {
-    if (cam.type_ == GlCamera::Type::EULER)
-      cam.SwitchType(GlCamera::Type::UVN);
-    else if (cam.type_ == GlCamera::Type::UVN)
-      cam.SwitchType(GlCamera::Type::EULER);
-  }
-}
-
-// Specialized camera function that moves camera in given directions
-
-void helpers::HandleCamMovement(Btn kbtn, float, GlCamera& cam)
-{
-  switch (kbtn)
-  {
-    case Btn::W : cam.MoveForward(); break;
-    case Btn::S : cam.MoveBackward(); break;
-    case Btn::A : cam.MoveLeft(); break;
-    case Btn::D : cam.MoveRight(); break;
-    case Btn::R : cam.MoveUp(); break;
-    case Btn::F : cam.MoveDown(); break;
-    case Btn::NUM9 : cam.ChangeFov(cam.fov_-1); break;
-    case Btn::NUM0 : cam.ChangeFov(cam.fov_+1); break;
-    default     : break;
-  }
-  cam.ProcessVelocity(true, false);  
-}
-
-// Moves camera to given y position (used in movement on the terrains)
-
-void helpers::HandleCamYPosition(float y, GlCamera& cam)
-{
-  cam.vrp_.y = y;
-}
-
-// Rotates camera by eulers angles and using mouse positions
-
-void helpers::HandleCamRotate(
-  bool mode, const Pos& mpos, Pos& mpos_prev, Vector& ang)
-{
-  if (mode)
-    ang.z -= (mpos_prev.x - mpos.x) / 2;
-  else
-    ang.y -= (mpos_prev.x - mpos.x) / 2;
-  ang.x -= (mpos_prev.y - mpos.y) / 2;  // todo: prevent gimbal lock
-  mpos_prev = mpos;
-}
-
 void helpers::HandlePause(Btn key, GlWindow& win)
 {
   if (key == Btn::P)
@@ -127,6 +75,7 @@ void helpers::PrintInfoOnScreen(
   const Vector& cam_pos, const Vector& cam_rot,
   int nfo_culled, int nfo_hidden)
 {
+  using vector::operator<<;
   std::ostringstream oss {};
   
   oss << "FPS: " << fps.ReadPrev()
@@ -153,6 +102,7 @@ void helpers::PrintInfoOnCmd(FpsCounter& fps, int culled, int hidden, cVector& p
 {
   if (fps.Ready())
   {
+    using vector::operator<<;    
     std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
     std::cerr << "Camera pos: " << pos << '\n';
     std::cerr << "Objects culled: " << culled << '\n';
