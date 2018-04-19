@@ -84,8 +84,6 @@ AudioOut::VStrings AudioOut::NowPlaying(bool only_repeated) const
   return res;
 }
 
-// IMPLEMENTATION DETAILS
-
 // Loads sample by filename, saves to loaded_ vector and return its handle
 
 AudioOut::Handle AudioOut::Load(const std::string& fname, bool repeat)
