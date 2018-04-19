@@ -1,10 +1,10 @@
-# Software renderer and game console
+# Game engine with software renderer
 
 This repository contains implementation of software game engine. The main idea of this game engine was to study different algorithms (graphics, games, etc), using vurtual linear addressed video buffer. This means that all the manipulations with the graphics (math, transformation, rasterisation, etc.) you must perform manually. And only then you will send data to the video memory.
 
 ## Linear video buffer implementation
 
-The idea of using abstract linear addressed video buffer was taken from book of Andre LaMothe. And implementation on this buffer under the linux was the problem that I faced.
+The idea of using abstract linear addressed video buffer was taken from the book of Andre LaMothe. And implementation on this buffer under the linux was the problem that I faced.
 
 In my implementation the linear video buffer is an abstraction consisting of an array in the system memory with a step of 4 bytes to store the pixel color in the format `ARGB (byte-ordered)`. Usually buffer has size is evaluated as *window_width x widnow_height x bytes_per_pixel*.
 
@@ -42,7 +42,7 @@ Directory `examples` contains examples based on the game engine. Currently there
 <img src="screenshot6.png" style="width: 600px;" />
 </div>
 
-## Libraries used in game console
+## Libraries used in game engine
 
 `math` - mathematical library, which I start to implement just now
 
