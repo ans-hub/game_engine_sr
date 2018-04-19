@@ -27,7 +27,6 @@ namespace anshub {
 
 struct CameraFol : public GlCamera
 {
-  #define TARGS template<class ... Args>
   enum DirectionType { YAW, PITCH, ROLL };
 
   CameraFol(float fov, float dov, int scr_w, int scr_h,
@@ -43,7 +42,8 @@ struct CameraFol : public GlCamera
   void FollowFor(const GlObject&);
   void Preprocess() override { vrp_ = vrp_orig_; }
   
-  TARGS void SetDirection(DirectionType, Args&&...);
+  template<class ... Args>
+  void SetDirection(DirectionType, Args&&...);
 
 private:
   Vector vrp_orig_;   // stores origin vrp for vrp rotating purposes
