@@ -1,0 +1,87 @@
+# Jeep ride level settings file
+
+#   f - float value
+#   i - integer value
+#   b - bool value
+#   v - 3d vector value
+#   a - std::vector<float> value
+#   s - std::string
+
+# Window settings
+
+i win_w             800
+i win_h             600
+b win_fs            0
+i win_fps           1000
+
+# Camera settings
+
+f cam_dov           1.0
+f cam_fov           75.0
+v cam_pos           -81.0 153.0 245.0
+v cam_dir           358.0 492.0 0.0
+f cam_nearz         0.1
+f cam_farz          1200.0
+f cam_clarity       50.0
+f cam_velocity      1.2
+f cam_fly_mode      0
+f cam_gravity       -0.1
+f cam_jump          0.0
+f cam_accel         0.08
+f cam_frict         0.7
+f cam_max_speed     2.5
+f cam_height        8.0
+f cam_speed_up      4.0
+
+# Player settings
+
+f pl_pitch_red      12.0
+f pl_pitch_vel      2.0
+f pl_pitch_min      -20.0
+f pl_pitch_max      20.0
+b pl_pitch_lock     0
+
+f pl_roll_red       12.0
+f pl_roll_vel       2.0
+f pl_roll_min       -10.0
+f pl_roll_max       10.0
+b pl_roll_lock      0
+
+f pl_yaw_red       1.0
+f pl_yaw_vel       2.0
+f pl_yaw_min       -360.0
+f pl_yaw_max       360.0
+b pl_yaw_lock      0
+
+# Terrain settings
+
+f ter_chunk         129
+f ter_divider       1
+a ter_detaliz       0 0 0 200 300 500 900
+f ter_shading       16
+s ter_sky           ../00_data/skyboxes/cube_skybox2.ply
+s ter_hm            levels/res/mountain_hm.bmp
+s ter_tx            levels/res/mountain_tx.bmp
+s ter_objs          levels/res/mountain_objs.bmp
+f ter_water_lvl     17.5
+
+# Sound settings
+
+s snd_engine        ../00_data/sounds/engine.ogg
+s snd_ambient       ../00_data/sounds/mountain.ogg
+f snd_low_pitch     -10.0
+f snd_high_pitch    1.0
+
+# Lights settings
+
+f light_amb_int     0.4
+f light_inf_int     0.8
+f light_pnt_int     0.0
+f light_sky_int     0.7
+
+s light_amb_color   white    
+s light_inf_color   white
+s light_pnt_color   yellow
+s light_sky_color   white
+
+v light_inf_dir     0.0   -1.0  -1.0

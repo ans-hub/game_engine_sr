@@ -1,0 +1,70 @@
+# Terrain demo config file
+
+#   f - float value
+#   i - integer value
+#   b - bool value
+#   v - 3d vector value
+#   a - std::vector<float> value
+#   s - std::string
+
+# Window settings
+
+i win_w             800
+i win_h             600
+b win_fs            0
+f win_fps           1000
+
+# Camera settings
+
+f cam_dov           2.0
+f cam_fov           75.0
+v cam_pos           0.0 10.0 0.0
+v cam_dir           0.0 0.0 0.0
+f cam_nearz         1.0
+b cam_fly_mode      0
+f cam_farz          400.0
+f cam_clarity       250.0
+f cam_fly_mode      0
+f cam_gravity       -0.07
+f cam_jump          1.0
+f cam_accel         0.01
+f cam_frict         0.8
+f cam_height        4.0
+f cam_speed_up      3.0
+f cam_mouse_sens    0.2
+
+# Terrain settings
+
+f ter_chunk         2
+f ter_divider       5
+a ter_detaliz       250.0
+f ter_shading       4 
+s ter_sky           ../00_data/skyboxes/cube_skybox3.ply
+s ter_hm            ../00_data/terrains/terrain_hm.bmp
+s ter_tx            ../00_data/terrains/terrain_tx.bmp
+f ter_water_lvl     5.5
+
+# Sound settings
+
+s snd_steps         ../00_data/sounds/steps.ogg
+s snd_jump          ../00_data/sounds/jump.ogg
+s snd_landing       ../00_data/sounds/landing.ogg
+
+# Lights settings
+
+f light_amb_int     0.2
+f light_inf_int     0.7
+f light_pnt_int     0.0
+f light_sky_int     0.7
+
+s light_amb_color   white
+s light_inf_color   white
+s light_pnt_color   white
+s light_sky_color   white
+
+v light_pnt_dir     0.0  0.0  1.0     # old - 0.0  0.0  1.0
+v light_pnt_pos     0.0  7.0  10.0    # old - 0.0 13.0 36.0
+
+# Debug settings
+
+b dbg_show_info     1

@@ -5,8 +5,8 @@ Simple game with different levels represents racing in the mountains. First leve
 ## Usage:
 ```bash
   $ make
-  $ ./fast_race levels/01.txt
-  $ ./fast_race levels/02.txt
+  $ ./fast_race levels/01.lvl
+  $ ./fast_race levels/02.lvl
   ...
 ```
 

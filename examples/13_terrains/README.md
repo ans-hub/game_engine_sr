@@ -5,10 +5,10 @@ Example of different terrains generating with skyboxes.
 ## Usage:
 ```bash
   $ make
-  $ ./terrains levels/01.txt
-  $ ./terrains levels/02.txt
-  $ ./terrains levels/07.txt
-  $ ./terrains levels/08.txt
+  $ ./terrains levels/01.lvl
+  $ ./terrains levels/02.lvl
+  $ ./terrains levels/07.lvl
+  $ ./terrains levels/08.lvl
 ```
 ## Subdirectories:
 
