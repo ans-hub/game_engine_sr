@@ -33,6 +33,9 @@ GlCamera::GlCamera
   , dir_{dir}
   , type_{CamType::EULER}
   , trig_{trig}
+  , pitch_{}
+  , yaw_{}
+  , roll_{}
 { }
 
 // Computes camera`s view vector (by convient we rotate vertices by YXZ

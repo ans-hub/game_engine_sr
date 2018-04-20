@@ -47,8 +47,8 @@ struct Dynamics
 
   // Other features
 
-  void SpeedUp(float factor) { accel_factor_ *= factor + math::kEpsilon; }
-  void SpeedDown(float factor) { accel_factor_ /= factor + math::kEpsilon; }
+  void SpeedUp(float factor) { accel_factor_ *= (factor + math::kEpsilon); }
+  void SpeedDown(float factor) { accel_factor_ /= (factor + math::kEpsilon); }
 
   // Velocity functions
 
@@ -62,7 +62,7 @@ struct Dynamics
 
   // todo: push_back(move_type); ProcessVelocity(moves); and most of is private
 
-private:
+// private:
 
   Vector    vel_;
   Vector    accel_;

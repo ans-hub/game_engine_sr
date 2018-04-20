@@ -24,9 +24,6 @@ CameraFol::CameraFol(
   , vrp_orig_{vrp}
   , obj_dir_{}
   , obj_pos_{}
-  , yaw_{}
-  , pitch_{}
-  , roll_{}
 {
   type_ = CamType::FOLLOW;
 }

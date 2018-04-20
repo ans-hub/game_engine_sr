@@ -23,6 +23,7 @@ struct Face
 {
   Face(V_Vertex& vxs, int f1, int f2, int f3) 
   : active_{true}
+  , double_sided_{false}
   , vxs_{f1, f2, f3}
   , normal_{
       vector::CrossProduct(
@@ -47,6 +48,7 @@ struct Face
   const int& operator[](int f) const { return vxs_[f]; }
 
   bool      active_;
+  bool      double_sided_;
   A3_Int    vxs_;     // numbers of vertices in vertices list
   Vector    normal_;  // face normal
   FColor    color_;   // face color
