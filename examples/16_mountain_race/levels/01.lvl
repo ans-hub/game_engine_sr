@@ -25,13 +25,13 @@ f cam_farz          1200.0
 f cam_clarity       50.0
 f cam_velocity      1.2
 f cam_fly_mode      0
-f cam_gravity       -0.1
+f cam_gravity       -0.05
 f cam_jump          0.0
 f cam_accel         0.08
 f cam_frict         0.7
 f cam_max_speed     2.5
 f cam_height        8.0
-f cam_speed_up      4.0
+f cam_speed_up      1.5
 
 # Player settings
 
