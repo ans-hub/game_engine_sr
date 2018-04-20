@@ -57,9 +57,13 @@ inline auto helpers::MakeCameraman(Args&&... args)
   man.SetButton(CamAction::MOVE_BACKWARD, KbdBtn::S);
   man.SetButton(CamAction::MOVE_UP, KbdBtn::R);
   man.SetButton(CamAction::MOVE_DOWN, KbdBtn::F);
+  man.SetButton(CamAction::TURN_LEFT, KbdBtn::NUM1);
+  man.SetButton(CamAction::TURN_RIGHT, KbdBtn::NUM2);
+  man.SetButton(CamAction::LOOK_UP, KbdBtn::NUM3);
+  man.SetButton(CamAction::LOOK_DOWN, KbdBtn::NUM4);
   man.SetButton(CamAction::JUMP, KbdBtn::SPACE);
   man.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM9);
-  man.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM0);
+  man.SetButton(CamAction::ZOOM_OUT, KbdBtn::NUM0);
   man.SetButton(CamAction::ROLL_MODE, KbdBtn::L, 20);
   man.SetButton(CamAction::WIRED, KbdBtn::T, 20);
   man.SetButton(CamAction::SWITCH_TYPE, KbdBtn::BACKS, 20);

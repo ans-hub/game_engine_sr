@@ -157,7 +157,6 @@ int main(int argc, const char** argv)
   GlText  text {win};
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
-  bool    cam_z_mode {false};             // to manage mouse manipulation
   int     nfo_culled;                     // shown how much objects is culled
   int     nfo_hidden;                     // how much hidden surfaces removed
 

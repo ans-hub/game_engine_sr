@@ -45,10 +45,10 @@ void helpers::HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
     case Btn::V :     rot.y += 0.5f; break;
     case Btn::B :     rot.z -= 0.5f; break;
     case Btn::N :     rot.z += 0.5f; break;
-    case Btn::NUM1 :  scale.x += 0.02;
+    case Btn::NUM6 :  scale.x += 0.02;
                       scale.y += 0.02;
                       scale.z += 0.02; break;
-    case Btn::NUM2 :  scale.x -= 0.02;
+    case Btn::NUM7 :  scale.x -= 0.02;
                       scale.y -= 0.02;
                       scale.z -= 0.02; break;
     default : break;

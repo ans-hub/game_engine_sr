@@ -139,7 +139,11 @@ int main(int argc, const char** argv)
   camman.SetButton(CamAction::MOVE_DOWN, KbdBtn::F);
   camman.SetButton(CamAction::JUMP, KbdBtn::SPACE);
   camman.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM9);
-  camman.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM0);
+  camman.SetButton(CamAction::ZOOM_OUT, KbdBtn::NUM0);
+  camman.SetButton(CamAction::TURN_LEFT, KbdBtn::NUM1);
+  camman.SetButton(CamAction::TURN_RIGHT, KbdBtn::NUM2);
+  camman.SetButton(CamAction::LOOK_UP, KbdBtn::NUM3);
+  camman.SetButton(CamAction::LOOK_DOWN, KbdBtn::NUM4);
   camman.SetButton(CamAction::ROLL_MODE, KbdBtn::L, 20);
   camman.SetButton(CamAction::WIRED, KbdBtn::T, 20);
   camman.SetButton(CamAction::BIFILTERING_MODE, KbdBtn::I, 20);
@@ -152,6 +156,10 @@ int main(int argc, const char** argv)
   camman.SetState(CamState::MIPMAP_MODE, true);
 
   camman.SetValue(CamValue::MOUSE_SENSITIVE, 0.3f);
+
+  auto& curr_cam = camman.GetCurrentCamera();
+  curr_cam.SetDirection(GlCamera::YAW, 1.0f, 6.0f, -360.0f, 360.0f, false);  
+  curr_cam.SetDirection(GlCamera::PITCH, 1.0f, 6.0f, -360.0f, 360.0f, false);  
 
   Dynamics dyn {0.005f, 0.8f, -0.1f, 100.0f};
   camman.SetDynamics(std::move(dyn));
