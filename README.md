@@ -84,7 +84,7 @@ Following packages should be installed (example given under Ubuntu 17.10):
   $ rm -rf tmp/ bass24-linux.zip
 ```
 
-Install `libbass_fx.so` - is the same as above
+Install `libbass_fx.so` - is the same as above (http://www.un4seen.com/files/z/0/bass_fx24-linux.zip)
 
 P.S.: if something goes wrong while downloading bass audio library, then the best way is to use [direct link](https://www.un4seen.com/bass.html) for downloading library
 
@@ -116,3 +116,7 @@ Installation of bass audio library is similar, but in the case of cygwin we shou
 ### Note about disable FPS limiting to 60 fps
 
 When start any example, use `vblank_mode=0 ./some_example`
+
+### Note about fullscreeno on Wayland
+
+If you use wayland, you mas switch to old X mode to use fullscreen (i.e., in Ubuntu you may do this by choose login session called "Gnome on xorg")
