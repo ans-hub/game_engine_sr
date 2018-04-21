@@ -62,6 +62,7 @@ GlObject::GlObject(
   vxs_trans_ = vxs_local_;
   
   // Now we prepare shading of object
+  // todo: attributes not only shading
 
   shading_ = static_cast<Shading>(attrs[0][0]);
 
@@ -83,6 +84,7 @@ GlObject::GlObject(
     faces_[i].color_ = vxs_local_[faces_[i][0]].color_;
     
   sphere_rad_ = object::ComputeBoundingSphereRadius(vxs_local_, Axis::XYZ);
+  // todo: + bounding_box
 }
 
 // Copies internal coordinates from source to destination

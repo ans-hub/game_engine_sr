@@ -485,6 +485,8 @@ Bitmap* render_helpers::ChooseMipmapLevel(Triangle* t, const RenderContext& ctx)
   int mipmap {0};
   if (ctx.is_mipmapping_ && t->textures_->size() > 1)
   {
+    if (math::Fzero(ctx.mipmap_dist_))
+      throw DrawExcept("ChooseMipmapLevel: ctx.mipmap_dist_ is zero");
     mipmap = (t->vxs_[0].pos_.z / (ctx.mipmap_dist_ / t->textures_->size())) - 1;
     mipmap = std::min(mipmap, (int)t->textures_->size() - 1);
   }

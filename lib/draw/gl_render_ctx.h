@@ -24,8 +24,8 @@ struct RenderContext
     , is_zbuf_{true}
     , is_bifiltering_{false}
     , is_mipmapping_{false}
-    , clarity_{}
-    , mipmap_dist_{}    
+    , clarity_{1.0f}
+    , mipmap_dist_{1.0f}
     , pixels_drawn_{}
     , triangles_drawn_{}
     , sbuf_{w, h, color}
@@ -39,8 +39,8 @@ struct RenderContext
   bool    is_zbuf_;
   bool    is_bifiltering_;
   bool    is_mipmapping_;
-  int     clarity_;
-  int     mipmap_dist_;
+  float   clarity_;
+  float   mipmap_dist_;
   int     pixels_drawn_;
   int     triangles_drawn_;
 

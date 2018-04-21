@@ -52,10 +52,10 @@ s snd_landing       ../00_data/sounds/landing.ogg
 
 # Lights settings
 
-f light_amb_int     0.1
-f light_inf_int     0.1
-f light_pnt_int     9.8
-f light_sky_int     0.4
+f light_amb_int     0.05
+f light_inf_int     0.05
+f light_pnt_int     12.8
+f light_sky_int     0.3
 
 s light_amb_color   blue    
 s light_inf_color   blue

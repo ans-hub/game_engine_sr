@@ -73,6 +73,7 @@ int main(int argc, const char** argv)
 
   const int kWinWidth {cfg.Get<int>("win_w")};
   const int kWinHeight {cfg.Get<int>("win_h")};
+  const bool kDebugShow {cfg.Get<bool>("dbg_show_info")};  
 
   FColor kWhite  {255.0f, 255.0f, 255.0f};
   FColor kYellow {255.0f, 255.0f, 0.0f};
@@ -91,6 +92,7 @@ int main(int argc, const char** argv)
 
   AudioFx audio {};
   auto engine_snd = cfg.Get<std::string>("snd_engine");
+  auto ambient_snd = cfg.Get<std::string>("snd_ambient");
   auto engine_mod = AudioFx::Modifier::PITCH;
 
   if (!engine_snd.empty())
@@ -101,6 +103,12 @@ int main(int argc, const char** argv)
     audio.SetModifierRange(engine_snd, engine_mod, min_pitch, max_pitch);
     audio.SetModifierValue(engine_snd, engine_mod, min_pitch);
     audio.PlayFx(engine_snd);
+  }
+
+  if (!ambient_snd.empty())
+  {
+    audio.Load(ambient_snd, true);
+    audio.Play(ambient_snd);
   }
 
   // Camera
@@ -122,7 +130,7 @@ int main(int argc, const char** argv)
   camman.SetButton(CamAction::MOVE_DOWN, KbdBtn::F);
   camman.SetButton(CamAction::JUMP, KbdBtn::SPACE);
   camman.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM9);
-  camman.SetButton(CamAction::ZOOM_IN, KbdBtn::NUM0);
+  camman.SetButton(CamAction::ZOOM_OUT, KbdBtn::NUM0);
   camman.SetButton(CamAction::WIRED, KbdBtn::T, 20);
   camman.SetButton(CamAction::SWITCH_TYPE, KbdBtn::ENTER, 20);
   camman.SetButton(CamAction::SPEED_UP, KbdBtn::LSHIFT);
@@ -465,7 +473,7 @@ int main(int argc, const char** argv)
     win.Render();
     timer.Wait();
 
-    if (fps.Ready())
+    if (kDebugShow && fps.Ready())
     {
       std::cerr << "Frames per second: " << fps.ReadPrev() << '\n';
       std::cerr << "Camera position: " << cam.vrp_ << '\n';

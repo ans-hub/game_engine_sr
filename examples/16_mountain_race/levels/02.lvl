@@ -13,6 +13,7 @@ i win_w             800
 i win_h             600
 b win_fs            0
 i win_fps           1000
+b dbg_show_info     0
 
 # Camera settings
 
@@ -68,19 +69,19 @@ f ter_water_lvl     -1000.0
 # Sound settings
 
 s snd_engine        ../00_data/sounds/engine.ogg
-s snd_ambient       ../00_data/sounds/night.ogg
+s snd_ambient       ../00_data/sounds/recon.ogg
 f snd_low_pitch     -10.0
 f snd_high_pitch    1.0
 
 # Lights settings
 
-f light_amb_int     0.3
-f light_inf_int     0.2
-f light_pnt_int     15.8
+f light_amb_int     0.15
+f light_inf_int     0.15
+f light_pnt_int     17.8
 f light_sky_int     0.4
 
 s light_amb_color   black    
-s light_inf_color   blue
+s light_inf_color   black
 s light_pnt_color   yellow
 s light_sky_color   white
 
