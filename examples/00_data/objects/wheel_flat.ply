@@ -17,7 +17,7 @@ property float nx
 property float ny
 property float nz
 element face 2026
-property list uchar uint index
+property list uchar uint vertex_indices
 end_header
 4
 1.014677 -0.052239 0.000000 -0.700400 0.035524 -0.712851

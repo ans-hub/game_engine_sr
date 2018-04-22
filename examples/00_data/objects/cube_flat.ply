@@ -15,7 +15,7 @@ property uchar red
 property uchar green
 property uchar blue
 element face 12
-property list uchar uint vx_indicies
+property list uchar uint vertex_indices
 end_header
 4
 1.000000 -1.000000 -1.000000 214 42 12
