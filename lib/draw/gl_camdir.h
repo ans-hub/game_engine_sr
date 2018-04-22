@@ -39,8 +39,8 @@ inline constexpr CamDir::CamDir(
   float reduce, float vel, float low, float high, bool locked)
   : reduce_{reduce}
   , vel_{vel}
-  , low_{low}
-  , high_{high}
+  , low_{std::fmod(low, 360.0f)}      // make in range
+  , high_{std::fmod(high, 360.0f)}    //  -359.9... + 359.9... degrees
   , locked_{locked}
 { }
 

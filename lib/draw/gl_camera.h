@@ -16,6 +16,8 @@
 #ifndef GC_GL_CAMERA_H
 #define GC_GL_CAMERA_H
 
+#include <cmath>
+
 #include "lib/draw/gl_aliases.h"
 #include "lib/draw/gl_enums.h"
 #include "lib/draw/gl_camdir.h"

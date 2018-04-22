@@ -66,20 +66,27 @@ void CameraFol::FollowFor(const GlObject& obj)
   // Apply direction changes
 
   if (!pitch_.locked_)
-  {
     dir_.x += diff_dir.x / pitch_.reduce_;
+  if (!roll_.locked_)
+    dir_.z += diff_dir.z / roll_.reduce_;
+  if (!yaw_.locked_)
+    dir_.y += diff_dir.y / yaw_.reduce_;
+
+  // Apply ranges (total dir_ in range -359.9 +359.9)
+
+  vector::InUpperBound(dir_, 360.0f);
+  if (pitch_.low_ != pitch_.high_)
+  {
     dir_.x = std::max(pitch_.low_, dir_.x);
     dir_.x = std::min(pitch_.high_, dir_.x);
   }
-  if (!roll_.locked_)
+  if (roll_.low_ != roll_.high_)
   {
-    dir_.z += diff_dir.z / roll_.reduce_;
     dir_.z = std::max(roll_.low_, dir_.z);
     dir_.z = std::min(roll_.high_, dir_.z);
   }
-  if (!yaw_.locked_)
+  if (yaw_.low_ != yaw_.high_)
   {
-    dir_.y += diff_dir.y / yaw_.reduce_;
     dir_.y = std::max(yaw_.low_, dir_.y);
     dir_.y = std::min(yaw_.high_, dir_.y);
   }

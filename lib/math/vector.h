@@ -128,6 +128,8 @@ namespace vector {
   float   CosBetween(const Vector&, const Vector&, bool = false);
   float   AngleBetween(const Vector&, const Vector&, bool = false);
   void    ConvertFromHomogeneous(Vector&);
+  void    InUpperBound(Vector&, float upper);
+
   std::ostream& operator<<(std::ostream&, const Vector&);
 
 } // namespace vector
@@ -235,6 +237,18 @@ inline Vector vector::CrossProduct(const Vector& v1, const Vector& v2)
    -(v1.x * v2.z - v2.x * v1.z),
     (v1.x * v2.y - v2.x * v1.y)    
   );
+}
+
+// Make vector in range (-upper; +upper)
+
+inline void vector::InUpperBound(Vector& v, float upper)
+{
+  if (v.x >= upper || v.x <= -upper)
+    v.x = std::fmod(v.x, upper);
+  if (v.y >= upper || v.y <= -upper)  
+    v.y = std::fmod(v.y, upper);
+  if (v.z >= upper || v.z <= -upper)  
+    v.z = std::fmod(v.z, upper);
 }
 
 } // namespace anshub
