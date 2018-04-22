@@ -63,9 +63,9 @@ public:
      height_         (0),
      row_increment_  (0),
      bytes_per_pixel_(3),
-     channel_mode_(bgr_mode)
+     channel_mode_(bgr_mode),
+     alpha_color_{color::MakeUnreal<Color<>>()}    // 18.04.2018 by Ans
    {
-     alpha_color_ = FColor(-1.0f, -1.0f, -1.0f);  // 18.04.2018 by Ans
    }
 
    Bitmap(const std::string& filename)
@@ -74,11 +74,40 @@ public:
      height_         (0),
      row_increment_  (0),
      bytes_per_pixel_(0),
-     channel_mode_(bgr_mode)
+     channel_mode_(bgr_mode),
+     alpha_color_{color::MakeUnreal<Color<>>()}    // 18.04.2018 by Ans
    {
       load_bitmap();
-      alpha_color_ = FColor(-1.0f, -1.0f, -1.0f);  // 18.04.2018 by Ans      
    }
+
+   //*************************************************************************
+   // By Ans 18.04.2018 to perform transparent color
+
+   Bitmap(const std::string& filename, const Color<>& alpha)
+   : file_name_(filename),
+     width_          (0),
+     height_         (0),
+     row_increment_  (0),
+     bytes_per_pixel_(0),
+     channel_mode_(bgr_mode),
+     alpha_color_{alpha}
+   {
+      load_bitmap();
+   }
+
+   Bitmap(const unsigned int width, const unsigned int height, const Color<>& alpha)
+   : file_name_(""),
+     width_ (width ),
+     height_(height),
+     row_increment_  (0),
+     bytes_per_pixel_(3),
+     channel_mode_(bgr_mode),
+     alpha_color_{alpha}    // 18.04.2018 by Ans
+   {
+      create_bitmap();
+   }
+
+   //*************************************************************************
 
    Bitmap(const unsigned int width, const unsigned int height)
    : file_name_(""),
@@ -86,10 +115,10 @@ public:
      height_(height),
      row_increment_  (0),
      bytes_per_pixel_(3),
-     channel_mode_(bgr_mode)
+     channel_mode_(bgr_mode),
+     alpha_color_{color::MakeUnreal<Color<>>()}    // 18.04.2018 by Ans
    {
       create_bitmap();
-      alpha_color_ = FColor(-1.0f, -1.0f, -1.0f);  // 18.04.2018 by Ans      
    }
 
    Bitmap(const Bitmap& image)
@@ -98,11 +127,12 @@ public:
      height_   (image.height_   ),
      row_increment_  (0),
      bytes_per_pixel_(3),
-     channel_mode_(bgr_mode)
+     channel_mode_(bgr_mode),
+     alpha_color_{color::MakeUnreal<Color<>>()}    // 18.04.2018 by Ans     
    {
       create_bitmap();
       data_ = image.data_;
-      alpha_color_ = image.alpha_color_;  // 18.04.2018 by Ans
+      alpha_color_ = image.alpha_color_;          // 18.04.2018 by Ans
    }
 
    //*************************************************************************
@@ -120,9 +150,8 @@ public:
    // Was added by Ans 18.04.2018 for fast buffer access
    //*************************************************************************
 
-   void SetAlphaColor(const FColor& color) { alpha_color_ = color; }
-   template<class T>
-   T GetAlphaColor() const { return alpha_color_; }
+   void SetAlphaColor(const Color<>& color) { alpha_color_ = color; }
+   Color<> GetAlphaColor() const { return alpha_color_; }
    
    //*************************************************************************
 
@@ -1646,7 +1675,7 @@ private:
    // Was added by Ans 18.04.2018 for fast buffer access
    //*************************************************************************
 
-   FColor alpha_color_;
+   Color<> alpha_color_;
 
    //*************************************************************************
 
@@ -3171,18 +3200,6 @@ inline void sobel_operator(const Bitmap& src_image,
 
    dst_image.import_gray_scale_clamped(&im1(0,0));
 }
-
-//****************************************************************************
-// Was added by Ans 18.04.2018 for alpha color settings
-//****************************************************************************
-
-template<>
-inline Color<> Bitmap::GetAlphaColor() const
-{ 
-  return Color<>(alpha_color_.GetARGB());
-}
-
-//****************************************************************************
 
 enum palette_name
 {
