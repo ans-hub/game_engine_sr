@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <limits>
 #include <cmath>
 
 #include "gl_aliases.h"
@@ -98,11 +99,13 @@ namespace color {
 
   // Helper functions
 
-  int     MakeARGB(uchar a, uchar r, uchar g, uchar b);
-  void    SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a);
-  void    SplitARGB(int color, uint& b, uint& g, uint& r, uint& a);
-  int     IncreaseBrightness(int color, float k);
-  void    ShiftRight(Color<uint>&, uint cnt);
+  int  MakeARGB(uchar a, uchar r, uchar g, uchar b);
+  void SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a);
+  void SplitARGB(int color, uint& b, uint& g, uint& r, uint& a);
+  int  IncreaseBrightness(int color, float k);
+  void ShiftRight(Color<uint>&, uint cnt);
+  template<class Src, class Dest> Color<Dest> Convert(const Color<Src>&);
+  template<class T> T MakeUnreal();
 
   // Output functions
 
@@ -390,6 +393,37 @@ std::ostream& operator<<(std::ostream& oss, const Color<T>& c)
 {
   oss << c.r_ << ';' << c.g_ << ';' << c.b_ << ';' << c.a_;
   return oss;
+}
+
+// Converts one color type to another
+
+template<class Src, class Dest>
+Color<Dest> color::Convert(const Color<Src>& src)
+{
+  Color<Dest> res (
+    static_cast<Dest>(src.r_),
+    static_cast<Dest>(src.g_),
+    static_cast<Dest>(src.b_)
+  );
+  return res;
+}
+
+// Makes unreal color (based on unsigned int component)
+
+template<>
+inline Color<uint> color::MakeUnreal<Color<uint>>()
+{ 
+  auto max = std::numeric_limits<uint>::max();
+  return Color<uint>(max, max, max);
+}
+
+// Makes unreal color (based on float component)
+
+template<>
+inline Color<float> color::MakeUnreal<Color<float>>()
+{ 
+  auto max = std::numeric_limits<float>::max();
+  return Color<float>(max, max, max);
 }
 
 } // namespace anshub

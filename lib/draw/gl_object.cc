@@ -31,8 +31,7 @@ GlObject::GlObject()
 
 // Creates object with vertexes, faces and attrs
 
-GlObject::GlObject(
-  cMatrix2d& pos, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs)
+GlObject::GlObject(const std::string& ply_fname, cVector& world_pos)
   : vxs_local_{}
   , vxs_trans_{}
   , current_vxs_{Coords::LOCAL}  
@@ -41,49 +40,45 @@ GlObject::GlObject(
   , mipmaps_squares_{}  
   , id_{}
   , active_{true}
-  , shading_{}  
-  , world_pos_{0.0f, 0.0f, 0.0f}
+  , shading_{Shading::CONST}  
+  , world_pos_{world_pos}
   , dir_{0.0f, 0.0f, 0.0f}
   , v_orient_x_{1.0f, 0.0f, 0.0f}
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
   , sphere_rad_{0.0f}
 {
-  // Fill local vertexes with position and color
+  // Load data from file and fill object
 
-  vxs_local_.reserve(pos.size());
-  for (std::size_t i = 0; i < pos.size(); ++i)
-  {
-    vxs_local_.emplace_back(
-      pos[i][0], pos[i][1], pos[i][2],
-      colors[i][0], colors[i][1], colors[i][2]
-    );
-  }
-  vxs_trans_ = vxs_local_;
+  auto loader = load_helpers::LoadFile(ply_fname);
+  auto coords = load_helpers::LoadVxsCoordinates(loader);
+  auto faces  = load_helpers::LoadFaces(loader);
+  auto texels = load_helpers::LoadTexCoordinates(loader);
+  auto colors = load_helpers::LoadVxsColors(loader);
+  auto attrs  = load_helpers::LoadAttributes(loader);
   
-  // Now we prepare shading of object
-  // todo: attributes not only shading
+  vxs_local_ = load_helpers::MakeVertices(coords, colors);
+  faces_ = load_helpers::MakeFaces(vxs_local_, faces);
 
-  shading_ = static_cast<Shading>(attrs[0][0]);
+  // Load textures
 
-  // Fill triangles (we suppose that we have correct ply file with
-  // custom fields or incorrect with emply fields)
-
-  faces_.reserve(faces.size());
-  for (std::size_t i = 0; i < faces.size(); ++i)
+  auto tex_fname = str::Replace(ply_fname, ".ply", ".bmp");
+  
+  if (!texels.empty() && file::IsExists(tex_fname))
   {
-    auto f1 = faces[i][0];
-    auto f2 = faces[i][1];
-    auto f3 = faces[i][2];
-    faces_.emplace_back(vxs_local_, f1, f2, f3);
+    Bitmap texture {tex_fname, attrs.tex_transparency_};
+    constexpr float kGamma = 1.02f;
+    textures_ = load_helpers::MakeMipmaps(texture, kGamma);
+    mipmaps_squares_ = load_helpers::ComputeMipmapSquares(textures_);
+    load_helpers::ApplyTexture(vxs_local_, faces_, texels);
   }
 
-  // Fill face colors
+  // Finish loading
 
-  for (std::size_t i = 0; i < faces.size(); ++i)
-    faces_[i].color_ = vxs_local_[faces_[i][0]].color_;
-    
-  sphere_rad_ = object::ComputeBoundingSphereRadius(vxs_local_, Axis::XYZ);
+  vxs_trans_ = vxs_local_;
+  shading_ = attrs.shading_;
+  sphere_rad_ = object::FindFarthestCoordinate(vxs_local_);
+  // sphere_rad_ = object::ComputeBoundingSphereRadius(vxs_local_, Axis::XYZ);
   // todo: + bounding_box
 }
 
@@ -97,166 +92,291 @@ void GlObject::CopyCoords(Coords src, Coords dest)
     vxs_local_ = vxs_trans_;
 }
 
-// Makes object from ply file in two ways:
-//  1) custom fields in ply file (with attrs)
-//  2) ply file, exported from Blender and contains at least "vertexes" with
-//  properties "x", "y", "z" and "face" elements
+// Loads ply file and returns Loader struct
 
-GlObject object::Make(const char* ply_fname)
+ply::Loader load_helpers::LoadFile(const std::string& fname)
 {
-  using namespace ply;
-
   ply::Loader ply {};
-  std::ifstream fss {ply_fname};
+  std::ifstream fss {fname};
   ply.Load(fss);
-  
-  // Try to determine if ply contains element called "globals_ply_v2", which is
-  // sign of using custom ply file
-  
-  auto header     = ply.GetHeader();
+  return ply;
+}
 
-  // Try to load attributes of object
+// Returns vertices coordinates stored in ply file in section "vertex" and
+// named by convient as "x", "y" and "z"
 
-  ply::Vector2d attrs {};
-  
-  if (ply.IsElementPresent("globals_ply_v2"))
-  {
-    if (ply.IsSinglePropertyPresent("globals_ply_v2", "shading"))
-      attrs = ply.GetLine("globals_ply_v2", {"shading"});
-  }
-  else
-    attrs = Vector2d(1, Vector1d{static_cast<int>(Shading::FLAT)});
-  
-  // Try to load vertices coordinates
-
+Vector2d load_helpers::LoadVxsCoordinates(ply::Loader& ply)
+{
   if (!ply.IsElementPresent("vertex"))
     throw DrawExcept("Ply file haven't vertexes element");
   if (!ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"x", "y", "z"}))
     throw DrawExcept("Ply file haven't properties x, y and z");
 
-  ply::Vector2d vxs = ply.GetLine("vertex", {"x", "y", "z"});
+  return ply.GetLine("vertex", {"x", "y", "z"});
+}
 
-  // Try load vertices colors
+// Returns faces stored in ply file in section "face" and named by convient as
+// "vertices_indicies"
 
-  ply::Vector2d colors {};
-  if (ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"red", "green", "blue"}))
-    colors = ply.GetLine("vertex", {"red", "green", "blue"});
-  else
-    colors = Vector2d(vxs.size(), Vector1d{255.0f, 255.0f, 255.0f});
-
-  // Try to load texture coordinates
-
-  bool textured;
-  ply::Vector2d texels {};
-  if (ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"s", "t"}))
-  {
-    texels = ply.GetLine("vertex", {"s", "t"});
-    textured = true;
-  }
-  else {
-    texels = Vector2d(vxs.size(), Vector1d{0.0f, 0.0f});
-    textured = false;
-  }
-  
-  // Try to load faces
-
+Vector2d load_helpers::LoadFaces(ply::Loader& ply)
+{
   if (!ply.IsElementPresent("face"))
     throw DrawExcept("Ply file haven't face element");
- 
-  ply::Vector2d faces {};
+  if (!ply.IsListPropertyPresent("face", "vertex_indices"))
+    throw DrawExcept("Ply file haven't vertex_indices property");
+    
+  return ply.GetList("face", {"vertex_indices"});
+}
 
-  if (ply.IsListPropertyPresent("face", "vertex_indicies"))
-     faces = ply.GetList("face", {"vertex_indicies"});
-  else {
-    auto name = header["face"].list_props_.begin()->first;
-    faces = ply.GetList("face", {name});
-  }
+// Returns vertices coordinates stored in ply file in section "vertex" and
+// named by convient as "s" and "t"
 
-  // Create object
+Vector2d load_helpers::LoadTexCoordinates(ply::Loader& ply)
+{
+  if (ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"s", "t"}))
+    return ply.GetLine("vertex", {"s", "t"});
+  else
+    return {};
+}
 
-  auto obj = GlObject(vxs, colors, faces, attrs);
-  obj.sphere_rad_ = object::FindFarthestCoordinate(obj);
+// Returns vertices colors stored in ply file in section "vertex" and named by
+// convient as "red", "green" and "blue" 
 
-  // Try to attach texture. If fails, then do object as non-textured
+Vector2d load_helpers::LoadVxsColors(ply::Loader& ply)
+{
+  if (ply::helpers::IsSinglePropertiesPresent(ply, "vertex", {"red", "green", "blue"}))
+    return ply.GetLine("vertex", {"red", "green", "blue"});
+  else
+    return {};
+}
 
-  if (textured)
+// Returns attributes of object
+
+ObjAttrs load_helpers::LoadAttributes(ply::Loader& ply)
+{
+  Vector2d arr {};
+  ObjAttrs attrs {};
+  
+  if (ply.IsElementPresent("globals_ply_v2"))
   {
-    // Load texture in memory (we suppose that texture name is the same as
-    // object file name, but with different extension)
-    
-    std::string bmp_fname {ply_fname};
-    str::Replace(bmp_fname, ".ply", ".bmp");
-    
-    Bitmap texture (bmp_fname);
-
-    // Load transparent color of texture
-
-    if (ply::helpers::IsSinglePropertiesPresent(
-       ply,
-       "globals_ply_v2",
-       {"rt", "gt", "bt"}))
+    if (ply.IsSinglePropertyPresent("globals_ply_v2", "shading"))
     {
-      auto tcol = ply.GetLine("globals_ply_v2", {"rt", "gt", "bt"});
-      texture.SetAlphaColor(FColor(tcol[0][0], tcol[0][1], tcol[0][2]));
+      auto arr = ply.GetLine("globals_ply_v2", {"shading"});
+      attrs.shading_ = static_cast<Shading>(arr[0][0]);
     }
-    else
-      texture.SetAlphaColor(FColor(300, 300, 300));  // !!! bad bad bad !!!
-
-    // Create mipmaps
-
-    object::CreateMipmaps(obj.textures_, texture);
-    object::FillMipmapSquares(obj.textures_, obj.mipmaps_squares_);
-    
-    // Fill vertices texture coordinate (unnormalized)
-
-    auto tex_w = obj.textures_[0]->width() - 1;
-    auto tex_h = obj.textures_[0]->height() - 1;
-
-    if (tex_w == 0 || tex_h == 0)
-      obj.textures_.resize(0);
-    else {
-
-      // Fill texture coords and make all vertices white color for lighting
-
-      for (std::size_t i = 0; i < obj.vxs_local_.size(); ++i)
-      {
-        obj.vxs_local_[i].texture_.x = texels[i][0];
-        obj.vxs_local_[i].texture_.y = texels[i][1];
-        obj.vxs_local_[i].color_ = FColor{color::White};
-      }
-
-      // Make all faces white for fast texture lighting
-
-      for (auto& face : obj.faces_)
-        face.color_ = FColor{color::White};
+    if (ply::helpers::IsSinglePropertiesPresent(ply, "globals_ply_v2",{"rt", "gt", "bt"}))
+    {
+      auto arr = ply.GetLine("globals_ply_v2", {"rt", "gt", "bt"});
+      attrs.tex_transparency_ = Color<>(arr[0][0], arr[0][1], arr[0][2]);
     }
   }
-  return obj;
+
+  return attrs;  
 }
 
-// Makes object from ply file, scale it, move to world position and rotate
+// Returns array of vertices by given pure arrays of coordinates and colors
 
-GlObject object::Make(
-  const char* str, TrigTable& t, cVector& scale, cVector& pos, cVector& rot)
+V_Vertex load_helpers::MakeVertices(cVector2d& coords, cVector2d& colors)
 {
-  auto obj = object::Make(str);
-  obj.SetCoords(Coords::LOCAL);
-  object::Scale(obj, scale);
-  object::Move(obj, pos);
-  object::Rotate(obj, rot, t);
-  // todo: rotate orientation vectors
-  return obj;
+  if (coords.empty())
+    throw DrawExcept("Vertices coords are empty");
+  if (!colors.empty() && coords.size() != colors.size())
+    throw DrawExcept("Vertices coords and colors are not the same size");
+
+  V_Vertex vxs {};
+  vxs.reserve(coords.size());
+
+  if (!colors.empty())
+  {
+    for (std::size_t i = 0; i < coords.size(); ++i)
+    {
+      vxs.emplace_back(
+        coords[i][0], coords[i][1], coords[i][2],
+        colors[i][0], colors[i][1], colors[i][2]
+      );
+    }
+  }
+  else
+  {
+    auto def_color = color::fWhite;
+    for (std::size_t i = 0; i < coords.size(); ++i)
+    {
+      vxs.emplace_back(
+        coords[i][0], coords[i][1], coords[i][2],
+        def_color.r_, def_color.g_, def_color.b_
+      );
+    }
+  }
+  return vxs;
 }
 
-// Makes object from ply file, then scale it and move to world position
+// Returns array of faces by give pure array of faces coords
 
-GlObject object::Make(const char* str, cVector& scale, cVector& pos)
+V_Face load_helpers::MakeFaces(V_Vertex& vxs, cVector2d& farr)
 {
-  auto obj = object::Make(str);
-  obj.SetCoords(Coords::LOCAL);
-  object::Scale(obj, scale);
-  object::Move(obj, pos);
-  return obj;
+  if (farr.empty())
+    throw DrawExcept("Faces coords are empty");
+
+  V_Face faces {};
+  faces.reserve(farr.size());
+
+  // Fill face coordinates
+
+  for (std::size_t i = 0; i < farr.size(); ++i)
+    faces.emplace_back(vxs, farr[i][0], farr[i][1], farr[i][2]);
+
+  // Fill face colors
+
+  for (std::size_t i = 0; i < faces.size(); ++i)
+    faces[i].color_ = vxs[faces[i][0]].color_;  
+
+  return faces;
+}
+
+// Creates mipmaps
+
+V_Bitmap load_helpers::MakeMipmaps(const Bitmap& tex, float gamma)
+{
+  // Prepare contanainer of mipmaps and make top level texture
+
+  V_Bitmap mipmaps {};
+  if (!tex.width() || !tex.height())
+    return mipmaps;
+  else
+    mipmaps.emplace_back(std::make_shared<Bitmap>(tex));
+
+  // Prepare variables
+
+  int bmp_pitch_w = tex.GetRowIncrement();
+  int bmp_texel_w = tex.GetBytesPerPixel();
+  auto alpha_color = tex.GetAlphaColor();
+
+  // Generate mipmaps for textures which dimension is factor of 2
+
+  if (!math::IsAbsFactorOfTwo(tex.width()) ||
+      !math::IsAbsFactorOfTwo(tex.height())
+  )
+    return mipmaps;
+
+  // Prepare interpolants
+
+  int curr_w = tex.width();
+  int curr_h = tex.height();
+  int smaller = std::min(tex.width(), tex.height()); // w and h may be not eq
+  int levels = std::log2(smaller);
+  
+  // Create bmp`s for each level and fill them
+
+  for (int i = 0; i < levels - 1; ++i)
+  {
+    // Interpolate to current level
+
+    curr_w >>= 1;
+    curr_h >>= 1;
+    smaller >>= 1;
+    bmp_pitch_w >>= 1;
+
+    // Add current bmp to array and get pointers
+
+    auto* prev_tex = mipmaps.back().get()->GetPointer();
+    mipmaps.emplace_back(std::make_shared<Bitmap>(curr_w, curr_h, alpha_color));
+    auto* curr_tex = mipmaps.back().get()->GetPointer();
+
+    // Iterate through curr bmp
+
+    std::vector<Color<>> neigh {};
+
+    for (int y = 0; y < curr_h; ++y)
+    {
+      for (int x = 0; x < curr_w; ++x)
+      { 
+        // Take from previous texture 4 neighboring not transparent pixels
+        
+        neigh.clear();
+
+        int offset = ((y*2) * bmp_pitch_w*2) + ((x*2) * bmp_texel_w);
+        Color<> lt {
+          prev_tex[offset + 2], prev_tex[offset + 1], prev_tex[offset + 0]};
+        Color<> orig {lt};
+        if (lt != alpha_color)
+          neigh.push_back(std::move(lt));
+
+        offset = ((y*2) * bmp_pitch_w*2) + ((x*2+1) * bmp_texel_w);
+        Color<> rt {
+          prev_tex[offset + 2], prev_tex[offset + 1], prev_tex[offset + 0]};
+        if (rt != alpha_color)
+          neigh.push_back(std::move(rt));
+
+        offset = ((y*2+1) * bmp_pitch_w*2) + ((x*2) * bmp_texel_w);
+        Color<> lb {
+          prev_tex[offset + 2], prev_tex[offset + 1], prev_tex[offset + 0]};
+        if (lb != alpha_color)
+          neigh.push_back(std::move(lb));
+
+        offset = ((y*2+1) * bmp_pitch_w*2) + ((x*2+1) * bmp_texel_w);
+        Color<> rb {
+          prev_tex[offset + 2], prev_tex[offset + 1], prev_tex[offset + 0]};
+        if (rb != alpha_color)
+          neigh.push_back(std::move(rb));
+
+        // Make average color
+
+        FColor total {};
+        if (neigh.size() <= 1)    // see note #1 below
+        {
+          total = color::Convert<uint, float>(alpha_color);
+        }
+        else
+        {
+          for (auto& col : neigh)
+            total += color::Convert<uint, float>(col);
+          total = total / neigh.size();
+          total = total * gamma;  // see note #2 below
+        }
+
+        // Save new pixel color to the current texture
+
+        offset = y * bmp_pitch_w + x * bmp_texel_w; 
+        curr_tex[offset + 2] = std::floor(total.r_);
+        curr_tex[offset + 1] = std::floor(total.g_);
+        curr_tex[offset + 0] = std::floor(total.b_);
+      }
+    }
+  }
+
+  return mipmaps;
+  
+  // Note #1: if we see that half of neighboring pixels is alpha, then we make
+  // current pixel alpha too
+  // Note #2: gamma correction applied to the total color to make mipmaps not
+  // so dark due to averaging
+}
+
+// Applies texture coordinates to vertices and fills faces by white color (by
+// convient) for texture lighting. Coordinates stays unnormalized
+
+void load_helpers::ApplyTexture(V_Vertex& vxs, V_Face& faces, cVector2d& tex_coords)
+{
+  for (std::size_t i = 0; i < vxs.size(); ++i)
+  {
+    vxs[i].texture_.x = tex_coords[i][0];
+    vxs[i].texture_.y = tex_coords[i][1];
+    vxs[i].color_ = FColor{color::White};
+  }
+
+  for (auto& face : faces)
+    face.color_ = FColor{color::White};
+}
+
+// Calculates squares of each mipmap and place them in array for fast
+// access in render functions
+
+V_Uint load_helpers::ComputeMipmapSquares(const V_Bitmap& arr)
+{
+  V_Uint squares {};
+  for (auto& bmp : arr)
+    squares.push_back(bmp->width() * bmp->height());
+  return squares;
 }
 
 // Reset attributes of object and triangles (before each frame)
@@ -735,8 +855,15 @@ void object::Rotate(GlObject& obj, const Vector& v, const TrigTable& t)
 
 float object::FindFarthestCoordinate(const GlObject& obj)
 {
+  return FindFarthestCoordinate(obj.GetCoords());
+}
+
+// Finds farthest absolute value of coordinate (x,y or z) for bounding
+// sphere purposes
+
+float object::FindFarthestCoordinate(cV_Vertex& vxs)
+{
   float rad {};
-  const auto& vxs = obj.GetCoords();
   for (const auto& vx : vxs)
   {
     rad = std::max(rad, std::fabs(vx.pos_.x));
@@ -862,114 +989,6 @@ V_Vertex object::ComputeDrawableVxsNormals(const GlObject& obj, float scale)
     norms.emplace_back(end);
   }
   return norms;
-}
-
-// Creates mipmaps
-
-void object::CreateMipmaps(V_Bitmap& arr, const Bitmap& tex)
-{
-  // Prepare variables for fast access
-
-  constexpr float kGamma {1.01f};
-  int w = tex.width();
-  int h = tex.height();
-  int bmp_pitch_w = tex.GetRowIncrement();
-  int bmp_texel_w = tex.GetBytesPerPixel();
-  auto transp_color = tex.GetAlphaColor<FColor>();
-
-  // Generate mipmaps for textures which dimension is factor of 2
-
-  if (math::IsAbsFactorOfTwo(w) && math::IsAbsFactorOfTwo(h))
-  {
-    // Make top level texture
-
-    arr.emplace_back(std::make_shared<Bitmap>(tex));
-    arr.back()->SetAlphaColor(transp_color);
-
-    // Prepare interpolants
-
-    int curr_w = w;
-    int curr_h = h;
-    int smaller = std::min(w, h);       // since w and h may be not eq
-    int levels = std::log2(smaller);
-    
-    // Create bmp`s for each level and fill them
-
-    for (int i = 0; i < levels - 1; ++i)
-    {
-      // Interpolate to current level
-
-      curr_w >>= 1;
-      curr_h >>= 1;
-      smaller >>= 1;
-      bmp_pitch_w >>= 1;
-
-      // Add current bmp to array and get pointers
-
-      auto* prev_tex = arr.back().get()->GetPointer();
-      arr.emplace_back(std::make_shared<Bitmap>(curr_w, curr_h));
-      arr.back()->SetAlphaColor(transp_color);
-      auto* curr_tex = arr.back().get()->GetPointer();
-
-      // Iterate through curr bmp, and take average values of previous
-
-      FColor lt {};
-      FColor rt {};
-      FColor lb {};
-      FColor rb {};
-      int offset {};
-
-      for (int y = 0; y < curr_h; ++y)
-      {
-        for (int x = 0; x < curr_w; ++x)
-        {
-          offset = ((y*2) * bmp_pitch_w*2) + ((x*2) * bmp_texel_w);
-          lt.r_ = prev_tex[offset + 2];
-          lt.g_ = prev_tex[offset + 1];
-          lt.b_ = prev_tex[offset + 0];
-
-          offset = ((y*2) * bmp_pitch_w*2) + ((x*2+1) * bmp_texel_w);
-          rt.r_ = prev_tex[offset + 2];
-          rt.g_ = prev_tex[offset + 1];
-          rt.b_ = prev_tex[offset + 0];
-          
-          offset = ((y*2+1) * bmp_pitch_w*2) + ((x*2) * bmp_texel_w);
-          lb.r_ = prev_tex[offset + 2];
-          lb.g_ = prev_tex[offset + 1];
-          lb.b_ = prev_tex[offset + 0];
-
-          offset = ((y*2+1) * bmp_pitch_w*2) + ((x*2+1) * bmp_texel_w);
-          rb.r_ = prev_tex[offset + 2];
-          rb.g_ = prev_tex[offset + 1];
-          rb.b_ = prev_tex[offset + 0];
-
-          FColor total {(lt + rt + lb + rb) / 4};
-          total *= kGamma;
-          total.r_ += 0.5f;
-          total.g_ += 0.5f;
-          total.b_ += 0.5f;
-
-          offset = y * bmp_pitch_w + x * bmp_texel_w; 
-          curr_tex[offset + 2] = std::floor(total.r_);
-          curr_tex[offset + 1] = std::floor(total.g_);
-          curr_tex[offset + 0] = std::floor(total.b_);
-        }
-      }
-    }
-  }
-  else {
-    arr.emplace_back(std::make_shared<Bitmap>(tex));
-    arr.back()->SetAlphaColor(transp_color);
-  }
-}
-
-// Calculates squares of each mipmap and place them in array for fast
-// access in render functions
-
-void object::FillMipmapSquares(const V_Bitmap& arr, V_Uint& squares)
-{
-  for (auto& bmp : arr)
-    squares.push_back(bmp->width() * bmp->height());
 }
 
 //*************************************************************************

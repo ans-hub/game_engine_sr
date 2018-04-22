@@ -155,7 +155,10 @@ int main(int argc, const char** argv)
   const Vector kScale     {9.0f, 9.0f, 9.0f};
   const Vector kPosition  {cfg.Get<Vector>("cam_pos")};
   const Vector kRotate    {-90.0f, 0.0f, 0.0f};
-  auto model = object::Make(kFname, trig, kScale, kPosition, kRotate);
+  
+  GlObject model (kFname, kPosition);
+  object::Scale(model, kScale);
+  object::Rotate(model, kRotate, trig);
 
   // Create player entity
 
@@ -209,7 +212,7 @@ int main(int argc, const char** argv)
   auto& follow_cam = camman.GetCamera(CamType::Follow::type);
   follow_cam.SetDirection(GlCamera::PITCH, 1.2f, 0.0f, -30.0f, 30.0f, false);
   follow_cam.SetDirection(GlCamera::ROLL, 1.2f, 0.0f, -10.0f, 10.0f, false);
-  follow_cam.SetDirection(GlCamera::YAW, 1.05f, 0.0f, -360.0f, 360.0f, false);
+  follow_cam.SetDirection(GlCamera::YAW, 1.0f, 0.0f, -360.0f, 360.0f, false);
   follow_cam.FollowFor(jeep, kVrpOffset, kDirOffset);
 
   // Create skybox
@@ -263,6 +266,8 @@ int main(int argc, const char** argv)
   render_ctx.is_wired_ = false;
   render_ctx.is_alpha_ = true;
   render_ctx.is_bifiltering_ = false;
+  render_ctx.is_mipmapping_ = true;
+  render_ctx.mipmap_dist_ = 240.0f;
   render_ctx.clarity_  = cfg.Get<float>("cam_clarity");
   
   // Make triangles arrays

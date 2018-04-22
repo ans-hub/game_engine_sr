@@ -46,10 +46,12 @@ void Nature::RecognizeObjects()
       {
         // Create object
 
-        auto obj = object::Make(obj_fname.c_str());
-        obj.world_pos_.x = (int)x - half_hw;
-        obj.world_pos_.z = -((int)y - half_hw);
-        obj.world_pos_.y = terrain_.FindGroundPosition(obj.world_pos_);
+        Vector wpos {};
+        wpos.x = (int)x - half_hw;
+        wpos.z = -((int)y - half_hw);
+        wpos.y = terrain_.FindGroundPosition(wpos);
+        
+        GlObject obj {obj_fname, wpos};
         obj.SetCoords(Coords::LOCAL);
         
         // Initial scale

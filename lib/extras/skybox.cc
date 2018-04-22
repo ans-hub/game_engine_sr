@@ -12,7 +12,7 @@ namespace anshub {
 // Creates GlObject that imitates skybox
 
 Skybox::Skybox(const char* fname, cVector& pos)
-  : GlObject{object::Make(fname, {1.0f, 1.0f, 1.0f}, pos)}
+  : GlObject{fname, pos}
 {
   // Invert face vertices order
 

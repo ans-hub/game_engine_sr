@@ -14,8 +14,11 @@
 namespace anshub {
 
 namespace str {
-  
-  int Replace(std::string& str, const std::string& sub, const std::string& s);
+
+  using Str = std::string;
+
+  int Replace(Str& str, const Str& sub, const Str& replace);
+  Str Replace(const Str& str, const Str& sub, const Str& replace);
 
 } // namespace str
 

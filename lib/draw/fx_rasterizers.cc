@@ -2341,7 +2341,7 @@ int raster_tri::TexturedPerspective(
   auto* s_buf = sbuf.GetPointer();
   auto* z_buf = zbuf.GetPointer();
   auto* tex_ptr = bmp->GetPointer();
-  auto tex_transp = bmp->GetAlphaColor<Color<>>();
+  auto tex_transp = bmp->GetAlphaColor();
 
   // Prepare order of vertices from top to bottom 
 
@@ -2797,7 +2797,7 @@ int raster_tri::TexturedPerspectiveFL(
   auto* s_buf = sbuf.GetPointer();
   auto* z_buf = zbuf.GetPointer();
   auto* tex_ptr = bmp->GetPointer();
-  auto tex_transp = bmp->GetAlphaColor<Color<>>();
+  auto tex_transp = bmp->GetAlphaColor();
 
   // Prepare order of vertices from top to bottom 
 
@@ -3257,7 +3257,8 @@ int raster_tri::TexturedPerspectiveFLBF(
   auto* tex_ptr = bmp->GetPointer();
   int tex_w = bmp->width();
   int tex_h = bmp->height();
-  auto tex_transp = bmp->GetAlphaColor<Color<>>();
+  auto tex_transp_i = bmp->GetAlphaColor();
+  auto tex_transp_f = color::Convert<uint,float>(tex_transp_i);
   
   // Prepare order of vertices from top to bottom 
 
@@ -3415,7 +3416,7 @@ int raster_tri::TexturedPerspectiveFLBF(
           tex_color.g_ = tex_ptr[offset + 1];
           tex_color.b_ = tex_ptr[offset + 0];
         
-          if (tex_transp != tex_color)
+          if (tex_transp_i != tex_color)
           {
             Color<> total {light_color};
             total.Modulate(tex_color);
@@ -3454,43 +3455,39 @@ int raster_tri::TexturedPerspectiveFLBF(
           int offset_lb = offset_lt + tex_width;
           int offset_rb = offset_lb + tex_texel_width;
 
-          Color<> tex_orig {};
           FColor tex_lt {};
           FColor tex_rt {};
           FColor tex_lb {};
           FColor tex_rb {};
 
-          tex_orig.r_ = tex_ptr[offset_lt + 2];       // get origin texel
-          tex_orig.g_ = tex_ptr[offset_lt + 1];
-          tex_orig.b_ = tex_ptr[offset_lt + 0];
-
           tex_lt.r_ = tex_ptr[offset_lt + 2];
           tex_lt.g_ = tex_ptr[offset_lt + 1];
           tex_lt.b_ = tex_ptr[offset_lt + 0];
 
-          if (tex_transp != tex_orig)
+          if (u < tex_w-1)                          // get right top texel
           {
-            if (u < tex_w-1)                          // get right top texel
-            {
-              tex_rt.r_ = tex_ptr[offset_rt + 2];
-              tex_rt.g_ = tex_ptr[offset_rt + 1];
-              tex_rt.b_ = tex_ptr[offset_rt + 0];
-            }
-            if (v < tex_h-1)                          // get left bottom texel
-            {
-              tex_lb.r_ = tex_ptr[offset_lb + 2];
-              tex_lb.g_ = tex_ptr[offset_lb + 1];
-              tex_lb.b_ = tex_ptr[offset_lb + 0];
-            }
-            if (v < tex_h-1 && u < tex_w-1)           // get left bottom texel
-            {
-              tex_rb.r_ = tex_ptr[offset_rb + 2];
-              tex_rb.g_ = tex_ptr[offset_rb + 1];
-              tex_rb.b_ = tex_ptr[offset_rb + 0];
-            }
+            tex_rt.r_ = tex_ptr[offset_rt + 2];
+            tex_rt.g_ = tex_ptr[offset_rt + 1];
+            tex_rt.b_ = tex_ptr[offset_rt + 0];
+          }
+          if (v < tex_h-1)                          // get left bottom texel
+          {
+            tex_lb.r_ = tex_ptr[offset_lb + 2];
+            tex_lb.g_ = tex_ptr[offset_lb + 1];
+            tex_lb.b_ = tex_ptr[offset_lb + 0];
+          }
+          if (v < tex_h-1 && u < tex_w-1)           // get left bottom texel
+          {
+            tex_rb.r_ = tex_ptr[offset_rb + 2];
+            tex_rb.g_ = tex_ptr[offset_rb + 1];
+            tex_rb.b_ = tex_ptr[offset_rb + 0];
+          }
           
-            // Mix neighboring texels to get average texel
-
+          // Mix neighboring texels to get average texel
+         
+          if (tex_transp_f != tex_lt && tex_transp_f != tex_rt &&
+              tex_transp_f != tex_lb && tex_transp_f != tex_rb)
+          {
             FColor tex_total {};
             tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
             tex_total += tex_rt*(du)*(1.0f-dv);
@@ -3681,7 +3678,7 @@ int raster_tri::TexturedPerspectiveFLBF(
           tex_color.g_ = tex_ptr[offset + 1];
           tex_color.b_ = tex_ptr[offset + 0];
           
-          if (tex_transp != tex_color)
+          if (tex_transp_i != tex_color)
           {
             Color<> total {light_color};
             total.Modulate(tex_color);
@@ -3720,41 +3717,37 @@ int raster_tri::TexturedPerspectiveFLBF(
           int offset_lb = offset_lt + tex_width;
           int offset_rb = offset_lb + tex_texel_width;
 
-          Color<> tex_orig {};
           FColor tex_lt {};
           FColor tex_rt {};
           FColor tex_lb {};
           FColor tex_rb {};
 
-          tex_orig.r_ = tex_ptr[offset_lt + 2];     // get origin texel
-          tex_orig.g_ = tex_ptr[offset_lt + 1];
-          tex_orig.b_ = tex_ptr[offset_lt + 0];
-
           tex_lt.r_ = tex_ptr[offset_lt + 2];
           tex_lt.g_ = tex_ptr[offset_lt + 1];
           tex_lt.b_ = tex_ptr[offset_lt + 0];
 
-          if (tex_transp != tex_orig)
+          if (u < tex_w-1)                          // get right top texel
           {
-            if (u < tex_w-1)                          // get right top texel
-            {
-              tex_rt.r_ = tex_ptr[offset_rt + 2];
-              tex_rt.g_ = tex_ptr[offset_rt + 1];
-              tex_rt.b_ = tex_ptr[offset_rt + 0];
-            }
-            if (v < tex_h-1)                          // get left bottom texel
-            {
-              tex_lb.r_ = tex_ptr[offset_lb + 2];
-              tex_lb.g_ = tex_ptr[offset_lb + 1];
-              tex_lb.b_ = tex_ptr[offset_lb + 0];
-            }
-            if (v < tex_h-1 && u < tex_w-1)           // get left bottom texel
-            {
-              tex_rb.r_ = tex_ptr[offset_rb + 2];
-              tex_rb.g_ = tex_ptr[offset_rb + 1];
-              tex_rb.b_ = tex_ptr[offset_rb + 0];
-            }
-          
+            tex_rt.r_ = tex_ptr[offset_rt + 2];
+            tex_rt.g_ = tex_ptr[offset_rt + 1];
+            tex_rt.b_ = tex_ptr[offset_rt + 0];
+          }
+          if (v < tex_h-1)                          // get left bottom texel
+          {
+            tex_lb.r_ = tex_ptr[offset_lb + 2];
+            tex_lb.g_ = tex_ptr[offset_lb + 1];
+            tex_lb.b_ = tex_ptr[offset_lb + 0];
+          }
+          if (v < tex_h-1 && u < tex_w-1)           // get left bottom texel
+          {
+            tex_rb.r_ = tex_ptr[offset_rb + 2];
+            tex_rb.g_ = tex_ptr[offset_rb + 1];
+            tex_rb.b_ = tex_ptr[offset_rb + 0];
+          }
+        
+          if (tex_transp_f != tex_lt && tex_transp_f != tex_rt &&
+              tex_transp_f != tex_lb && tex_transp_f != tex_rb)
+          {
             // Mix neighboring texels to get average texel
 
             FColor tex_total {};
@@ -3823,7 +3816,7 @@ int raster_tri::TexturedPerspectiveGR(
   auto* s_buf = sbuf.GetPointer();
   auto* z_buf = zbuf.GetPointer();
   auto* tex_ptr = bmp->GetPointer();
-  auto tex_transp = bmp->GetAlphaColor<Color<>>();
+  auto tex_transp = bmp->GetAlphaColor();
 
  // Prepare order of vertices from top to bottom 
 
@@ -4335,7 +4328,7 @@ int raster_tri::TexturedAffineGR(
   auto* s_buf = sbuf.GetPointer();
   auto* z_buf = zbuf.GetPointer();
   auto* tex_ptr = bmp->GetPointer();
-  auto tex_transp = bmp->GetAlphaColor<Color<>>();
+  auto tex_transp = bmp->GetAlphaColor();
 
   // Prepare order of vertices from top to bottom 
 
@@ -4850,7 +4843,8 @@ int raster_tri::TexturedAffineGRBF(
   auto* tex_ptr = bmp->GetPointer();
   int tex_w = bmp->width();
   int tex_h = bmp->height();
-  auto tex_transp = bmp->GetAlphaColor<Color<>>();
+  auto tex_transp_i = bmp->GetAlphaColor();
+  auto tex_transp_f = color::Convert<uint,float>(tex_transp_i);
 
   // Prepare order of vertices from top to bottom 
 
@@ -5030,7 +5024,7 @@ int raster_tri::TexturedAffineGRBF(
           tex_color.g_ = tex_ptr[offset + 1];
           tex_color.b_ = tex_ptr[offset + 0];
 
-          if (tex_transp != tex_color)
+          if (tex_transp_i != tex_color)
           {
             Color<> total {c_curr.GetARGB()};
             total.Modulate(tex_color);
@@ -5098,25 +5092,26 @@ int raster_tri::TexturedAffineGRBF(
           }
         
           // Mix neighboring texels to get average texel
+         
+          if (tex_transp_f != tex_lt && tex_transp_f != tex_rt &&
+              tex_transp_f != tex_lb && tex_transp_f != tex_rb)
+          {
+            FColor tex_total {};
+            tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
+            tex_total += tex_rt*(du)*(1.0f-dv);
+            tex_total += tex_lb*(1.0f-du)*(dv);
+            tex_total += tex_rb*(du)*(dv);
+          
+            if (v >= tex_h-1 || u >= tex_w-1)         // special case rb texel
+              tex_total = tex_lt;
 
-          FColor tex_total {};
-          tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
-          tex_total += tex_rt*(du)*(1.0f-dv);
-          tex_total += tex_lb*(1.0f-du)*(dv);
-          tex_total += tex_rb*(du)*(dv);
-        
-          // if (tex_transp == tex_total)
-          //   continue;
+            FColor total {c_curr.GetARGB()};
+            total.Modulate(tex_total);
 
-          if (v >= tex_h-1 || u >= tex_w-1)         // special case rb texel
-            tex_total = tex_lt;
-
-          FColor total {c_curr.GetARGB()};
-          total.Modulate(tex_total);
-
-          s_buf[idx] = total.GetARGB();
-          z_buf[idx] = z_curr;
-          ++total_drawn;
+            s_buf[idx] = total.GetARGB();
+            z_buf[idx] = z_curr;
+            ++total_drawn;
+          }
         }
         ++idx;
         z_curr += z_step;
@@ -5311,7 +5306,7 @@ int raster_tri::TexturedAffineGRBF(
           tex_color.g_ = tex_ptr[offset + 1];
           tex_color.b_ = tex_ptr[offset + 0];
 
-          if (tex_transp != tex_color)
+          if (tex_transp_i != tex_color)
           {
             Color<> total {c_curr.GetARGB()};
             total.Modulate(tex_color);
@@ -5379,25 +5374,26 @@ int raster_tri::TexturedAffineGRBF(
           }
 
           // Mix neighboring texels to get average texel
+         
+          if (tex_transp_f != tex_lt && tex_transp_f != tex_rt &&
+              tex_transp_f != tex_lb && tex_transp_f != tex_rb)
+          {
+            FColor tex_total {};
+            tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
+            tex_total += tex_rt*(du)*(1.0f-dv);
+            tex_total += tex_lb*(1.0f-du)*(dv);
+            tex_total += tex_rb*(du)*(dv);
+
+            if (v >= tex_h-1 || u >= tex_w-1)         // special case rb texel
+              tex_total = tex_lt;
           
-          FColor tex_total {};
-          tex_total += tex_lt*(1.0f-du)*(1.0f-dv);
-          tex_total += tex_rt*(du)*(1.0f-dv);
-          tex_total += tex_lb*(1.0f-du)*(dv);
-          tex_total += tex_rb*(du)*(dv);
+            FColor total {c_curr.GetARGB()};
+            total.Modulate(tex_total);
 
-          // if (tex_transp == tex_total)
-          //   continue;
-
-          if (v >= tex_h-1 || u >= tex_w-1)         // special case rb texel
-            tex_total = tex_lt;
-        
-          FColor total {c_curr.GetARGB()};
-          total.Modulate(tex_total);
-
-          s_buf[idx] = total.GetARGB();
-          z_buf[idx] = z_curr;
-          ++total_drawn;
+            s_buf[idx] = total.GetARGB();
+            z_buf[idx] = z_curr;
+            ++total_drawn;
+          }
         }
         ++idx;
         z_curr += z_step;

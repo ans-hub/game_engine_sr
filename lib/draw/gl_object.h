@@ -22,6 +22,7 @@
 #include "exceptions.h"
 #include "lib/data/ply_loader.h"
 #include "lib/data/bmp_loader.h"
+#include "lib/system/files.h"
 #include "lib/system/strings.h"
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
@@ -62,7 +63,7 @@ struct GlObject
   // Constructors
 
   GlObject();
-  GlObject(cMatrix2d& vxs, cMatrix2d& colors, cMatrix2d& faces, cMatrix2d& attrs);
+  GlObject(const std::string& fname, cVector& world_pos_);
   GlObject(const GlObject&) =default;
   GlObject& operator=(const GlObject&) =default;
   GlObject(GlObject&&) =default;
@@ -71,12 +72,30 @@ struct GlObject
 
   // Coordinates routines
 
-  void  SetCoords(Coords c) { current_vxs_ = c; }
+  void SetCoords(Coords c) { current_vxs_ = c; }
   virtual void CopyCoords(Coords src, Coords dest);
   auto& GetCoords();
   auto& GetCoords() const;
 
 }; // struct Object
+
+// Represents attributes while loading GlObject
+
+struct ObjAttrs
+{
+  ObjAttrs()
+    : shading_{Shading::FLAT}
+    , tex_transparency_{color::MakeUnreal<Color<>>()}  // note #1
+  { }
+  Shading shading_;
+  Color<> tex_transparency_;
+
+  // Note #1: Rasterizer checks if current color is transparent or not
+  // by using Color<T>::operator== (compares colors components). By making
+  // tex_transparency unreal (i.e., each of color components are eq 256)
+  // we disable texture transparency for current object.
+ 
+}; // struct ObjAttrs
 
 //***********************************************************************
 // INLINE IMPLEMENTATION
@@ -91,19 +110,38 @@ struct GlObject
   }
 
 //***********************************************************************
+// Helper functions to load object
+//***********************************************************************
+
+namespace load_helpers {
+
+  using ply::Loader; 
+
+  // Loading routines
+
+  Loader   LoadFile(const std::string&);
+  Matrix2d LoadVxsCoordinates(Loader&);
+  Vector2d LoadFaces(Loader&);
+  Vector2d LoadTexCoordinates(Loader&);
+  Vector2d LoadVxsColors(Loader&);
+  ObjAttrs LoadAttributes(Loader&);
+
+  // Filling routines
+
+  V_Vertex MakeVertices(cVector2d& coords, cVector2d& colors);
+  V_Face   MakeFaces(V_Vertex&, cVector2d& faces_arr);  
+  V_Bitmap MakeMipmaps(const Bitmap& texture, float gamma);
+  void     ApplyTexture(V_Vertex&, V_Face&, cVector2d& tex_coords);
+  V_Uint   ComputeMipmapSquares(const V_Bitmap& mipmaps);
+
+} // namespace load_helpers
+
+//***********************************************************************
 // Helper functions for ONE OBJECT
 //***********************************************************************
 
 namespace object {
   
-  // V_GlObject creating
-
-  GlObject  Make(const char*);
-  GlObject  Make(
-    const char*, TrigTable&, cVector& scale, cVector& pos, cVector& rot);
-  GlObject  Make(
-    const char*, cVector& scale, cVector& pos);
-
   // Object attributes manipilation
 
   bool  Cull(GlObject&, const GlCamera&, const MatrixCamera&);
@@ -137,11 +175,10 @@ namespace object {
   // Object helpers
 
   float FindFarthestCoordinate(const GlObject&);
+  float FindFarthestCoordinate(cV_Vertex&);
   void  RefreshOrientation(GlObject&, const MatrixRotateEul&);
   void  RefreshOrientationXYZ(GlObject&, const Vector& dir, TrigTable&);
   float ComputeBoundingSphereRadius(V_Vertex& vxs, Axis);
-  void  CreateMipmaps(V_Bitmap&, const Bitmap&);
-  void  FillMipmapSquares(const V_Bitmap&, V_Uint&);
 
   // Debug purposes
 
@@ -150,7 +187,7 @@ namespace object {
 } // namespace object
 
 //***********************************************************************
-// Helper functions for CONTAINER OF OBJECT
+// Helper functions for CONTAINER OF OBJECTS
 //***********************************************************************
 
 namespace objects {
