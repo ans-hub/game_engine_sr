@@ -109,15 +109,12 @@ int main(int argc, const char** argv)
 
   auto pos  = io_helpers::GetXYToMiddle(kWidth, kHeight); 
   GlWindow win (pos.x, pos.y, kWidth, kHeight, "Camera"); 
+  auto mode = io_helpers::FindVideoMode(kWidth, kHeight);
 
   // Objects
 
-  auto obj = object::Make(
-    obj_fname, trig, 
-    {1.5f, 1.5f, 1.5f},     // initial scale
-    {0.0f, 0.0f, 10.0f},    // world pos
-    {0.0f, 0.0f, 0.0f}      // initial rotate
-  );
+  GlObject obj {obj_fname, {0.0f, 0.0f, 10.0f}};
+  object::Scale(obj, {1.5f, 1.5f, 1.5f});
 
   // Camera
 
@@ -179,7 +176,7 @@ int main(int argc, const char** argv)
   render_ctx.is_alpha_ = false;
   render_ctx.is_bifiltering_ = true;
   render_ctx.is_mipmapping_  = true;
-  render_ctx.mipmap_dist_ = 170.0f;
+  render_ctx.mipmap_dist_ = 200.0f;
   render_ctx.clarity_  = camman.GetCurrentCamera().z_far_;
 
   GlText  text {win};
@@ -203,6 +200,7 @@ int main(int argc, const char** argv)
 
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);
+    helpers::HandleFullscreen(kbtn, mode, win);
 
     Vector  obj_vel    {0.0f, 0.0f, 0.0f};
     Vector  obj_scale  {1.0f, 1.0f, 1.0f};

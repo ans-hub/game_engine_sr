@@ -208,7 +208,8 @@ int main(int argc, const char** argv)
   std::vector<Bird> birds;
   for (int i = 0; i < 10; ++i)
   {
-    auto bird_model = object::Make("../00_data/objects/bird.ply");
+    GlObject bird_model {
+      "../00_data/objects/bird.ply", {0.0f, 0.0f, 0.0f}};
     birds.emplace_back(
       std::move(bird_model),
       kBirdChangeFly,
