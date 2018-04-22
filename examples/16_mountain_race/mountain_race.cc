@@ -241,9 +241,9 @@ int main(int argc, const char** argv)
 
   Nature nature (cfg.Get<std::string>("ter_objs"), terrain, trig);
   Nature::ObjsList<NatureTypes> nature_list {
-    { NatureTypes::TREE_T1, "../00_data/nature/tree_type_1.ply"},
+    { NatureTypes::TREE_T1, "../00_data/nature/tree_type_2.ply"},
     { NatureTypes::ROCK_T1, "../00_data/nature/rock_type_1.ply"},
-    { NatureTypes::GRASS_T1, "../00_data/nature/grass_type_1.ply"}
+    { NatureTypes::GRASS_T1, "../00_data/nature/grass_type_2.ply"}
   };
   nature.SetObjects<NatureTypes>(nature_list);
 
