@@ -75,13 +75,13 @@ f snd_high_pitch    1.0
 
 # Lights settings
 
-f light_amb_int     0.15
-f light_inf_int     0.15
-f light_pnt_int     17.8
+f light_amb_int     0.02
+f light_inf_int     0.1
+f light_pnt_int     25.8
 f light_sky_int     0.4
 
-s light_amb_color   black    
-s light_inf_color   black
+s light_amb_color   blue    
+s light_inf_color   blue
 s light_pnt_color   yellow
 s light_sky_color   white
 

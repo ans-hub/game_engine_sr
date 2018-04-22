@@ -212,7 +212,7 @@ int main(int argc, const char** argv)
   auto& follow_cam = camman.GetCamera(CamType::Follow::type);
   follow_cam.SetDirection(GlCamera::PITCH, 1.2f, 0.0f, -30.0f, 30.0f, false);
   follow_cam.SetDirection(GlCamera::ROLL, 1.2f, 0.0f, -10.0f, 10.0f, false);
-  follow_cam.SetDirection(GlCamera::YAW, 1.0f, 0.0f, -360.0f, 360.0f, false);
+  follow_cam.SetDirection(GlCamera::YAW, 1.0f, 0.0f, 0.0f, 0.0f, false);
   follow_cam.FollowFor(jeep, kVrpOffset, kDirOffset);
 
   // Create skybox
