@@ -36,9 +36,12 @@ struct CameraFol : public GlCamera
 
   void FollowFor(const GlObject&, cVector& vrp_offset, cVector& dir_offset);
   void FollowFor(const GlObject&);
-  void Preprocess() override { vrp_ = vrp_orig_; }
+  void Preprocess() override { } // vrp_ = vrp_orig_; }
 
 private:
+  Vector vrp_offset_;
+  Vector dir_offset_;
+
   Vector vrp_orig_;   // stores origin vrp for vrp rotating purposes
   Vector obj_dir_;    // stores object direction to track changes 
   Vector obj_pos_;    // stores object position to track changes

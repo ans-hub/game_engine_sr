@@ -77,7 +77,7 @@ f snd_high_pitch    1.0
 
 f light_amb_int     0.02
 f light_inf_int     0.1
-f light_pnt_int     25.8
+f light_pnt_int     12.8
 f light_sky_int     0.4
 
 s light_amb_color   blue    

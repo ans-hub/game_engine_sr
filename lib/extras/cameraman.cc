@@ -37,31 +37,31 @@ void CameraMan::ProcessInput(const BaseWindow& win)
   
   if (IsButtonPressed(win, Btn::MOVE_FORWARD))
   {
-    if (cam_->type_ != CamType::FOLLOW)
+    // if (cam_->type_ != CamType::FOLLOW)
       dyn_.MoveForward(cam_->dir_);
-    else
-      dyn_.MoveNorth();
+    // else
+      // dyn_.MoveNorth();
   }
   if (IsButtonPressed(win, Btn::MOVE_BACKWARD))
   {
-    if (cam_->type_ != CamType::FOLLOW)
+    // if (cam_->type_ != CamType::FOLLOW)
       dyn_.MoveBackward(cam_->dir_);
-    else
-      dyn_.MoveSouth();
+    // else
+      // dyn_.MoveSouth();
   }
   if (IsButtonPressed(win, Btn::STRAFE_LEFT))
   {
-    if (cam_->type_ != CamType::FOLLOW)
+    // if (cam_->type_ != CamType::FOLLOW)
       dyn_.StrafeLeft(cam_->dir_);
-    else
-      dyn_.MoveWest();
+    // else
+      // dyn_.MoveWest();
   }
   if (IsButtonPressed(win, Btn::STRAFE_RIGHT))
   {
-    if (cam_->type_ != CamType::FOLLOW)
+    // if (cam_->type_ != CamType::FOLLOW)
       dyn_.StrafeRight(cam_->dir_);
-    else
-      dyn_.MoveEast();
+    // else
+      // dyn_.MoveEast();
   }
   if (IsButtonPressed(win, Btn::TURN_LEFT) && cam_->type_ != CamType::UVN)
     dyn_.RotateYaw(cam_->yaw_.vel_);

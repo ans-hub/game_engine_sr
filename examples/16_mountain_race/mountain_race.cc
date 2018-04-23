@@ -1,5 +1,5 @@
 // *************************************************************
-// File:    fast_race.cc
+// File:    mountain_race.cc
 // Descr:   simple terrain game
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
@@ -27,6 +27,7 @@
 #include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_z_buffer.h"
+#include "lib/draw/gl_debug_draw.h"
 
 #include "lib/extras/skybox.h"
 #include "lib/extras/terrain.h"
@@ -74,10 +75,6 @@ int main(int argc, const char** argv)
   const int kWinWidth {cfg.Get<int>("win_w")};
   const int kWinHeight {cfg.Get<int>("win_h")};
   const bool kDebugShow {cfg.Get<bool>("dbg_show_info")};  
-
-  FColor kWhite  {255.0f, 255.0f, 255.0f};
-  FColor kYellow {255.0f, 255.0f, 0.0f};
-  FColor kBlue   {0.0f, 0.0f, 255.0f};
   
   // Window
   
@@ -206,7 +203,7 @@ int main(int argc, const char** argv)
   // Set initial camera position (by using orient_z vector)
 
   const Vector kDirOffset {6.5f, 0.0f, 0.0f};
-  const Vector kVrpOffset {0.0f, 2.5f, -3.0f};
+  const Vector kVrpOffset {0.0f, 2.5f, -10.0f};
 
   camman.UseCamera(CamType::Follow::type);
   auto& follow_cam = camman.GetCamera(CamType::Follow::type);
@@ -237,7 +234,6 @@ int main(int argc, const char** argv)
   auto& terrain_chunks = terrain.GetChunks();
 
   // Create nature objects
-  
 
   Nature nature (cfg.Get<std::string>("ter_objs"), terrain, trig);
   Nature::ObjsList<NatureTypes> nature_list {
@@ -312,11 +308,17 @@ int main(int argc, const char** argv)
   
   // Main loop
 
+  float kFar {1.0f};
+  float kPitch {0.0f};
+  float kY {0.0f};
+
   do {
     timer.Start();
     win.Clear();
 
     auto& cam = camman.GetCurrentCamera();
+    // std::cerr << "Jeep wp: " << jeep.world_pos_ << '\n';
+    // std::cerr << "Cam wp: " << cam.vrp_ << '\n';
 
     // Process system input
 
@@ -343,6 +345,10 @@ int main(int argc, const char** argv)
     jeep.ProcessInput(win);
     jeep.ProcessMovement(terrain);
     follow_cam.FollowFor(jeep);
+    // std::cerr << "2Jeep wp: " << jeep.world_pos_ << '\n';
+    // std::cerr << "2Cam wp: " << cam.vrp_ << '\n';
+
+
     object::Translate(jeep, jeep.world_pos_);
     object::ResetAttributes(jeep);
     object::ComputeFaceNormals(jeep, true);
@@ -446,12 +452,42 @@ int main(int argc, const char** argv)
 
     triangles::ComputeNormals(tris_base);
 
-    // Convert all lights but point to camera coordinates
+    // Convert all lights to camera coordinates
 
-    light::World2Camera(lights_all, cam, trig);
+    if (kbtn == Btn::Y)
+      kFar += 1.0f;
+    if (kbtn == Btn::U)
+      kFar -= 1.0f;
+
+    if (kbtn == Btn::I)
+      kY += 1.0f;
+    if (kbtn == Btn::O)
+      kY -= 1.0f;
+
+    if (kbtn == Btn::H)
+      kPitch += 1.0f;
+    if (kbtn == Btn::J)
+      kPitch -= 1.0f;
+
+    std::cerr << kFar << ' ' << kY << ' ' << kPitch << '\n';
     if (!lights_all.point_.empty())
-      lights_all.point_.front().Reset();
-
+    {
+      auto dz = jeep.v_orient_z_ * kFar;
+      Vector pos {jeep.world_pos_ + dz};
+      pos.y += kY;
+      lights_all.point_.back().SetPosition(pos);
+      // Vector dir {0.0f, 0.0f, 1.0f};
+      // coords::RotatePitch(dir, jeep.dir_.x, trig);
+      // coords::RotateYaw(dir, jeep.dir_.y, trig);
+      // coords::RotateRoll(dir, jeep.dir_.z, trig);
+      // Vector dir {jeep.v_orient_z_};
+      // coords::RotatePitch(dir, kPitch, trig);
+      lights_all.point_.back().SetDirection({0.0f, -0.2f, -0.8f});
+      light::World2Camera(lights_all, cam, trig);
+    }
+    else
+      light::World2Camera(lights_all, cam, trig);
+    
     light::Triangles(tris_base, lights_all);
     light::Reset(lights_all);
 
@@ -473,8 +509,19 @@ int main(int argc, const char** argv)
 
     render_ctx.is_wired_ = camman.GetState(CamState::WIRED_MODE);
     render::Context(tris_ptrs, render_ctx);
-    fps.Count();
+    
+    // Draw player orientation vectors
 
+    // DebugContext debug_ctx {render_ctx.sbuf_, cam};
+    // debug_ctx.len_multiplier_ = 5.0f;
+    // debug_render::DrawVector(jeep.v_orient_x_, jeep.world_pos_, debug_ctx);
+    // debug_render::DrawVector(jeep.v_orient_y_, jeep.world_pos_, debug_ctx);
+    // debug_render::DrawVector(jeep.v_orient_z_, jeep.world_pos_, debug_ctx);
+    // render_ctx.sbuf_.SendDataToFB();
+    
+    // Finish frame rendering
+
+    fps.Count();
     win.Render();
     timer.Wait();
 

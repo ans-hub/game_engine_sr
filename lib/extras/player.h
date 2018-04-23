@@ -29,7 +29,9 @@ enum class ObjAction
 {
   TURN_LEFT,    TURN_RIGHT,
   MOVE_FORWARD, MOVE_BACKWARD,
+  STRAFE_LEFT,  STRAFE_RIGHT,
   LOOK_UP,      LOOK_DOWN,
+  ROLL_LEFT,    ROLL_RIGHT,
   SPEED_UP,     SLOW_DOWN,
   _count
 
@@ -71,7 +73,7 @@ struct Player
   template<class ... Args>
   void SetDirection(DirectionType, Args&&...);
 
-private:
+// private:
   Dynamics  dyn_;
   CamDir    yaw_;
   CamDir    pitch_;

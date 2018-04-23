@@ -26,6 +26,7 @@ Player::Player(
   SetValue(ObjValue::PLAYER_HEIGHT, player_height);
   this->world_pos_ = world_pos;
   this->dir_ = dir;
+  ProcessPlayerOrientation();
 }
 
 void Player::ProcessInput(const BaseWindow& win)
@@ -47,6 +48,12 @@ void Player::ProcessInput(const BaseWindow& win)
   if (IsButtonPressed(win, Btn::MOVE_BACKWARD))
     dyn_.MoveBackward(dir_);
 
+  if (IsButtonPressed(win, Btn::STRAFE_LEFT))
+    dyn_.StrafeLeft(dir_);
+
+  if (IsButtonPressed(win, Btn::STRAFE_RIGHT))
+    dyn_.StrafeRight(dir_);
+
   if (IsButtonPressed(win, Btn::TURN_LEFT))
     dyn_.RotateYaw(yaw_.vel_);
 
@@ -59,9 +66,15 @@ void Player::ProcessInput(const BaseWindow& win)
   if (IsButtonPressed(win, Btn::LOOK_DOWN))
     dyn_.RotatePitch(pitch_.vel_);
 
+  if (IsButtonPressed(win, Btn::ROLL_LEFT))
+    dyn_.RotateRoll(-roll_.vel_);
+
+  if (IsButtonPressed(win, Btn::ROLL_RIGHT))
+    dyn_.RotateRoll(roll_.vel_);
+
   // Finish input
 
-  dyn_.ProcessVelocity(false, GetState(ObjState::ON_GROUND));
+  dyn_.ProcessVelocity(GetState(ObjState::FLY_MODE), GetState(ObjState::ON_GROUND));
   world_pos_ += dyn_.GetVelocity();
   dyn_.ProcessDirVelocity();
   dir_ += dyn_.GetDirVelocity();
@@ -146,27 +159,27 @@ void Player::ProcessGroundDirection(const Terrain& terrain)
 
 void Player::ProcessPlayerOrientation()
 {
-  auto& or_x = v_orient_x_;
-  auto& or_y = v_orient_y_;
-  auto& or_z = v_orient_z_;
-
   // Restore original orientation (always as origin)
   
-  or_x = {1.0f, 0.0f, 0.0f};
-  or_y = {0.0f, 1.0f, 0.0f};
-  or_z = {0.0f, 0.0f, 1.0f};
+  v_orient_x_ = {1.0f, 0.0f, 0.0f};
+  v_orient_y_ = {0.0f, 1.0f, 0.0f};
+  v_orient_z_ = {0.0f, 0.0f, 1.0f};
 
   // Rotate orientation vectors by given direction in XYZ seq
 
-  coords::RotatePitch(or_x, dir_.x, trig_);
-  coords::RotateYaw(or_x, dir_.y, trig_);
-  coords::RotateRoll(or_x, dir_.z, trig_);
-  coords::RotatePitch(or_y, dir_.x, trig_);
-  coords::RotateYaw(or_y, dir_.y, trig_);
-  coords::RotateRoll(or_y, dir_.z, trig_);
-  coords::RotatePitch(or_z, dir_.x, trig_);
-  coords::RotateYaw(or_z, dir_.y, trig_);
-  coords::RotateRoll(or_z, dir_.z, trig_);
+  coords::RotatePitch(v_orient_x_, dir_.x, trig_);
+  coords::RotateYaw(v_orient_x_, dir_.y, trig_);
+  coords::RotateRoll(v_orient_x_, dir_.z, trig_);
+  coords::RotatePitch(v_orient_y_, dir_.x, trig_);
+  coords::RotateYaw(v_orient_y_, dir_.y, trig_);
+  coords::RotateRoll(v_orient_y_, dir_.z, trig_);
+  coords::RotatePitch(v_orient_z_, dir_.x, trig_);
+  coords::RotateYaw(v_orient_z_, dir_.y, trig_);
+  coords::RotateRoll(v_orient_z_, dir_.z, trig_);
+
+  v_orient_x_.Normalize();
+  v_orient_y_.Normalize();
+  v_orient_z_.Normalize();
 }
 
 // Rotate player coordinates by the XYZ (!) sequence. Note that we rotate

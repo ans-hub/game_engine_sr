@@ -33,15 +33,23 @@ CameraFol::CameraFol(
 void CameraFol::FollowFor(
   const GlObject& obj, cVector& vrp_offset, cVector& dir_offset)
 {
+  // Store vrp offset
+
+  vrp_offset_ = vrp_offset;
+  dir_offset_ = dir_offset;
+
   // Make vrp z offset
 
-  auto dz = obj.v_orient_z_ * (vrp_offset.z);
-  vrp_ = obj.world_pos_ + dz;
+  // auto dx = obj.v_orient_x_ * (vrp_offset_.x);
+  // auto dy = obj.v_orient_y_ * (vrp_offset_.y);
+  // auto dz = obj.v_orient_z_ * (vrp_offset_.z);
+  // vrp_ = obj.world_pos_ + dz;// + dx + dy + dz;
+  vrp_ = obj.world_pos_;
 
   // Make vrp y offset
 
   vrp_.y += vrp_offset.y;
-  vrp_orig_ = vrp_;
+  // vrp_orig_ = vrp_;
 
   // Initialize dir with given offset
 
@@ -95,20 +103,20 @@ void CameraFol::FollowFor(const GlObject& obj)
 
   vrp_ += diff_vrp;
 
-  // Store valuse for next frame
+  // Store values for next frame
 
   obj_dir_ = obj.dir_;
   obj_pos_ = obj.world_pos_; 
-  vrp_orig_ = vrp_; 
+  // vrp_orig_ = vrp_; 
 
   // Rotate vrp
 
   auto obj2cam_orig = vrp_ - obj.world_pos_; 
   auto obj2cam_rot = obj2cam_orig;
 
-  coords::RotatePitch(obj2cam_rot, obj.dir_.x, trig_);
-  coords::RotateYaw(obj2cam_rot, obj.dir_.y, trig_);
-  coords::RotateRoll(obj2cam_rot, obj.dir_.z, trig_);
+  coords::RotatePitch(obj2cam_rot, diff_dir.x, trig_);
+  coords::RotateYaw(obj2cam_rot, diff_dir.y, trig_);
+  coords::RotateRoll(obj2cam_rot, diff_dir.z, trig_);
   auto obj2cam_new = obj2cam_rot - obj2cam_orig;
 
   vrp_ += obj2cam_new;
