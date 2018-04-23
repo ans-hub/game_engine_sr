@@ -20,9 +20,11 @@ namespace coords {
 
   void  Local2World(V_Vertex&, const Vector& move);
   void  Camera2Persp(V_Vertex&, float dov, float ar);
+  void  Camera2Persp(Vector&, float dov, float ar);
   void  World2Camera(V_Vertex&, cVector& pos, cVector& dir, const TrigTable&);
   void  World2Camera(Vector&, cVector& pos, cVector& dir, const TrigTable&);
   void  Persp2Screen(V_Vertex&, float wov, int scr_w, int scr_h);
+  void  Persp2Screen(Vector&, float wov, int scr_w, int scr_h);
 
   void  RotateYaw(V_Vertex&, float deg, TrigTable&);
   void  RotatePitch(V_Vertex&, float deg, TrigTable&);

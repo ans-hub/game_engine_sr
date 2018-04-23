@@ -86,7 +86,15 @@ void coords::Camera2Persp(V_Vertex& vxs, float dov, float ar)
   }
 }
 
-// Where wov - width of view
+// Translates vector from camera (world) to perspective
+
+void coords::Camera2Persp(Vector& vec, float dov, float ar)
+{
+  vec.x = vec.x * dov / vec.z;
+  vec.y = vec.y * dov * ar / vec.z;
+}
+
+// Translates persective coordinates to screen, where wov - width of view
 
 void coords::Persp2Screen(V_Vertex& vxs, float wov, int scr_w, int scr_h)
 {
@@ -104,6 +112,23 @@ void coords::Persp2Screen(V_Vertex& vxs, float wov, int scr_w, int scr_h)
     vx.pos_.x = (vx.pos_.x + half_wov) * kx;   // convert -half_wov +half_wov
     vx.pos_.y = (vx.pos_.y + half_wov) * ky;   // to 0-width, 0-height
   }
+}
+
+// The same as above but for single Vector
+
+void coords::Persp2Screen(Vector& vec, float wov, int scr_w, int scr_h)
+{
+  // Define proportion koefficients
+
+  float kx = scr_w / wov; // how much pixels in one unit of projection plane 
+  float ky = scr_h / wov;
+  
+  float half_wov = wov / 2;
+
+  // Convert vector from persp to screen
+
+  vec.x = (vec.x + half_wov) * kx;   // convert -half_wov +half_wov
+  vec.y = (vec.y + half_wov) * ky;   // to 0-width, 0-height
 }
 
 // Rotates all vertexes by y-axis (conventionally yaw)

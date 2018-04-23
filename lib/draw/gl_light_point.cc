@@ -18,7 +18,7 @@ LightPoint::LightPoint(cFColor& c, float i, cVector& pos, cVector& dir)
   , direction_copy_{}
   , kc_{1.0f}
   , kl_{1.0f}
-  , kq_{0.2f}
+  , kq_{0.0f}
 {
   direction_.Normalize();
 

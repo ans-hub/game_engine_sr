@@ -75,6 +75,7 @@ namespace anshub {
 
   using cVertex = const Vertex;
   using cV_Vertex = const V_Vertex;
+  using cV_Face = const V_Face;  
   using cV_Triangle = const V_Triangle;
   using cV_Vector = const V_Vector;
   using cV_FColor = const V_FColor;
