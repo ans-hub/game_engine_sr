@@ -35,7 +35,7 @@ struct Terrain
   using  V_Chunk = std::vector<Chunk>;
 
   Terrain(
-    cChar* hm_fname, cChar* tex_fname, int div_factor, int obj_width, Shading);
+    cChar* hm_fname, cChar* tex_fname, float div_factor, int obj_width, Shading);
   
   auto& GetChunks() { return chunks_; }
   int   GetHmWidth() const { return hm_w_; }
@@ -49,7 +49,7 @@ private:
 
   void LoadTexture(const char*);
   void LoadHeightmap(const char*);
-  void ComputeAllVertices(int div_factor);
+  void ComputeAllVertices(float div_factor);
   void MakeChunks(int obj_width);
   void MakeChunkFaces();
   void FillChunks();

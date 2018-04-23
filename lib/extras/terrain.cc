@@ -10,8 +10,12 @@
 namespace anshub {
 
 Terrain::Terrain(
-  cChar* map_fname, cChar* tex_fname, 
-  int div_factor, int obj_width, Shading shading)
+    cChar* map_fname,
+    cChar* tex_fname, 
+    float div_factor,
+    int obj_width,
+    Shading shading
+)
   : hm_w_{}
   , hm_h_{}
   , tx_w_{}
@@ -110,15 +114,12 @@ float Terrain::FindGroundPosition(const Vector& pos) const
 
   float row_float = vxs_[0].pos_.z - pos.z;
   float col_float = pos.x - vxs_[0].pos_.x;
+  int   row_floor = static_cast<int>(row_float);
+  int   col_floor = static_cast<int>(col_float);
 
-  // Make rounding of position above
-
-  float tz = row_float - math::Floor(row_float);
-  float tx = col_float - math::Floor(col_float);
-  
   // Get neighboring vertices
 
-  uint lt = (uint)row_float * hm_w_ + (uint)col_float;
+  uint lt = row_floor * hm_w_ + col_floor;
   uint rt = lt + 1;
   uint lb = lt + hm_w_;
   uint rb = lb + 1;
@@ -127,9 +128,14 @@ float Terrain::FindGroundPosition(const Vector& pos) const
 
   if (lt < vxs_.size() && lb < vxs_.size() && rt < vxs_.size() && rb < vxs_.size())
   {
-    float y_tside = vxs_[lt].pos_.y + ((vxs_[rt].pos_.y - vxs_[lt].pos_.y) * tx);
-    float y_bside = vxs_[lb].pos_.y + ((vxs_[rb].pos_.y - vxs_[lb].pos_.y) * tx);
-    return y_tside + ((y_bside - y_tside) * tz);
+    float dx = col_float - col_floor;
+    float dz = row_float - row_floor;
+    float curr_y {0.0f};
+    curr_y += vxs_[lt].pos_.y * (1.0f-dx) * (1.0f-dz);
+    curr_y += vxs_[rt].pos_.y * (dx) * (1.0f-dz);
+    curr_y += vxs_[lb].pos_.y * (1.0f-dx) * (dz);
+    curr_y += vxs_[rb].pos_.y * (dx) * (dz);
+    return curr_y;   
   }
   else
     return 0;
@@ -211,7 +217,7 @@ void Terrain::LoadHeightmap(const char* fname)
 // Compute vertices for most detalized level. Divide factor used here
 // to regulate impact of pixel color to y coordinate
 
-void Terrain::ComputeAllVertices(int div_factor)
+void Terrain::ComputeAllVertices(float div_factor)
 {
   // Helpers computations
 
@@ -230,11 +236,13 @@ void Terrain::ComputeAllVertices(int div_factor)
   for (int z = 0; z < hm_h_; ++z) {
     for (int x = 0; x < hm_w_; ++x) {
 
-      // Make position and texture vectors
+      // Make position and texture vectors. Height may be taken from any
+      // channel since this is grayscale. I like red =)
 
-      float vx = (float)(x - half_w);
-      float vy = (float)(heightmap_.red_channel(x,z) / div_factor);
-      float vz = (float)(-(z - half_h));
+      auto curr_h = static_cast<float>(heightmap_.red_channel(x,z));
+      auto vx = static_cast<float>(x - half_w);
+      auto vz = static_cast<float>(-(z - half_h));
+      auto vy = curr_h / div_factor;
       Vector pos {vx, vy, vz};
       Vector tex {x*u_step, z*v_step, 0.0f};    // interval would be 0-1 for all mesh
 
