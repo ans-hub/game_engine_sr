@@ -8,14 +8,16 @@
 #ifndef GC_GL_TRIANGLE_H
 #define GC_GL_TRIANGLE_H
 
-#include "gl_enums.h"
-#include "gl_aliases.h"
-#include "fx_colors.h"
-#include "gl_camera.h"
-#include "gl_face.h"
-#include "gl_vertex.h"
-#include "gl_object.h"
+#include "lib/draw/gl_enums.h"
+#include "lib/draw/gl_aliases.h"
+#include "lib/draw/fx_colors.h"
+#include "lib/draw/gl_camera.h"
+#include "lib/draw/gl_face.h"
+#include "lib/draw/gl_vertex.h"
+#include "lib/draw/gl_object.h"
+
 #include "lib/data/bmp_loader.h"
+
 #include "lib/math/vector.h"
 #include "lib/math/plane3d.h"
 #include "lib/math/parmline3d.h"

@@ -12,7 +12,9 @@
 
 namespace anshub {
 
-// Stores direction settings
+//***************************************************************************
+// Holds settings for camera and object directions (see note after code) 
+//***************************************************************************
 
 struct CamDir
 {
@@ -26,6 +28,10 @@ struct CamDir
   bool  locked_;    // is direction locked (can`t change)
 
 }; // struct CamDir
+
+//***************************************************************************
+// Inline implementation 
+//***************************************************************************
 
 inline constexpr CamDir::CamDir()
   : reduce_{1.0f}
@@ -47,3 +53,11 @@ inline constexpr CamDir::CamDir(
 }  // namespace anshub
 
 #endif  // GC_GL_CAMDIR_H
+
+// Note:
+//  - "reduce" used to reduce the amount of angle, i.e. curr yaw rotation
+//    to the "theta of yaw" eq 60 with "reduce" eq 2.0f will be 30 degrees
+//  - "vel" is velocity of direction changes on one frame
+//  - "low" and "high" - the maximum angles of directions. When 0.0f and 0.0f,
+//    then we no limits
+//  - locked - is rotation of direction is locked 

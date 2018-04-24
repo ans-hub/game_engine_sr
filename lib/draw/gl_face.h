@@ -8,9 +8,10 @@
 #ifndef GC_GL_FACE_H
 #define GC_GL_FACE_H
 
-#include "gl_aliases.h"
-#include "fx_colors.h"
-#include "gl_vertex.h"
+#include "lib/draw/gl_aliases.h"
+#include "lib/draw/fx_colors.h"
+#include "lib/draw/gl_vertex.h"
+
 #include "lib/math/vector.h"
 
 namespace anshub {
@@ -21,7 +22,25 @@ namespace anshub {
 
 struct Face
 {
-  Face(V_Vertex& vxs, int f1, int f2, int f3) 
+  Face(V_Vertex& vxs, int f1, int f2, int f3);
+
+  int& operator[](int f) { return vxs_[f]; }
+  const int& operator[](int f) const { return vxs_[f]; }
+
+  bool      active_;
+  bool      double_sided_;
+  A3_Int    vxs_;     // numbers of vertices in vertices list
+  Vector    normal_;  // face normal
+  FColor    color_;   // face color
+  A3_Float  angles_;  // angles to compute vertices normals
+
+}; // struct Face
+
+//**********************************************************************
+// Inline implementation
+//**********************************************************************
+
+inline Face::Face(V_Vertex& vxs, int f1, int f2, int f3) 
   : active_{true}
   , double_sided_{false}
   , vxs_{f1, f2, f3}
@@ -39,22 +58,10 @@ struct Face
     vector::AngleBetween(
       Vector(vxs[f1].pos_ - vxs[f3].pos_), Vector(vxs[f2].pos_ - vxs[f3].pos_)
     ) }
-  {
-    if (!normal_.IsZero())
-      normal_.Normalize();
-  }
-
-  int& operator[](int f) { return vxs_[f]; }
-  const int& operator[](int f) const { return vxs_[f]; }
-
-  bool      active_;
-  bool      double_sided_;
-  A3_Int    vxs_;     // numbers of vertices in vertices list
-  Vector    normal_;  // face normal
-  FColor    color_;   // face color
-  A3_Float  angles_;  // angles to compute vertices normals
-
-}; // struct Face
+{
+  if (!normal_.IsZero())
+    normal_.Normalize();
+}
 
 } // namespace anshub
 

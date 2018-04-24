@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    gl_camera_fol.h
-// Descr:   follow type camera
+// Descr:   camera of follow type
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -29,11 +29,11 @@ struct CameraFol : public GlCamera
   CameraFol(float fov, float dov, int scr_w, int scr_h,
     cVector& vrp, cVector& dir, float z_near, float z_far, const TrigTable&
   );
-  CameraFol(const CameraFol&) =default;
-  CameraFol& operator=(const CameraFol&) =default;
-  CameraFol(CameraFol&&) =default;
-  CameraFol& operator=(CameraFol&&) =default;
-  ~CameraFol() noexcept { }
+  CameraFol(const CameraFol&) noexcept =default;
+  CameraFol& operator=(const CameraFol&) noexcept =default;
+  CameraFol(CameraFol&&) noexcept =default;
+  CameraFol& operator=(CameraFol&&) noexcept  =default;
+  ~CameraFol() { }
 
   void FollowFor(const GlObject&, cVector& vrp_offset, cVector& dir_offset);
   void FollowFor(const GlObject&);
@@ -41,7 +41,7 @@ struct CameraFol : public GlCamera
 
 private:
   Vector vrp_orig_;   // stores origin vrp for vrp rotating purposes
-  Vector obj_dir_;    // stores object direction to track changes 
+  Vector obj_dir_;    // stores object direction to track changes
   Vector obj_pos_;    // stores object position to track changes
 
 }; // struct CameraFol

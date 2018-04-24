@@ -11,7 +11,7 @@ namespace anshub {
 
 // Draws wired object
 
-int draw_object::Wired(const GlObject& obj, Buffer& buf)
+int draw_object::Wired(const GlObject& obj, ScrBuffer& buf)
 {
   int total {0};
 
@@ -59,7 +59,7 @@ int draw_object::Wired(const GlObject& obj, Buffer& buf)
 
 // Draws solid object
 
-int draw_object::Solid(const GlObject& obj, Buffer& buf)
+int draw_object::Solid(const GlObject& obj, ScrBuffer& buf)
 {
   int total {0};
 
@@ -132,7 +132,7 @@ int draw_object::Solid(const GlObject& obj, Buffer& buf)
 // Here we build segments of normals like: obj.vx[i] is start, ends.vx[i] is end
 
 void draw_object::Normals(
-    const GlObject& obj, const V_Vertex& ends, uint color, Buffer& buf)
+    const GlObject& obj, const V_Vertex& ends, uint color, ScrBuffer& buf)
 {
   auto& vxs = obj.GetCoords();
   auto w = buf.Width();
@@ -152,7 +152,7 @@ void draw_object::Normals(
 
 // Draws wired triangles
 
-int draw_triangles::Wired(const V_TrianglePtr& arr, Buffer& buf)
+int draw_triangles::Wired(const V_TrianglePtr& arr, ScrBuffer& buf)
 {
   int total {0};  
   int w {buf.Width()};
@@ -195,7 +195,7 @@ int draw_triangles::Wired(const V_TrianglePtr& arr, Buffer& buf)
 
 // Draws solid triangles
 
-int draw_triangles::Solid(const V_TrianglePtr& arr, Buffer& buf)
+int draw_triangles::Solid(const V_TrianglePtr& arr, ScrBuffer& buf)
 {
   int total_tris {0};
 
@@ -263,7 +263,8 @@ int draw_triangles::Solid(const V_TrianglePtr& arr, Buffer& buf)
 // Draws solid triangles with 1/z buffer and returns total triangle which
 // were been drawn
 
-int draw_triangles::Solid(const V_TrianglePtr& arr, ZBuffer& zbuf, Buffer& buf)
+int draw_triangles::Solid(
+  const V_TrianglePtr& arr, ZBuffer& zbuf, ScrBuffer& buf)
 {
   // Debug variables (we collect drawn pixels only from heavy weight functions)
 

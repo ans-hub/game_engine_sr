@@ -344,8 +344,6 @@ int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
       // Change old triangle
 
       tri.vxs_[pb] = v3;
-      // tri.normal_ =
-        // vector::CrossProduct(tri[1].pos_-tri[0].pos_, tri[2].pos_-tri[0].pos_);
     }
   }
   

@@ -17,29 +17,33 @@
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/fx_colors.h"
 #include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_buffer.h"
+#include "lib/draw/gl_scr_buffer.h"
 #include "lib/draw/fx_rasterizers.h"
 
 namespace anshub {
 
+//***************************************************************************
 // Helps to hold different data for debug drawing
+//***************************************************************************
 
 struct DebugContext
 {
-  DebugContext(Buffer& sbuf, const GlCamera& cam)
+  DebugContext(ScrBuffer& sbuf, const GlCamera& cam)
     : color_{color::Red}
     , len_multiplier_{1.0f}
     , sbuf_{sbuf}
     , cam_{cam}
   { }
-  uint    color_;
-  float   len_multiplier_;
-  Buffer& sbuf_;
-  const   GlCamera& cam_;
+  uint        color_;
+  float       len_multiplier_;
+  ScrBuffer&  sbuf_;
+  const GlCamera& cam_;
 
 }; // struct DebugContext
 
+//***************************************************************************
 // Debug drawing procedures
+//***************************************************************************
 
 namespace debug_render {
 

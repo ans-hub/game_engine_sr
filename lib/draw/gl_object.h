@@ -13,17 +13,20 @@
 #include <fstream>
 #include <memory>
 
-#include "gl_enums.h"
-#include "gl_aliases.h"
-#include "gl_camera.h"
-#include "fx_colors.h"
-#include "gl_coords.h"
-#include "gl_face.h"
-#include "exceptions.h"
+#include "lib/draw/exceptions.h"
+#include "lib/draw/gl_enums.h"
+#include "lib/draw/gl_aliases.h"
+#include "lib/draw/gl_camera.h"
+#include "lib/draw/fx_colors.h"
+#include "lib/draw/gl_coords.h"
+#include "lib/draw/gl_face.h"
+
 #include "lib/data/ply_loader.h"
 #include "lib/data/bmp_loader.h"
+
 #include "lib/system/files.h"
 #include "lib/system/strings.h"
+
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 #include "lib/math/vector.h"
@@ -68,7 +71,7 @@ struct GlObject
   GlObject& operator=(const GlObject&) =default;
   GlObject(GlObject&&) =default;
   GlObject& operator=(GlObject&&) =default;
-  virtual ~GlObject() noexcept {}
+  virtual ~GlObject() {}
 
   // Coordinates routines
 

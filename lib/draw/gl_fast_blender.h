@@ -19,8 +19,10 @@
 
 namespace anshub {
 
+//****************************************************************************
 // Performs fast blending of colors with step 0.125f using only shifts
 // and additions
+//****************************************************************************
 
 struct FastBlender
 {

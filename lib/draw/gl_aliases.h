@@ -40,11 +40,6 @@ namespace anshub {
   using cFColor = const Color<float>;
   using cChar = const char;
   using cTrigTable = const TrigTable;
-  
-  using Matrix2d  = std::vector<std::vector<double>>;
-  using cMatrix2d = const Matrix2d;
-  using Vector2d  = std::vector<std::vector<double>>;
-  using cVector2d = const Vector2d;
 
   // Pointer aliases
 
@@ -70,6 +65,8 @@ namespace anshub {
   using V_FColor = std::vector<Color<float>>;
   using V_Color = std::vector<Color<uchar>>;
   using V_Bitmap = std::vector<P_Bitmap>;
+  using Matrix2d  = std::vector<std::vector<double>>;
+  using Vector2d  = std::vector<std::vector<double>>;
   
   // Const containers aliases
 
@@ -79,6 +76,8 @@ namespace anshub {
   using cV_Triangle = const V_Triangle;
   using cV_Vector = const V_Vector;
   using cV_FColor = const V_FColor;
+  using cMatrix2d = const Matrix2d;
+  using cVector2d = const Vector2d;
 
 } // namespace anshub
 

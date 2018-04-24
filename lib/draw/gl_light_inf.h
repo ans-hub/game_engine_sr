@@ -16,7 +16,9 @@
 
 namespace anshub {
 
+//****************************************************************************
 // Lighting structure represents infinite light source
+//****************************************************************************
 
 struct LightInfinite
 {

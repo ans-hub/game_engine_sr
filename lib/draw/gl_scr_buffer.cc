@@ -1,20 +1,20 @@
 // *************************************************************
-// File:    gl_buffer.cc
-// Descr:   emulates buffer for manual rendering
+// File:    gl_scr_buffer.cc
+// Descr:   emulates screen buffer for rendering
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
-#include "gl_buffer.h"
+#include "gl_scr_buffer.h"
 
 namespace anshub {
 
-Buffer::Buffer(int w, int h, int color)
+ScrBuffer::ScrBuffer(int w, int h, int color)
   : w_{w}
   , h_{h}
   , clear_color_{color}
-  , format_{GL_BGRA}                       // see note #3
-  , type_{GL_UNSIGNED_INT_8_8_8_8}         // after code
+  , format_{GL_BGRA}                // see note #3
+  , type_{GL_UNSIGNED_INT_8_8_8_8}  // after code
   , ptr_(w_ * h_, clear_color_)
 {
   // Prepare OpenGl states before using SendDataToFB()
@@ -34,7 +34,7 @@ Buffer::Buffer(int w, int h, int color)
   
 // Sends pixel data to framebuffer
 
-void Buffer::SendDataToFB()
+void ScrBuffer::SendDataToFB()
 {
   glWindowPos2i(0, 0);  // to prevent text clipping
   glDrawPixels(w_, h_, format_, type_, (GLvoid*)ptr_.data());

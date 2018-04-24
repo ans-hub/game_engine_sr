@@ -10,12 +10,13 @@
 
 #include <cmath>
 
-#include "lib/draw/gl_buffer.h"
+#include "lib/draw/gl_scr_buffer.h"
 #include "lib/draw/gl_z_buffer.h"
 #include "lib/draw/fx_colors.h"
 #include "lib/draw/gl_vertex.h"
 
 #include "lib/math/vector.h"
+
 #include "lib/data/bmp_loader.h"
 
 namespace anshub {
@@ -31,15 +32,17 @@ namespace anshub {
 
 namespace raster {
 
-  void Point(int x, int y, int col, Buffer&) noexcept;
+  void Point(int x, int y, int col, ScrBuffer&) noexcept;
   void Point(int x, int y, int col, uint* buf, int lpitch) noexcept;
-  void Line(int x1, int y1, int x2, int y2, int col, Buffer&) noexcept;
-  void Line(int x1, int y1, int x2, int y2, int col, float, float, Buffer&) noexcept;
-  void LineBres(int x1, int y1, int x2, int y2, int col, Buffer&) noexcept;
-  void LineWu(int x1, int y1, int x2, int y2, int col, Buffer&) noexcept;
-  void HorizontalLine(int y, int x1, int x2, int col, Buffer&) noexcept;
+  void Point(int x, int y, int col, ScrBuffer&) noexcept;
+  void Line(int x1, int y1, int x2, int y2, int col, ScrBuffer&) noexcept;
+  void Line(
+    int x1, int y1, int x2, int y2, int col, float, float, ScrBuffer&) noexcept;
+  void LineBres(int x1, int y1, int x2, int y2, int col, ScrBuffer&) noexcept;
+  void LineWu(int x1, int y1, int x2, int y2, int col, ScrBuffer&) noexcept;
+  void HorizontalLine(int y, int x1, int x2, int col, ScrBuffer&) noexcept;
 
-}
+} // namespace raster
 
 //****************************************************************************
 // TRIANGLE RASTERIZERS
@@ -52,63 +55,63 @@ namespace raster_tri {
   void SolidFL(                                 // v1
       float px1, float px2, float px3,
       float py1, float py2, float py3,
-      uint color, Buffer&
+      uint color, ScrBuffer&
   ) noexcept;
   void SolidGR(                                 // v1
       float x1, float x2, float x3, 
       float y1, float y2, float y3, 
-      uint c1, uint c2, uint c3, Buffer&
+      uint c1, uint c2, uint c3, ScrBuffer&
   ) noexcept;
   void TexturedAffine(                          // v1
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
-    Bitmap*, Buffer&
+    Bitmap*, ScrBuffer&
   ) noexcept;
   void TexturedAffineFL(                        // v1
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
-    uint color, Bitmap*, Buffer&
+    uint color, Bitmap*, ScrBuffer&
   ) noexcept;
   void TexturedAffineGR(                        // v1
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
     uint c1, uint c2, uint c3, Bitmap*,
-    Buffer&
+    ScrBuffer&
   ) noexcept;
 
   // Rasterizes triangle with 1/z-buffering
 
   int SolidFL(                                  // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
-    cFColor& color, ZBuffer&, Buffer&
+    cFColor& color, ZBuffer&, ScrBuffer&
   ) noexcept;
   int SolidGR(                                  // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
-    ZBuffer&, Buffer&
+    ZBuffer&, ScrBuffer&
   ) noexcept;
   int TexturedPerspective(                      // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
-    Bitmap*, ZBuffer&, Buffer&
+    Bitmap*, ZBuffer&, ScrBuffer&
   ) noexcept;
   int TexturedPerspectiveFL(                    // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
-    cFColor& color, Bitmap*, ZBuffer&, Buffer&
+    cFColor& color, Bitmap*, ZBuffer&, ScrBuffer&
   ) noexcept;
   int TexturedPerspectiveFLBF(                  // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
-    cFColor& color, Bitmap*, ZBuffer&, Buffer&
+    cFColor& color, Bitmap*, ZBuffer&, ScrBuffer&
   ) noexcept;
   int TexturedPerspectiveGR(                    // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
-    Bitmap*, ZBuffer&, Buffer&
+    Bitmap*, ZBuffer&, ScrBuffer&
   ) noexcept;
   int TexturedAffineGR(                         // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
-    Bitmap*, ZBuffer&, Buffer&    
+    Bitmap*, ZBuffer&, ScrBuffer&    
   ) noexcept;
   int TexturedAffineGRBF(                       // v2, optimized +
     Vertex v1, Vertex v2, Vertex v3,
-    Bitmap*, ZBuffer&, Buffer&    
+    Bitmap*, ZBuffer&, ScrBuffer&    
   ) noexcept;
 
 } // namespace raster_tri
@@ -129,15 +132,15 @@ namespace raster_helpers {
 // Implementations of inline functions
 //****************************************************************************
 
-// Draws point using Buffer object
+// Draws point using screen buffer
 
 inline void raster::Point(
-  int x, int y, int color, Buffer& buf) noexcept
+  int x, int y, int color, ScrBuffer& buf) noexcept
 {
   buf[x + y * buf.Width()] = color;
 }
 
-// Draws point using buffer pointer
+// Draws point using screen buffer pointer
 
 inline void raster::Point(
   int x, int y, int color, uint* buf, int lpitch) noexcept
@@ -145,8 +148,10 @@ inline void raster::Point(
   buf[x + y * lpitch] = color;
 }
 
+// Draws horizontal line using screen buffer
+
 inline void raster::HorizontalLine(
-  int y, int x1, int x2, int color, Buffer& buf) noexcept
+  int y, int x1, int x2, int color, ScrBuffer& buf) noexcept
 {
   auto* ptr = buf.GetPointer();
   std::fill_n(ptr + x1 + y * buf.Width(), x2-x1, color);

@@ -12,7 +12,7 @@
 #include <algorithm>
 
 #include "fx_colors.h"
-#include "gl_buffer.h"
+#include "gl_scr_buffer.h"
 #include "gl_object.h"
 #include "gl_vertex.h"
 #include "gl_triangle.h"
@@ -30,9 +30,9 @@ namespace anshub {
 
 namespace draw_object {
 
-  int  Wired(const GlObject&, Buffer&);
-  int  Solid(const GlObject&, Buffer&);
-  void Normals(const GlObject&, const V_Vertex&, uint color, Buffer&);
+  int  Wired(const GlObject&, ScrBuffer&);
+  int  Solid(const GlObject&, ScrBuffer&);
+  void Normals(const GlObject&, const V_Vertex&, uint color, ScrBuffer&);
 
 } // namespace draw_object
 
@@ -40,9 +40,9 @@ namespace draw_object {
 
 namespace draw_triangles {
 
-  int  Wired(const V_TrianglePtr&, Buffer&);
-  int  Solid(const V_TrianglePtr&, Buffer&);
-  int  Solid(const V_TrianglePtr&, ZBuffer&, Buffer&);
+  int  Wired(const V_TrianglePtr&, ScrBuffer&);
+  int  Solid(const V_TrianglePtr&, ScrBuffer&);
+  int  Solid(const V_TrianglePtr&, ZBuffer&, ScrBuffer&);
 
 } // namespace draw_triangles
 
@@ -52,9 +52,9 @@ namespace render {
 
   // Just adaptors to legacy functions
   
-  int  Wired(const V_TrianglePtr& t, Buffer&b);
-  int  Solid(const V_TrianglePtr&, Buffer&);
-  int  Solid(const V_TrianglePtr&, ZBuffer&, Buffer&);
+  int  Wired(const V_TrianglePtr& t, ScrBuffer&b);
+  int  Solid(const V_TrianglePtr&, ScrBuffer&);
+  int  Solid(const V_TrianglePtr&, ZBuffer&, ScrBuffer&);
 
   // Main function to rendering triangles
 
@@ -76,17 +76,17 @@ namespace render_helpers {
 // Inline functions (adaptors) implementation
 //****************************************************************************
 
-inline int render::Wired(const V_TrianglePtr& t, Buffer& b)
+inline int render::Wired(const V_TrianglePtr& t, ScrBuffer& b)
 {
   return draw_triangles::Wired(t, b);
 }
 
-inline int render::Solid(const V_TrianglePtr& t, Buffer& b)
+inline int render::Solid(const V_TrianglePtr& t, ScrBuffer& b)
 {
   return draw_triangles::Solid(t, b);
 }
 
-inline int render::Solid(const V_TrianglePtr& t, ZBuffer& z, Buffer& b)
+inline int render::Solid(const V_TrianglePtr& t, ZBuffer& z, ScrBuffer& b)
 {
   return draw_triangles::Solid(t, z, b);
 }

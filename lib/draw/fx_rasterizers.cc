@@ -11,7 +11,8 @@ namespace anshub {
 
 // Draws the line, using Bresengham algorithm
 
-void raster::LineBres(int x1, int y1, int x2, int y2, int color, Buffer& buf) noexcept
+void raster::LineBres(
+  int x1, int y1, int x2, int y2, int color, ScrBuffer& buf) noexcept
 {
   int dx = x2 - x1;
   int dy = y2 - y1;
@@ -72,7 +73,9 @@ void raster::LineBres(int x1, int y1, int x2, int y2, int color, Buffer& buf) no
 // The extremely fast line algorithm var.E (additional fixed point precalc)
 // Author: Po-Han Lin, http://www.edepot.com
 
-void raster::Line(int x1, int y1, int x2, int y2, int color, Buffer& buf) noexcept
+void raster::Line(
+  int x1, int y1, int x2, int y2, 
+  int color, ScrBuffer& buf) noexcept
 {
   bool y_longer = false;
 	int short_len = y2 - y1;
@@ -126,7 +129,9 @@ void raster::Line(int x1, int y1, int x2, int y2, int color, Buffer& buf) noexce
 // Supposed that b_1 > b_2
 
 void raster::Line(
-  int x1, int y1, int x2, int y2, int color, float b_1, float b_2, Buffer& buf) noexcept
+  int x1, int y1, int x2, int y2, 
+  int color, float b_1, float b_2,
+  ScrBuffer& buf) noexcept
 {
   int dx = std::abs(x2-x1);
   int dy = std::abs(y2-y1);
@@ -199,7 +204,7 @@ void raster::Line(
 void raster_tri::SolidFL(
     float px1, float py1, float px2,
     float py2, float px3, float py3,
-    uint color, Buffer& buf) noexcept
+    uint color, ScrBuffer& buf) noexcept
 {
   // Make y1 as top point and y3 as bottom point, y2 is middle
 
@@ -356,7 +361,7 @@ void raster_tri::SolidFL(
 void raster_tri::SolidGR(
     float px1, float py1, float px2,
     float py2, float px3, float py3,
-    uint col1, uint col2, uint col3, Buffer& buf) noexcept
+    uint col1, uint col2, uint col3, ScrBuffer& buf) noexcept
 {
   // Convert float to int
 
@@ -613,7 +618,7 @@ void raster_tri::SolidGR(
 void raster_tri::TexturedAffine(
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
-    Bitmap* bmp, Buffer& buf) noexcept
+    Bitmap* bmp, ScrBuffer& buf) noexcept
 {
   // Convert float to int for vertex positions
 
@@ -906,7 +911,7 @@ void raster_tri::TexturedAffine(
 void raster_tri::TexturedAffineFL(
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
-    uint color, Bitmap* bmp, Buffer& scr_buf) noexcept
+    uint color, Bitmap* bmp, ScrBuffer& scr_buf) noexcept
 {
   // Prepare fast screen buffer, texture and z-buffer access
 
@@ -1262,7 +1267,7 @@ void raster_tri::TexturedAffineFL(
 void raster_tri::TexturedAffineGR(
     cVector& p1, cVector& p2, cVector& p3,
     cVector& t1, cVector& t2, cVector& t3,
-    uint col1, uint col2, uint col3, Bitmap* bmp, Buffer& scr_buf) noexcept
+    uint col1, uint col2, uint col3, Bitmap* bmp, ScrBuffer& scr_buf) noexcept
 {
   // Prepare fast screen buffer, texture and z-buffer access
 
@@ -1668,7 +1673,7 @@ void raster_tri::TexturedAffineGR(
 
 int raster_tri::SolidFL(
     Vertex v1, Vertex v2, Vertex v3,
-    cFColor& color, ZBuffer& zbuffer, Buffer& sbuffer) noexcept
+    cFColor& color, ZBuffer& zbuffer, ScrBuffer& sbuffer) noexcept
 {
   int total_drawn {};
   
@@ -1973,7 +1978,7 @@ int raster_tri::SolidFL(
 
 int raster_tri::SolidGR(
     Vertex v1, Vertex v2, Vertex v3,
-    ZBuffer& zbuffer, Buffer& sbuffer) noexcept
+    ZBuffer& zbuffer, ScrBuffer& sbuffer) noexcept
 {
   int total_drawn {};
 
@@ -2319,7 +2324,7 @@ int raster_tri::SolidGR(
 
 int raster_tri::TexturedPerspective(
     Vertex v1, Vertex v2, Vertex v3,
-    Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf) noexcept
+    Bitmap* bmp, ZBuffer& zbuf, ScrBuffer& sbuf) noexcept
 {
   int total_drawn {};
 
@@ -2775,7 +2780,7 @@ int raster_tri::TexturedPerspective(
 
 int raster_tri::TexturedPerspectiveFL(
     Vertex v1, Vertex v2, Vertex v3,
-    cFColor& fcolor, Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf) noexcept
+    cFColor& fcolor, Bitmap* bmp, ZBuffer& zbuf, ScrBuffer& sbuf) noexcept
 {
   int total_drawn {};
 
@@ -3233,7 +3238,7 @@ int raster_tri::TexturedPerspectiveFL(
 
 int raster_tri::TexturedPerspectiveFLBF(
     Vertex v1, Vertex v2, Vertex v3,
-    cFColor& fcolor, Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf) noexcept
+    cFColor& fcolor, Bitmap* bmp, ZBuffer& zbuf, ScrBuffer& sbuf) noexcept
 {
   int total_drawn {};
 
@@ -3794,7 +3799,7 @@ int raster_tri::TexturedPerspectiveFLBF(
 
 int raster_tri::TexturedPerspectiveGR(
     Vertex v1, Vertex v2, Vertex v3,
-    Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf) noexcept
+    Bitmap* bmp, ZBuffer& zbuf, ScrBuffer& sbuf) noexcept
 {
   int total_drawn {};
   
@@ -4306,7 +4311,7 @@ int raster_tri::TexturedPerspectiveGR(
 
 int raster_tri::TexturedAffineGR(
     Vertex v1, Vertex v2, Vertex v3,
-    Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf) noexcept
+    Bitmap* bmp, ZBuffer& zbuf, ScrBuffer& sbuf) noexcept
 {
   int total_drawn {};
 
@@ -4819,7 +4824,7 @@ int raster_tri::TexturedAffineGR(
 
 int raster_tri::TexturedAffineGRBF(
     Vertex v1, Vertex v2, Vertex v3,
-    Bitmap* bmp, ZBuffer& zbuf, Buffer& sbuf) noexcept
+    Bitmap* bmp, ZBuffer& zbuf, ScrBuffer& sbuf) noexcept
 {
   int total_drawn {};
 

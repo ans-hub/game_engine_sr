@@ -1,12 +1,12 @@
 // *************************************************************
-// File:    gl_buffer.h
-// Descr:   emulates buffer for manual rendering
+// File:    gl_scr_buffer.h
+// Descr:   emulates screen buffer for rendering
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
-#ifndef GL_BUFFER_H
-#define GL_BUFFER_H
+#ifndef GL_SCR_BUFFER_H
+#define GL_SCR_BUFFER_H
 
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES     // to get prototype functions from glext.h
@@ -21,10 +21,13 @@
 
 namespace anshub {
 
-class Buffer
+//****************************************************************************
+// Screen buffer emulator class
+//****************************************************************************
+
+struct ScrBuffer
 {
-public:
-  Buffer(int, int, int);
+  ScrBuffer(int w, int h, int color);
 
   void  Clear();
   void  SendDataToFB();
@@ -41,11 +44,15 @@ private:
   int clear_color_; // -
   GLenum format_;   // https://goo.gl/2A58hH
   GLenum type_;     // the same as above
-  V_Uint ptr_;       // 32 bit color buffer
+  V_Uint ptr_;      // 32 bit color buffer
 
-}; // class Buffer
+}; // class ScrBuffer
 
-inline void Buffer::Clear()
+//****************************************************************************
+// Implementation of inline member functions
+//****************************************************************************
+
+inline void ScrBuffer::Clear()
 {
   memset(ptr_.data(), 0, w_*h_*sizeof(*ptr_.data())); 
   
@@ -54,6 +61,6 @@ inline void Buffer::Clear()
 
 }  // namespace anshub
 
-#endif  // GL_BUFFER_H
+#endif  // GL_SCR_BUFFER_H
 
 // Important note : 0,0 is the left-bottom corner

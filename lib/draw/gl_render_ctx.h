@@ -8,31 +8,19 @@
 #ifndef GL_RENDER_CTX_H
 #define GL_RENDER_CTX_H
 
-#include "gl_buffer.h"
+#include "gl_scr_buffer.h"
 #include "gl_z_buffer.h"
 
 namespace anshub {
 
+//***************************************************************************
 // Represents struct to hold different information about rendering
 // and used in render functions
+//***************************************************************************
 
 struct RenderContext
 {
-  RenderContext(int w, int h, int color)
-    : is_wired_{false}
-    , is_alpha_{false}
-    , is_zbuf_{true}
-    , is_bifiltering_{false}
-    , is_mipmapping_{false}
-    , clarity_{1.0f}
-    , mipmap_dist_{1.0f}
-    , pixels_drawn_{}
-    , triangles_drawn_{}
-    , sbuf_{w, h, color}
-    , zbuf_{w, h}
-  { }
-
-  // Context members
+  RenderContext(int w, int h, int color);
 
   bool    is_wired_;
   bool    is_alpha_;
@@ -44,12 +32,28 @@ struct RenderContext
   int     pixels_drawn_;
   int     triangles_drawn_;
 
-  // Context entities
-
-  Buffer    sbuf_;
+  ScrBuffer sbuf_;
   ZBuffer   zbuf_;
 
 }; // struct RenderContext
+
+//***************************************************************************
+// Inline implementation
+//***************************************************************************
+
+inline RenderContext::RenderContext(int w, int h, int color)
+  : is_wired_{false}
+  , is_alpha_{false}
+  , is_zbuf_{true}
+  , is_bifiltering_{false}
+  , is_mipmapping_{false}
+  , clarity_{1.0f}
+  , mipmap_dist_{1.0f}
+  , pixels_drawn_{}
+  , triangles_drawn_{}
+  , sbuf_{w, h, color}
+  , zbuf_{w, h}
+{ }
 
 }  // namespace anshub
 

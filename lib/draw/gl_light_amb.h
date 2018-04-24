@@ -13,7 +13,9 @@
 
 namespace anshub {
 
+//****************************************************************************
 // Lighting structure represents ambient lighting of the scene
+//****************************************************************************
 
 struct LightAmbient
 {

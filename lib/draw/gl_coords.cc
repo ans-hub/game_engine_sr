@@ -1,6 +1,6 @@
 // *****************************************************************
 // File:    gl_coords.cc
-// Descr:   functions to convert different coordinates (non-matrices)
+// Descr:   functions to convert different coordinates
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *****************************************************************

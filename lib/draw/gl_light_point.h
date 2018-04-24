@@ -16,6 +16,10 @@
 
 namespace anshub {
 
+//****************************************************************************
+// Represents point light source
+//****************************************************************************
+
 struct LightPoint
 {
   LightPoint(cFColor& c, float i, cVector& pos, cVector& dir);

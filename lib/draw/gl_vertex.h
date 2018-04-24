@@ -8,32 +8,22 @@
 #ifndef GC_GL_VERTEX_H
 #define GC_GL_VERTEX_H
 
-#include "gl_aliases.h"
-#include "fx_colors.h"
+#include "lib/draw/gl_aliases.h"
+#include "lib/draw/fx_colors.h"
+
 #include "lib/math/vector.h"
 
 namespace anshub {
 
 //**********************************************************************
-// Represent drawable vertex
+// Represent vertex
 //**********************************************************************
 
 struct Vertex
 {
-  Vertex()
-  : pos_{}
-  , normal_{}
-  , color_{}
-  , texture_{} { }
-  explicit Vertex(const Vector& v)
-  : pos_{v}
-  , normal_{}
-  , color_{}
-  , texture_{} { }
-  Vertex(float x, float y, float z, float r, float g, float b)
-  : pos_{x, y, z}
-  , normal_{}
-  , color_{r, g, b} { }
+  Vertex();
+  explicit Vertex(const Vector&);
+  Vertex(float x, float y, float z, float r, float g, float b);
 
   Vector  pos_;
   Vector  normal_;
@@ -41,6 +31,30 @@ struct Vertex
   Vector  texture_;
   
 }; // struct Vertex
+
+//**********************************************************************
+// Inline implementation
+//**********************************************************************
+
+inline Vertex::Vertex()
+  : pos_{}
+  , normal_{}
+  , color_{}
+  , texture_{}
+{ }
+
+inline Vertex::Vertex(const Vector& v)
+  : pos_{v}
+  , normal_{}
+  , color_{}
+  , texture_{}
+{ }
+
+inline Vertex::Vertex(float x, float y, float z, float r, float g, float b)
+  : pos_{x, y, z}
+  , normal_{}
+  , color_{r, g, b}
+{ }
 
 }  // namespace anshub
 
