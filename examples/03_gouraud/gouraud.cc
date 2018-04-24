@@ -22,15 +22,15 @@
 #include "lib/draw/gl_text.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_object.h"
-#include "lib/draw/gl_camera.h"
+#include "lib/draw/cameras/gl_camera.h"
 
-#include "lib/math/matrix_rotate_eul.h"
-#include "lib/math/matrix_rotate_uvn.h"
-#include "lib/math/matrix_persp.h"
-#include "lib/math/matrix_trans.h"
-#include "lib/math/matrix_view.h"
-#include "lib/math/matrix_scale.h"
-#include "lib/math/matrix_camera.h"
+#include "lib/math/matrixes/mx_rotate_eul.h"
+#include "lib/math/matrixes/mx_rotate_uvn.h"
+#include "lib/math/matrixes/mx_perspective.h"
+#include "lib/math/matrixes/mx_translate.h"
+#include "lib/math/matrixes/mx_view.h"
+#include "lib/math/matrixes/mx_scale.h"
+#include "lib/math/matrixes/mx_camera.h"
 
 #include "lib/extras/cameraman.h"
 

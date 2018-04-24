@@ -41,9 +41,6 @@
 #include "lib/system/rand_toolkit.h"
 
 #include "lib/math/trig.h"
-#include "lib/math/matrix_rotate_eul.h"
-#include "lib/math/matrix_rotate_uvn.h"
-#include "lib/math/matrix_trans.h"
 
 #include "../helpers.h"
 
@@ -330,13 +327,13 @@ int main(int argc, const char** argv)
 
     if (kbtn == Btn::L && !lights_all.point_.empty())
     {
-      lights_all.point_.back().intense_ = 0.0f;
-      lights_all.infinite_.back().intense_ = cfg.Get<float>("light_inf_int") * 3;
+      lights_all.point_.back().SetIntense(0.0f);
+      lights_all.infinite_.back().SetIntense(cfg.Get<float>("light_inf_int") * 3);
     }
     else if (kbtn == Btn::K && !lights_all.point_.empty())
     {
-      lights_all.point_.back().intense_ = cfg.Get<float>("light_pnt_int");
-      lights_all.infinite_.back().intense_ = cfg.Get<float>("light_inf_int");
+      lights_all.point_.back().SetIntense(cfg.Get<float>("light_pnt_int"));
+      lights_all.infinite_.back().SetIntense(cfg.Get<float>("light_inf_int"));
     }
 
     // Process gameplay input 
@@ -427,7 +424,7 @@ int main(int argc, const char** argv)
 
     // Change terrain detalization
 
-    terrain.ProcessDetalization(cam);
+    terrain.ProcessDetalization(cam.vrp_);
     
     for (auto& chunk : terrain_chunks)
     {

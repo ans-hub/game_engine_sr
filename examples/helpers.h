@@ -12,11 +12,16 @@
 #include <sstream>
 
 #include "lib/math/vector.h"
+
 #include "lib/physics/dynamics.h"
+
 #include "lib/extras/cameraman.h"
+
 #include "lib/draw/gl_text.h"
+
 #include "lib/window/base_window.h"
 #include "lib/window/gl_window.h"
+
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 

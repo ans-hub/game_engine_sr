@@ -31,7 +31,7 @@ void helpers::HandleFullscreen(Btn key, int mode, GlWindow& win)
     win.ToggleFullscreen(mode);
 }
 
-void helpers::HandleObject(Btn key, Vector& vel, Vector& rot, Vector& scale)
+void helpers::HandleObject(Btn key, Vector& vel, Vector& rot, Vector&)
 {
   switch(key)
   {

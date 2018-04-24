@@ -23,16 +23,8 @@
 #include "lib/draw/gl_z_buffer.h"
 #include "lib/draw/gl_lights.h"
 #include "lib/draw/gl_object.h"
-#include "lib/draw/gl_camera.h"
+#include "lib/draw/cameras/gl_camera.h"
 #include "lib/draw/gl_draw.h"
-
-#include "lib/math/matrix_rotate_eul.h"
-#include "lib/math/matrix_rotate_uvn.h"
-#include "lib/math/matrix_persp.h"
-#include "lib/math/matrix_trans.h"
-#include "lib/math/matrix_view.h"
-#include "lib/math/matrix_scale.h"
-#include "lib/math/matrix_camera.h"
 
 #include "../helpers.h"
 

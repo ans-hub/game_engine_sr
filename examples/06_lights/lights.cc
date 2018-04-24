@@ -9,24 +9,20 @@
 
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
+
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
+
 #include "lib/math/vector.h"
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
+
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
-#include "lib/draw/gl_lights.h"
 #include "lib/draw/gl_object.h"
-#include "lib/draw/gl_camera.h"
-#include "lib/math/matrix_rotate_eul.h"
-#include "lib/math/matrix_rotate_uvn.h"
-#include "lib/math/matrix_persp.h"
-#include "lib/math/matrix_trans.h"
-#include "lib/math/matrix_view.h"
-#include "lib/math/matrix_scale.h"
-#include "lib/math/matrix_camera.h"
+#include "lib/draw/gl_lights.h"
+#include "lib/draw/cameras/gl_camera.h"
 
 #include "../helpers.h"
 
@@ -118,14 +114,9 @@ int main(int argc, const char** argv)
   // Prepare lights sources
   
   Lights lights {};
-  FColor white  {255.0f, 255.0f, 255.0f};
-  FColor yellow {255.0f, 255.0f, 0.0f};
-  FColor blue   {0.0f, 0.0f, 255.0f};
-  
-  lights.ambient_.emplace_back(white, 0.2f);
-  lights.infinite_.emplace_back(yellow, 0.6f, Vector{0.0f, -1.0f, 0.0f});
-  lights.point_.emplace_back(blue, 0.6f, 
-    Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
+  lights.AddAmbient(color::fWhite, 0.2f);
+  lights.AddInfinite(color::fYellow, 0.6f, {0.0f, -1.0f, 0.0f});
+  lights.AddPoint(color::fBlue, 0.6f, {0.0f, 0.0f, 10.0f}, {0.0f, 0.0f, -1.0f});
 
   // Other stuff
 

@@ -240,7 +240,7 @@ int main(int argc, const char** argv)
 
     // Change terrain detalization
 
-    terrain.ProcessDetalization(cam);
+    terrain.ProcessDetalization(cam.vrp_);
     
     for (auto& chunk : terrain_chunks)
     {

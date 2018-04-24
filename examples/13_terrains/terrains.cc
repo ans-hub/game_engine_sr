@@ -37,8 +37,6 @@
 #include "lib/system/rand_toolkit.h"
 
 #include "lib/math/trig.h"
-#include "lib/math/matrix_rotate_uvn.h"
-#include "lib/math/matrix_trans.h"
 
 #include "lib/data/cfg_loader.h"
 
@@ -359,7 +357,7 @@ int main(int argc, const char** argv)
 
     // Change terrain detalization
 
-    terrain.ProcessDetalization(cam);
+    terrain.ProcessDetalization(cam.vrp_);
     
     for (auto& chunk : terrain_chunks)
     {
