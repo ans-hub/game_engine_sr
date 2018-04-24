@@ -19,15 +19,15 @@ namespace anshub {
 
 namespace math {
 
-  int   Floor(float);
-  int   Ceil(float);
-  bool  Fzero(float);
-  bool  FNotZero(float);
-  bool  FlessZero(float);
-  bool  Feq(float, float);
-  bool  IsAbsFactorOfTwo(int);
-  int   Clamp(int, int, int);
-  float Clamp(float, float, float);
+  constexpr int Floor(float);
+  constexpr int Ceil(float);
+  constexpr bool Fzero(float);
+  constexpr bool FNotZero(float);
+  constexpr bool FlessZero(float);
+  constexpr bool Feq(float, float);
+  constexpr bool IsAbsFactorOfTwo(int);
+  constexpr int Clamp(int, int, int);
+  constexpr float Clamp(float, float, float);
   template<class T = float>
   float LeadToRange(const std::pair<T,T>& src, const std::pair<T,T>& dst, T val);
 
@@ -35,49 +35,49 @@ namespace math {
 
 // Math helpers implementation
 
-inline int math::Floor(float num)
+inline constexpr int math::Floor(float num)
 {
   return (int)(num);
 }
 
-inline int math::Ceil(float num)
+inline constexpr int math::Ceil(float num)
 {
   return (int)(num + 1.0f);
 }
 
-inline bool math::Fzero(float num)
+inline constexpr bool math::Fzero(float num)
 {
   return std::abs(num) < kEpsilon;
 }
 
-inline bool math::FNotZero(float num)
+inline constexpr bool math::FNotZero(float num)
 {
   return !(std::abs(num) < kEpsilon);
 }
 
-inline bool math::FlessZero(float num)
+inline constexpr bool math::FlessZero(float num)
 {
   return num < -kEpsilon;
 }
 
-inline bool math::Feq(float n1, float n2) 
+inline constexpr bool math::Feq(float n1, float n2) 
 { 
   return std::abs(n1-n2) < kEpsilon;
 }
 
-inline bool math::IsAbsFactorOfTwo(int num)
+inline constexpr bool math::IsAbsFactorOfTwo(int num)
 {
   int n = std::abs(num);
   return !(n & (n-1));
 }
 
-inline int math::Clamp(int val, int min, int max)
+inline constexpr int math::Clamp(int val, int min, int max)
 {
   int rem = val % max;
   return rem < 0 ? max + rem : min + rem;
 }
 
-inline float math::Clamp(float val, float min, float max)
+inline constexpr float math::Clamp(float val, float min, float max)
 {
   float rem = std::fmod(val, max);
   return rem < 0.0f ? max + rem : min + rem;

@@ -8,39 +8,49 @@
 #ifndef GM_TRIG_H
 #define GM_TRIG_H
 
-#include <vector>
+#include <array>
 #include <cmath>
 
 #include "constants.h"
 
 namespace anshub {
 
-class TrigTable
+//****************************************************************************
+// Precomputed LUT contains sin/cos angle values
+//****************************************************************************
+
+struct TrigTable
 {
-public:
-  TrigTable();
-  float Sin(float) const;
-  float Cos(float) const;
+  constexpr TrigTable();
+  constexpr float Sin(float) const;
+  constexpr float Cos(float) const;
+
 private:
-  std::vector<float> sine_;
-  std::vector<float> cosine_;
+  std::array<float, 361> sine_;
+  std::array<float, 361> cosine_;
 
 }; // class TrigTable
 
+//****************************************************************************
+// Helper functions
+//****************************************************************************
+
 namespace trig {
 
-  float Rad2deg(float);
-  float Deg2rad(float);
+  constexpr float Rad2deg(float);
+  constexpr float Deg2rad(float);
   float CalcOppositeCatet(float adjanced_catet, float theta, const TrigTable&);
   float CalcOppositeCatet(float adjanced_catet, float theta);
 
 } // namespace math
 
-// Member functions implementation
+//****************************************************************************
+// Inline member functions implementation
+//****************************************************************************
 
-inline TrigTable::TrigTable()
-  : sine_(361)
-  , cosine_(361)
+inline constexpr TrigTable::TrigTable()
+  : sine_{}
+  , cosine_{}
 {
   for (int i = 0; i < 361; ++i) 
   {
@@ -56,7 +66,7 @@ inline TrigTable::TrigTable()
   cosine_[270] = 0;
 }
 
-inline float TrigTable::Sin(float theta) const
+inline constexpr float TrigTable::Sin(float theta) const
 {
   if (theta > 360.0f || theta < -360.0f)
     theta = fmodf(theta, 360.0f);
@@ -69,7 +79,7 @@ inline float TrigTable::Sin(float theta) const
   );
 }
 
-inline float TrigTable::Cos(float theta) const
+inline constexpr float TrigTable::Cos(float theta) const
 {
   if (theta > 360.0f || theta < -360.0f)
     theta = fmodf(theta, 360.0f);
@@ -82,14 +92,16 @@ inline float TrigTable::Cos(float theta) const
   );
 }
 
-// Trigonometry helpers implementation
+//****************************************************************************
+// Inline trigonometry helpers implementation
+//****************************************************************************
 
-inline float trig::Deg2rad(float deg)
+inline constexpr float trig::Deg2rad(float deg)
 { 
   return deg * math::kPI / 180.0;
 }
 
-inline float trig::Rad2deg(float rad)
+inline constexpr float trig::Rad2deg(float rad)
 {
   return rad * 180.0 / math::kPI;
 }
