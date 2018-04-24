@@ -19,8 +19,8 @@ b dbg_show_info     0
 
 f cam_dov           1.0
 f cam_fov           75.0
-v cam_pos           -81.0 153.0 245.0
-v cam_dir           358.0 492.0 0.0
+v cam_pos           -59.0 26.0 60.0
+v cam_dir           -3.5 119.0 0.0
 f cam_nearz         0.1
 f cam_farz          1200.0
 f cam_clarity       50.0
@@ -28,43 +28,24 @@ f cam_velocity      1.2
 f cam_fly_mode      0
 f cam_gravity       -0.05
 f cam_jump          0.0
-f cam_accel         0.08
+f cam_accel         0.04
 f cam_frict         0.7
-f cam_max_speed     2.5
-f cam_height        8.0
-f cam_speed_up      1.5
-
-# Player settings
-
-f pl_pitch_red      12.0
-f pl_pitch_vel      2.0
-f pl_pitch_min      -20.0
-f pl_pitch_max      20.0
-b pl_pitch_lock     0
-
-f pl_roll_red       12.0
-f pl_roll_vel       2.0
-f pl_roll_min       -10.0
-f pl_roll_max       10.0
-b pl_roll_lock      0
-
-f pl_yaw_red       1.0
-f pl_yaw_vel       2.0
-f pl_yaw_min       -360.0
-f pl_yaw_max       360.0
-b pl_yaw_lock      0
+f cam_max_speed     0.1
+f cam_height        0.1
+f cam_speed_up      4.0
 
 # Terrain settings
 
-f ter_chunk         129
-f ter_divider       1
-a ter_detaliz       0 0 0 200 300 500 900
+f ter_chunk         33
+f ter_divider       4
+a ter_detaliz       50 100 150 200 250
 f ter_shading       16
 s ter_sky           ../00_data/skyboxes/cube_skybox2.ply
 s ter_hm            levels/res/mountain_hm.bmp
 s ter_tx            levels/res/mountain_tx.bmp
 s ter_objs          levels/res/mountain_objs.bmp
-f ter_water_lvl     17.5
+f ter_water_lvl     -1000
+i ter_rain          0
 
 # Sound settings
 

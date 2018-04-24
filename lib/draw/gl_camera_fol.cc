@@ -75,23 +75,17 @@ void CameraFol::FollowFor(const GlObject& obj)
   // Apply ranges (total dir_ in range -359.9 +359.9)
 
   vector::InUpperBound(dir_, 360.0f);
-  if (pitch_.low_ != pitch_.high_)
-  {
-    dir_.x = std::max(pitch_.low_, dir_.x);
-    dir_.x = std::min(pitch_.high_, dir_.x);
-  }
-  if (roll_.low_ != roll_.high_)
-  {
-    dir_.z = std::max(roll_.low_, dir_.z);
-    dir_.z = std::min(roll_.high_, dir_.z);
-  }
-  if (yaw_.low_ != yaw_.high_)
-  {
-    dir_.y = std::max(yaw_.low_, dir_.y);
-    dir_.y = std::min(yaw_.high_, dir_.y);
-  }
 
-  // Apply vrp changes
+  // Make range dir 
+
+  if (pitch_.low_ != pitch_.high_)
+    dir_.x = (dir_.x / 90.0f) * pitch_.high_;    
+  if (roll_.low_ != roll_.high_)
+    dir_.z = (dir_.z / 90.0f) * roll_.high_;    
+  if (yaw_.low_ != yaw_.high_)
+    dir_.y = (dir_.y / 90.0f) * yaw_.high_;    
+
+  // Apply vrp
 
   vrp_ += diff_vrp;
 

@@ -23,7 +23,7 @@ v cam_dir           -2.0 7.0 0.0
 f cam_nearz          0.1
 f cam_farz          600.0
 f cam_clarity       5.0
-f cam_fly_mode      0
+f cam_fly_mode      1
 f cam_gravity       -0.07
 f cam_jump          1.0
 f cam_accel         0.01
@@ -34,36 +34,33 @@ f cam_mouse_sens    0.2
 
 # Terrain settings
 
-f ter_chunk         17
+f ter_chunk         33
 f ter_divider       4
-a ter_detaliz       50.0 80.0 120.0
+a ter_detaliz       50 100 200 300 400
 f ter_shading       16
-s ter_sky           ../00_data/skyboxes/cube_skybox.ply
-s ter_hm            ../00_data/terrains/map_hm_3.bmp
-s ter_tx            ../00_data/terrains/map_tx_3.bmp
-f ter_water_lvl     17.8
+s ter_sky           ../00_data/skyboxes/cube_skybox2.ply
+s ter_hm            ../16_mountain_race/levels/res/mountain_hm.bmp
+s ter_tx            ../16_mountain_race/levels/res/mountain_tx.bmp
+f ter_water_lvl     17.5
 
 # Sound settings
 
-s snd_ambient       ../00_data/sounds/night.ogg
+s snd_ambient       ../00_data/sounds/mountain.ogg
 s snd_steps         ../00_data/sounds/steps.ogg
 s snd_jump          ../00_data/sounds/jump.ogg
 s snd_landing       ../00_data/sounds/landing.ogg
 
 # Lights settings
 
-f light_amb_int     0.05
-f light_inf_int     0.05
-f light_pnt_int     8.8
-f light_sky_int     0.3
+f light_amb_int     0.2
+f light_inf_int     0.7
+f light_pnt_int     0.0
+f light_sky_int     0.7
 
-s light_amb_color   blue    
-s light_inf_color   blue
-s light_pnt_color   yellow
+s light_amb_color   white
+s light_inf_color   white
+s light_pnt_color   white
 s light_sky_color   white
-
-v light_pnt_dir     0.0  0.0  1.0     # old - 0.0  0.0  1.0
-v light_pnt_pos     0.0  7.0  10.0    # old - 0.0 13.0 36.0
 
 # Debug settings
 

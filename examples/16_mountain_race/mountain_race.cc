@@ -1,5 +1,5 @@
 // *************************************************************
-// File:    fast_race.cc
+// File:    mountain_race.cc
 // Descr:   simple terrain game
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
@@ -27,11 +27,13 @@
 #include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_z_buffer.h"
+#include "lib/draw/gl_debug_draw.h"
 
 #include "lib/extras/skybox.h"
 #include "lib/extras/terrain.h"
 #include "lib/extras/nature.h"
 #include "lib/extras/water.h"
+#include "lib/extras/rain.h"
 #include "lib/extras/player.h"
 #include "lib/extras/cameraman.h"
 
@@ -74,10 +76,6 @@ int main(int argc, const char** argv)
   const int kWinWidth {cfg.Get<int>("win_w")};
   const int kWinHeight {cfg.Get<int>("win_h")};
   const bool kDebugShow {cfg.Get<bool>("dbg_show_info")};  
-
-  FColor kWhite  {255.0f, 255.0f, 255.0f};
-  FColor kYellow {255.0f, 255.0f, 0.0f};
-  FColor kBlue   {0.0f, 0.0f, 255.0f};
   
   // Window
   
@@ -138,12 +136,11 @@ int main(int argc, const char** argv)
   camman.SetState(CamState::FLY_MODE, true);
   camman.SetState(CamState::ON_GROUND, false);
 
+  camman.SetValue(CamValue::MOUSE_SENSITIVE, 0.5f);
   camman.SetValue(CamValue::OPERATOR_HEIGHT, cfg.Get<float>("cam_height"));
   camman.SetValue(CamValue::SPEED_UP, cfg.Get<float>("cam_speed_up"));
 
-  Dynamics dyn_camera {
-    cfg.Get<float>("cam_accel"),
-    cfg.Get<float>("cam_frict"),
+  Dynamics dyn_camera { 0.001, 0.9,
     cfg.Get<float>("cam_gravity"),
     cfg.Get<float>("cam_max_speed")
   };
@@ -152,7 +149,7 @@ int main(int argc, const char** argv)
   // Create jeep model
 
   const char*  kFname     {"../00_data/objects/jeep_front.ply"};
-  const Vector kScale     {9.0f, 9.0f, 9.0f};
+  const Vector kScale     {2.0f, 2.0f, 2.0f};
   const Vector kPosition  {cfg.Get<Vector>("cam_pos")};
   const Vector kRotate    {-90.0f, 0.0f, 0.0f};
   
@@ -162,7 +159,7 @@ int main(int argc, const char** argv)
 
   // Create player entity
 
-  const float  kPlayerHeight {5.0f};
+  const float  kPlayerHeight {2.0f};
   const Vector kPlayerDir    {0.0f, 125.0f, 0.0f};
   const Vector kPlayerPos    {cfg.Get<Vector>("cam_pos")};
   Player jeep (std::move(model), kPlayerHeight, kPlayerPos, kPlayerDir, trig);
@@ -180,21 +177,17 @@ int main(int argc, const char** argv)
   jeep.SetState(ObjState::FLY_MODE, false);
   jeep.SetValue(ObjValue::SPEED_UP, cfg.Get<float>("cam_speed_up"));  
 
-  jeep.SetDirection(
-    Player::PITCH, cfg.Get<float>("pl_pitch_red"),
-    cfg.Get<float>("pl_pitch_vel"), cfg.Get<float>("pl_pitch_min"),
-    cfg.Get<float>("pl_pitch_max"), cfg.Get<bool>("pl_pitch_lock")
-  );
-  jeep.SetDirection(
-    Player::ROLL, cfg.Get<float>("pl_roll_red"),
-    cfg.Get<float>("pl_roll_vel"), cfg.Get<float>("pl_roll_min"),
-    cfg.Get<float>("pl_roll_max"), cfg.Get<bool>("pl_roll_lock")
-  );
-  jeep.SetDirection(
-    Player::YAW, cfg.Get<float>("pl_yaw_red"),
-    cfg.Get<float>("pl_yaw_vel"), cfg.Get<float>("pl_yaw_min"),
-    cfg.Get<float>("pl_yaw_max"), cfg.Get<bool>("pl_yaw_lock")
-  );
+  // Player moving settings:
+  // - amplitude of directions not reduced (1.0f)
+  // - pitch angles -90..+90.. would be in range -45..+45 degrees
+  // - roll angles -90..+90.. would be in range -30..+30 degrees
+  // - yaw angles -90..+90.. would be in range -90..+90 degrees
+  // - yaw velocity more than other since we rotate it by hands
+
+  jeep.SetDirection(Player::PITCH, 1.0f, 4.0f, -45.0f, 45.0f, false);
+  jeep.SetDirection(Player::ROLL, 1.0f, 4.0f, -30.0f, 30.0f, false);
+  jeep.SetDirection(Player::YAW, 1.0f, 6.0f, 0.0f, 0.0f, false);
+
   Dynamics dyn_player {
     cfg.Get<float>("cam_accel"),
     cfg.Get<float>("cam_frict"),
@@ -206,13 +199,19 @@ int main(int argc, const char** argv)
   // Set initial camera position (by using orient_z vector)
 
   const Vector kDirOffset {6.5f, 0.0f, 0.0f};
-  const Vector kVrpOffset {0.0f, 2.5f, -3.0f};
+  const Vector kVrpOffset {0.0f, 0.5f, -0.6f};
+
+  // Follow camera settings:
+  // - roll amplitude > than jeep for 20%, follow any angle
+  // - pitch amplitude < than jeep for 20%, follow any angle
+  // - yaw amplitude equal jeep angle
+  // - velocity of directions are 2.0f
 
   camman.UseCamera(CamType::Follow::type);
   auto& follow_cam = camman.GetCamera(CamType::Follow::type);
-  follow_cam.SetDirection(GlCamera::PITCH, 1.2f, 0.0f, -30.0f, 30.0f, false);
-  follow_cam.SetDirection(GlCamera::ROLL, 1.2f, 0.0f, -10.0f, 10.0f, false);
-  follow_cam.SetDirection(GlCamera::YAW, 1.0f, 0.0f, 0.0f, 0.0f, false);
+  follow_cam.SetDirection(GlCamera::PITCH, 1.2f, 2.0f, 0.0f, 0.0f, false);
+  follow_cam.SetDirection(GlCamera::ROLL, 0.8f, 2.0f, 0.0f, 0.0f, false);
+  follow_cam.SetDirection(GlCamera::YAW, 1.0f, 2.0f,  0.0f, 0.0f, false);
   follow_cam.FollowFor(jeep, kVrpOffset, kDirOffset);
 
   // Create skybox
@@ -238,26 +237,30 @@ int main(int argc, const char** argv)
 
   // Create nature objects
   
-
-  Nature nature (cfg.Get<std::string>("ter_objs"), terrain, trig);
+  Nature nature (cfg.Get<std::string>("ter_objs"), 0.5f, terrain, trig);
   Nature::ObjsList<NatureTypes> nature_list {
     { NatureTypes::TREE_T1, "../00_data/nature/tree_type_2.ply"},
     { NatureTypes::ROCK_T1, "../00_data/nature/rock_type_1.ply"},
     { NatureTypes::GRASS_T1, "../00_data/nature/grass_type_2.ply"}
   };
   nature.SetObjects<NatureTypes>(nature_list);
-
   nature.RecognizeObjects();
   auto& nature_objs = nature.GetObjects();
 
   // Make water
   
   Water water {
-    terrain.GetHmWidth() * 2,
+    terrain.GetHmWidth(),
     cfg.Get<float>("ter_water_lvl"),
     color::fOceanBlue,
     Shading::GOURAUD
   };
+
+  // Make rain
+
+  Rain rain {cfg.Get<int>("ter_rain"), 15.0f};
+  for (auto& blob : rain.GetObjects())
+    object::Scale(blob, {2.0f, 1.0f, 2.0f});
 
   // Create render context
 
@@ -365,6 +368,7 @@ int main(int argc, const char** argv)
     object::ResetAttributes(skybox);
     hidden = object::RemoveHiddenSurfaces(skybox, cam);
     light::Object(skybox, lights_sky);
+    object::World2Camera(skybox, cam, trig);
 
     // Process water
 
@@ -394,6 +398,24 @@ int main(int argc, const char** argv)
       obj_culled += object::CullY(obj, cam, trig);
     }
 
+    // Process rain
+
+    rain.Process(jeep.world_pos_);
+    auto& blobs = rain.GetObjects();
+
+    for (auto& blob : blobs)
+    {
+      blob.SetCoords(Coords::TRANS);      
+      blob.CopyCoords(Coords::LOCAL, Coords::TRANS);
+      object::ResetAttributes(blob);
+      object::ComputeFaceNormals(blob, true);
+      object::RemoveHiddenSurfaces(blob, cam);
+      object::Translate(blob, blob.world_pos_);
+      object::CullZ(blob, cam, trig);
+      object::CullX(blob, cam, trig);
+      object::CullY(blob, cam, trig);
+    } 
+
     // Cull terrain chunks by world pos
 
     for (auto& chunk : terrain_chunks)
@@ -421,10 +443,6 @@ int main(int argc, const char** argv)
       object::VerticesNormals2Camera(chunk, cam, trig);
     }
 
-    // Go to camera coords for light and skybox (exclude terrain)
-
-    object::World2Camera(skybox, cam, trig);
-
     // Make triangles from terrain
 
     tris_base.resize(0);
@@ -435,6 +453,11 @@ int main(int argc, const char** argv)
     {
       if (chunk.active_)
         triangles::AddFromObject(chunk, tris_base);
+    }
+    for (auto& blob : blobs)
+    {
+      if (blob.active_)
+        triangles::AddFromObject(blob, tris_base);
     }
     triangles::AddFromObject(water, tris_base);
     triangles::AddFromObjects(nature_objs, tris_base);
@@ -473,8 +496,8 @@ int main(int argc, const char** argv)
 
     render_ctx.is_wired_ = camman.GetState(CamState::WIRED_MODE);
     render::Context(tris_ptrs, render_ctx);
-    fps.Count();
 
+    fps.Count();
     win.Render();
     timer.Wait();
 

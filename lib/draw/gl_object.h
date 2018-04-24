@@ -141,6 +141,11 @@ namespace load_helpers {
 //***********************************************************************
 
 namespace object {
+
+  // Make routines
+
+  GlObject Make(const std::string&, const TrigTable&,
+    cVector& scale, cVector& world_pos, cVector& rotate);
   
   // Object attributes manipilation
 

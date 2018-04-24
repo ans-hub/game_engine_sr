@@ -379,6 +379,19 @@ V_Uint load_helpers::ComputeMipmapSquares(const V_Bitmap& arr)
   return squares;
 }
 
+// Makes object
+
+GlObject object::Make(
+  const std::string& fname, const TrigTable& trig,
+  cVector& scale, cVector& world_pos, cVector& rotate
+)
+{
+  GlObject obj(fname, world_pos);
+  object::Scale(obj, scale);
+  object::Rotate(obj, rotate, trig);
+  return obj;
+}
+
 // Reset attributes of object and triangles (before each frame)
 
 void object::ResetAttributes(GlObject& obj)

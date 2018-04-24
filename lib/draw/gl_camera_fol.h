@@ -9,6 +9,7 @@
 #define GC_GL_CAMERA_FOLLOW_H
 
 #include <limits>
+#include <numeric>
 
 #include "lib/draw/gl_camera.h"
 #include "lib/draw/gl_object.h"

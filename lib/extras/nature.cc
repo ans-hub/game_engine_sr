@@ -12,11 +12,12 @@ namespace anshub {
 // Load map of nature objects
 
 Nature::Nature(
-  const std::string& map_fname, const Terrain& terrain, TrigTable& trig)
+  const std::string& map_fname, float scale, const Terrain& terrain, TrigTable& trig)
   : map_{map_fname.c_str()}
   , terrain_{terrain}
   , objects_{}
   , fnames_{}
+  , scale_{scale}
   , trig_{trig}
 {
   rand_toolkit::start_rand();
@@ -56,8 +57,8 @@ void Nature::RecognizeObjects()
         
         // Initial scale
 
-        float scale {rand_toolkit::get_rand(1.0f, 1.7f)};   // todo: !!! bad
-        object::Scale(obj, {scale, scale, scale});
+        float scale {rand_toolkit::get_rand(scale-(scale/2.0f), scale+(scale/2.0f))};
+        object::Scale(obj, {scale_, scale_, scale_});
 
         // Initial rotate
 

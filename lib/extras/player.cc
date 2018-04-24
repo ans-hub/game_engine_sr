@@ -59,10 +59,24 @@ void Player::ProcessInput(const BaseWindow& win)
   if (IsButtonPressed(win, Btn::LOOK_DOWN))
     dyn_.RotatePitch(pitch_.vel_);
 
+  if (IsButtonPressed(win, Btn::ROLL_LEFT))
+    dyn_.RotateRoll(-roll_.vel_);
+
+  if (IsButtonPressed(win, Btn::ROLL_RIGHT))
+    dyn_.RotateRoll(roll_.vel_);
+
+  if (IsButtonPressed(win, Btn::MOVE_UP))
+    dyn_.MoveUp();
+
+  if (IsButtonPressed(win, Btn::MOVE_DOWN))
+    dyn_.MoveDown();
+
   // Finish input
 
-  dyn_.ProcessVelocity(false, GetState(ObjState::ON_GROUND));
+  dyn_.ProcessVelocity(
+    GetState(ObjState::FLY_MODE), GetState(ObjState::ON_GROUND));
   world_pos_ += dyn_.GetVelocity();
+  
   dyn_.ProcessDirVelocity();
   dir_ += dyn_.GetDirVelocity();
 
@@ -119,11 +133,8 @@ void Player::ProcessGroundDirection(const Terrain& terrain)
     {
       auto& or_z = v_orient_z_;
       or_z.Normalize();
-
       auto angle_x = (90.0f - vector::AngleBetween(normal, or_z, true));
       dir_.x += (angle_x / pitch_.reduce_);
-      dir_.x = std::max(pitch_.low_, dir_.x);
-      dir_.x = std::min(pitch_.high_, dir_.x);
     }
 
     // Process roll acceleration
@@ -132,12 +143,21 @@ void Player::ProcessGroundDirection(const Terrain& terrain)
     {
       auto& or_x = v_orient_x_;
       or_x.Normalize();
-
       auto angle_z = 90.0f - vector::AngleBetween(normal, or_x, true);
       dir_.z += (angle_z / roll_.reduce_);
-      dir_.z = std::max(roll_.low_, dir_.z);
-      dir_.z = std::min(roll_.high_, dir_.z);
     }
+
+    // Apply ranges (total dir_ in range -359.9 +359.9)    
+    
+    vector::InUpperBound(dir_, 360.0f);
+
+    // Make range dir 
+    
+    if (pitch_.low_ != pitch_.high_)
+      dir_.x = (dir_.x / 90.0f) * pitch_.high_;
+
+    if (roll_.low_ != roll_.high_)
+      dir_.z = (dir_.z / 90.0f) * roll_.high_; 
   }
 }
 
@@ -146,27 +166,23 @@ void Player::ProcessGroundDirection(const Terrain& terrain)
 
 void Player::ProcessPlayerOrientation()
 {
-  auto& or_x = v_orient_x_;
-  auto& or_y = v_orient_y_;
-  auto& or_z = v_orient_z_;
-
   // Restore original orientation (always as origin)
   
-  or_x = {1.0f, 0.0f, 0.0f};
-  or_y = {0.0f, 1.0f, 0.0f};
-  or_z = {0.0f, 0.0f, 1.0f};
+  v_orient_x_ = {1.0f, 0.0f, 0.0f};
+  v_orient_y_ = {0.0f, 1.0f, 0.0f};
+  v_orient_z_ = {0.0f, 0.0f, 1.0f};
 
   // Rotate orientation vectors by given direction in XYZ seq
 
-  coords::RotatePitch(or_x, dir_.x, trig_);
-  coords::RotateYaw(or_x, dir_.y, trig_);
-  coords::RotateRoll(or_x, dir_.z, trig_);
-  coords::RotatePitch(or_y, dir_.x, trig_);
-  coords::RotateYaw(or_y, dir_.y, trig_);
-  coords::RotateRoll(or_y, dir_.z, trig_);
-  coords::RotatePitch(or_z, dir_.x, trig_);
-  coords::RotateYaw(or_z, dir_.y, trig_);
-  coords::RotateRoll(or_z, dir_.z, trig_);
+  coords::RotatePitch(v_orient_x_, dir_.x, trig_);
+  coords::RotateYaw(v_orient_x_, dir_.y, trig_);
+  coords::RotateRoll(v_orient_x_, dir_.z, trig_);
+  coords::RotatePitch(v_orient_y_, dir_.x, trig_);
+  coords::RotateYaw(v_orient_y_, dir_.y, trig_);
+  coords::RotateRoll(v_orient_y_, dir_.z, trig_);
+  coords::RotatePitch(v_orient_z_, dir_.x, trig_);
+  coords::RotateYaw(v_orient_z_, dir_.y, trig_);
+  coords::RotateRoll(v_orient_z_, dir_.z, trig_);
 }
 
 // Rotate player coordinates by the XYZ (!) sequence. Note that we rotate

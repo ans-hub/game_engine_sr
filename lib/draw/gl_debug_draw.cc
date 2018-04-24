@@ -40,6 +40,9 @@ void debug_render::DrawLine(Vector begin, Vector end, cDebugCtx& ctx)
   coords::Camera2Persp(end, ctx.cam_.dov_, ctx.cam_.ar_);
   coords::Persp2Screen(end, ctx.cam_.wov_, ctx.cam_.scr_w_, ctx.cam_.scr_h_);
   
+  if (begin.z <= ctx.cam_.z_near_ || end.z <= ctx.cam_.z_near_)
+    return;
+    
   if (segment2d::Clip(
     0, 0, ctx.cam_.scr_w_, ctx.cam_.scr_h_, begin.x, begin.y, end.x, end.y)
   )

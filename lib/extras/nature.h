@@ -50,7 +50,7 @@ struct Nature
   using cTerrain = const Terrain;
   template<class T> using ObjsList = std::map<T, std::string>;
 
-  explicit Nature(const std::string& map_fname, const Terrain&, TrigTable&);
+  Nature(const std::string& map_fname, float scale, const Terrain&, TrigTable&);
 
   template<class Enum>
   void  SetObjects(const std::map<Enum, std::string>&);
@@ -63,6 +63,7 @@ private:
   cTerrain&   terrain_;  
   V_GlObject  objects_;
   MapString   fnames_;
+  float       scale_;
   TrigTable&  trig_;
 
 }; // struct Nature

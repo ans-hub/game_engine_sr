@@ -23,9 +23,11 @@
 #include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_z_buffer.h"
+#include "lib/draw/gl_debug_draw.h"
 #include "lib/extras/skybox.h"
 #include "lib/extras/terrain.h"
 #include "lib/extras/birds.h"
+#include "lib/extras/rain.h"
 #include "lib/extras/water.h"
 #include "lib/extras/cameraman.h"
 #include "lib/system/timer.h"
@@ -417,8 +419,8 @@ int main(int argc, const char** argv)
     // Draw triangles
 
     render::Context(tris_ptrs, render_ctx);
-    fps.Count();
 
+    fps.Count();
     win.Render();
     timer.Wait();
     

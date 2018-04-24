@@ -8,6 +8,8 @@
 #ifndef GC_PLAYER_ENTITY_H
 #define GC_PLAYER_ENTITY_H
 
+#include <list>
+
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_aliases.h"
 #include "lib/draw/gl_camdir.h"
@@ -30,6 +32,8 @@ enum class ObjAction
   TURN_LEFT,    TURN_RIGHT,
   MOVE_FORWARD, MOVE_BACKWARD,
   LOOK_UP,      LOOK_DOWN,
+  ROLL_LEFT,    ROLL_RIGHT,
+  MOVE_UP,      MOVE_DOWN,
   SPEED_UP,     SLOW_DOWN,
   _count
 
@@ -70,7 +74,8 @@ struct Player
 
   template<class ... Args>
   void SetDirection(DirectionType, Args&&...);
-
+  void ProcessPlayerOrientation();
+  void ProcessPlayerRotating();
 private:
   Dynamics  dyn_;
   CamDir    yaw_;
@@ -78,11 +83,12 @@ private:
   CamDir    roll_;
   TrigTable trig_;
 
+  std::list<float> heights_;  
+
   void SetGroundPosition(float ypos);
   void ProcessGroundPosition(const Terrain&);
   void ProcessGroundDirection(const Terrain&);
-  void ProcessPlayerOrientation();
-  void ProcessPlayerRotating();
+
 
 }; // struct Player
 
