@@ -9,19 +9,23 @@
 
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
+
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
+
 #include "lib/math/vector.h"
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
+
 #include "lib/draw/gl_text.h"
-#include "lib/draw/gl_buffer.h"
+#include "lib/draw/gl_scr_buffer.h"
 #include "lib/draw/gl_z_buffer.h"
 #include "lib/draw/gl_lights.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_camera.h"
 #include "lib/draw/gl_draw.h"
+
 #include "lib/math/matrix_rotate_eul.h"
 #include "lib/math/matrix_rotate_uvn.h"
 #include "lib/math/matrix_persp.h"
@@ -131,9 +135,9 @@ int main(int argc, const char** argv)
 
   // Other stuff
 
-  Buffer  buf (kWidth, kHeight, color::Black);
-  ZBuffer zbuf (kWidth, kHeight);
-  GlText  text {win};
+  ScrBuffer buf (kWidth, kHeight, color::Black);
+  ZBuffer   zbuf (kWidth, kHeight);
+  GlText    text {win};
 
   // Make triangles arrays
 

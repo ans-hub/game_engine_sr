@@ -153,8 +153,9 @@ int main(int argc, const char** argv)
 
   // Other stuff
 
-  Buffer  buf (kWidth, kHeight, 0);
-  GlText  text {win};
+  ScrBuffer buf (kWidth, kHeight, 0);
+  GlText text {win};
+  
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};
   Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
   int     nfo_culled;                     // shown how much objects is culled

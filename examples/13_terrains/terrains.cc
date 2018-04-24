@@ -14,28 +14,32 @@
 #include "lib/audio/audio_fx.h"
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
+
 #include "lib/draw/gl_render_ctx.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_triangle.h"
 #include "lib/draw/fx_colors.h"
 #include "lib/draw/gl_lights.h"
-#include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_z_buffer.h"
 #include "lib/draw/gl_debug_draw.h"
+
 #include "lib/extras/skybox.h"
 #include "lib/extras/terrain.h"
 #include "lib/extras/birds.h"
 #include "lib/extras/rain.h"
 #include "lib/extras/water.h"
 #include "lib/extras/cameraman.h"
+
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
+
 #include "lib/math/trig.h"
 #include "lib/math/matrix_rotate_uvn.h"
 #include "lib/math/matrix_trans.h"
+
 #include "lib/data/cfg_loader.h"
 
 #include "../helpers.h"

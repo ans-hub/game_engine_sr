@@ -15,7 +15,7 @@
 #include "lib/window/gl_window.h"
 #include "lib/system/rand_toolkit.h"
 #include "lib/system/timer.h"
-#include "lib/draw/gl_buffer.h"
+#include "lib/draw/gl_scr_buffer.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
 #include "lib/draw/fx_colors.h"
@@ -59,7 +59,7 @@ private:
 
   Level&    level_;   
   Timer     timer_;
-  Buffer    buffer_;
+  ScrBuffer buffer_;
   GlText    text_;
   
   // Data members to store info

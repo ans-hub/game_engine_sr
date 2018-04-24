@@ -131,8 +131,8 @@ int main(int argc, const char** argv)
 
   // Other stuff
 
-  Buffer  buf (kWidth, kHeight, color::Black);
-  GlText  text {win};
+  ScrBuffer buf (kWidth, kHeight, color::Black);
+  GlText    text {win};
 
   do {
     timer.Start();

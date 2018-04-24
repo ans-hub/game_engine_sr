@@ -11,17 +11,21 @@
 
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
+
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_triangle.h"
 #include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_buffer.h"
+#include "lib/draw/gl_scr_buffer.h"
 #include "lib/draw/gl_z_buffer.h"
-#include "lib/extras/skybox.h"
+
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
+
 #include "lib/math/trig.h"
+
+#include "lib/extras/skybox.h"
 
 #include "../helpers.h"
 
@@ -86,8 +90,8 @@ int main(int argc, const char** argv)
   
   // Other stuff
 
-  Buffer  buf (kWinWidth, kWinHeight, color::Black);
-  ZBuffer zbuf (kWinWidth, kWinHeight);
+  ScrBuffer buf (kWinWidth, kWinHeight, color::Black);
+  ZBuffer   zbuf (kWinWidth, kWinHeight);
 
   // Prepare horizont cube
 

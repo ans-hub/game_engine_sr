@@ -9,17 +9,21 @@
 
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
+
 #include "lib/system/timer.h"
 #include "lib/system/fps_counter.h"
 #include "lib/system/rand_toolkit.h"
+
 #include "lib/math/vector.h"
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
+
 #include "lib/draw/gl_draw.h"
 #include "lib/draw/gl_text.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_camera.h"
+
 #include "lib/math/matrix_rotate_eul.h"
 #include "lib/math/matrix_rotate_uvn.h"
 #include "lib/math/matrix_persp.h"
@@ -27,6 +31,7 @@
 #include "lib/math/matrix_view.h"
 #include "lib/math/matrix_scale.h"
 #include "lib/math/matrix_camera.h"
+
 #include "lib/extras/cameraman.h"
 
 #include "../helpers.h"
@@ -74,9 +79,9 @@ int main()
   
   // Other stuff
 
-  Buffer  buf (kWidth, kHeight, color::Black);
-  GlText  text {win};
-  Pos     mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
+  ScrBuffer buf (kWidth, kHeight, color::Black);
+  GlText    text {win};
+  Pos       mpos_prev {win.ReadMousePos()}; // to calc mouse pos between frames
 
   do {
     timer.Start();

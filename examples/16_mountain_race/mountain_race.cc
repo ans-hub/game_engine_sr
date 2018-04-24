@@ -24,7 +24,6 @@
 #include "lib/draw/gl_triangle.h"
 #include "lib/draw/fx_colors.h"
 #include "lib/draw/gl_lights.h"
-#include "lib/draw/gl_buffer.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/gl_z_buffer.h"
 #include "lib/draw/gl_debug_draw.h"
