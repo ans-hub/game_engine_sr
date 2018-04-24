@@ -49,9 +49,9 @@ struct LightPoint : public LightSource<PointArgs>
   void   SetDirection(cVector&);
 
 private:
-  Vector  position_;          // direction of light source
-  Vector  direction_;         // direction of light source
-  Vector  position_copy_;     // used to recover direction after frame 
+  Vector  position_;          // position of light source
+  Vector  direction_;         // direction of light source 
+  Vector  position_copy_;     // used to recover position after frame 
   Vector  direction_copy_;    // used to recover direction after frame 
   float   kc_;                // constant attenuation
   float   kl_;                // linear attenuation
