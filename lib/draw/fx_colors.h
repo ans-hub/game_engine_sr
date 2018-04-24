@@ -34,14 +34,14 @@ struct Color
     (std::is_unsigned<T>::value && std::is_integral<T>::value),
     "Color<T> - T should be float or unsigned int"
   );
-  constexpr Color();
-  constexpr Color(T r, T g, T b);
-  constexpr Color(T r, T g, T b, float a);
-  constexpr explicit Color(uint);
+  constexpr Color() noexcept;
+  constexpr Color(T r, T g, T b) noexcept;
+  constexpr Color(T r, T g, T b, float a) noexcept;
+  constexpr explicit Color(uint) noexcept;
 
-  uint  GetARGB() const;
-  void  Modulate(const Color&);
-  void  Clamp();
+  uint GetARGB() const;
+  void Modulate(const Color&);
+  void Clamp();
 
   bool   operator==(const Color<T>& rhs) const;
   bool   operator!=(const Color<T>& rhs) const;
@@ -130,7 +130,7 @@ namespace color {
 // Default Color constructor
 
 template<class T>
-inline constexpr Color<T>::Color()
+inline constexpr Color<T>::Color() noexcept
   : r_{0}
   , g_{0}
   , b_{0}
@@ -140,7 +140,7 @@ inline constexpr Color<T>::Color()
 // Constructs Color with given color components (using alpha)
 
 template<class T>
-inline constexpr Color<T>::Color(T cr, T cg, T cb, float ca)
+inline constexpr Color<T>::Color(T cr, T cg, T cb, float ca) noexcept
   : r_{static_cast<T>(cr)}
   , g_{static_cast<T>(cg)}
   , b_{static_cast<T>(cb)}
@@ -150,7 +150,7 @@ inline constexpr Color<T>::Color(T cr, T cg, T cb, float ca)
 // Constructs Color with given color components (using alpha)
 
 template<class T>
-inline constexpr Color<T>::Color(T cr, T cg, T cb)
+inline constexpr Color<T>::Color(T cr, T cg, T cb) noexcept
   : r_{static_cast<T>(cr)}
   , g_{static_cast<T>(cg)}
   , b_{static_cast<T>(cb)}
@@ -160,7 +160,7 @@ inline constexpr Color<T>::Color(T cr, T cg, T cb)
 // Constructs Color with unsigned represent of color
 
 template<class T>
-inline constexpr Color<T>::Color(unsigned int c)
+inline constexpr Color<T>::Color(unsigned int c) noexcept
   : r_{static_cast<T>((c >> 8) & 0xff)}
   , g_{static_cast<T>((c >> 16) & 0xff)}
   , b_{static_cast<T>((c >> 24) & 0xff)}
