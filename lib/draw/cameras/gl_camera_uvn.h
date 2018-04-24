@@ -10,18 +10,19 @@
 
 #include <limits>
 
-#include "lib/draw/gl_camera.h"
 #include "lib/draw/gl_coords.h"
+
+#include "lib/draw/cameras/gl_camera.h"
 
 #include "lib/math/trig.h"
 #include "lib/math/vector.h"
 #include "lib/math/matrix.h"
-#include "lib/math/matrix_rotate_uvn.h"
+#include "lib/math/matrixes/mx_rotate_uvn.h"
 
 namespace anshub {
 
 //***************************************************************************
-// UVN CAMERA CONSTANTS
+// Represents UVN-type camera
 //***************************************************************************
 
 namespace camera_const {
@@ -32,15 +33,9 @@ namespace camera_const {
 
 } // namespace camera_const
 
-//***************************************************************************
-// UVN CAMERA INTERFACE
-//***************************************************************************
-
 struct CameraUvn : public GlCamera
 {
-  // Helps to make soft rotation of camera`s gimbal while LookAt()
-
-  struct Gimbal
+  struct Gimbal     // Helps to make soft rotation of camera while LookAt()
   {
     Gimbal()
     : steps_{1}
@@ -81,7 +76,7 @@ private:
 }; // struct CameraUvn
 
 //***************************************************************************
-// UVN CAMERA HELPERS
+// UVN-camera helpers
 //***************************************************************************
 
 namespace camera_helpers {

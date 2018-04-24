@@ -11,10 +11,11 @@
 #include "lib/draw/gl_enums.h"
 #include "lib/draw/gl_aliases.h"
 #include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_camera.h"
 #include "lib/draw/gl_face.h"
 #include "lib/draw/gl_vertex.h"
 #include "lib/draw/gl_object.h"
+
+#include "lib/draw/cameras/gl_camera.h"
 
 #include "lib/data/bmp_loader.h"
 
@@ -25,7 +26,7 @@
 namespace anshub {
 
 //***********************************************************************
-// Represents triangle struct
+// Represents drawable triangle in engine
 //***********************************************************************
 
 struct Triangle

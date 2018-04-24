@@ -1,27 +1,22 @@
 // *************************************************************
-// File:    gl_light_inf.cc
+// File:    infinite.cc
 // Descr:   represents infinite light source
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
-#include "gl_light_inf.h"
+#include "infinite.h"
 
 namespace anshub {
 
-LightInfinite::LightInfinite(cFColor& c, float i, cVector& dir)
-  : color_{c}
-  , intense_{i}
+LightInfinite::LightInfinite(cFColor& color, float intense, cVector& dir)
+  : LightSource{color, intense}
   , direction_{dir}
   , direction_copy_{}
 { 
   direction_.Normalize();
   direction_copy_ = direction_;  
-  math::Clamp(intense_, 0.0f, 1.0f);  
 }
-
-LightInfinite::LightInfinite(cFColor&& c, float i, cVector&& dir)
-  : LightInfinite(c, i, dir) { }
 
 void LightInfinite::World2Camera(const GlCamera& cam, const TrigTable& trig)
 {
@@ -33,12 +28,12 @@ void LightInfinite::World2Camera(const GlCamera& cam, const TrigTable& trig)
   direction_.Normalize();
 }
 
-FColor LightInfinite::Illuminate(cFColor& base_color, cVector& normal)
+FColor LightInfinite::Illuminate() const
 {
   auto dir = direction_ * (-1.0f);
-  auto prod = vector::DotProduct(dir, normal);
+  auto prod = vector::DotProduct(dir, *args_.normal_);
   if (prod < 0) prod = 0;
-  return (base_color * color_ * intense_ * prod) / 256.0f;
+  return (args_.base_color_ * color_ * intense_ * prod) / 256.0f;
 }
 
 void LightInfinite::SetDirection(cVector& dir)

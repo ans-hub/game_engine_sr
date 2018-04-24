@@ -1,26 +1,28 @@
-// *************************************************************
+// ******************************************************************
 // File:    gl_lights.h
-// Descr:   represents lights container with some features
+// Descr:   represents container of light sources with some features
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
-// *************************************************************
+// ******************************************************************
 
 #ifndef GL_LIGHTS_H
 #define GL_LIGHTS_H
 
-#include "fx_colors.h"
-#include "gl_aliases.h"
-#include "gl_object.h"
-#include "gl_triangle.h"
-#include "gl_light_amb.h"
-#include "gl_light_inf.h"
-#include "gl_light_point.h"
+#include "lights/ambient.h"
+#include "lights/infinite.h"
+#include "lights/point.h"
+
+#include "lib/draw/fx_colors.h"
+#include "lib/draw/gl_aliases.h"
+#include "lib/draw/gl_object.h"
+#include "lib/draw/gl_triangle.h"
+
 #include "lib/math/vector.h"
 
 namespace anshub {
 
 //****************************************************************************
-// General lighting structure
+// Container of light sources
 //****************************************************************************
 
 struct Lights

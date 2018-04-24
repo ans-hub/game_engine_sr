@@ -11,8 +11,9 @@
 #include <limits>
 #include <numeric>
 
-#include "lib/draw/gl_camera.h"
 #include "lib/draw/gl_object.h"
+
+#include "lib/draw/cameras/gl_camera.h"
 
 #include "lib/math/trig.h"
 #include "lib/math/vector.h"
@@ -21,7 +22,7 @@
 namespace anshub {
 
 //***************************************************************************
-// FOLLOW CAMERA INTERFACE
+// Represents camera with following capability
 //***************************************************************************
 
 struct CameraFol : public GlCamera

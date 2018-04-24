@@ -58,18 +58,30 @@ void light::Object(GlObject& obj, Lights& lights)
         face.normal_.Normalize();
 
       for (auto& light : lights.ambient_)
-        cc += light.Illuminate(bc);
+      {
+        light.args_.base_color_ = bc;
+        cc += light.Illuminate();
+      }
       for (auto& light : lights.infinite_)
-        cc += light.Illuminate(bc, face.normal_);
+      {
+        light.args_.base_color_ = bc;
+        light.args_.normal_ = &face.normal_;
+        cc += light.Illuminate();
+      }
       for (auto& light : lights.point_)
-        cc += light.Illuminate(bc, face.normal_, vxs[face[0]].pos_);
+      {
+        light.args_.base_color_ = bc;
+        light.args_.normal_ = &face.normal_;
+        light.args_.destination_ = &vxs[face[0]].pos_;
+        cc += light.Illuminate();
+      }
       cc.Clamp();
     }
     
     // If triangle is gourang shaded, then iterate over its vertixes colors,
     // check if its lighted, and store color in vertexes
 
-    else if (obj.shading_ == Shading::GOURANG)
+    else if (obj.shading_ == Shading::GOURAUD)
     {
       for (const auto& f : face.vxs_)
       {
@@ -81,11 +93,23 @@ void light::Object(GlObject& obj, Lights& lights)
           used[f] = true;
 
           for (auto& light : lights.ambient_)
-            cc += light.Illuminate(bc);
+          {
+            light.args_.base_color_ = bc;
+            cc += light.Illuminate();
+          }
           for (auto& light : lights.infinite_)
-            cc += light.Illuminate(bc, vxs[f].normal_);
+          {
+            light.args_.base_color_ = bc;
+            light.args_.normal_ = &vxs[f].normal_;
+            cc += light.Illuminate();
+          }
           for (auto& light : lights.point_)
-            cc += light.Illuminate(bc, vxs[f].normal_, vxs[f].pos_);
+          {
+            light.args_.base_color_ = bc;
+            light.args_.normal_ = &vxs[f].normal_;
+            light.args_.destination_ = &vxs[f].pos_;
+            cc += light.Illuminate();
+          }
           cc.Clamp();
         }
       }
@@ -127,18 +151,30 @@ void light::Triangles(V_Triangle& arr, Lights& lights)
         tri.normal_.Normalize();
 
       for (auto& light : lights.ambient_)
-        cc += light.Illuminate(bc);
+      {
+        light.args_.base_color_ = bc;
+        cc += light.Illuminate();
+      }
       for (auto& light : lights.infinite_)
-        cc += light.Illuminate(bc, tri.normal_);
+      {
+        light.args_.base_color_ = bc;
+        light.args_.normal_ = &tri.normal_;
+        cc += light.Illuminate();
+      }
       for (auto& light : lights.point_)
-        cc += light.Illuminate(bc, tri.normal_, tri.vxs_[0].pos_);
+      {
+        light.args_.base_color_ = bc;
+        light.args_.normal_ = &tri.normal_;
+        light.args_.destination_ = &tri.vxs_[0].pos_;
+        cc += light.Illuminate();
+      }
       cc.Clamp();
     }
     
     // If triangle is gourang shaded, then iterate over its vertixes colors,
     // check if its lighted, and store color in vertexes
 
-    else if (tri.shading_ == Shading::GOURANG)
+    else if (tri.shading_ == Shading::GOURAUD)
     {
       for (auto& vx : tri.vxs_)
       {
@@ -147,11 +183,23 @@ void light::Triangles(V_Triangle& arr, Lights& lights)
         cc = {0.0f, 0.0f, 0.0f, bc.a_};
 
         for (auto& light : lights.ambient_)
-          cc += light.Illuminate(bc);
+        {
+          light.args_.base_color_ = bc;
+          cc += light.Illuminate();
+        }
         for (auto& light : lights.infinite_)
-          cc += light.Illuminate(bc, vx.normal_);
+        {
+          light.args_.base_color_ = bc;
+          light.args_.normal_ = &vx.normal_;
+          cc += light.Illuminate();
+        }
         for (auto& light : lights.point_)
-          cc += light.Illuminate(bc, vx.normal_, vx.pos_);
+        {
+          light.args_.base_color_ = bc;
+          light.args_.normal_ = &vx.normal_;
+          light.args_.destination_ = &vx.pos_;
+          cc += light.Illuminate();
+        }
         cc.Clamp();
       }
     }

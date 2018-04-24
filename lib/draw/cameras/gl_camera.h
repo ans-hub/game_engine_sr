@@ -20,17 +20,17 @@
 
 #include "lib/draw/gl_aliases.h"
 #include "lib/draw/gl_enums.h"
-#include "lib/draw/gl_camdir.h"
+#include "lib/draw/cameras/gl_camdir.h"
 
 #include "lib/math/trig.h"
 #include "lib/math/vector.h"
 #include "lib/math/matrix.h"
-#include "lib/math/matrix_rotate_eul.h"
+#include "lib/math/matrixes/mx_rotate_eul.h"
 
 namespace anshub {
 
 //***************************************************************************
-// EULER CAMERA INTERFACE
+// Represents camera based on Euler`s angles
 //***************************************************************************
 
 struct GlCamera
@@ -75,19 +75,11 @@ struct GlCamera
 
 }; // struct GlCamera
 
-//***************************************************************************
-// CAMERA HELPERS
-//***************************************************************************
-
 namespace camera_helpers {
 
   Vector ComputeCamViewVector(cVector& cam_direction, cTrigTable&);
 
 } // namespace camera_helpers
-
-//***************************************************************************
-// CAMERA CONSTANTS
-//***************************************************************************
 
 namespace camera_const {
 
@@ -97,7 +89,7 @@ namespace camera_const {
 } // namespace camera_const
 
 //***************************************************************************
-// INLINE IMPLEMENTATION
+// Inline implementation
 //***************************************************************************
 
 inline void GlCamera::ChangeFov(int fov)

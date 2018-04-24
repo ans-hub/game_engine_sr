@@ -78,7 +78,7 @@ GlObject::GlObject(const std::string& ply_fname, cVector& world_pos)
   vxs_trans_ = vxs_local_;
   shading_ = attrs.shading_;
   sphere_rad_ = object::FindFarthestCoordinate(vxs_local_);
-  // sphere_rad_ = object::ComputeBoundingSphereRadius(vxs_local_, Axis::XYZ);
+  // todo: sphere_rad_ = object::ComputeBoundingSphereRadius(vxs_local_, Axis::XYZ);
   // todo: + bounding_box
 }
 

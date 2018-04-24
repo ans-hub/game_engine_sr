@@ -9,7 +9,7 @@
 
 namespace anshub {
 
-GlText::GlText(GlWindow& win) : GlText(win, default_font_name_) { }
+GlText::GlText(GlWindow& win) : GlText(win, gl_text::default_font_) { }
 
 GlText::GlText(GlWindow& win, const char* font_name)
   : disp_{win.Disp()}

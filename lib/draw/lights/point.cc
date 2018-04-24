@@ -1,17 +1,16 @@
 // *************************************************************
-// File:    gl_light_point.cc
+// File:    point.cc
 // Descr:   represents point light source
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
-#include "gl_light_point.h"
+#include "point.h"
 
 namespace anshub {
 
-LightPoint::LightPoint(cFColor& c, float i, cVector& pos, cVector& dir)
-  : color_{c}
-  , intense_{i}
+LightPoint::LightPoint(cFColor& color, float intense, cVector& pos, cVector& dir)
+  : LightSource{color, intense}
   , position_{pos}
   , direction_{dir}
   , position_copy_{}
@@ -21,15 +20,19 @@ LightPoint::LightPoint(cFColor& c, float i, cVector& pos, cVector& dir)
   , kq_{0.0f}
 {
   direction_.Normalize();
-
   direction_copy_ = direction_;
   position_copy_ = position_;
-  
-  math::Clamp(intense_, 0.0f, 1.0f);
 }
 
-LightPoint::LightPoint(cFColor&& c, float i, cVector&& pos, cVector& dir)
-  : LightPoint(c, i, pos, dir) { }
+LightPoint::LightPoint(
+  cFColor& color, float intense, cVector& pos, cVector& dir,
+  float kc, float kl, float kq)
+  : LightPoint{color, intense, pos, dir}
+{
+  kc_ = kc;
+  kl_ = kl;
+  kq_ = kq;
+}
 
 void LightPoint::Reset()
 {
@@ -54,18 +57,17 @@ void LightPoint::World2Camera(const GlCamera& cam, const TrigTable& trig)
   coords::RotateRoll(position_, -cam.dir_.z, trig);
 }
 
-FColor LightPoint::Illuminate(
-  cFColor& base_color, cVector& normal, cVector& dest)
+FColor LightPoint::Illuminate() const
 {
   auto dir = direction_ * (-1);
-  auto prod = vector::DotProduct(dir, normal);
+  auto prod = vector::DotProduct(dir, *args_.normal_);
   if (prod < 0) prod = 0;
 
-  auto distance = position_ - dest;
+  auto distance = position_ - *args_.destination_;
   auto len = distance.Length();
   auto k = (color_ * intense_) / (kc_ + kl_ * len + kq_ * len * len);
 
-  return (base_color * prod * k) / 256.0f;
+  return (args_.base_color_ * prod * k) / 256.0f;
 }
 
 void LightPoint::SetPosition(cVector& pos)

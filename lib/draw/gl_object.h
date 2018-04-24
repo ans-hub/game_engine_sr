@@ -13,13 +13,13 @@
 #include <fstream>
 #include <memory>
 
-#include "lib/draw/exceptions.h"
-#include "lib/draw/gl_enums.h"
-#include "lib/draw/gl_aliases.h"
-#include "lib/draw/gl_camera.h"
-#include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_coords.h"
-#include "lib/draw/gl_face.h"
+#include "exceptions.h"
+#include "gl_enums.h"
+#include "gl_aliases.h"
+#include "fx_colors.h"
+#include "gl_coords.h"
+#include "gl_face.h"
+#include "cameras/gl_camera.h"
 
 #include "lib/data/ply_loader.h"
 #include "lib/data/bmp_loader.h"
@@ -31,13 +31,13 @@
 #include "lib/math/trig.h"
 #include "lib/math/vector.h"
 #include "lib/math/matrix.h"
-#include "lib/math/matrix_rotate_eul.h"
-#include "lib/math/matrix_camera.h"
+#include "lib/math/matrixes/mx_rotate_eul.h"
+#include "lib/math/matrixes/mx_camera.h"
 
 namespace anshub {
 
 //***********************************************************************
-// GLOBJECT INTERFACE
+// GlObject - main struct represents drawable object in engine
 //***********************************************************************
 
 struct GlObject
@@ -82,7 +82,9 @@ struct GlObject
 
 }; // struct Object
 
+//***********************************************************************
 // Represents attributes while loading GlObject
+//***********************************************************************
 
 struct ObjAttrs
 {
@@ -101,7 +103,7 @@ struct ObjAttrs
 }; // struct ObjAttrs
 
 //***********************************************************************
-// INLINE IMPLEMENTATION
+// Inline implementation
 //***********************************************************************
 
   inline auto& GlObject::GetCoords() { 

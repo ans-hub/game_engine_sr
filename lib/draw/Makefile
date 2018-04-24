@@ -2,8 +2,10 @@
 # Dependicies: libwindow.a, libmath.a, libdata.a
 
 LIBNAME = libdraw.a
-SRCDIR = ./
 ROOTDIR = ../../
+SRCDIR = ./
+CAMDIR = $(SRCDIR)cameras
+LIGHTDIR = $(SRCDIR)lights
 
 # Setup dependicies libs
 
@@ -21,13 +23,12 @@ CXXFLAGS += -MP -MMD
 DBGFLAGS = -ggdb3 -DDEBUG -O0 -pg -no-pie
 RLSFLAGS = -O2
 
-# Setup objects
-
-# VPATH = cameras
-
 # Other stuff
 
 SRCFILES = $(wildcard *.cc)
+SRCFILES += $(wildcard $(CAMDIR)/*.cc)
+SRCFILES += $(wildcard $(LIGHTDIR)/*.cc)
+
 .PHONY: clean
 
 ##############################################################################
@@ -66,6 +67,8 @@ debug	: $(SRCFILES:%.cc=%dbg.o)
 
 clean :
 	rm -f *.o *.d $(LIBNAME)
+	rm -f $(LIGHTDIR)/*.o $(LIGHTDIR)/*.d
+	rm -f $(CAMDIR)/*.o $(CAMDIR)/*.d
 	make clean -C $(LIBWINDOW)
 	make clean -C $(LIBMATH)
 	make clean -C $(LIBDATA)

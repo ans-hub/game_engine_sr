@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    gl_z_buffer.h
-// Descr:   z-buffer struct
+// Descr:   1/z-buffer struct
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -33,6 +33,7 @@ struct ZBuffer
   int     Width() const { return w_; }
   int     Height() const { return h_; }
   float*  GetPointer() { return data_.data(); }
+  
   float&  operator()(int x, int y) { return data_[y * w_ + x]; }
   const float& operator()(int x, int y) const { return data_[y * w_ + x]; }
 
