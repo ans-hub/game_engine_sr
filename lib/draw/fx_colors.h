@@ -12,10 +12,12 @@
 #include <string>
 #include <map>
 #include <limits>
+#include <type_traits>
 #include <cmath>
 
-#include "gl_aliases.h"
-#include "exceptions.h"
+#include "lib/draw/gl_aliases.h"
+#include "lib/draw/exceptions.h"
+
 #include "lib/math/math.h"
 
 namespace anshub {
@@ -27,10 +29,15 @@ namespace anshub {
 template<class T = uint>
 struct Color
 {
-  Color();
-  Color(T r, T g, T b);
-  Color(T r, T g, T b, float a);
-  explicit Color(unsigned int);
+  static_assert(
+    (std::is_floating_point<T>::value) || 
+    (std::is_unsigned<T>::value && std::is_integral<T>::value),
+    "Color<T> - T should be float or unsigned int"
+  );
+  constexpr Color();
+  constexpr Color(T r, T g, T b);
+  constexpr Color(T r, T g, T b, float a);
+  constexpr explicit Color(uint);
 
   uint  GetARGB() const;
   void  Modulate(const Color&);
@@ -46,8 +53,8 @@ struct Color
   Color& operator*=(const Color& rhs);
   Color& operator-=(const Color& rhs);
   Color& operator+=(const Color& rhs);
-  template<class U> friend Color<U> operator/ (Color<U>, U scalar);
-  template<class U> friend Color<U> operator/ (Color<U>, int scalar);
+  template<class U> friend Color<U> operator/(Color<U>, U scalar);
+  template<class U> friend Color<U> operator/(Color<U>, int scalar);
   template<class U> friend Color<U> operator*(Color<U>, U scalar);
   template<class U> friend Color<U> operator*(Color<U>, int scalar);
   template<class U> friend Color<U> operator*(Color<U>, const Color<U>&);
@@ -76,12 +83,10 @@ private:
 }; // struct ColorTable
 
 //***************************************************************************
-// Interface to Color helper functions
+// Color consts
 //***************************************************************************
 
 namespace color {
-
-  // Color constants
 
   constexpr uint White  {0xffffff01};
   constexpr uint Blue   {0xff000001};
@@ -89,7 +94,7 @@ namespace color {
   constexpr uint Green  {0x00ff0001};
   constexpr uint Cyan   {0xffff0001};
   constexpr uint Black  {0x00000001};
-  const FColor fWhite  {255.0f, 255.0f, 255.0f};
+  const FColor fWhite  (255.0f, 255.0f, 255.0f);
   const FColor fBlack  {0.0f, 0.0f, 0.0f};
   const FColor fYellow {255.0f, 255.0f, 0.0f};
   const FColor fBlue   {0.0f, 0.0f, 255.0f};
@@ -97,15 +102,19 @@ namespace color {
   const FColor fOceanBlue {143.0f, 175.0f, 201.0f};
   const FColor fDeepPink {255.0f, 20.0f, 147.0f};
 
-  // Helper functions
-
+//***************************************************************************
+// Interface to Color helper functions
+//***************************************************************************
+  
   int  MakeARGB(uchar a, uchar r, uchar g, uchar b);
   void SplitARGB(int color, uchar& b, uchar& g, uchar& r, uchar& a);
   void SplitARGB(int color, uint& b, uint& g, uint& r, uint& a);
   int  IncreaseBrightness(int color, float k);
   void ShiftRight(Color<uint>&, uint cnt);
-  template<class Src, class Dest> Color<Dest> Convert(const Color<Src>&);
-  template<class T> T MakeUnreal();
+  template<class Src, class Dest> 
+    Color<Dest> Convert(const Color<Src>&);
+  template<class T> 
+    T MakeUnreal();
 
   // Output functions
 
@@ -121,38 +130,42 @@ namespace color {
 // Default Color constructor
 
 template<class T>
-inline Color<T>::Color()
+inline constexpr Color<T>::Color()
   : r_{0}
   , g_{0}
   , b_{0}
-  , a_{1} { }
+  , a_{1}
+{ }
 
 // Constructs Color with given color components (using alpha)
 
 template<class T>
-inline Color<T>::Color(T cr, T cg, T cb, float ca)
+inline constexpr Color<T>::Color(T cr, T cg, T cb, float ca)
   : r_{static_cast<T>(cr)}
   , g_{static_cast<T>(cg)}
   , b_{static_cast<T>(cb)}
-  , a_{static_cast<T>(ca)} { }
+  , a_{static_cast<T>(ca)}
+{ }
 
 // Constructs Color with given color components (using alpha)
 
 template<class T>
-inline Color<T>::Color(T cr, T cg, T cb)
+inline constexpr Color<T>::Color(T cr, T cg, T cb)
   : r_{static_cast<T>(cr)}
   , g_{static_cast<T>(cg)}
   , b_{static_cast<T>(cb)}
-  , a_{1} { }
+  , a_{1}
+{ }
 
 // Constructs Color with unsigned represent of color
 
 template<class T>
-inline Color<T>::Color(unsigned int c)
+inline constexpr Color<T>::Color(unsigned int c)
   : r_{static_cast<T>((c >> 8) & 0xff)}
   , g_{static_cast<T>((c >> 16) & 0xff)}
   , b_{static_cast<T>((c >> 24) & 0xff)}
-  , a_{1} { }
+  , a_{1}
+{ }
 
 // Returns color in uint representation
 
@@ -206,7 +219,7 @@ inline void Color<T>::Clamp()
   b_ = std::min(255.0f, b_);
 }
 
-// Other useful member functions implementation
+// Other member and friend functions implementation
 
 template<class T>
 inline bool Color<T>::operator==(const Color<T>& rhs) const
@@ -293,8 +306,6 @@ inline Color<T>& Color<T>::operator+=(const Color& rhs)
   this->b_ += rhs.b_;
   return *this;
 }
-
-// Friend non-member functions implementation
 
 template<class U>
 inline Color<U> operator/(Color<U> lhs, U scalar)
@@ -412,7 +423,7 @@ Color<Dest> color::Convert(const Color<Src>& src)
 
 template<>
 inline Color<uint> color::MakeUnreal<Color<uint>>()
-{ 
+{
   auto max = std::numeric_limits<uint>::max();
   return Color<uint>(max, max, max);
 }
