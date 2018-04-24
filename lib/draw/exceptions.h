@@ -12,6 +12,10 @@
 
 namespace anshub {
 
+//***************************************************************************
+// Exceptions struct used in draw library
+//***************************************************************************
+
 struct DrawExcept : std::logic_error
 {
   DrawExcept(const char* msg) : std::logic_error(msg) { }
