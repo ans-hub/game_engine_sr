@@ -8,7 +8,7 @@
 #ifndef GC_MATRIX_SCALE_H
 #define GC_MATRIX_SCALE_H
 
-#include "matrix.h"
+#include "../matrix.h"
 
 namespace anshub {
 

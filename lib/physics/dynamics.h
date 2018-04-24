@@ -12,7 +12,9 @@
 
 namespace anshub {
 
+//*************************************************************************
 // Performs dynamic movements for different objects such as cameras, objects
+//*************************************************************************
 
 struct Dynamics
 {
@@ -54,25 +56,28 @@ struct Dynamics
 
   void ProcessVelocity(bool fly_mode, bool on_ground);
   void ProcessDirVelocity();
-  auto GetVelocity() const { return vel_; }
-  auto GetDirVelocity() const { return dir_vel_; }
   void ResetVelocity() { vel_.Zero(); }
   void ResetAcceleration() { accel_.Zero(); }
   void ResetGravity() { vel_.y = 0.0f; accel_.y = 0.0f; }
+  
+  // Getters
+  
+  auto GetVelocity() const { return vel_; }
+  auto GetDirVelocity() const { return dir_vel_; }
 
   // todo: push_back(move_type); ProcessVelocity(moves); and most of is private
 
-// private:
+private:
 
-  Vector    vel_;
-  Vector    accel_;
-  Vector    dir_vel_;
-  Vector    dir_accel_;
-  float     accel_factor_;
-  float     frict_factor_;
-  float     gravity_factor_;
-  float     max_speed_;
-  TrigTable trig_;
+  Vector      vel_;
+  Vector      accel_;
+  Vector      dir_vel_;
+  Vector      dir_accel_;
+  float       accel_factor_;
+  float       frict_factor_;
+  float       gravity_factor_;
+  float       max_speed_;
+  TrigTable   trig_;        // todo: sure? not reference?
 
 }; // struct Dynamics
 

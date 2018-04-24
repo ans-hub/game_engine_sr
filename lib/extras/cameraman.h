@@ -10,13 +10,18 @@
 
 #include "lib/extras/exceptions.h"
 #include "lib/extras/inputer.h"
-#include "lib/draw/gl_camera.h"
-#include "lib/draw/gl_camera_uvn.h"
-#include "lib/draw/gl_camera_fol.h"
+
 #include "lib/draw/gl_enums.h"
+
+#include "lib/draw/cameras/gl_camera.h"
+#include "lib/draw/cameras/gl_camera_uvn.h"
+#include "lib/draw/cameras/gl_camera_fol.h"
+
 #include "lib/window/enums.h"
 #include "lib/window/base_window.h"
+
 #include "lib/math/vector.h"
+
 #include "lib/physics/dynamics.h"
 
 namespace anshub {

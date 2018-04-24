@@ -12,7 +12,8 @@
 
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_aliases.h"
-#include "lib/draw/gl_camdir.h"
+
+#include "lib/draw/cameras/gl_camdir.h"
 
 #include "lib/extras/inputer.h"
 #include "lib/extras/terrain.h"
@@ -88,7 +89,6 @@ private:
   void SetGroundPosition(float ypos);
   void ProcessGroundPosition(const Terrain&);
   void ProcessGroundDirection(const Terrain&);
-
 
 }; // struct Player
 

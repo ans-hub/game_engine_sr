@@ -8,10 +8,10 @@
 #ifndef GC_MATRIX_ROTATE_EUL_H
 #define GC_MATRIX_ROTATE_EUL_H
 
-#include "trig.h"
-#include "math.h"
-#include "vector.h"
-#include "matrix.h"
+#include "../trig.h"
+#include "../math.h"
+#include "../vector.h"
+#include "../matrix.h"
 
 namespace anshub {
 

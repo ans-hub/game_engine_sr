@@ -8,8 +8,8 @@
 #ifndef GC_MATRIX_TRANS_H
 #define GC_MATRIX_TRANS_H
 
-#include "matrix.h"
-#include "vector.h"
+#include "../matrix.h"
+#include "../vector.h"
 
 namespace anshub {
 

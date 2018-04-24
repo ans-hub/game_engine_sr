@@ -66,13 +66,13 @@ void Terrain::SetDetalization(const V_Float& dists)
 
 // Change detalization of every chunk if necessary and align borders
 
-void Terrain::ProcessDetalization(const GlCamera& cam)
+void Terrain::ProcessDetalization(const Vector& cam_vrp)
 {
   for (auto& chunk : chunks_)
   {
     // Find distance length between curr cam pos and pos of chunk
 
-    Vector dist {chunk.world_pos_ - cam.vrp_};
+    Vector dist {chunk.world_pos_ - cam_vrp};
     float  len = dist.Length();
     bool   need_align {false};
     int    det_level {0};

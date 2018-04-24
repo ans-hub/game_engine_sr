@@ -16,32 +16,26 @@
 
 namespace ply {
 
-  // General aliases
-
-  using std::string;
-  using uint = std::size_t;
-
 //************************************************************************
 // Helper class represents header of ply file
 //************************************************************************
 
-  // Header aliases 
+using std::string;
+using uint = std::size_t;
 
-  using SingleTuple = std::tuple<std::string, uint, uint>;
-  using SingleMap   = std::map<std::string, SingleTuple>;
-  using ListTuple   = std::tuple<std::string, uint>;
-  using ListMap     = std::map<std::string, ListTuple>;
+using SingleTuple = std::tuple<std::string, uint, uint>;
+using SingleMap   = std::map<std::string, SingleTuple>;
+using ListTuple   = std::tuple<std::string, uint>;
+using ListMap     = std::map<std::string, ListTuple>;
 
-  // Header struct (storeds info about elements of ply file)
+struct Header
+{
+  int       pos_;
+  int       count_;
+  SingleMap single_props_;
+  ListMap   list_props_;
 
-  struct Header
-  {
-    int       pos_;
-    int       count_;
-    SingleMap single_props_;
-    ListMap   list_props_;
-
-  }; // struct Header
+}; // struct Header
 
 //************************************************************************
 // Main class Loader for parsing ascii ply files

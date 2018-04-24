@@ -8,7 +8,7 @@
 #ifndef GC_MATRIX_CAMERA_H
 #define GC_MATRIX_CAMERA_H
 
-#include "matrix.h"
+#include "../matrix.h"
 
 namespace anshub {
 

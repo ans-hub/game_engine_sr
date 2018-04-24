@@ -17,7 +17,7 @@
 namespace anshub {
 
 //****************************************************************************
-// MATRIX CLASS
+// Represents matrix of any size
 //****************************************************************************
 
 template<std::size_t Row, std::size_t Col>

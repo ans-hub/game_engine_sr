@@ -2,7 +2,10 @@
 
 LIBNAME = libmath.a
 SRCDIR = ./
+MATRIXDIR = $(SRCDIR)matrix
+
 SRCFILES = $(wildcard *.cc)
+SRCFILES += $(wildcard $(MATRIXDIR)/*.cc)
 
 # Coimpiler settings
 
@@ -11,6 +14,8 @@ CXXFLAGS = -I $(SRCDIR) -ansi -pedantic-errors -Wall -Wextra -std=c++14
 CXXFLAGS += -MP -MMD
 DBGFLAGS = -ggdb3 -DDEBUG -O0 -pg -no-pie
 RLSFLAGS = -O2
+
+.PHONY: clean
 
 ##############################################################################
 
@@ -42,3 +47,4 @@ debug	: $(SRCFILES:%.cc=%dbg.o)
 
 clean :
 	rm -f *.o *.d $(LIBNAME)
+	rm -f $(MATRIXDIR)/*.o $(MATRIXDIR)/*.d	

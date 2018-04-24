@@ -112,7 +112,7 @@ void Dynamics::RotateRoll(float theta)
   dir_accel_.z -= theta * accel_factor_;  
 }
 
-// Apply velocity in each frame after all movements
+// Apply move velocity in each frame after all movements
 
 void Dynamics::ProcessVelocity(bool fly_mode, bool on_ground)
 {
@@ -150,6 +150,8 @@ void Dynamics::ProcessVelocity(bool fly_mode, bool on_ground)
     accel_.Zero();
   }
 }
+
+// Apply direction velocity in each frame after all movements
 
 void Dynamics::ProcessDirVelocity()
 {

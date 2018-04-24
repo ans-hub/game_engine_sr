@@ -13,9 +13,11 @@
 
 namespace anshub {
 
+//*************************************************************************
 // Class represents skybox. We may load any textured object since
 // this struct inside inverts the order of face points to make inverted
 // normals
+//*************************************************************************
 
 struct Skybox : public GlObject
 {

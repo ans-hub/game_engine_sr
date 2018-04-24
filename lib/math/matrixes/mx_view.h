@@ -8,8 +8,8 @@
 #ifndef GM_MATRIX_VIEWPORT_H
 #define GM_MATRIX_VIEWPORT_H
 
-#include "matrix.h"
-#include "vector.h"
+#include "../matrix.h"
+#include "../vector.h"
 
 namespace anshub {
 

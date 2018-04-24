@@ -16,6 +16,10 @@
 
 namespace anshub {
 
+//*************************************************************************
+// Very simple water
+//*************************************************************************
+
 struct Water : public GlObject
 {
   Water(int width, float height, cFColor&, Shading);

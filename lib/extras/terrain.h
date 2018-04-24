@@ -13,7 +13,6 @@
 #include "lib/draw/exceptions.h"
 #include "lib/draw/gl_aliases.h"
 #include "lib/draw/gl_object.h"
-#include "lib/draw/gl_camera.h"
 #include "lib/draw/gl_vertex.h"
 
 #include "lib/math/math.h"
@@ -41,7 +40,7 @@ struct Terrain
   int   GetHmWidth() const { return hm_w_; }
   void  SetShading(Shading);
   void  SetDetalization(const V_Float&);
-  void  ProcessDetalization(const GlCamera&);
+  void  ProcessDetalization(const Vector&);
   float FindGroundPosition(const Vector&) const;
   Vector FindGroundNormal(const Vector&) const;
 

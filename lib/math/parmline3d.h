@@ -14,9 +14,11 @@
 #include "plane3d.h"
 
 namespace anshub {
-
+  
+//*************************************************************************
 // Represents 3d line using parametric form  
 //  ax + by + cz + d = 0
+//*************************************************************************
 
 struct Parmline3d
 {  
@@ -39,7 +41,9 @@ struct Parmline3d
 
 }; // struct Parmline3d
 
+//*************************************************************************
 // Helpers functions definition
+//*************************************************************************
 
 namespace parmline3d
 {
