@@ -483,7 +483,7 @@ int main(int argc, const char** argv)
     // Triangles merging
 
     triangles::MakePointers(tris_base, tris_ptrs);
-    triangles::SortZAvg(tris_ptrs);
+    triangles::SortZAvgCounting(tris_ptrs, far_z);
 
     triangles::Camera2Persp(tris_base, cam);
     triangles::Persp2Screen(tris_base, cam);

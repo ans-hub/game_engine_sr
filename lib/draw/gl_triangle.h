@@ -93,6 +93,7 @@ namespace triangles {
   void SortZNear(V_TrianglePtr&);
   void SortZAvgInv(V_TrianglePtr&);
   void SortZFarInv(V_TrianglePtr&);
+  void SortZAvgCounting(V_TrianglePtr&, float far_z);
 
 } // namespace triangles
 

@@ -611,5 +611,44 @@ void triangles::SortZFarInv(V_TrianglePtr& arr)
   });
 }
 
+// Sorts triangles using counting sort algorithm
+
+void triangles::SortZAvgCounting(V_TrianglePtr& v, float far_z)
+{
+  int kSize = std::ceil(far_z) * 10;
+
+  std::vector<Triangle*> res (v.size(), 0);
+  std::vector<int>       c   (kSize+1, 0);
+
+  for (uint i = 0; i < v.size(); ++i)     // fill C with freq of meeting values
+  {
+    int index = 10 * std::floor(
+      0.3333333f * 
+      (v[i]->vxs_[0].pos_.z + 
+       v[i]->vxs_[1].pos_.z +
+       v[i]->vxs_[2].pos_.z)
+    );
+    if (index > kSize)
+      index = kSize;
+    ++c[index];
+  }
+  for (uint i = 1; i < c.size(); ++i)     // compute most right place of each val
+    c[i] += c[i-1];
+  for (int i = v.size()-1; i >= 0; --i)   // place values by reducing most right
+  {                                       // place
+    int index = 10 * std::floor(
+      0.3333333f * 
+      (v[i]->vxs_[0].pos_.z + 
+       v[i]->vxs_[1].pos_.z +
+       v[i]->vxs_[2].pos_.z)
+    );
+    if (index > kSize)
+      index = kSize;
+    --c[index];
+    res[c[index]] = v[i];
+  }
+  v = res;
+}
+
 
 } // namespace anshub

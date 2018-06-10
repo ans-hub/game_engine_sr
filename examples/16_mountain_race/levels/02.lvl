@@ -13,7 +13,7 @@ i win_w             800
 i win_h             600
 b win_fs            0
 i win_fps           1000
-b dbg_show_info     0
+b dbg_show_info     1
 
 # Camera settings
 
