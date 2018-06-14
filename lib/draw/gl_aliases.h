@@ -62,6 +62,7 @@ namespace anshub {
   using V_Vertex = std::vector<Vertex>;
   using V_Vector = std::vector<Vector>;
   using V_GlObject = std::vector<GlObject>;
+  using V_GlObjectP = std::vector<GlObject*>;
   using V_FColor = std::vector<Color<float>>;
   using V_Color = std::vector<Color<uchar>>;
   using V_Bitmap = std::vector<P_Bitmap>;
