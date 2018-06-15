@@ -24,7 +24,7 @@ void PrintUsage(std::ostream& oss)
 {
   oss << "Usage: ./demo arg1..arg5 \n"
       << "  [fname_path]    - string\n"
-      << "  [world_rad]     - float\n"
+      << "  [world_size]    - float\n"
       << "  [objs_in_world] - int\n"
       << "  [max_scale]     - float\n"
       << "  [tree_depth]    - int\n";
@@ -45,7 +45,7 @@ struct InputData
   InputData(int argc, const char** argv);
 
   const char* fname_;
-  float world_radius_;
+  float world_size_;
   int objs_count_;
   float max_scale_;
   int tree_depth_;
@@ -62,7 +62,7 @@ InputData::InputData(int argc, const char** argv)
     throw std::runtime_error("Invalid arguments count");
   }
   fname_ = argv[1];
-  world_radius_ = atof(argv[2]);
+  world_size_ = atof(argv[2]);
   objs_count_ = atoi(argv[3]);
   max_scale_ = atof(argv[4]);
   tree_depth_ = atoi(argv[5]);
@@ -109,13 +109,13 @@ int main(int argc, const char** argv)
 
   rand_toolkit::start_rand();
   auto other = MakeObjects(
-    args.fname_, args.objs_count_, args.world_radius_, args.max_scale_);
+    args.fname_, args.objs_count_, args.world_size_, args.max_scale_);
   auto main  = other.back();
   other.pop_back();
 
   // Create bvh-tree and insert objects there
 
-  Bvh tree (args.tree_depth_, args.world_radius_);
+  Bvh tree (args.tree_depth_, args.world_size_);
   for (auto& obj : other)
     tree.Insert(obj);
 
@@ -126,11 +126,15 @@ int main(int argc, const char** argv)
 
   // Print results
   
-  std::cout << "Main point:"
-            << " pos: " << main.world_pos_ << ","
+  std::cout << "Main point:\n"
+            << " pos: " << main.world_pos_ << '\n'
             << " rad: " << main.sphere_rad_ << '\n';
-  std::cout << "Potential: " << potential.size() << ", "
-            << "Collided:  " << collided.size() << '\n';
+  std::cout << "Objs in fact:  " << other.size() << '\n';
+  std::cout << "Ptrs in tree:  " << tree.ObjectsCount() << '\n';
+  std::cout << "Octs in tree:  " << tree.OctantsCount() << '\n';
+  std::cout << "Nodes checked: " << tree.LastNodesVisits() << '\n';
+  std::cout << "Potential collided: " << potential.size() << ", "
+            << "Collided exactly:   " << collided.size() << '\n';
 
   if (!collided.empty())
     std::cout << "List of collided: \n";
