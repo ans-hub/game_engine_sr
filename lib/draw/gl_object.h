@@ -53,8 +53,7 @@ struct GlObject
 
   // Data members: helpers
 
-  int       id_;              // object id  
-  bool      active_;          // object state
+  bool      active_;          // state
   Shading   shading_;         // shading type
   Vector    world_pos_;       // position of obj center in world`s coords
   Vector    dir_;             // direction Euler`s angles
@@ -62,6 +61,7 @@ struct GlObject
   Vector    v_orient_y_;      // orientation vectors  
   Vector    v_orient_z_;      //
   float     sphere_rad_;      // bounding sphere radius
+  AuxFlags  aux_flags_;       // auxilary flags  
   
   // Constructors
 
@@ -165,6 +165,8 @@ namespace object {
   void  ComputeFaceNormalsInv(GlObject&, bool normalize = true);
   void  ComputeVertexNormalsV1(GlObject&);
   void  ComputeVertexNormalsV2(GlObject&);
+  bool  GetAuxFlag(GlObject&, AuxFlags);
+  void  SetAuxFlag(GlObject&, AuxFlags);
  
   // Object transformation
 

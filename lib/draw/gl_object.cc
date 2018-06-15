@@ -18,7 +18,6 @@ GlObject::GlObject()
   , faces_{}
   , textures_{}
   , mipmaps_squares_{}
-  , id_{}
   , active_{true}
   , shading_{Shading::CONST}
   , world_pos_{0.0f, 0.0f, 0.0f}
@@ -27,6 +26,7 @@ GlObject::GlObject()
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
   , sphere_rad_{0.0f}  
+  , aux_flags_{AuxFlags::NONE}
 { }
 
 // Creates object with vertexes, faces and attrs
@@ -38,7 +38,6 @@ GlObject::GlObject(const std::string& ply_fname, cVector& world_pos)
   , faces_{}
   , textures_{}
   , mipmaps_squares_{}  
-  , id_{}
   , active_{true}
   , shading_{Shading::CONST}  
   , world_pos_{world_pos}
@@ -47,6 +46,7 @@ GlObject::GlObject(const std::string& ply_fname, cVector& world_pos)
   , v_orient_y_{0.0f, 1.0f, 0.0f}
   , v_orient_z_{0.0f, 0.0f, 1.0f}
   , sphere_rad_{0.0f}
+  , aux_flags_{AuxFlags::NONE}
 {
   // Load data from file and fill object
 
@@ -403,6 +403,7 @@ void object::ResetAttributes(GlObject& obj)
     face.normal_.Zero();
   }
   obj.active_ = true;
+  obj.aux_flags_ = AuxFlags::NONE;
 }
 
 // Refresh face normals (for lighting purposes we should call this function
@@ -516,6 +517,20 @@ void object::ComputeVertexNormalsV2(GlObject& obj)
     if (!vx.normal_.IsZero())
       vx.normal_.Normalize();
   }
+}
+
+// Returns true if flag is present in aux_flags_
+
+bool object::GetAuxFlag(GlObject& obj, AuxFlags f)
+{
+  return (obj.aux_flags_ & f) == f;
+}
+
+// Sets flag to the aux_flags
+
+void object::SetAuxFlag(GlObject& obj, AuxFlags f)
+{
+  obj.aux_flags_ |= f;
 }
 
 // Cull objects in cameras coordinates. Since we work in camera coordinates,

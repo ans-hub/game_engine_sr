@@ -8,6 +8,8 @@
 #ifndef GC_DRAW_ENUMS_H
 #define GC_DRAW_ENUMS_H
 
+#include <type_traits>
+
 namespace anshub {
 
 // Camera types
@@ -64,7 +66,7 @@ enum class Coords
 
 }; // enum class Coords
 
-// Represent Axis names
+// Represents Axis names
 
 enum class Axis
 {
@@ -77,6 +79,48 @@ enum class Axis
   XYZ       = 7
 
 }; // enum class Axis
+
+// Represents auxilary flags for GlObject
+
+enum class AuxFlags : int
+{
+  NONE      = 1,
+  COLLIDED  = 1 << 1  
+
+}; // enum class AuxFlags
+ 
+// Overloaded operator & allows to use AuxFlags values in boolean expressions
+
+inline AuxFlags operator&(AuxFlags lhs, AuxFlags rhs)
+{
+  using T = std::underlying_type_t <AuxFlags>;
+  return static_cast<AuxFlags>(
+    (static_cast<T>(lhs) & static_cast<T>(rhs)));
+}
+
+inline AuxFlags& operator &=(AuxFlags& lhs, AuxFlags rhs)
+{
+  using T = std::underlying_type_t <AuxFlags>;
+  lhs = (AuxFlags)(static_cast<T>(lhs) & static_cast<T>(rhs));
+  return lhs;
+}
+
+
+// The same as above but for logical OR
+
+inline AuxFlags operator|(AuxFlags lhs, AuxFlags rhs)
+{
+  using T = std::underlying_type_t <AuxFlags>;
+  return static_cast<AuxFlags>(
+    (static_cast<T>(lhs) | static_cast<T>(rhs)));
+}
+
+inline AuxFlags& operator |=(AuxFlags& lhs, AuxFlags rhs)
+{
+  using T = std::underlying_type_t <AuxFlags>;
+  lhs = (AuxFlags)(static_cast<T>(lhs) | static_cast<T>(rhs));
+  return lhs;
+}
 
 } // namespace anshub
 
