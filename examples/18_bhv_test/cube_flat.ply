@@ -1,0 +1,40 @@
+ply
+format ascii 1.0
+comment Property "shading" of element "globals_ply_v2"
+comment   0x2  = const shading
+comment   0x4  = flat shading
+comment   0x8  = phong shading
+comment   0x10 = gouraud shading
+element globals_ply_v2 1
+property uint shading
+element vertex 8
+property float x
+property float y
+property float z
+property uchar red
+property uchar green
+property uchar blue
+element face 12
+property list uchar uint vertex_indices
+end_header
+4
+0.500000 -0.500000 -0.500000 214 42 12
+-0.500000 0.500000 -0.500000 214 42 12
+0.500000 0.500000 -0.500000 214 42 12
+-0.500000 0.500000 0.500000 214 42 12
+0.500000 -0.500001 0.500000 214 42 12
+0.500000 0.500000 0.500000 214 42 12
+-0.500000 -0.500000 -0.500000 214 42 12
+-0.500000 -0.500000 0.500000 214 42 12
+3 0 1 2
+3 3 4 5
+3 5 0 2
+3 4 6 0
+3 6 3 1
+3 2 3 5
+3 0 6 1
+3 3 7 4
+3 5 4 0
+3 4 7 6
+3 6 7 3
+3 2 1 3
