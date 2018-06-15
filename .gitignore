@@ -1,6 +1,9 @@
 # Ignore all files
 
 *
+
+# Unignore dirs
+
 !*/
 
 # Unignore common source files
@@ -8,6 +11,7 @@
 !*.h
 !*.cc
 !*.c
+!*.sh
 !*.asm
 
 # Unignore level files
@@ -38,3 +42,4 @@
 !Makefile
 !*.md
 !LICENSE
+!.gitignore
