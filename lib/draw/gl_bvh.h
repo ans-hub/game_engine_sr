@@ -57,11 +57,16 @@ struct Bvh
   std::vector<GlObject*> FindPotential(const GlObject&);
   std::vector<GlObject*> FindCollision(const GlObject&);
 
+  auto ObjectsCount() const { return objects_cnt_; }
+  auto OctantsCount() const { return octants_cnt_; }
+  auto LastNodesVisits() const { return nodes_visits_; }
+
 private:
   Node* root_;
-  int depth_;          // 0 - one level, 1 - two, etc...
+  int depth_;           // 0 - one level, 1 - two, etc...
   int objects_cnt_;
   int octants_cnt_;
+  int nodes_visits_;    // debug: how much visits of nodes in traversal funcs
 
   void Clear(Node*);
   void Insert(GlObject*, Node*, int depth, int max_depth);

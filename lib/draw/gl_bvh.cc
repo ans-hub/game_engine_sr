@@ -17,6 +17,7 @@ Bvh::Bvh(int depth, float world_size)
   , depth_{depth}
   , objects_cnt_{0}
   , octants_cnt_{1} // at the start world cube is one big octant
+  , nodes_visits_{0}
 { }
 
 // Destroys all nodes
@@ -70,6 +71,7 @@ void Bvh::Insert(GlObject* obj, Node* node, int curr_depth, int depth)
 std::vector<GlObject*> Bvh::FindPotential(const GlObject& obj)
 {
   std::vector<GlObject*> objs {};
+  nodes_visits_ = 0;
   TraversePotential(&obj, objs, root_);
   return objs;
 }
@@ -79,6 +81,7 @@ std::vector<GlObject*> Bvh::FindPotential(const GlObject& obj)
 std::vector<GlObject*> Bvh::FindCollision(const GlObject& obj)
 {
   std::vector<GlObject*> objs {};
+  nodes_visits_ = 0;
   TraverseCollision(&obj, objs, root_);
   return objs;
 }
@@ -96,7 +99,10 @@ void Bvh::TraversePotential(const GlObject* obj,
   objs.insert(objs.end(), add.begin(), add.end());
  
   for (auto* child : node->GetChildren())
+  {
     TraversePotential(obj, objs, child);
+    ++nodes_visits_;
+  }
 }
 
 // Traverses tree to determine objects which is really collided with an
@@ -119,7 +125,10 @@ void Bvh::TraverseCollision(const GlObject* main,
   }
  
   for (auto* child : node->GetChildren())
+  {
     TraverseCollision(main, objs, child);
+    ++nodes_visits_;
+  }    
 }
 
 // Creates bvh-tree`s node
