@@ -109,6 +109,9 @@ void triangles::AddFromTriangles(cV_Triangle& from, V_Triangle& to)
 //  rasterization function)
 // 2) test triangles to intersect of near_z plane. If intersects, then clip
 
+// todo: lighting after clipping near_z is not correct, since something
+// goes wrong in vertices exchanging while clipping. Fix!
+
 int triangles::CullAndClip(V_Triangle& arr, const GlCamera& cam)
 {
   // Prepare container for new triangles if we would divide old
