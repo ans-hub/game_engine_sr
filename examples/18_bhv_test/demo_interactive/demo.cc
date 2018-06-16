@@ -352,13 +352,14 @@ int main(int argc, const char** argv)
       obj.CopyCoords(Coords::LOCAL, Coords::TRANS);
       obj.SetCoords(Coords::TRANS);
       object::ResetAttributes(obj);
+
       object::Translate(obj, obj.world_pos_);    
       object::CullZ(obj, cam, trig);
       object::CullX(obj, cam, trig);
       object::CullY(obj, cam, trig);
 
-      object::ComputeFaceNormals(obj, true);
       object::RemoveHiddenSurfaces(obj, cam);
+      object::ComputeFaceNormals(obj, true);
       if (obj.active_)
         triangles::AddFromObject(obj, tris_base);
     }
@@ -367,15 +368,17 @@ int main(int argc, const char** argv)
 
     triangles::AddFromObject(main, tris_base);
     triangles::World2Camera(tris_base, cam, trig);
-    triangles::CullAndClip(tris_base, cam);
-
+    
     // Light triangles in world coordinates
-
-    triangles::ComputeNormals(tris_base);
+    
+    triangles::CullAndClip(tris_base, cam);   // !!
+    triangles::ComputeNormals(tris_base, true);
     light::World2Camera(lights, cam, trig);
     light::Triangles(tris_base, lights);
     light::Reset(lights);
 
+    // !! todo: if move here, lighting of zclipped ok, To fix
+    
     // Finish
 
     triangles::MakePointers(tris_base, tris_ptrs);
