@@ -32,7 +32,7 @@ struct Config
 
   Config(const char* cfg_fname);
   template<class T>
-    auto Get(const Str& name);
+    auto Get(const Str& name) const;
 
 private:
   std::map<Str, int>      integers_;
@@ -97,39 +97,39 @@ inline Config::Config(const char* cfg_fname)
 // Specialized template member functions
 
 template<>
-inline auto Config::Get<int>(const Str& name)
+inline auto Config::Get<int>(const Str& name) const
 { 
-  return integers_[name];
+  return integers_.at(name);
 }
 
 template<>
-inline auto Config::Get<float>(const Str& name)
-{ 
-  return floats_[name];
-}
-
-template<>
-inline auto Config::Get<bool>(const Str& name)
+inline auto Config::Get<float>(const Str& name) const
 {
-  return bools_[name];
+  return floats_.at(name);
 }
 
 template<>
-inline auto Config::Get<std::string>(const Str& name)
+inline auto Config::Get<bool>(const Str& name) const
 {
-  return strings_[name];
+  return bools_.at(name);
 }
 
 template<>
-inline auto Config::Get<Vector>(const Str& name)
-{ 
-  return vectors3d_[name];
+inline auto Config::Get<std::string>(const Str& name) const
+{
+  return strings_.at(name);
 }
 
 template<>
-inline auto Config::Get<Config::V_Float>(const Str& name)
-{ 
-  return vectorsf_[name];
+inline auto Config::Get<Vector>(const Str& name) const
+{
+  return vectors3d_.at(name);
+}
+
+template<>
+inline auto Config::Get<Config::V_Float>(const Str& name) const
+{
+  return vectorsf_.at(name);
 }
 
 } // namespace anshub
