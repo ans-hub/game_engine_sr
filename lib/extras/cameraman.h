@@ -93,6 +93,7 @@ struct CameraMan : public Inputer<CamAction, CamState, CamValue>
   void  SetDynamics(Dynamics&& dyn) { dyn_ = std::move(dyn); }
   auto& GetDynamics() const { return dyn_; }  
   auto& GetCurrentCamera() { return *cam_; }
+  auto& GetCurrentCamera() const { return *cam_; }
   void  ProcessInput(const BaseWindow&) override;
   void  SetGroundPosition(float ypos);
 

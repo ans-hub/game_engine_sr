@@ -63,9 +63,15 @@ struct Dynamics
   // Getters
   
   auto GetVelocity() const { return vel_; }
+  auto GetAcceleration() const { return accel_; }
+  auto GetDirAcceleration() const { return dir_accel_; }
   auto GetDirVelocity() const { return dir_vel_; }
-
   // todo: push_back(move_type); ProcessVelocity(moves); and most of is private
+
+  // Setters
+
+  void SetVelocity(const Vector& v) { vel_ = v; } 
+  void SetAcceleration(const Vector& v) { accel_ = v; } 
 
 private:
 
