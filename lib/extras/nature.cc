@@ -23,7 +23,7 @@ Nature::Nature(
   rand_toolkit::start_rand();
 }
 
-// Recognize objects in loaded map and place them into container
+// Recognize objects from loaded map and place them into the container
 
 void Nature::RecognizeObjects()
 {
@@ -57,12 +57,13 @@ void Nature::RecognizeObjects()
         
         // Initial scale
 
-        float scale {rand_toolkit::get_rand(scale-(scale/2.0f), scale+(scale/2.0f))};
+        float scale {
+          rand_toolkit::get_rand(scale-(scale/2.0f), scale+(scale/2.0f))};
         object::Scale(obj, {scale_, scale_, scale_});
 
         // Initial rotate
 
-        float roll {rand_toolkit::get_rand(0.0f, 15.0f)};   // todo: !!! bad
+        float roll {rand_toolkit::get_rand(0.0f, 15.0f)};   // todo: bad magic
         object::Rotate(obj, {0.0f, roll, 0.0f}, trig_);
         
         objects_.push_back(obj);
