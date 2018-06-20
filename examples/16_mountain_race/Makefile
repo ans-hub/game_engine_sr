@@ -1,6 +1,6 @@
 # Builds main app
 
-APPNAME = mountain_race
+APPNAME = game
 ROOTDIR = ../../
 
 # Setup libraries pathes and flags
@@ -33,7 +33,7 @@ RLSFLAGS  = -O2
 # Setup objects
 
 VPATH =	../
-OBJECTS = helpers.o
+OBJECTS = helpers.o scene.o logic.o level.o
 
 # Other stuff
 

@@ -26,6 +26,7 @@ f cam_farz          1200.0
 f cam_clarity       50.0
 f cam_velocity      1.2
 f cam_fly_mode      0
+f cam_mouse_sens    0.5
 f cam_gravity       -0.05
 f cam_jump          0.0
 f cam_accel         0.04
@@ -36,7 +37,7 @@ f cam_speed_up      4.0
 
 # Terrain settings
 
-f ter_chunk         33
+i ter_chunk         33
 f ter_divider       4
 a ter_detaliz       50 100 150 200 250
 f ter_shading       16
@@ -46,11 +47,18 @@ s ter_tx            levels/res/mountain_tx.bmp
 s ter_objs          levels/res/mountain_objs.bmp
 f ter_water_lvl     -1000
 i ter_rain          0
+i ter_bvh_depth     4
+f ter_world_size    256.0
+
+# Player settings
+
+s player_obj        ../00_data/objects/jeep_front.ply
 
 # Sound settings
 
 s snd_engine        ../00_data/sounds/engine.ogg
 s snd_ambient       ../00_data/sounds/mountain.ogg
+s snd_crash         ../00_data/sounds/crash.ogg
 f snd_low_pitch     -10.0
 f snd_high_pitch    1.0
 
@@ -67,3 +75,5 @@ s light_pnt_color   yellow
 s light_sky_color   white
 
 v light_inf_dir     0.0   -1.0  -1.0
+v light_pnt_dir     0.0   0.0   0.0
+v light_pnt_pos     0.0   0.0   0.0
