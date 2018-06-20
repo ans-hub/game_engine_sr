@@ -13,5 +13,5 @@ Simple game with different levels represents racing in the mountains. First leve
 ## See gameplay on youtube:
 
 <div style="text-align: center;" markdown="1" />
-<a href="https://youtu.be/M80RGH-DY4s"><img src="screenshot.png" style="width: 600px;" /></a>
+<a href="https://youtu.be/M80RGH-DY4s?t=1m1s"><img src="screenshot.png" style="width: 600px;" /></a>
 </div>
