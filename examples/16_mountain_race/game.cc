@@ -1,6 +1,6 @@
 // *************************************************************
-// File:    mountain_race.cc
-// Descr:   simple terrain game
+// File:    game.cc
+// Descr:   example of simple terrain game
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
