@@ -217,8 +217,7 @@ int main(int argc, const char** argv)
     camman.ProcessInput(win);
     obj.ProcessInput(win);
     
-    obj.ProcessPlayerOrientation();
-    obj.ProcessPlayerRotating();
+    obj.ProcessView();
 
     follow_cam.FollowFor(obj);
 
