@@ -21,7 +21,7 @@ namespace anshub {
 struct Scene
 {
   Scene(const Config&, GlWindow&, Level&);
-  void Build();
+  void Build(float factor);
 
   auto GetObjectsCulled() const { return objects_culled_; }
   auto GetTrianglesCulled() const { return triangles_culled_; }

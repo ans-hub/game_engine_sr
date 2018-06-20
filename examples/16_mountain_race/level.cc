@@ -12,11 +12,15 @@ namespace anshub {
 Level::Level(const Config& cfg)
   : trig_{}
 
+  // Initializes audio objects
+
   , audio_{}
   , engine_snd_ {cfg.Get<std::string>("snd_engine")}
   , crash_snd_ {cfg.Get<std::string>("snd_crash")}
   , ambient_snd_ {cfg.Get<std::string>("snd_ambient")}
   , engine_mod_ {AudioFx::Modifier::PITCH}
+
+  // Initializes gameplay objects
 
   , camman_{
       cfg.Get<float>("cam_fov"),
@@ -77,7 +81,10 @@ Level::Level(const Config& cfg)
       15.0f                         // todo: magic (blob width)
   }
   
-  , lights_{}
+  // Initializes renderer objects
+  
+  , lights_all_{}
+  , lights_sky_{}
   , render_ctx_{
       cfg.Get<int>("win_w"),
       cfg.Get<int>("win_h"),
@@ -280,14 +287,14 @@ void Level::SetupLights(const Config& cfg)
   Vector lpos {};
   Vector ldir {};
 
-  lights_.AddAmbient(color, intense);
+  lights_all_.AddAmbient(color, intense);
 
   color   = color_table[cfg.Get<std::string>("light_inf_color")];
   intense = cfg.Get<float>("light_inf_int");
   ldir    = cfg.Get<Vector>("light_inf_dir");
 
   if (intense)
-    lights_.AddInfinite(color, intense, ldir);
+    lights_all_.AddInfinite(color, intense, ldir);
 
   color   = color_table[cfg.Get<std::string>("light_pnt_color")];
   intense = cfg.Get<float>("light_pnt_int");
@@ -295,14 +302,12 @@ void Level::SetupLights(const Config& cfg)
   lpos    = cfg.Get<Vector>("light_pnt_pos");
 
   if (intense)
-    lights_.AddPoint(color, intense, lpos, ldir);
-
-  Lights lights_sky {};
+    lights_all_.AddPoint(color, intense, lpos, ldir);
 
   color    = color_table[cfg.Get<std::string>("light_sky_color")];
   intense  = cfg.Get<float>("light_sky_int");
   
-  lights_sky.AddAmbient(color, intense);
+  lights_sky_.AddAmbient(color, intense);
 }
 
 } // namespace anshub

@@ -22,7 +22,7 @@ Scene::Scene(const Config&, GlWindow& win, Level& level)
 
 // Builds scenes for further rendering
 
-void Scene::Build()
+void Scene::Build(float factor)
 {
   hidden_surfaces_ = 0;
   objects_culled_ = 0;
@@ -49,6 +49,8 @@ void Scene::Build()
 
 void Scene::BuildPlayer(const GlCamera& cam)
 {
+  level_.player_.ProcessView();
+
   object::Translate(level_.player_, level_.player_.world_pos_);
   object::ResetAttributes(level_.player_);
   object::ComputeFaceNormals(level_.player_, true);
@@ -65,7 +67,7 @@ void Scene::BuildSkybox(const GlCamera& cam)
   object::Translate(level_.skybox_, level_.skybox_.world_pos_);
   object::ResetAttributes(level_.skybox_);
   hidden_surfaces_ += object::RemoveHiddenSurfaces(level_.skybox_, cam);
-  light::Object(level_.skybox_, level_.lights_);
+  light::Object(level_.skybox_, level_.lights_sky_);
   object::World2Camera(level_.skybox_, cam, level_.trig_);
 }
 
@@ -202,12 +204,12 @@ void Scene::ProcessTriangles(const GlCamera& cam)
   
   // Convert all lights but point to camera coordinates (since point is car`s)
 
-  light::World2Camera(level_.lights_, cam, level_.trig_);
-  if (!level_.lights_.point_.empty())
-    level_.lights_.point_.front().Reset();
+  light::World2Camera(level_.lights_all_, cam, level_.trig_);
+  if (!level_.lights_all_.point_.empty())
+    level_.lights_all_.point_.front().Reset();
 
-  light::Triangles(tris_base_, level_.lights_);
-  light::Reset(level_.lights_);
+  light::Triangles(tris_base_, level_.lights_all_);
+  light::Reset(level_.lights_all_);
 
   // Make triangles for skybox (we want light it sepearately)
 

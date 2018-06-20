@@ -30,8 +30,8 @@ f cam_mouse_sens    0.5
 f cam_gravity       -0.05
 f cam_jump          0.0
 f cam_accel         0.04
-f cam_frict         0.7
-f cam_max_speed     0.1
+f cam_frict         0.6
+f cam_max_speed     0.06
 f cam_height        0.1
 f cam_speed_up      4.0
 

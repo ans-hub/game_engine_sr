@@ -33,17 +33,23 @@
 
 namespace anshub {
 
+// Level is just container of game objects
+
 struct Level
 {
   Level(const Config&);
 
   TrigTable trig_;
 
+  // Audio objects
+
   AudioFx audio_;
   std::string engine_snd_;
   std::string crash_snd_;
   std::string ambient_snd_;
   AudioFx::Modifier engine_mod_;
+
+  // Gameplay objects 
 
   CameraMan camman_;
   Player player_;
@@ -55,7 +61,10 @@ struct Level
   Nature nature_;
   Rain rain_;
 
-  Lights lights_;
+  // Renderer objects
+
+  Lights lights_all_;
+  Lights lights_sky_;
   RenderContext render_ctx_;
   Bvh bvh_tree_;
 
@@ -73,11 +82,6 @@ private:
   void SetupRenderContext(const Config&);
 
 }; // struct Level 
-
-namespace helpers {
-
-
-} // namespace helpers
 
 } // namespace anshub
 

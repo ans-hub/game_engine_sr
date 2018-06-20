@@ -63,7 +63,7 @@ int main(int argc, const char** argv)
   
   rand_toolkit::start_rand();
 
-  // Create game entities
+  // Create entities
 
   FpsCounter fps     {};
   Timer      timer   (kFpsWait);
@@ -73,17 +73,26 @@ int main(int argc, const char** argv)
 
   // Main loop
 
+  const  int MS_PER_FRAME {30};
+  double prev = timer.GetCurrentClock();
+  double lags = 0.0f;
+
   do {
-    timer.Start();
+    double curr = timer.GetCurrentClock();
+    double elapsed = curr - prev;
+    prev = curr;
+    lags += elapsed;
     win.Clear();
-    if (logic.Process()) {
-      scene.Build();
-      fps.Count();
-      win.Render();
-      timer.Wait();
+
+    while (lags >= MS_PER_FRAME)
+    {      
+      lags -= MS_PER_FRAME;
+      logic.Process();
     }
-    else
-      win.Close();
+    
+    scene.Build(lags / MS_PER_FRAME);
+    fps.Count();
+    win.Render();
 
     if (kDebugShow && fps.Ready())
       PrintDebug(fps, level, scene);

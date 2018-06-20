@@ -28,13 +28,19 @@ struct Logic
 private:
   GlWindow& win_;
   Level& level_;
-  bool first_collision_;  // points that we collided first time
+  Timer timer_;
+  signed long ignore_input_;      // how much ms to ignore user input
+  KbdBtn mem_forward_;            // memory for forward button
+  KbdBtn mem_backward_;           // memory for backward button
+  bool first_collision_;          // points that we collided first time
 
   void StartAudioEngineSound(const Config&);
   
   void ProcessSystemInput(Btn); 
   void ProcessTreesCollisions();
   void ProcessPlayerSounds();
+  void ProcessPlayer();
+  void ProcessIgnoreTime();
 
 }; // struct Logic 
 

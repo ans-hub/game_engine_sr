@@ -12,8 +12,13 @@ namespace anshub {
 Logic::Logic(const Config& cfg, GlWindow& win, Level& level)
   : win_{win}
   , level_{level}
+  , timer_{}
+  , ignore_input_{0} // todo: magic (1 sec)
+  , mem_forward_{level_.player_.GetButton(ObjAction::MOVE_FORWARD)}
+  , mem_backward_{level_.player_.GetButton(ObjAction::MOVE_BACKWARD)}
   , first_collision_{true}
 {
+  timer_.Start();
   StartAudioEngineSound(cfg);
 }
 
@@ -26,10 +31,8 @@ bool Logic::Process()
   ProcessSystemInput(kbtn);
   ProcessTreesCollisions();
 
-  level_.camman_.ProcessInput(win_);
-  level_.player_.ProcessInput(win_);
-  level_.player_.ProcessMovement(level_.terrain_);
-  level_.follow_cam_.FollowFor(level_.player_);
+  ProcessPlayer();
+  ProcessIgnoreTime();
 
   ProcessPlayerSounds();
   level_.rain_.Process(level_.player_.world_pos_);
@@ -69,17 +72,42 @@ void Logic::ProcessTreesCollisions()
   if (!collisions.empty())
   {
     auto& dyn = level_.player_.GetDynamics();
-    if (dyn.GetCurrentSpeed() > dyn.GetMaxSpeed()/3 &&    // todo: magic
-        !audio_helpers::IsNowPlaying(level_.audio_, level_.crash_snd_))
+    if (!audio_helpers::IsNowPlaying(level_.audio_, level_.crash_snd_))
       level_.audio_.Play(level_.crash_snd_, false);
     if (first_collision_)
     {
-      dyn.SetAcceleration(dyn.GetAcceleration() * -10.0f);
+      ignore_input_ = 1000;   // todo: magic (1 sec)
+      dyn.SetAcceleration(dyn.GetAcceleration() * -20.0f);  // todo: magic!!
       first_collision_ = false;
     }
   }
   else
     first_collision_ = true;
+}
+
+// Processes player movements
+
+void Logic::ProcessPlayer()
+{
+  if (ignore_input_ <= 0)   // also we need backward ignoring
+    level_.player_.SetButton(ObjAction::MOVE_FORWARD, mem_forward_);
+  else
+    level_.player_.SetButton(ObjAction::MOVE_FORWARD, KbdBtn::NONE);
+
+  level_.camman_.ProcessInput(win_);
+  level_.player_.ProcessInput(win_);
+  level_.player_.ProcessMovement(level_.terrain_);
+  level_.follow_cam_.FollowFor(level_.player_);
+}
+
+// Processes ignore time
+
+void Logic::ProcessIgnoreTime()
+{
+  timer_.End();
+  if (ignore_input_ > 0)
+    ignore_input_ -= timer_.GetElapsed();
+  timer_.Start();
 }
 
 // Processes player`s sounds (engine volume in depends of speed)
