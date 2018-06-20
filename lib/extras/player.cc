@@ -93,6 +93,10 @@ void Player::ProcessMovement(const Terrain& terrain)
 {
   ProcessGroundPosition(terrain);
   ProcessGroundDirection(terrain);
+}
+
+void Player::ProcessView()
+{
   ProcessPlayerOrientation();
   ProcessPlayerRotating();
 }

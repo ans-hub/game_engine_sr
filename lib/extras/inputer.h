@@ -27,11 +27,12 @@ struct Inputer
 {
   Inputer();
 
-  void  SetButton(Action, KbdBtn, int delay = 0);
-  bool  GetState(State) const;
-  void  SetState(State, bool value);
-  float GetValue(Value) const;
-  void  SetValue(Value, float value);
+  void   SetButton(Action, KbdBtn, int delay = 0);
+  KbdBtn GetButton(Action);
+  bool   GetState(State) const;
+  void   SetState(State, bool value);
+  float  GetValue(Value) const;
+  void   SetValue(Value, float value);
   
   virtual void ProcessInput(const BaseWindow&) =0;
 
@@ -63,6 +64,12 @@ template<class A, class S, class V>
 inline void Inputer<A,S,V>::SetButton(A action, KbdBtn btn, int delay)
 {
   keys_[static_cast<int>(action)] = CameraBtn(btn, delay);
+}
+
+template<class A, class S, class V>
+inline KbdBtn Inputer<A,S,V>::GetButton(A action)
+{
+  return keys_[static_cast<int>(action)].btn_;
 }
 
 template<class A, class S, class V>

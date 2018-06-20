@@ -70,13 +70,13 @@ struct Player
   Player(GlObject&&, float player_h, cVector& dir, cVector& pos, cTrigTable&);
   void  SetDynamics(Dynamics&& dyn) { dyn_ = std::move(dyn); }
   auto& GetDynamics() { return dyn_; }
+  
   void  ProcessInput(const BaseWindow&) override;
   void  ProcessMovement(const Terrain&);
+  void  ProcessView();
 
   template<class ... Args>
   void SetDirection(DirectionType, Args&&...);
-  void ProcessPlayerOrientation();
-  void ProcessPlayerRotating();
 private:
   Dynamics  dyn_;
   CamDir    yaw_;
@@ -89,6 +89,8 @@ private:
   void SetGroundPosition(float ypos);
   void ProcessGroundPosition(const Terrain&);
   void ProcessGroundDirection(const Terrain&);
+  void ProcessPlayerOrientation();
+  void ProcessPlayerRotating();
 
 }; // struct Player
 

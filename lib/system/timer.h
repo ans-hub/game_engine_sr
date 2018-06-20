@@ -30,6 +30,7 @@ public:
   void  End()    { end_time_ = GetCurrentClock(); }
   slong GetStartTime() const { return start_time_; }
   slong GetEndTime() const   { return end_time_; }
+  slong GetElapsed() const { return end_time_ - start_time_; }
   slong GetCurrentClock() const;
   void  SetMillisecondsToWait(int ms) { ms_wait_ = ms; }
 
