@@ -97,6 +97,8 @@ namespace color {
   const FColor fWhite  (255.0f, 255.0f, 255.0f);
   const FColor fBlack  {0.0f, 0.0f, 0.0f};
   const FColor fYellow {255.0f, 255.0f, 0.0f};
+  const FColor fRed    {255.0f, 0.0f, 0.0f};
+  const FColor fGreen  {0.0f, 255.0f, 0.0f};
   const FColor fBlue   {0.0f, 0.0f, 255.0f};
   const FColor fCyan   {0.0f, 255.0f, 255.0f};
   const FColor fOceanBlue {143.0f, 175.0f, 201.0f};
