@@ -131,6 +131,13 @@ void coords::Persp2Screen(Vector& vec, float wov, int scr_w, int scr_h)
   vec.y = (vec.y + half_wov) * ky;   // to 0-width, 0-height
 }
 
+// Clip vector by near z plane
+
+void coords::ClipNearZ(Vector& vec, float near_z)
+{
+  vec.z = vec.z < near_z ? near_z : vec.z;
+}
+
 // Rotates all vertexes by y-axis (conventionally yaw)
 
 void coords::RotateYaw(V_Vertex& vxs, float deg, TrigTable& trig)

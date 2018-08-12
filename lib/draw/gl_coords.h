@@ -28,6 +28,7 @@ namespace coords {
   void  World2Camera(Vector&, cVector& pos, cVector& dir, const TrigTable&);
   void  Persp2Screen(V_Vertex&, float wov, int scr_w, int scr_h);
   void  Persp2Screen(Vector&, float wov, int scr_w, int scr_h);
+  void  ClipNearZ(Vector&, float near_z);
 
   // Rotating functions
   
