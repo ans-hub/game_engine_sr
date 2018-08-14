@@ -16,7 +16,7 @@
 #include "lib/draw/gl_object.h"
 #include "lib/draw/gl_coords.h"
 #include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_draw.h"
+#include "lib/draw/gl_render_ctx.h"
 #include "lib/draw/gl_scr_buffer.h"
 #include "lib/draw/fx_rasterizers.h"
 
@@ -28,16 +28,19 @@ namespace anshub {
 
 struct DebugContext
 {
-  DebugContext(ScrBuffer& sbuf, const GlCamera& cam)
-    : color_{color::Red}
-    , len_multiplier_{1.0f}
-    , sbuf_{sbuf}
-    , cam_{cam}
-  { }
-  uint        color_;
-  float       len_multiplier_;
-  ScrBuffer&  sbuf_;
-  const GlCamera& cam_;
+  struct Line
+  {
+    Vector begin_;
+    Vector end_;
+    FColor color_;
+
+  }; // struct Line
+
+  DebugContext();
+  void AddLine(const Vector& p0, const Vector& p1, const FColor& color);
+
+  std::vector<Line> lines_;
+  std::vector<std::string> text_;
 
 }; // struct DebugContext
 
@@ -47,10 +50,7 @@ struct DebugContext
 
 namespace debug_render {
 
-  using cDebugCtx = const DebugContext;
-
-  void DrawVector(cVector& vec, Vector begin, cDebugCtx&);
-  void DrawLine(Vector begin, Vector end, cDebugCtx&);
+  void DrawVector(Vector begin, Vector end, const FColor&, RenderContext&);
 
 } // namespace debug_draw
 
