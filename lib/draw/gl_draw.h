@@ -18,6 +18,7 @@
 #include "gl_triangle.h"
 #include "gl_z_buffer.h"
 #include "gl_render_ctx.h"
+#include "gl_debug_draw.h"
 #include "fx_rasterizers.h"
 
 #include "lib/math/segment.h"
@@ -59,6 +60,7 @@ namespace render {
   // Main function to rendering triangles
 
   int  Context(const V_TrianglePtr&, RenderContext&) noexcept;
+  int  Context(const V_TrianglePtr&, RenderContext&, DebugContext&) noexcept;
   int  Solid(const V_TrianglePtr&, RenderContext&) noexcept;
   int  SolidWithAlpha(const V_TrianglePtr&, RenderContext&) noexcept;
 

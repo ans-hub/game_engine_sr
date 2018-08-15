@@ -329,6 +329,36 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx) noexcept
   return drawn;
 }
 
+// Draws triangles using information from rendering context
+
+int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx,
+                    DebugContext& dbg) noexcept
+{
+  ctx.sbuf_.Clear();
+  if (ctx.is_zbuf_)
+    ctx.zbuf_.Clear();
+
+  int drawn {0};
+  if (ctx.is_wired_)
+    render::Wired(triangles, ctx.sbuf_);
+  else if (!ctx.is_zbuf_)
+    drawn += render::Solid(triangles, ctx.sbuf_);
+  else if (ctx.is_zbuf_ && !ctx.is_alpha_)
+    drawn += render::Solid(triangles, ctx);
+  else if (ctx.is_zbuf_ && ctx.is_alpha_)
+    drawn += render::SolidWithAlpha(triangles, ctx);
+
+  if (ctx.cam_)
+    for (const auto& line : dbg.lines_)
+      debug_render::DrawVector(line.begin_, line.end_, line.color_, ctx);
+
+  dbg.lines_.clear();
+  ctx.sbuf_.SendDataToFB();
+  ctx.pixels_drawn_ = drawn;
+
+  return drawn;
+}
+
 // Renders triangles and uses dist as chooser between affine and perspective
 // correct texturing
 
