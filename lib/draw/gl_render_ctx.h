@@ -10,6 +10,7 @@
 
 #include "gl_scr_buffer.h"
 #include "gl_z_buffer.h"
+#include "cameras/gl_camera.h"
 
 namespace anshub {
 
@@ -32,6 +33,7 @@ struct RenderContext
   int     pixels_drawn_;
   int     triangles_drawn_;
 
+  GlCamera* cam_;
   ScrBuffer sbuf_;
   ZBuffer   zbuf_;
 
@@ -51,6 +53,7 @@ inline RenderContext::RenderContext(int w, int h, int color)
   , mipmap_dist_{1.0f}
   , pixels_drawn_{}
   , triangles_drawn_{}
+  , cam_{nullptr}
   , sbuf_{w, h, color}
   , zbuf_{w, h}
 { }
