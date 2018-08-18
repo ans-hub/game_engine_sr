@@ -1,5 +1,5 @@
 // *************************************************************
-// File:    matrix_rotate_eul.h
+// File:    mx_rotate_eul.h
 // Descr:   rotation matrix based on euler angles (YXZ sequence)
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
@@ -8,10 +8,10 @@
 #ifndef GC_MATRIX_ROTATE_EUL_H
 #define GC_MATRIX_ROTATE_EUL_H
 
-#include "../trig.h"
-#include "../math.h"
-#include "../vector.h"
-#include "../matrix.h"
+#include "lib/math/trig.h"
+#include "lib/math/math.h"
+#include "lib/math/vector.h"
+#include "lib/math/matrix.h"
 
 namespace anshub {
 

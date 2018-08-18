@@ -26,17 +26,14 @@ struct MatrixRotateUvn : public Matrix<4,4>
 // Constructs uvn rotation matrix
 
 inline MatrixRotateUvn::MatrixRotateUvn(cVector& u, cVector& v, cVector& n)
-: Matrix(Type::IDENTITY)
-{
-  Matrix<4,4> res = {
+  : Matrix<4,4>
+  ({
     u.x,  v.x,  n.x,  0.0f,
     u.y,  v.y,  n.y,  0.0f,
     u.z,  v.z,  n.z,  0.0f,
     0.0f, 0.0f, 0.0f, 1.0f,
-  };
-
-  data_ = std::move(res.Data());
-}
+  })
+{ }
 
 }  // namespace anshub
 

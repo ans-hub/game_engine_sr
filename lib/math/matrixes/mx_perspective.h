@@ -22,7 +22,7 @@ struct MatrixPerspective : public Matrix<4,4>
 }; // struct MatrixTranslate
 
 inline MatrixPerspective::MatrixPerspective(float dov, float ar)
-: Matrix
+  : Matrix<4,4>
   ({
     dov,  0.0f,   0.0f,   0.0f,
     0.0f, dov*ar, 0.0f,   0.0f,
