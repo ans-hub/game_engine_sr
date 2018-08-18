@@ -8,7 +8,7 @@
 #ifndef GM_MATRIX_H
 #define GM_MATRIX_H
 
-#include <vector>
+#include <array>
 #include <algorithm>
 #include <initializer_list>
 
@@ -25,13 +25,13 @@ class Matrix
 {
 public:
   
-  using Container = std::vector<float>;
+  using Container = std::array<float, Row * Col>;
 
   enum Type { ZERO, IDENTITY }; // used to constructs zero or identity matrix
 
-  Matrix();                               // for zero matrix creating
-  explicit Matrix(Type);                  // for identity matrix creating
-  Matrix(std::initializer_list<float>);   // for custom matrix creating
+  Matrix();                                     // for zero matrix creating
+  explicit Matrix(Type);                        // for identity matrix creating
+  Matrix(const std::initializer_list<float>&);  // for custom matrix creating
   Matrix(const Matrix&) =default;
   Matrix& operator=(const Matrix&) =default;
   Matrix(Matrix&&) =default;
@@ -40,8 +40,13 @@ public:
 
   std::size_t Rows() const { return r_; }
   std::size_t Cols() const { return c_; }
-  std::size_t Size() const { return size_; }
-  Container   Data() const { return data_; }
+  std::size_t Size() const { return data_.count(); }
+  Container&  Data() { return data_; }
+  const Container& Data() const { return data_; }
+
+  Vector GetRow(std::size_t row) const;
+  void SetRow(std::size_t row, const Vector&);
+  Vector operator*(const Vector&);
 
   Matrix& operator*=(float s)
   {
@@ -77,22 +82,26 @@ public:
     ); 
     return *this;
   }
-  float operator()(int i, int k) const {
+  float operator()(int i, int k) const
+  {
     return data_[i * c_ + k];
   }
   float& operator()(int i, int k)
   {
     return data_[i * c_ + k];
   }
-  friend inline Matrix operator*(Matrix lhs, float scalar) {
+  friend inline Matrix operator*(Matrix lhs, float scalar)
+  {
     lhs *= scalar;
     return lhs;
   }
-  friend inline Matrix operator/(Matrix lhs, float scalar) {
+  friend inline Matrix operator/(Matrix lhs, float scalar)
+  {
     lhs /= scalar;
     return lhs;
   }
-  friend inline Matrix operator-(Matrix lhs, const Matrix& rhs) {
+  friend inline Matrix operator-(Matrix lhs, const Matrix& rhs)
+  {
     lhs -= rhs;
     return lhs;
   }
@@ -103,12 +112,46 @@ public:
   }
 
 protected:
+  Container   data_;
   std::size_t r_;
   std::size_t c_;
-  std::size_t size_;
-  Container   data_;
 
 }; // struct Matrix
+
+//****************************************************************************
+// MATRIX SPECIALIZATION OF MOST COMMON MATRIX FUNCTIONS
+//****************************************************************************
+
+// Returns vector from matrix row
+
+template<>
+inline Vector Matrix<4,4>::GetRow(std::size_t r) const
+{
+  if (r >= r_)
+    throw MathExcept("<Matrix<4,4>::operator() - row count invalid");
+  return Vector(
+    data_[r*c_], data_[r*c_+1], data_[r*c_+2], data_[r*c_+3]);
+}
+
+// Sets row of matrix by vector
+
+template<>
+inline void Matrix<4,4>::SetRow(std::size_t row, const Vector& v)
+{
+  data_[row*c_] = v.x;
+  data_[row*c_+1] = v.y;
+  data_[row*c_+2] = v.z;
+  data_[row*c_+3] = v.w;
+}
+
+template<>
+inline Vector Matrix<4,4>::operator*(const Vector& v)
+{
+  return {data_[0] * v.x + data_[1] * v.y + data_[2] * v.z,
+          data_[4] * v.x + data_[5] * v.y + data_[6] * v.z,
+          data_[8] * v.x + data_[9] * v.y + data_[10] * v.z,
+          data_[12] * v.x + data_[13] * v.y + data_[14] * v.z};
+}
 
 //****************************************************************************
 // DEFINITION: HELPER FUNCTIONS FOR MATRIX CLASS
@@ -142,6 +185,9 @@ namespace matrix {
   template<std::size_t R>
   void MakeIdentityFromZero(Matrix<R,R>&);
 
+  template<std::size_t R>
+  void MakeRotateAxis(Matrix<R,R>&, float angle);
+
   // Other helpers
 
   template<std::size_t R, std::size_t C> 
@@ -157,10 +203,9 @@ namespace matrix {
 
 template<std::size_t R, std::size_t C>
 Matrix<R,C>::Matrix()
-  : r_{R}
+  : data_()
+  , r_{R}
   , c_{C}
-  , size_{r_ * c_}
-  , data_(size_)
 { }
 
 // Constructs the identity matrix if identity flag is on. Otherwise zero mx/
@@ -168,10 +213,9 @@ Matrix<R,C>::Matrix()
 
 template<std::size_t R, std::size_t C>
 Matrix<R,C>::Matrix(Type t)
-  : r_{R}
+  : data_()
+  , r_{R}
   , c_{C}
-  , size_{r_ * c_}
-  , data_(size_)
 {
   if (t == Type::IDENTITY)
     matrix::MakeIdentityFromZero(*this);
@@ -180,14 +224,16 @@ Matrix<R,C>::Matrix(Type t)
 // Constructs the matrix with initializer list
 
 template<std::size_t R, std::size_t C>
-Matrix<R,C>::Matrix(std::initializer_list<float> list)
-  : r_{R}
+Matrix<R,C>::Matrix(const std::initializer_list<float>& list)
+  : data_{}
+  , r_{R}
   , c_{C}
-  , size_{r_ * c_}
-  , data_{list}
 {
-  if (size_ != list.size())
+  if (data_.size() != list.size())
     throw MathExcept("Matrix::Matrix(): size and values are not same");
+  int i {0};
+  for (auto& item : list)
+    data_[i++] = item;
 }
 
 //****************************************************************************
