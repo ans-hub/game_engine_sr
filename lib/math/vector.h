@@ -41,6 +41,8 @@ struct Vector
     : x{ax}, y{ay}, z{}, w{1.0} { }
   constexpr Vector(float ax, float ay, float az) 
     : x{ax}, y{ay}, z{az}, w{1.0} { }
+  constexpr Vector(float ax, float ay, float az, float aw)
+    : x{ax}, y{ay}, z{az}, w{aw} { }
   
   float x;
   float y;

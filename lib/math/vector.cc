@@ -121,7 +121,7 @@ bool vector::IsCollinearB(const Vector& v1, const Vector& v2)
 
 std::ostream& vector::operator<<(std::ostream& oss, const Vector& v)
 {
-  oss << v.x << ',' << v.y << ',' << v.z;
+  oss << "x: " << v.x << "  y: " << v.y << "  z:" << v.z;
   return oss;
 }
 
