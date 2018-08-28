@@ -1,6 +1,6 @@
 # Builds main app
 
-APPNAME = axis
+APPNAME = debug_draw
 ROOTDIR = ../../
 
 # Setup libraries pathes and flags
