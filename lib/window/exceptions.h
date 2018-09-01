@@ -21,6 +21,7 @@ struct IOException : std::runtime_error
     , msg_{nullptr}
   {
     msg_ = (char*)malloc(strlen(msg) + strlen(std::strerror(num) + 1));
+    strcpy(msg_, msg);
   }
     
   ~IOException() { if (msg_) free(msg_); }

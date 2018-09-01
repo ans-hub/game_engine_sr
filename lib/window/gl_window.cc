@@ -38,21 +38,25 @@ GlWindow::GlWindow(
   , ctxattr_{ctx_cfg}
   , glxself_{0}
   , fbcfgs_ {nullptr, 0}
-{ 
+{
   using namespace io_helpers;
 
   // New style context creating
 
-  if (glxver_.first > 1 || (glxver_.first == 1 && glxver_.second >= 3)) {
+  if (glxver_.first > 1 || (glxver_.first == 1 && glxver_.second >= 3))
+  {
     fbcfgs_   = GetFBConfigs(disp_, fbattr_);
-    // int best  = GetBestMSAAVisual(disp_, fbcfgs_); // see note #4 why commented
-    int best  = 0;
+    // int best  = GetBestMSAAVisual(disp_, fbcfgs_);
+    int best  = 0;   // see note #4 why commented
     auto cfg  = *(fbcfgs_[best]);
     auto fbvi = ChooseGlVisual(disp_, cfg);
     swa_      = GetDefaultWinAttribs(disp_, root_, fbvi.get());
     context_  = CreateGlContext(disp_, cfg, ctxattr_);
     self_     = CreateGlWindow(disp_, root_, fbvi.get(), swa_, p.x, p.y, sz.w, sz.h);
-    pbuffer_  = CreatePBuffer(disp_, sz.w, sz.h, cfg);
+    if (FindFlagInFBAttrs(fb_cfg, GLX_DRAWABLE_TYPE, GLX_PBUFFER_BIT))
+      pbuffer_  = CreatePBuffer(disp_, sz.w, sz.h, cfg);
+    else
+      pbuffer_ = 0;
     if (pbuffer_)
       glXMakeContextCurrent(disp_, self_, pbuffer_, context_);
     else {
@@ -63,7 +67,8 @@ GlWindow::GlWindow(
 
   // Old style context creating
 
-  else {
+  else
+  {
     auto fbvi = ChooseGlVisual(disp_);
     swa_      = GetDefaultWinAttribs(disp_, root_, fbvi.get());
     context_  = CreateGlContext(disp_, fbvi.get());

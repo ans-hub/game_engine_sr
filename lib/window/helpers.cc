@@ -173,6 +173,16 @@ VisualPtr ChooseGlVisual(Display* disp)
   return vi;
 }
 
+// Searches setted bit in fbattrs array
+
+bool FindFlagInFBAttrs(const FBAttrs& fb_attrs, int attr, int flag)
+{
+  for (auto& attr_item : fb_attrs)
+    if ((attr_item == attr) && (attr_item & flag))
+      return true;
+  return false;
+}
+
 //*****************************************************************************
 // Context and pbuffer routines
 //*****************************************************************************
@@ -186,7 +196,7 @@ GLXContext CreateGlContext(Display* disp, GLXFBConfig& fb_cfg, CTAttrs& attrs)
   GLXContext glc = 0;
 	auto glxExts = GetAllGlxExtensions(disp);
 	if (!IsExtensionSupported(glxExts, "GLX_ARB_create_context")) {
-    std::cerr << "dsa\n";
+    std::cerr << "GLX_ARB_create_context is not supported\n";
     glc = glXCreateNewContext(disp, fb_cfg, GLX_RGBA_TYPE, 0, True);
 	}
 	else {
@@ -465,7 +475,7 @@ Pos GetXYToMiddle(int w, int h)
 //*****************************************************************************
 
 // Returns all Gl extensions (only after gl context creating)
-// Format: strings througt space
+// Format: strings through the space
 
 const char* GetAllGlExtensions()
 {
@@ -473,7 +483,7 @@ const char* GetAllGlExtensions()
 }
 
 // Returns all Glx extensions (any time)
-// Format: strings througt space
+// Format: strings through the space
 
 const char* GetAllGlxExtensions(Display* disp)
 {
@@ -533,7 +543,7 @@ Pair GetGlContextVersion()
   return std::make_pair(major, minor);
 }
 
-// Returns 1 - core profile, 2 - compatibility profile
+// Returns in first - 1 is core profile, 2 is compatibility profile
 
 Pair GetGlContextProfile()
 {
@@ -556,9 +566,10 @@ Pair GetGlxVersion(Display* disp)
  
 void PrintGlInfo(std::ostream& oss)
 {
-  oss << "GL Renderer: "  << glGetString(GL_RENDERER) << "\n";
-	oss << "GL Version: "   << glGetString(GL_VERSION) << "\n";
-	oss << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+  std::string gl_ctx_profile = GetGlContextProfile().first == 1 ? "core" : "comp";
+  oss << "GL Renderer: "  << glGetString(GL_RENDERER) << '\n'
+	    << "GL Version: "   << glGetString(GL_VERSION) << '\n'
+	    << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n';
 }
 
 //*****************************************************************************
@@ -645,5 +656,15 @@ VisualPtr ptr::glXChooseVisual(Display* disp, int scr, int* data)
 }
 
 } // namespace io_helpers
+
+//*****************************************************************************
+// Other helpers
+//*****************************************************************************
+
+std::ostream& operator<<(std::ostream& oss, std::pair<int,int>& p)
+{
+  oss << p.first << '.' << p.second << '\n';
+  return oss;
+}
 
 } // namespace anshub

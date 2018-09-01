@@ -49,6 +49,7 @@ namespace io_helpers {      // low-level io helpers
   int         GetBestMSAAVisual(Display*, FBConfigs&);
   VisualPtr   ChooseGlVisual(Display*, GLXFBConfig&);
   VisualPtr   ChooseGlVisual(Display*);
+  bool        FindFlagInFBAttrs(const FBAttrs&, int, int);
 
   // Context routines
 
@@ -112,6 +113,8 @@ namespace io_helpers {      // low-level io helpers
   } // namespace ptr
 
 } // namespace io_helpers
+
+std::ostream& operator<<(std::ostream&, std::pair<int,int>&);
 
 } // namespace anshub
 
