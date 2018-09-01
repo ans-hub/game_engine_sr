@@ -19,9 +19,9 @@ GlText::GlText(GlWindow& win, const char* font_name)
 {
   auto gl_ver = io_helpers::GetGlContextVersion();
   auto gl_prf = io_helpers::GetGlContextProfile();
-  
+  std::cerr << gl_ver << " " << gl_prf << '\n';
   if (gl_ver.first >= 3 && gl_ver.second > 0) {
-    if (gl_prf.first != 2)
+    if (gl_prf.first == 2)
       throw IOException("GlText: gl context is not in compatible mode", errno);      
   }
 
