@@ -41,6 +41,7 @@ struct DebugContext
 
   std::vector<Line> lines_;
   std::vector<std::string> text_;
+  bool render_first_;
 
 }; // struct DebugContext
 

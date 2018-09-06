@@ -135,7 +135,7 @@ void coords::Persp2Screen(Vector& vec, float wov, int scr_w, int scr_h)
 
 void coords::ClipNearZ(Vector& vec, float near_z)
 {
-  vec.z = vec.z < near_z ? near_z : vec.z;
+  vec.z = vec.z <= near_z ? near_z : vec.z;
 }
 
 // Rotates all vertexes by y-axis (conventionally yaw)

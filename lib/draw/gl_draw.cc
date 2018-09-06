@@ -338,6 +338,10 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx,
   if (ctx.is_zbuf_)
     ctx.zbuf_.Clear();
 
+  if (dbg.render_first_)
+    for (const auto& line : dbg.lines_)
+      debug_render::DrawVector(line.begin_, line.end_, line.color_, ctx);
+
   int drawn {0};
   if (ctx.is_wired_)
     render::Wired(triangles, ctx.sbuf_);
@@ -348,7 +352,7 @@ int render::Context(const V_TrianglePtr& triangles, RenderContext& ctx,
   else if (ctx.is_zbuf_ && ctx.is_alpha_)
     drawn += render::SolidWithAlpha(triangles, ctx);
 
-  if (ctx.cam_)
+  if (!dbg.render_first_)
     for (const auto& line : dbg.lines_)
       debug_render::DrawVector(line.begin_, line.end_, line.color_, ctx);
 

@@ -12,6 +12,7 @@ namespace anshub {
 DebugContext::DebugContext()
   : lines_{}
   , text_{}
+  , render_first_{false}
 { }
 
 void DebugContext::AddLine(const Vector& p0, const Vector& p1, const FColor& color)
