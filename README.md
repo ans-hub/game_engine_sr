@@ -1,12 +1,10 @@
 # Game engine with software renderer
 
-This repository contains implementation of software game engine. The main idea of this game engine was to study different algorithms (graphics, games, etc), using vurtual linear addressed video buffer. This means that all the manipulations with the graphics (math, transformation, rasterisation, etc.) you must perform manually. And only then you will send data to the video memory.
+This repository contains implementation of software game engine. The main idea of this game engine was to study different algorithms (graphics, games, etc), using vurtual linear addressed video buffer. This means that all the manipulations with the graphics (math, transformation, rasterisation, etc.) you must perform manually. And only then you will send data to the video memory. Game engine uses left-handed coordinate system (+z forward in screen) and math lib with column ordered matrices.
 
 ## Linear video buffer implementation
 
-The idea of using abstract linear addressed video buffer was taken from the book of Andre LaMothe. And implementation on this buffer under the linux was the problem that I faced.
-
-In my implementation the linear video buffer is an abstraction consisting of an array in the system memory with a step of 4 bytes to store the pixel color in the format `ARGB (byte-ordered)`. Usually buffer has size is evaluated as *window_width x widnow_height x bytes_per_pixel*.
+The idea of using abstract linear addressed video buffer was taken from the book of Andre LaMothe. In my implementation the linear video buffer is an abstraction consisting of an array in the system memory with a step of 4 bytes to store the pixel color in the format `ARGB (byte-ordered)`. Usually buffer has size is evaluated as *window_width x widnow_height x bytes_per_pixel*.
 
 The linear buffer has the following interface:
 - `operator[]` - allows you to access and write to the buffer data
@@ -117,6 +115,17 @@ Installation of bass audio library is similar, but in the case of cygwin we shou
 
 When start any example, use `vblank_mode=0 ./some_example`
 
-### Note about fullscreeno on Wayland
+### Note about fullscreen on Wayland
 
 If you use wayland, you mas switch to old X mode to use fullscreen (i.e., in Ubuntu you may do this by choose login session called "Gnome on xorg")
+
+## Todo:
+
+* parallelize rasterizer
+* bvh (or other similar struct) for terrain culling
+* occluders
+* ray-tracing
+* normal mapping
+* spot light
+* shadows
+* reflections
