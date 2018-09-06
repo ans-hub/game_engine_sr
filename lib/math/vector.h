@@ -264,6 +264,7 @@ inline void vector::InUpperBound(Vector& v, float upper)
 // Note #2: this is fiction coordinate which used only to get capable of multiply mxs.
 // One important thing - is in perspective proj. In quaternions w coordinate uses to
 // represents really coordinate (it may be multiplie, add, and sub ...)
+// Also we make it 0 when we don't want to translate this vector by transform matrix
 
 // Todo #1 : may be do as Vector<2>, Vector<3> ??? Yes, surely
 // Todo #2 : make all inline ??? 

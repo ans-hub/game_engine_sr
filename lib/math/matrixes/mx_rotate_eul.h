@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    mx_rotate_eul.h
-// Descr:   rotation matrix based on euler angles (YXZ sequence)
+// Descr:   row-ordered rotation matrix (YXZ sequence)
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -109,8 +109,7 @@ inline MatrixRotateEul::MatrixRotateEul(const Vector& ang, const TrigTable& t)
      0,               0,               0,       1
   };
 
-  // This matrix is the same but when we use not row based matrixes,
-  // as in opengl. Here is present good explanation, but all matrixes
+  // Here is present good explanation, but all matrixes
   // are not the same as here, thus needs to compute by hands
   // http://www.songho.ca/opengl/gl_anglestoaxes.html
 
@@ -124,6 +123,7 @@ inline MatrixRotateEul::MatrixRotateEul(const Vector& ang, const TrigTable& t)
   data_ = std::move(res.Data());
 
 }
+
 }  // namespace anshub
 
 #endif  // GC_MATRIX_ROTATE_EUL_H

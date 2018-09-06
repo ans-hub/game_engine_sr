@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    matrix_persp.h
-// Descr:   perspective matrix
+// Descr:   row-based perspective matrix
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
@@ -26,8 +26,8 @@ inline MatrixPerspective::MatrixPerspective(float dov, float ar)
   ({
     dov,  0.0f,   0.0f,   0.0f,
     0.0f, dov*ar, 0.0f,   0.0f,
-    0.0f, 0.0f,   10.0f,   1.0f,    // todo: why and what the magic consts?
-    0.0f, 0.0f,   -10.1f,   0.0f
+    0.0f, 0.0f,   1.0f,   1.0f,
+    0.0f, 0.0f,   1.0f,   0.0f
   })
 { }
 

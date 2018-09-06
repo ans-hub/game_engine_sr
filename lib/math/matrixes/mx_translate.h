@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    matrix_trans.h
-// Descr:   translate matrix
+// Descr:   row-based translate matrix
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************

@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    matrix_view.h
-// Descr:   viewport matrix
+// Descr:   row-bases viewport matrix
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
@@ -30,8 +30,8 @@ inline MatrixViewport::MatrixViewport(float wov, int scr_w, int scr_h)
   {
       kx,           0.0f,         0.0f,   0.0f,
       0.0f,         ky,           0.0f,   0.0f,
-      0.0f,         0.0f,         990.0f,   1.0f,
-      half_wov*kx,  half_wov*ky,  10.0f,   0.0f
+      0.0f,         0.0f,         1.0f,   0.0f,
+      half_wov*kx,  half_wov*ky,  1.0f,   0.0f
   };
   data_ = std::move(tmp);
 } 

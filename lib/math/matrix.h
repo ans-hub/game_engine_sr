@@ -10,8 +10,10 @@
 
 #include <array>
 #include <algorithm>
+#include <cmath>
 #include <initializer_list>
 
+#include "trig.h"
 #include "vector.h"
 
 namespace anshub {
@@ -46,7 +48,15 @@ public:
 
   Vector GetRow(std::size_t row) const;
   void SetRow(std::size_t row, const Vector&);
+
+  // Non standart behaviour operators
+
   Vector operator*(const Vector&);
+  Vector operator%(Vector);
+  Matrix& operator*(const Matrix&);
+  Matrix& operator%(const Matrix&);
+
+  // Standart behavior operators
 
   Matrix& operator*=(float s)
   {
@@ -119,41 +129,6 @@ protected:
 }; // struct Matrix
 
 //****************************************************************************
-// MATRIX SPECIALIZATION OF MOST COMMON MATRIX FUNCTIONS
-//****************************************************************************
-
-// Returns vector from matrix row
-
-template<>
-inline Vector Matrix<4,4>::GetRow(std::size_t r) const
-{
-  if (r >= r_)
-    throw MathExcept("<Matrix<4,4>::operator() - row count invalid");
-  return Vector(
-    data_[r*c_], data_[r*c_+1], data_[r*c_+2], data_[r*c_+3]);
-}
-
-// Sets row of matrix by vector
-
-template<>
-inline void Matrix<4,4>::SetRow(std::size_t row, const Vector& v)
-{
-  data_[row*c_] = v.x;
-  data_[row*c_+1] = v.y;
-  data_[row*c_+2] = v.z;
-  data_[row*c_+3] = v.w;
-}
-
-template<>
-inline Vector Matrix<4,4>::operator*(const Vector& v)
-{
-  return {data_[0] * v.x + data_[1] * v.y + data_[2] * v.z,
-          data_[4] * v.x + data_[5] * v.y + data_[6] * v.z,
-          data_[8] * v.x + data_[9] * v.y + data_[10] * v.z,
-          data_[12] * v.x + data_[13] * v.y + data_[14] * v.z};
-}
-
-//****************************************************************************
 // DEFINITION: HELPER FUNCTIONS FOR MATRIX CLASS
 //****************************************************************************
 
@@ -188,12 +163,68 @@ namespace matrix {
   template<std::size_t R>
   void MakeRotateAxis(Matrix<R,R>&, float angle);
 
+  Matrix<4,4> MakeRotateX(float angle);
+  Matrix<4,4> MakeRotateY(float angle);
+  Matrix<4,4> MakeRotateZ(float angle);
+
   // Other helpers
 
   template<std::size_t R, std::size_t C> 
   std::ostream& operator<<(std::ostream&, const Matrix<R,C>&);
 
 } // namespace matrix
+
+//****************************************************************************
+// MATRIX SPECIALIZATION OF MOST COMMON MATRIX FUNCTIONS
+//****************************************************************************
+
+// Returns vector from matrix row
+
+template<>
+inline Vector Matrix<4,4>::GetRow(std::size_t r) const
+{
+  if (r >= r_)
+    throw MathExcept("<Matrix<4,4>::operator() - row count invalid");
+  return Vector(
+    data_[r*c_], data_[r*c_+1], data_[r*c_+2], data_[r*c_+3]);
+}
+
+// Sets row of matrix by vector
+
+template<>
+inline void Matrix<4,4>::SetRow(std::size_t row, const Vector& v)
+{
+  data_[row*c_] = v.x;
+  data_[row*c_+1] = v.y;
+  data_[row*c_+2] = v.z;
+  data_[row*c_+3] = v.w;
+}
+
+// Rotate and translate vector by matrix (see note after this code section)
+
+template<>
+inline Vector Matrix<4,4>::operator*(const Vector& v)
+{
+  Vector res {};
+  res.x = data_[0] * v.x + data_[4] * v.y + data_[8] * v.z + data_[12] * v.w;
+  res.y = data_[1] * v.x + data_[5] * v.y + data_[9] * v.z + data_[13] * v.w;
+  res.z = data_[2] * v.x + data_[6] * v.y + data_[10] * v.z + data_[14] * v.w;
+  res.w = 1.f;
+  return res;
+}
+
+// Rotate without translate vector by matrix (see note after this code section)
+
+template<>
+inline Vector Matrix<4,4>::operator%(Vector v)
+{
+  v.w = 0.f;
+  return *this * v;
+}
+
+// Note: w multiplication imitates multiplication implemented in hardware.
+// Here I multiplie it just for clear educational reasons. In real life w == 0
+// to not apply translation
 
 //****************************************************************************
 // IMPLEMENTATION: MATRIX MEMBER FUNCTIONS
@@ -234,6 +265,25 @@ Matrix<R,C>::Matrix(const std::initializer_list<float>& list)
   int i {0};
   for (auto& item : list)
     data_[i++] = item;
+}
+
+// Multiplie matrix
+
+template<std::size_t R, std::size_t C>   
+Matrix<R,C>& Matrix<R,C>::operator*(const Matrix<R,C>& rhs)
+{
+  *this = matrix::Multiplie(*this, rhs);  
+  return *this;
+}
+
+// Multiplie 4x4 in regular way but translation row is zero
+
+template<std::size_t R, std::size_t C>   
+Matrix<R,C>& Matrix<R,C>::operator%(const Matrix<R,C>& rhs)
+{
+  *this = matrix::Multiplie(*this, rhs);
+  this->SetRow(3, Vector{0.f, 0.f, 0.f, 1.f});
+  return *this;
 }
 
 //****************************************************************************

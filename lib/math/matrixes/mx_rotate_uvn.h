@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    matrix_rotate_uvn.h
-// Descr:   rotation matrix based on uvn vectors
+// Descr:   preinverted rotation matrix based on uvn vectors
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -15,7 +15,12 @@
 
 namespace anshub {
 
-// Rotation matrix builded from uvn vectors which are new basis 
+// Inverted rotation matrix builded from uvn vectors which are new
+// basis. Already inverted matrix since directional vectors are in 
+// columns not in rows as usually. Therefore any multiplication
+// of vectors with this matrix would be interpreted as rotate
+// back (as it dot product of p with each of axises therefore
+// p' will have local coordinates of the uvn basis) 
 
 struct MatrixRotateUvn : public Matrix<4,4>
 {

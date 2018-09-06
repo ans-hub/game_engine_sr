@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    matrix_scale.h
-// Descr:   scale matrix
+// Descr:   row-based scale matrix
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************

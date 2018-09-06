@@ -1,6 +1,6 @@
 // *************************************************************
 // File:    matrix_camera.h
-// Descr:   camera matrix
+// Descr:   row-based camera matrix
 // Author:  Novoselov Anton @ 2018
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
@@ -12,9 +12,8 @@
 
 namespace anshub {
 
-// This is simple identity matrix, used to store combination of
-// camera translations and rotations. Is necessary as some functions
-// need only camera modifications
+// This is simple identity matrix, which in fither will be used to
+// store combination of inverted camera translations and rotations.
 
 // Copy constructor and assigment implemented by hands since usually
 // multiply is provided with Matrix<4,4>, not only MatrixCamera 
