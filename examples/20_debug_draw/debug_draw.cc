@@ -79,16 +79,19 @@ int main(int argc, const char** argv)
   // Objects
 
   GlObject obj {obj_fname, {0.0f, 0.0f, 0.0f}};
-  object::Scale(obj, {1.5f, 1.5f, 1.5f});
+  object::Scale(obj, {5.f, 5.f, 5.f});
+
+  for (auto& vx : obj.vxs_local_)
+    vx.color_.a_ = 0.1f;
 
   // Camera
 
-  float    dov     {1.0f};
-  float    fov     {75.0f};
-  Vector   cam_pos {-3.0f, 3.45f, 3.65f};
-  Vector   cam_dir {27.0f, -31.0f, 0.0f};
-  float    near_z  {1.5f};
-  float    far_z   {500};
+  float    dov     {1.f};
+  float    fov     {75.f};
+  Vector   cam_pos {0.f, 0.f, -5.f};
+  Vector   cam_dir {0.f, 0.f, 1.0f};
+  float    near_z  {0.1f};
+  float    far_z   {500.f};
 
   CameraMan camman {
     fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig
@@ -123,7 +126,7 @@ int main(int argc, const char** argv)
   curr_cam.SetDirection(GlCamera::YAW, 1.0f, 6.0f, -360.0f, 360.0f, false);  
   curr_cam.SetDirection(GlCamera::PITCH, 1.0f, 6.0f, -360.0f, 360.0f, false);  
 
-  Dynamics dyn {0.005f, 0.8f, -0.1f, 100.0f};
+  Dynamics dyn {0.005f, 0.7f, -0.1f, 100.0f};
   camman.SetDynamics(std::move(dyn));
 
   // Prepare lights sources
@@ -138,15 +141,15 @@ int main(int argc, const char** argv)
   RenderContext render_ctx(kWidth, kHeight, color::Black);
   render_ctx.is_zbuf_  = true;
   render_ctx.is_wired_ = false;
-  render_ctx.is_alpha_ = false;
+  render_ctx.is_alpha_ = true;
   render_ctx.is_bifiltering_ = true;
   render_ctx.is_mipmapping_  = true;
   render_ctx.mipmap_dist_ = 200.0f;
   render_ctx.clarity_ = camman.GetCurrentCamera().z_far_;
   render_ctx.cam_ = &camman.GetCurrentCamera();
 
-  GlText  text {win};
-  Vector  obj_rot {0.0f, 0.0f, 0.0f};
+  GlText text {win};
+  Vector obj_rot {0.0f, 0.0f, 0.0f};
 
   // Make triangles arrays
 
@@ -156,6 +159,7 @@ int main(int argc, const char** argv)
   // Debug draw
 
   DebugContext debug {};
+  debug.render_first_ = true;
 
   do {
     timer.Start();
@@ -196,7 +200,7 @@ int main(int argc, const char** argv)
     // Culling
 
     object::ResetAttributes(obj);
-    auto hidden = object::RemoveHiddenSurfaces(obj, cam);
+    auto hidden = 0;//object::RemoveHiddenSurfaces(obj, cam);
 
     // Light objects
 
@@ -219,25 +223,56 @@ int main(int argc, const char** argv)
     triangles::Camera2Persp(tris_base, cam);
     triangles::Persp2Screen(tris_base, cam);
 
-    // Draw axis (debug)
+    // Draw axis
 
     Vector start {0.f, 0.f, 0.f};
+    Vector fwd {0.f, 0.f, 1.f};
+    Vector up {0.f, 1.f, 0.f};
+    Vector right {1.f, 0.f, 0.f};
+    debug.AddLine(start, start + up * 10.f, color::fWhite * 0.5f);
+    debug.AddLine(start, start + up * -10.f, color::fWhite * 0.25f);
+    debug.AddLine(start, start + fwd * 10.f, color::fWhite * 0.5f);
+    debug.AddLine(start, start + fwd * -10.f, color::fWhite * 0.25f);
+    debug.AddLine(start, start + right * 10.f, color::fWhite * 0.5f);
+    debug.AddLine(start, start + right * -10.f, color::fWhite * 0.25f);
+
+    // Debug draw axis of our lhs coordinate system from origin
+
     Matrix<4,4> tm {};
-    tm.SetRow(0, Vector{0.f, 0.f, 1.f});
-    tm.SetRow(1, Vector{0.f, 1.f, 0.f});
-    tm.SetRow(2, Vector{1.f, 0.f, 0.f});
-    tm.SetRow(3, Vector{0.f, 0.f, 0.f});
-    debug.AddLine(start, start + tm.GetRow(0) * 3.f, color::fRed);
-    debug.AddLine(start, start + tm.GetRow(1) * 3.f, color::fGreen);
-    debug.AddLine(start, start + tm.GetRow(2) * 3.f, color::fBlue);
+    float mp {1.f};
+    tm.SetRow(0, fwd);
+    tm.SetRow(1, up);
+    tm.SetRow(2, right);
+    tm.SetRow(3, start);
+    debug.AddLine(start, start + tm.GetRow(0) * mp, color::fRed);
+    debug.AddLine(start, start + tm.GetRow(1) * mp, color::fGreen);
+    debug.AddLine(start, start + tm.GetRow(2) * mp, color::fBlue);
 
-    // Rotate axis (debug)
+    // Make rotate matrix and rotate by it (as it lhs sys - pos angle rotates cw)
 
-    MatrixRotateEul rot {3.f, 3.f, 0.f, trig};
-    tm = matrix::Multiplie(tm, rot);
-    debug.AddLine(start, start + tm.GetRow(0) * 3.f, color::fRed);
-    debug.AddLine(start, start + tm.GetRow(1) * 3.f, color::fGreen);
-    debug.AddLine(start, start + tm.GetRow(2) * 3.f, color::fBlue);
+    Matrix<4,4> rotX = matrix::MakeRotateX(7.f);
+    Matrix<4,4> rotY = matrix::MakeRotateY(7.f);
+    Matrix<4,4> rot = rotY * rotX;
+
+    // Rotate point
+
+    Vector pt { 1.f, 1.f, 1.f};
+    Vector dir {0.f, 0.f, 1.f};
+    debug.AddLine(pt, pt + dir, color::fBlue);
+    dir = rot % dir;
+    debug.AddLine(pt, pt + dir, color::fBlue * 0.5f);
+
+    // Rotate matrix 
+
+    tm = tm % rot;
+    rot = matrix::Transpose(rot);
+    tm = tm % rot;
+    debug.AddLine(start, start + tm.GetRow(0) * mp, color::fRed * 0.5f);
+    debug.AddLine(start, start + tm.GetRow(1) * mp, color::fGreen * 0.5f);
+    debug.AddLine(start, start + tm.GetRow(2) * mp, color::fBlue * 0.5f);
+    
+    // Expected result: as it lhs (pos z fwd, vector right) coord system,
+    // positive angle rotates dir vector to positive angle
 
     // Finalize
 
