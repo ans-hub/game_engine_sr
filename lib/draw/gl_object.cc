@@ -482,7 +482,6 @@ void object::ComputeVertexNormalsV1(GlObject& obj)
 
   for (std::size_t i = 0; i < vxs.size(); ++i)
   {
-    vxs[i].normal_ /= cnt[i];
     if (!vxs[i].normal_.IsZero())
         vxs[i].normal_.Normalize();
   }

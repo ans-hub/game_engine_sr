@@ -25,7 +25,7 @@ struct MatrixRotateEul : public Matrix<4,4>
 
 }; // struct MatrixRotate
 
-// Constructs rotation matrixin regular way
+// Constructs rotation matrix in regular way
 
 inline MatrixRotateEul::MatrixRotateEul(
   float x, float y, float z, const TrigTable& t)

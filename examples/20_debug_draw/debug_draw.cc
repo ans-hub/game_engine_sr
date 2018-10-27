@@ -207,6 +207,8 @@ int main(int argc, const char** argv)
     object::ComputeFaceNormals(obj);
     object::ComputeVertexNormalsV2(obj);
     light::Object(obj, lights);
+    for (auto& vx : obj.GetCoords())
+      debug.AddLine(vx.pos_, vx.pos_ + vx.normal_ * 2.f, color::fYellow);
 
     // Make triangles
 
@@ -273,6 +275,8 @@ int main(int argc, const char** argv)
     
     // Expected result: as it lhs (pos z fwd, vector right) coord system,
     // positive angle rotates dir vector to positive angle
+
+    // Draw normals
 
     // Finalize
 
