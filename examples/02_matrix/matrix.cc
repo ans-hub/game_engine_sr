@@ -49,8 +49,6 @@ const char* HandleInput(int argc, const char** argv)
     return argv[1];
 }
 
-// Creates array of rectangles (w_cnt * h_cnt size) 
-
 auto CreateGround(int rect_cnt, TrigTable& trig)
 {
   auto master = object::Make("../00_data/objects/floor.ply", trig,

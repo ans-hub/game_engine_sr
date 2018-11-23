@@ -5,8 +5,6 @@
 // *************************************************************
 
 // Notes:
-// - in draw lib all transformations is based on camera direction which
-//   used Euler`s angles. Thus we use Euler`s camera as base camera
 // - all rotations in YXZ sequence
 // - dir_ is vector contains Euler`s x (pitch), y (yaw), z (roll)
 // - view_ is direction vector of camera

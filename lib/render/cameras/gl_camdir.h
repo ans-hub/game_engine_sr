@@ -2,7 +2,6 @@
 // File:    gl_camdir.h
 // Descr:   holds camera direction settings
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
 #ifndef GC_GL_CAMDIR_H

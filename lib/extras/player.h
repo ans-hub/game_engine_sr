@@ -17,7 +17,7 @@
 #include "lib/extras/inputer.h"
 #include "lib/extras/terrain.h"
 
-#include "lib/physics/dynamics.h"
+#include "lib/physics/physics.h"
 
 #include "lib/window/base_window.h"
 

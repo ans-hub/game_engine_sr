@@ -21,7 +21,7 @@
 
 #include "lib/math/vector.h"
 
-#include "lib/physics/dynamics.h"
+#include "lib/physics/physics.h"
 
 namespace anshub {
 
