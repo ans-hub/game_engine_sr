@@ -2,11 +2,7 @@
 // File:    base_window.cc
 // Descr:   pure virtual class represents `window` concept
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
-
-// Note : all big chunk of pure low-level code placed in ll_helpers
-// due to clear understand the principles of this class without details 
 
 #include "base_window.h"
 

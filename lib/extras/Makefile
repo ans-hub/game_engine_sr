@@ -9,7 +9,7 @@ ROOTDIR = ../../
 
 LIBWINDOW 	= $(ROOTDIR)lib/window
 LIBMATH 		= $(ROOTDIR)lib/math
-LIBDRAW 		= $(ROOTDIR)lib/draw
+LIBRENDER 		= $(ROOTDIR)lib/render
 LIBPHYSICS 	= $(ROOTDIR)lib/physics
 LDFLAGS 		= -lwindow -lmath -ldraw -lphysics
 
@@ -17,7 +17,7 @@ LDFLAGS 		= -lwindow -lmath -ldraw -lphysics
 
 CXX = g++
 CXXFLAGS = -I $(SRCDIR) -I $(ROOTDIR) -ansi -pedantic -Wall -Wextra -std=c++14 
-CXXFLAGS += -L $(LIBWINDOW) -L $(LIBMATH) -L $(LIBDRAW) -L $(LIBPHYSICS)
+CXXFLAGS += -L $(LIBWINDOW) -L $(LIBMATH) -L $(LIBRENDER) -L $(LIBPHYSICS)
 CXXFLAGS += -MP -MMD
 DBGFLAGS = -ggdb3 -DDEBUG -O0 -pg -no-pie
 RLSFLAGS = -O2
@@ -34,7 +34,7 @@ SRCFILES = $(wildcard *.cc)
 $(LIBNAME) : $(SRCFILES:%.cc=%.o)
 	make -C $(LIBWINDOW)
 	make -C $(LIBMATH)
-	make -C $(LIBDRAW)
+	make -C $(LIBRENDER)
 	make -C $(LIBPHYSICS)
 	ar crs $(LIBNAME) $(SRCFILES:%.cc=%.o)
 	ranlib $(LIBNAME)
@@ -47,7 +47,7 @@ $(LIBNAME) : $(SRCFILES:%.cc=%.o)
 debug	: $(SRCFILES:%.cc=%dbg.o)
 	make debug -C $(LIBWINDOW)
 	make debug -C $(LIBMATH)
-	make debug -C $(LIBDRAW)
+	make debug -C $(LIBRENDER)
 	make debug -C $(LIBPHYSICS)	
 	ar crs $(LIBNAME) $(SRCFILES:%.cc=%dbg.o)
 	ranlib $(LIBNAME)
@@ -67,5 +67,5 @@ clean :
 	rm -f *.o *.d $(LIBNAME)
 	make clean -C $(LIBWINDOW)
 	make clean -C $(LIBMATH)
-	make clean -C $(LIBDRAW)
+	make clean -C $(LIBRENDER)
 	make clean -C $(LIBPHYSICS)

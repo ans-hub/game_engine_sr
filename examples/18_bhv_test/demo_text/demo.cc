@@ -1,15 +1,14 @@
 // ***************************************************************************
 // File:    demo.cc
 // Descr:   BHV-tree demo with text representation
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // ***************************************************************************
 
 #include <vector>
 #include <stdexcept>
 
-#include "lib/draw/gl_bvh.h"
-#include "lib/draw/gl_object.h"
+#include "lib/render/gl_bvh.h"
+#include "lib/render/gl_object.h"
 
 #include "lib/system/rand_toolkit.h"
 
@@ -101,11 +100,7 @@ auto MakeObjects(const char* fname, int cnt, float world_rad, float max_scale)
 
 int main(int argc, const char** argv)
 {
-  // Process file name
-
   InputData args(argc, argv);
-
-  // Make world objects and choose back as main object
 
   rand_toolkit::start_rand();
   auto other = MakeObjects(

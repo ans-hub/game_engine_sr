@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    line.h
 // Descr:   represents 2d line entity on the plane
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GM_LINE_2D_H
@@ -35,7 +34,7 @@ struct Line
 }; // struct Line
 
 //*************************************************************************
-// Helpers functions definition
+// Helpers functions declaration
 //*************************************************************************
 
 namespace line2d

@@ -1,21 +1,20 @@
 // *************************************************************
 // File:    polygon.cc
-// Descr:   represents polygon 2d entity and helpers 
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Descr:   represents polygon 2d and helpers 
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "polygon.h"
 
 namespace anshub {
 
-void polygon2d::CheckInvariant(const Vertexes& p)
+void polygon2d::CheckInvariant(const Vertices& p)
 {
   if (p.size() < 2)
     throw MathExcept("X or Y coords less than 2");
 }
 
-float polygon2d::Square(const Vertexes& p)
+float polygon2d::Square(const Vertices& p)
 {
   CheckInvariant(p);
   
@@ -26,7 +25,7 @@ float polygon2d::Square(const Vertexes& p)
   return summ/2;
 }
 
-Point polygon2d::Barycenter(const Vertexes& p, float sq)
+Point polygon2d::Barycenter(const Vertices& p, float sq)
 {
   CheckInvariant(p);
   Point res {};
@@ -45,7 +44,7 @@ Point polygon2d::Barycenter(const Vertexes& p, float sq)
 // Based on:
 // https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
 
-bool polygon2d::PointInside(const Vertexes& poly, const Point& p)
+bool polygon2d::PointInside(const Vertices& poly, const Point& p)
 {
   int c = 0;
   int sz = (int)poly.size();
@@ -96,11 +95,11 @@ bool polygon2d::PointsInside(
   return true;
 }
 
-bool polygon2d::CutConvex(Vertexes& p1, Vertexes& p2, const Line& l)
+bool polygon2d::CutConvex(Vertices& p1, Vertices& p2, const Line& l)
 {
   math_helpers::DummyPushBack(p1);
-  Vertexes t1{};
-  Vertexes t2{};
+  Vertices t1{};
+  Vertices t2{};
   bool in_two {false};
   
   for (auto it = p1.begin(); it != p1.end()-1; ++it)

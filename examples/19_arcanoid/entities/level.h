@@ -2,7 +2,6 @@
 // File:    level.h
 // Descr:   contains game object and state
 // Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
 #ifndef GAME_LEVEL_H

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    audio_fx.h
 // Descr:   wrapper to BASS_FX (addon of BASS audio library)
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/audio_out
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 // BASS Library docs placed here: https://www.un4seen.com/doc/

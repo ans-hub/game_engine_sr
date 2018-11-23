@@ -1,6 +1,6 @@
 # Lighting example
 
-In this example we can see ambient, infinite and point lighting
+Ambient, infinite and point lighting
 
 ## Usage:
 ```bash

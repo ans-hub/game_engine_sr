@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    exceptions.h
 // Descr:   contains exceptions class for extras lib
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GC_EXTRAS_EXCEPT_H

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    matrix.cc
 // Descr:   matrix transformation example
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>
@@ -21,19 +20,19 @@
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_text.h"
-#include "lib/draw/gl_coords.h"
-#include "lib/draw/gl_object.h"
-#include "lib/draw/cameras/gl_camera.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_text.h"
+#include "lib/render/gl_coords.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/cameras/gl_camera.h"
 
-#include "lib/math/matrixes/mx_rotate_eul.h"
-#include "lib/math/matrixes/mx_rotate_uvn.h"
-#include "lib/math/matrixes/mx_perspective.h"
-#include "lib/math/matrixes/mx_translate.h"
-#include "lib/math/matrixes/mx_view.h"
-#include "lib/math/matrixes/mx_scale.h"
-#include "lib/math/matrixes/mx_camera.h"
+#include "lib/math/matrices/mx_rotate_eul.h"
+#include "lib/math/matrices/mx_rotate_uvn.h"
+#include "lib/math/matrices/mx_perspective.h"
+#include "lib/math/matrices/mx_translate.h"
+#include "lib/math/matrices/mx_view.h"
+#include "lib/math/matrices/mx_scale.h"
+#include "lib/math/matrices/mx_camera.h"
 
 #include "../helpers.h"
 
@@ -200,7 +199,7 @@ int main(int argc, const char** argv)
 
     obj.world_pos_ += obj_vel;
 
-    // Prepare transformation matrixes for main object
+    // Prepare transformation matrices for main object
 
     MatrixRotateEul   mx_rot {obj_rot, trig};
     MatrixTranslate   mx_trans {obj.world_pos_};
@@ -226,7 +225,7 @@ int main(int argc, const char** argv)
     obj.SetCoords(Coords::TRANS);
     object::ApplyMatrix(mx_total, obj);
     
-    // Prepare camera`s matrixes (Euler or uvn) for all objects
+    // Prepare camera`s matrices (Euler or uvn) for all objects
 
     MatrixCamera mx_cam {};
     if (cam.type_ == CamType::EULER)

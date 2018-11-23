@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    nature.h
-// Descr:   represents nature of the terrain
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Descr:   represents simple nature on the terrain
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GL_EXTRAS_NATURE_H
@@ -13,11 +12,11 @@
 
 #include "terrain.h"
 
-#include "lib/draw/exceptions.h"
-#include "lib/draw/gl_aliases.h"
-#include "lib/draw/gl_object.h" 
-#include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_vertex.h"
+#include "lib/render/exceptions.h"
+#include "lib/render/gl_aliases.h"
+#include "lib/render/gl_object.h" 
+#include "lib/render/fx_colors.h"
+#include "lib/render/gl_vertex.h"
 
 #include "lib/data/bmp_loader.h"
 #include "lib/math/trig.h"
@@ -85,6 +84,5 @@ inline void Nature::SetObjects(const std::map<Enum,std::string>& list)
 
 #endif // GL_EXTRAS_NATURE_H
 
-// Note : the best way is to make V_GlObject as separate object (not
-// just alias as now) + Terrain class should accept Water object and
-// Nature object as part of himself (i.e., terrain.SetWater(water)) 
+// Note : Terrain class should accept Water object and Nature object
+// as a part of himself (i.e., terrain.SetWater(water)) 

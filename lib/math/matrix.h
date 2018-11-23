@@ -1,9 +1,10 @@
 // *************************************************************
 // File:    matrix.h
 // Descr:   represents matrix
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
+
+// TODO: return std::array instead of std::vector
 
 #ifndef GM_MATRIX_H
 #define GM_MATRIX_H
@@ -17,10 +18,6 @@
 #include "vector.h"
 
 namespace anshub {
-
-//****************************************************************************
-// Represents matrix of any size
-//****************************************************************************
 
 template<std::size_t Row, std::size_t Col>
 class Matrix
@@ -129,12 +126,12 @@ protected:
 }; // struct Matrix
 
 //****************************************************************************
-// DEFINITION: HELPER FUNCTIONS FOR MATRIX CLASS
+// DECLARATION: HELPER FUNCTIONS FOR MATRIX CLASS
 //****************************************************************************
 
 namespace matrix {
 
-  // Special simple functions for frequently meets square matrixes
+  // Special simple functions for frequently meets square matrices
 
   float   Determinant(const Matrix<2,2>&);
   float   Determinant(const Matrix<3,3>&);
@@ -143,7 +140,7 @@ namespace matrix {
   Vector  Multiplie(const Vector&, const Matrix<3,3>&);   // 2d+1 x mx<3,3>
   Vector  Multiplie(const Vector&, const Matrix<4,4>&);   // 3d+1 x mx<4,4>
 
-  // Helper functions to transform matrixes
+  // Helper functions to transform matrices
 
   template<std::size_t R1, std::size_t R2, std::size_t C>   
   Matrix<R1,R2> Multiplie(const Matrix<R1,C>&, const Matrix<C,R2>&);
@@ -175,7 +172,7 @@ namespace matrix {
 } // namespace matrix
 
 //****************************************************************************
-// MATRIX SPECIALIZATION OF MOST COMMON MATRIX FUNCTIONS
+// MATRIX SPECIALIZATION OF MOST COMMON MATRICES FUNCTIONS
 //****************************************************************************
 
 // Returns vector from matrix row
@@ -287,10 +284,10 @@ Matrix<R,C>& Matrix<R,C>::operator%(const Matrix<R,C>& rhs)
 }
 
 //****************************************************************************
-// IMPLEMENTATION: MATRIX HELPERS NON-MEMBER FUNCTIONS
+// IMPLEMENTATION: MATRICES HELPERS NON-MEMBER FUNCTIONS
 //****************************************************************************
 
-// Multiplie matrixes (naive)
+// Multiplie matrices (naive)
 
 template<std::size_t R1, std::size_t R2, std::size_t C>   
 Matrix<R1,R2> matrix::Multiplie(const Matrix<R1,C>& mx1, const Matrix<C,R2>& mx2)
@@ -335,16 +332,17 @@ Matrix<R,R> matrix::MakeIdentity()
 template<std::size_t R> 
 void matrix::MakeIdentity(Matrix<R,R>& mx)
 {
-  mx = Matrix<R,R>(); // clears matrix to zeroes
+  mx = Matrix<R,R>();
   for (std::size_t i = 0; i < mx.Cols(); ++i)
     mx(i,i) = 1;
 }
 
-// Makes identity matrix (naive). Supposed tha mx is zero mx
+// Makes identity matrix (naive)
 
 template<std::size_t R> 
 void matrix::MakeIdentityFromZero(Matrix<R,R>& mx)
 {
+  // todo: add assert matrix is zero
   for (std::size_t i = 0; i < mx.Cols(); ++i)
     mx(i,i) = 1;
 }
@@ -368,7 +366,3 @@ std::ostream& matrix::operator<<(std::ostream& oss, const Matrix<R,C>& mx)
 } // namespace anshub
 
 #endif  // GM_MATRIX_H
-
-// Notes: to create identity mx: Matrix<3,3> news (Matrix<3,3>::IDENTITY);
-
-// Todo : make implementation based on std::array ???

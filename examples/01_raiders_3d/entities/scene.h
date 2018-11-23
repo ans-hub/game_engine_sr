@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    scene.h
 // Descr:   simple 3d processor (just visualise all objects)
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GAME_SCENE_H
@@ -15,10 +14,10 @@
 #include "lib/window/gl_window.h"
 #include "lib/system/rand_toolkit.h"
 #include "lib/system/timer.h"
-#include "lib/draw/gl_scr_buffer.h"
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_text.h"
-#include "lib/draw/fx_colors.h"
+#include "lib/render/gl_scr_buffer.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_text.h"
+#include "lib/render/fx_colors.h"
 #include "lib/math/polygon.h"
 #include "lib/math/segment.h"
 #include "lib/math/math.h"

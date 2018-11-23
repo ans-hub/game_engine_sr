@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    rain.cc
-// Descr:   represents rain
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Descr:   represents simple rain
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "rain.h"

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    player.h
 // Descr:   player (viewport) entity
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GAME_PLAYER_H

@@ -2,11 +2,9 @@
 // File:    helpers.cc
 // Descr:   low-level helpers to work with system directly
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
 
 // Todo : 
-//  - remove some silly and unnecessary exceptions and make them just warnings
 //  - check returns values from video mode functions
 
 #include "helpers.h"
@@ -60,7 +58,6 @@ SWAttribs GetDefaultWinAttribs(Display* disp, Window wnd, XVisualInfo* vi)
     PointerMotionMask |
     VisibilityChangeMask;
   attr.override_redirect = true;
-  //
   attr.background_pixmap = None ;
   attr.background_pixel  = 0    ;
   attr.border_pixel      = 0    ;
@@ -285,8 +282,8 @@ Window CreateGlWindow(Display* disp, Window root, Visual* vi, SWAttribs& attr,
 
 Window CreateSmpWindow(Display* disp, Window root, int scr, int x, int y, int w, int h)
 {
-  ulong fg    = BlackPixel(disp, scr);  // fg color
-  ulong bg    = WhitePixel(disp, scr);  // bg color
+  ulong fg    = BlackPixel(disp, scr);
+  ulong bg    = WhitePixel(disp, scr);
   int depth   = 1;
   Window win = XCreateSimpleWindow(disp, root, x, y, w, h, depth, fg, bg);
   if (!win)
@@ -366,11 +363,6 @@ void GetWindowDimension(Display* disp, Window win, int* w, int* h)
   *h = wa.height;
 }
 
-// void GetVModeDimension(Display* disp, Window root, int mode, int* w, int* h)
-// {
-//   auto config = ptr::XRRGetScreenInfo(disp, root);  
-// }
-
 // Returns nearest video mode to requested
 
 int FindNearestVideoMode(int w, int h)
@@ -406,10 +398,10 @@ int FindVideoMode(int w, int h)
   XCloseDisplay(disp);
 
   auto to_find = std::make_pair(w, h);
-  auto finded = std::find(modes.begin(), modes.end(), to_find);
+  auto found = std::find(modes.begin(), modes.end(), to_find);
 
-  if (finded != modes.end())
-    return std::distance(modes.begin(), finded);
+  if (found != modes.end())
+    return std::distance(modes.begin(), found);
   else
     return -1;
 }
@@ -505,14 +497,15 @@ bool IsExtensionSupported(const char* extList, const char *extension)
   const char *start;
   const char *where, *terminator;
   
-  /* Extension names should not have spaces. */
+  // Extension names should not have spaces
+
   where = strchr(extension, ' ');
   if (where || *extension == '\0')
     return false;
 
-  /* It takes a bit of care to be fool-proof about parsing the
-     OpenGL extensions string. Don't be fooled by sub-strings,
-     etc. */
+  // It takes a bit of care to be fool-proof about parsing the
+  // OpenGL extensions string. Don't be fooled by sub-strings, etc.
+
   for (start=extList;;) {
     where = strstr(start, extension);
 
@@ -584,7 +577,7 @@ bool SendToggleFullscreenNotify(Display* disp, Window root, Window win)
 	e.xclient.window = win;
 	e.xclient.format = 32;
 	e.xclient.message_type  = XInternAtom(disp, "_NET_WM_STATE", false);
-  e.xclient.data.l[0]     = 2;  // 0 - off, 1 - on, 2 - toggle
+  e.xclient.data.l[0]     = 2;  // 0 - off, 1 - on, 2 - toggle, todo - move to enum
   e.xclient.data.l[1]     = XInternAtom(disp, "_NET_WM_STATE_FULLSCREEN", false);
   e.xclient.data.l[3]     = 1;
   
@@ -592,7 +585,6 @@ bool SendToggleFullscreenNotify(Display* disp, Window root, Window win)
   if (!XSendEvent(disp, root, false, mask, &e))
     return false;
   return true;
-    // throw IOException("Can't switch to fullscreen", errno);
 }
 
 void SendCloseWindowNotify(Display* disp, Window, Window win)
@@ -621,7 +613,7 @@ void SendToggleOnTopNotify(Display* disp, Window root, Window win)
   e.xclient.window  = win;
   e.xclient.format = 32;
   e.xclient.message_type = XInternAtom (disp, "_NET_WM_STATE", False);
-  e.xclient.data.l[0] = 2;  // 0 - unset, 1 - set, 2 - toggle
+  e.xclient.data.l[0] = 2;  // 0 - unset, 1 - set, 2 - toggle, todo: move to enum
   e.xclient.data.l[1] = XInternAtom (disp, "_NET_WM_STATE_ABOVE", false);
   e.xclient.data.l[2] = 0;
   e.xclient.data.l[3] = 0;
@@ -631,11 +623,6 @@ void SendToggleOnTopNotify(Display* disp, Window root, Window win)
   if (!XSendEvent (disp, root, False, mask, &e))
     throw IOException("Can't send wm_toggle_on_top notify", errno);    
 }
-
-//*****************************************************************************
-// Work with smart pointers
-//  All functions below just makes wrappers around pure pointers
-//*****************************************************************************
 
 XRRScreenPtr ptr::XRRGetScreenInfo(Display* disp, Window root)
 {

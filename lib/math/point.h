@@ -1,9 +1,10 @@
 // *************************************************************
 // File:    point.h
 // Descr:   represents 2d-3d point (legacy)
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
+
+// TODO: LEGACY, MOVE OUT
 
 #ifndef GM_POINT_2D_3D_H
 #define GM_POINT_2D_3D_H
@@ -68,4 +69,4 @@ struct Point
 
 // Notes : operator- as argument has lhs given by value. And operator+ as argument
 // has const reference to lhs. In both cases we create new point to return result.
-// We should test which case is better in perfomance.
+// Should test which case is better in perfomance.

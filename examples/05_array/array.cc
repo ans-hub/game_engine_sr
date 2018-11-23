@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    array.cc
 // Descr:   using triangles array demo
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>
@@ -18,12 +17,12 @@
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_text.h"
-#include "lib/draw/gl_coords.h"
-#include "lib/draw/gl_object.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_text.h"
+#include "lib/render/gl_coords.h"
+#include "lib/render/gl_object.h"
 
-#include "lib/draw/cameras/gl_camera.h"
+#include "lib/render/cameras/gl_camera.h"
 
 #include "../helpers.h"
 
@@ -46,25 +45,17 @@ int main(int argc, const char** argv)
     return 1;
   }
 
-  // Math processor
-  
   TrigTable trig {};
   rand_toolkit::start_rand();
-
-  // Timers
 
   FpsCounter fps {};
   constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
 
-  // Window
-
   constexpr int kWidth = 800;
   constexpr int kHeight = 600;
   auto pos  = io_helpers::GetXYToMiddle(kWidth, kHeight); 
   GlWindow win (pos.x, pos.y, kWidth, kHeight, "Camera"); 
-
-  // Ethalon object
 
   auto obj = object::Make(
     fname, trig, 
@@ -74,8 +65,6 @@ int main(int argc, const char** argv)
   );
   Vector  obj_rot  {0.0f, 0.0f, 0.0f};
   
-  // Create work objects, place randomly in space
-
   constexpr   int kCubesCount {30};
   constexpr   float kWorldSize {30};
   V_GlObject  cubes {kCubesCount, obj};
@@ -140,40 +129,28 @@ int main(int argc, const char** argv)
     timer.Start();
     win.Clear();
 
-    // Handle input
-    
     camman.ProcessInput(win);
     auto& cam = camman.GetCurrentCamera();
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);    
 
-    // Rotate cubes
-
     objects::SetCoords(cubes, Coords::LOCAL);
     objects::Rotate(cubes, cubes_rot, trig);
-
-    // Translate cubes to world
 
     objects::CopyCoords(cubes, Coords::LOCAL, Coords::TRANS);
     objects::SetCoords(cubes, Coords::TRANS);
     for (auto& cube : cubes)
       object::Translate(cube, cube.world_pos_);
 
-    // Cull hidden surfaces
-
     objects::ResetAttributes(cubes);
     auto hidden = objects::RemoveHiddenSurfaces(cubes, cam);    
     objects::World2Camera(cubes, cam, trig);
-    
-    // Make triangles from objects. Now all changes go through this array
 
     tris_base.resize(0);
     tris_ptrs.resize(0);
     triangles::AddFromObjects(cubes, tris_base);
     auto culled = triangles::CullAndClip(tris_base, cam);
     triangles::MakePointers(tris_base, tris_ptrs);
-
-    // Finally
 
     triangles::SortZAvgInv(tris_ptrs);
     triangles::Camera2Persp(tris_base, cam);

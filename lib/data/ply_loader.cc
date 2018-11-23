@@ -1,15 +1,12 @@
 // *************************************************************
 // File:    ply_loader.cc
 // Descr:   ply (ascii) format loader
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/ply_loader
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "ply_loader.h"
 
 namespace ply {
-
-// Main procedure to load ascii ply 
 
 bool Loader::Load(std::istream& iss)
 {
@@ -108,12 +105,8 @@ cVector3d& Loader::GetRawData(const std::string& key)
 
 Vector2d Loader::GetLine(const std::string& elem, const Vector1s& filter)
 {
-  // Check if given elem is valid
-
   if (helpers::IsKeyAbsentInMap(elem, order_))
     throw Except(string{"GetLine(): elem absent - "} + string{elem});
-  
-  // Check if given filer elements are valid
 
   for (const auto& prop : filter)
     if (helpers::IsKeyAbsentInMap(prop, head_[elem].single_props_))
@@ -124,8 +117,6 @@ Vector2d Loader::GetLine(const std::string& elem, const Vector1s& filter)
   auto& curr = data_[order_[elem]];
   Vector2d res (curr.size());
   
-  // Iterate through each item of current element
-
   for (std::size_t i = 0; i < curr.size(); ++i)
   {
     // Fill current result item with requested property
@@ -145,12 +136,8 @@ Vector2d Loader::GetLine(const std::string& elem, const Vector1s& filter)
 
 Vector2d Loader::GetList(const std::string& elem, const std::string& filter)
 {
-  // Check if given elem is valid
-
   if (helpers::IsKeyAbsentInMap(elem, order_))
     throw Except(string{"GetLine(): elem absent - "} + string{elem});
-
-  // Check if given filer elements are valid
 
   if (helpers::IsKeyAbsentInMap(filter, head_[elem].list_props_))
     throw Except(string{"GetLine(): property absent - "} + string{filter});
@@ -160,21 +147,13 @@ Vector2d Loader::GetList(const std::string& elem, const std::string& filter)
   auto& curr = data_[order_[elem]];
   Vector2d res (curr.size());
 
-  // Iterate through each item of current element
-
   for (std::size_t i = 0; i < curr.size(); ++i)
   {
-    // Fill current result item with requested property
-        
     int prop_arr = std::get<1>(head_[elem].list_props_[filter]); // prop_arr pos
     res[i] = curr[i][prop_arr];
   }
   return res;
 }
-
-//************************************************************************
-// PRIVATE MEMBER FUNCTIONS IMPLEMENTATION
-//************************************************************************
 
 // Reads data after header (istream pos shoudld stay at the data pos)
 // First would meets elements which were described first in the header.
@@ -215,8 +194,6 @@ void Loader::LoadData(std::istream& iss)
       ++elem;                           //  then go to the next element
       item = 0;
     }
-    
-    // Reserve max space to store arrays of properties values
 
     data_[elem][item].reserve(props_[elem].size());
 
@@ -301,10 +278,6 @@ bool Loader::IsListPropertyPresent(const std::string& elem, const std::string& p
 {
   return !helpers::IsKeyAbsentInMap(prop, head_[elem].list_props_);
 }
-
-//************************************************************************
-// Helper functions inplementation
-//************************************************************************
 
 // Rewinds istream
 

@@ -1,24 +1,19 @@
 // *************************************************************
 // File:    water.h
-// Descr:   represents very simple water
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Descr:   represents very simple water-plane
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GL_EXTRAS_WATER_H
 #define GL_EXTRAS_WATER_H
 
-#include "lib/draw/exceptions.h"
-#include "lib/draw/gl_aliases.h"
-#include "lib/draw/gl_object.h" 
-#include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_vertex.h"
+#include "lib/render/exceptions.h"
+#include "lib/render/gl_aliases.h"
+#include "lib/render/gl_object.h" 
+#include "lib/render/fx_colors.h"
+#include "lib/render/gl_vertex.h"
 
 namespace anshub {
-
-//*************************************************************************
-// Very simple water
-//*************************************************************************
 
 struct Water : public GlObject
 {

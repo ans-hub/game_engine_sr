@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    starship.h
 // Descr:   starship entity
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GAME_STARSHIP_H
@@ -17,14 +16,14 @@
 
 namespace anshub {
 
-// Represent edge in Vertexes meaning
+// Represent edge in Vertices meaning
 
 struct Edge
 {
   Edge() : v1{-1.0}, v2{-1.0} { }
   Edge(float a, float b) : v1{a}, v2{b} { }
-  float v1;  // number of vertex 1
-  float v2;  // number of vertex 2
+  float v1;
+  float v2;
 
 }; // struct Edge
 
@@ -32,23 +31,23 @@ struct Edge
 
 struct Starship
 {
-  using Vertexes = std::vector<Vector>;  // n points
-  using Edges = std::vector<Edge>;      // two number of points
-  using Rect = Segment;                 // simple left bottom and right top 
+  using Vertices = std::vector<Vector>;  // n points
+  using Edges = std::vector<Edge>;       // two number of points
+  using Rect = Segment;                  // simple left bottom and right top 
 
   Starship();
 
-  Vector    pos_;           // starship global pos
-  Vector    vel_;           // starship velocity
-  int       color_;         // starship color
-  Vertexes  vx_;            // model vertexes (local coords)
+  Vector    pos_;
+  Vector    vel_;
+  int       color_;
+  Vertices  vx_;            // local coords
   Edges     ed_;            // model edges (pair of indexes in vx_)
   Rect      bounding_box_;  // used for laser hit detection
   
   // States
 
-  bool      dead_;          // is dead ?
-  bool      audible_;       // is audible for current viewpoint ?
+  bool      dead_;
+  bool      audible_;       // is audible for current viewpoint 
   int       attack_seq_;    // how much shots should do this ship
   int       attack_wait_;   // times between shots in sequence
 

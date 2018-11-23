@@ -1,7 +1,7 @@
 // *************************************************************
 // File:    player.cc
 // Descr:   represents player in game
-// Author:  Novoselov Anton @ 2018
+// Author:  Novoselov Anton @ 2017
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    raiders.cc
 // Descr:   main game loop
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "lib/window/gl_window.h"
@@ -19,15 +18,11 @@ using namespace anshub;
 
 int main()
 {
-  // System settings
-
   constexpr int kWidth = 800;
   constexpr int kHeight = 600;
   constexpr int kFpsWait = 35;
   constexpr int kShipsCnt = 13;
 
-  // Create window and usefull stuff
- 
   auto pos  = io_helpers::GetXYToMiddle(kWidth, kHeight); 
   auto mode = io_helpers::FindVideoMode(kWidth, kHeight);
 
@@ -36,15 +31,11 @@ int main()
   win.HideCursor();
   rand_toolkit::start_rand();
 
-  // Create game entities
-
   Timer     timer   (kFpsWait);
   AudioOut  audio   {};
   Level     level   (kShipsCnt);
   Logic     logic   {win, level, audio};
   Scene     scene   {win, level};
-
-  // Main loop
 
   do {
     timer.Start();
@@ -72,7 +63,7 @@ int main()
 // - white splash in enemy ship when its shot
 // - custom rotate ships
 // - add alternative - broken ship
-// - delta time in main loop (???)
+// - delta time in main loop
 // - add friend ships left top and right top
 // - slow motion when ship is near and broken
 // *************************************************************

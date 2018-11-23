@@ -2,7 +2,6 @@
 // File:    config.h
 // Descr:   enumerators
 // Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
 #ifndef GAME_CONFIG_H

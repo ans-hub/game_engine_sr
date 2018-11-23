@@ -2,7 +2,6 @@
 // File:    game_objects.h
 // Descr:   ball, paddle and block entities
 // Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
 #ifndef GAME_BALL_N_PADDLE_H

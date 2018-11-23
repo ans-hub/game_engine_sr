@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    alpha_blending.cc
 // Descr:   alpha blending example
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>
@@ -21,14 +20,14 @@
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 
-#include "lib/draw/gl_render_ctx.h"
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_text.h"
-#include "lib/draw/gl_lights.cc"
-#include "lib/draw/gl_coords.h"
-#include "lib/draw/gl_object.h"
-#include "lib/draw/gl_z_buffer.h"
-#include "lib/draw/cameras/gl_camera.h"
+#include "lib/render/gl_render_ctx.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_text.h"
+#include "lib/render/gl_lights.cc"
+#include "lib/render/gl_coords.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/gl_z_buffer.h"
+#include "lib/render/cameras/gl_camera.h"
 
 #include "../helpers.h"
 
@@ -66,8 +65,6 @@ void PrintInfo(
 
 int main(int argc, const char** argv)
 {
-  // Hanle input filenames
-
   const char* obj1_fname {};
   const char* obj2_fname {};
 
@@ -80,28 +77,18 @@ int main(int argc, const char** argv)
     obj2_fname = argv[2];
   }
    
-  // Math processor
-  
   TrigTable trig {};
   rand_toolkit::start_rand();
-
-  // Timers
 
   FpsCounter fps {};
   constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
 
-  // Constants
-
   constexpr int kWidth = 800;
   constexpr int kHeight = 600;
 
-  // Window
-
   auto pos  = io_helpers::GetXYToMiddle(kWidth, kHeight); 
   GlWindow win (pos.x, pos.y, kWidth, kHeight, "Camera"); 
-
-  // Objects
 
   auto obj_1 = object::Make(
     obj1_fname, trig, 
@@ -110,8 +97,6 @@ int main(int argc, const char** argv)
     {0.0f, 0.0f, 0.0f}      // initial rotate
   );
 
-  // Make object 1 transparent
-  
   if (obj_1.textures_.empty())
   {
     for (auto& vx : obj_1.vxs_local_)
@@ -139,8 +124,6 @@ int main(int argc, const char** argv)
   obj_2.world_pos_.y -= 5.0f;
   objs.push_back(obj_2);
 
-  // Camera
-
   float    dov     {1.0f};
   float    fov     {75.0f};
   Vector   cam_pos {0.0f, 0.0f, -10.0f};
@@ -153,17 +136,13 @@ int main(int argc, const char** argv)
 
   camman.SetValue(CamValue::MOUSE_SENSITIVE, 1.0f);
 
-  Dynamics dyn {0.01f, 0.85f, -0.1f, 100.0f};
-  camman.SetDynamics(std::move(dyn));
+  Physics dyn {0.01f, 0.85f, -0.1f, 100.0f};
+  camman.SetPhysics(std::move(dyn));
 
-  // Prepare lights sources
- 
   Lights lights {};
   lights.AddAmbient(color::fWhite, 0.3f);
   lights.AddInfinite(color::fWhite, 0.7f, {-1.0f, -2.0f, -0.9f});
   lights.AddPoint(color::fBlue, 0.6f, {0.0f, 3.0f, 5.0f}, {0.0f, 0.0f, -1.0f});
-
-  // Create render context
 
   RenderContext render_ctx(kWidth, kHeight, color::Black);
   render_ctx.is_zbuf_  = true;
@@ -174,16 +153,12 @@ int main(int argc, const char** argv)
   GlText  text {win};
   Vector  obj_rot    {0.0f, 0.0f, 0.0f};
 
-  // Make triangles arrays
-
   auto tris_base = triangles::MakeBaseContainer(0);
   auto tris_ptrs = triangles::MakePtrsContainer(0);
 
   do {
     timer.Start();
     win.Clear();
-
-    // Handle input
 
     auto& cam = camman.GetCurrentCamera();    
     camman.ProcessInput(win);
@@ -197,8 +172,6 @@ int main(int argc, const char** argv)
     helpers::HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
     obj_1.world_pos_ += obj_vel;
 
-    // Some hand transformation
-
     obj_1.SetCoords(Coords::LOCAL);
     object::Rotate(obj_1, obj_rot, trig);
     obj_1.CopyCoords(Coords::LOCAL, Coords::TRANS);
@@ -211,15 +184,11 @@ int main(int argc, const char** argv)
     for (auto& obj : objs)
       object::Translate(obj, obj.world_pos_);
 
-    // Culling
-
     object::ResetAttributes(obj_1);
     objects::ResetAttributes(objs);
 
     auto hidden = object::RemoveHiddenSurfaces(obj_1, cam);
     hidden += objects::RemoveHiddenSurfaces(objs, cam);
-
-    // Light objects
 
     object::ComputeFaceNormals(obj_1);
     objects::ComputeFaceNormals(objs);
@@ -228,15 +197,11 @@ int main(int argc, const char** argv)
     light::Object(obj_1, lights);
     light::Objects(objs, lights);
 
-    // Go to camera coords
-
     if (cam.type_ == CamType::UVN)
       camman.GetCamera(CamType::Uvn::type).LookAt(obj_1.world_pos_);
 
     object::World2Camera(obj_1, cam, trig);
     objects::World2Camera(objs, cam, trig);
-
-    // Make triangles
 
     tris_base.resize(0);
     tris_ptrs.resize(0);
@@ -246,16 +211,10 @@ int main(int argc, const char** argv)
     triangles::MakePointers(tris_base, tris_ptrs);
     triangles::SortZAvg(tris_ptrs);
     
-    // Finally
-    
     triangles::Camera2Persp(tris_base, cam);
     triangles::Persp2Screen(tris_base, cam);
 
-    // Draw
-
     render::Context(tris_ptrs, render_ctx);
-    
-    // Print fps and other info
     
     PrintInfo(
       text, fps, obj_1.world_pos_, obj_rot, cam.vrp_, cam.dir_, culled, hidden

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    parmline3d.cc
-// Descr:   represents 3d parmline entity
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Descr:   represents 3d parametric line
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "parmline3d.h"

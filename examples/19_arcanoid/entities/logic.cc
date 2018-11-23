@@ -2,7 +2,6 @@
 // File:    logic.cc
 // Descr:   main game logic
 // Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
 #include "logic.h"

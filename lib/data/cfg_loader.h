@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    cfg_loader.h
 // Descr:   struct to read config files
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GC_CFG_LOADER_H
@@ -20,10 +19,6 @@
 #include "lib/math/vector.h"
 
 namespace anshub {
-
-//****************************************************************************
-// Represents config for demo applications
-//****************************************************************************
 
 struct Config
 {

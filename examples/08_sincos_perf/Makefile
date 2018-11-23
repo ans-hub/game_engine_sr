@@ -9,7 +9,7 @@ ROOTDIR = ../../
 LIBDIR 		= $(ROOTDIR)lib
 LIBWINDOW = $(LIBDIR)/window
 LIBMATH 	= $(LIBDIR)/math
-LIBDRAW 	= $(LIBDIR)/draw
+LIBRENDER = $(LIBDIR)/render
 LIBSYSTEM = $(LIBDIR)/system
 LDFLAGS 	= -lwindow  -ldraw -lmath -lsystem 				# internal
 LDFLAGS  += -lX11 -lGL -lGLU -lXrandr								# external
@@ -20,7 +20,7 @@ CXX 			= g++
 CXXFLAGS 	= -I $(ROOTDIR) -I .											# see note below
 CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
 CXXLIBS  += -L $(LIBWINDOW) -L $(LIBMATH)
-CXXLIBS  += -L $(LIBDRAW) -L $(LIBSYSTEM)
+CXXLIBS  += -L $(LIBRENDER) -L $(LIBSYSTEM)
 CXXLIBS  += -L /usr/local/lib/
 CXXFLAGS += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
@@ -55,7 +55,7 @@ endif
 $(APPNAME_1) : $(APPNAME_1).cc $(OBJECTS)
 	make -C $(LIBWINDOW)
 	make -C $(LIBMATH)
-	make -C $(LIBDRAW)
+	make -C $(LIBRENDER)
 	make -C $(LIBSYSTEM)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(RLSFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $@
 
@@ -64,7 +64,7 @@ $(APPNAME_1) : $(APPNAME_1).cc $(OBJECTS)
 $(APPNAME_2) : $(APPNAME_2).cc $(OBJECTS)
 	make -C $(LIBWINDOW)
 	make -C $(LIBMATH)
-	make -C $(LIBDRAW)
+	make -C $(LIBRENDER)
 	make -C $(LIBSYSTEM)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(RLSFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $@
 
@@ -73,7 +73,7 @@ $(APPNAME_2) : $(APPNAME_2).cc $(OBJECTS)
 debug_1 : $(APPNAME_1).cc $(OBJECTS)
 	make debug -C $(LIBWINDOW)
 	make debug -C $(LIBMATH)
-	make debug -C $(LIBDRAW)
+	make debug -C $(LIBRENDER)
 	make debug -C $(LIBSYSTEM)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(DBGFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $(APPNAME_1)_$@
 
@@ -82,7 +82,7 @@ debug_1 : $(APPNAME_1).cc $(OBJECTS)
 debug_2 : $(APPNAME_2).cc $(OBJECTS)
 	make debug -C $(LIBWINDOW)
 	make debug -C $(LIBMATH)
-	make debug -C $(LIBDRAW)
+	make debug -C $(LIBRENDER)
 	make debug -C $(LIBSYSTEM)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(DBGFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $(APPNAME_2)_$@
 
@@ -106,7 +106,7 @@ clean :
 	rm -rf $(APPNAME_1) $(APPNAME_2) $(APPNAME_1)_* $(APPNAME_2)_* *.d *.o 
 	make clean -C $(LIBWINDOW)
 	make clean -C $(LIBMATH)
-	make clean -C $(LIBDRAW)
+	make clean -C $(LIBRENDER)
 	make clean -C $(LIBSYSTEM)
 
 	# Important note: we have 2 include path - root (for including libraries headers

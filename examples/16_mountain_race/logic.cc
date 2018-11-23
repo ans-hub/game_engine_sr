@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    logic.cc
 // Descr:   logic class for mountain race game
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "logic.h"
@@ -22,8 +21,6 @@ Logic::Logic(const Config& cfg, GlWindow& win, Level& level)
   StartAudioEngineSound(cfg);
 }
 
-// Processes game frame
-
 bool Logic::Process()
 {
   auto kbtn = win_.ReadKeyboardBtn(BtnType::KB_DOWN);
@@ -41,8 +38,6 @@ bool Logic::Process()
   return kbtn != Btn::ESC;
 }
 
-// Starts in-game sound
-
 void Logic::StartAudioEngineSound(const Config& cfg)
 {
   auto& audio = level_.audio_;
@@ -56,14 +51,10 @@ void Logic::StartAudioEngineSound(const Config& cfg)
   audio.Play(level_.ambient_snd_);    // and regular play in other cases
 }
 
-// Processes system input
-
 void Logic::ProcessSystemInput(Btn kbtn)
 {
   helpers::HandlePause(kbtn, win_);
 }
-
-// Processes collisions with player and trees
 
 void Logic::ProcessTreesCollisions()
 {
@@ -85,8 +76,6 @@ void Logic::ProcessTreesCollisions()
     first_collision_ = true;
 }
 
-// Processes player movements
-
 void Logic::ProcessPlayer()
 {
   if (ignore_input_ <= 0)   // also we need backward ignoring
@@ -100,8 +89,6 @@ void Logic::ProcessPlayer()
   level_.follow_cam_.FollowFor(level_.player_);
 }
 
-// Processes ignore time
-
 void Logic::ProcessIgnoreTime()
 {
   timer_.End();
@@ -109,8 +96,6 @@ void Logic::ProcessIgnoreTime()
     ignore_input_ -= timer_.GetElapsed();
   timer_.Start();
 }
-
-// Processes player`s sounds (engine volume in depends of speed)
 
 void Logic::ProcessPlayerSounds()
 {

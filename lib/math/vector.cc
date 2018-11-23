@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    vector.cc
 // Descr:   represents 2d-3d-4d vector
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "vector.h"
@@ -66,7 +65,7 @@ Vector vector::Normalize(const Vector& v)
 // If `norm` == true - supposed that v1 and v2 is normalized (has length == 1)
 
 // Note : since Length() is very expensive, we have two ways:
-//  1) don't use this function and think about another way of problem
+//  1) don't use this function
 //  2) prenormalize vectors and use CosBetweenNormalized (which is DotProduct)
 
 float vector::CosBetween(const Vector& v1, const Vector& v2, bool norm)

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    helpers.h
 // Descr:   input-output helpers
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GC_HELPERS_CAMERA_H
@@ -17,7 +16,7 @@
 
 #include "lib/extras/cameraman.h"
 
-#include "lib/draw/gl_text.h"
+#include "lib/render/gl_text.h"
 
 #include "lib/window/base_window.h"
 #include "lib/window/gl_window.h"
@@ -79,8 +78,8 @@ inline auto helpers::MakeCameraman(Args&&... args)
   man.SetValue(CamValue::MOUSE_SENSITIVE, 1.0f);  
   man.SetValue(CamValue::SPEED_UP, 5.0f);  
 
-  Dynamics dyn {0.01f, 0.9f, -0.1f, 100.0f};
-  man.SetDynamics(std::move(dyn));
+  Physics dyn {0.01f, 0.9f, -0.1f, 100.0f};
+  man.SetPhysics(std::move(dyn));
 
   return man;
 }

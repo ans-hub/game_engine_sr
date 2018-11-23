@@ -2,7 +2,6 @@
 // File:    base_window.h
 // Descr:   pure virtual class represents `window` concept in x
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
 
 #include "unistd.h"
@@ -28,7 +27,7 @@ class BaseWindow
 public:
   BaseWindow();
   BaseWindow(const BaseWindow&) =delete;
-  BaseWindow(BaseWindow&&) =delete;       // todo : realise move ctor
+  BaseWindow(BaseWindow&&) =delete;
   virtual ~BaseWindow();
 
   // Output hanlders

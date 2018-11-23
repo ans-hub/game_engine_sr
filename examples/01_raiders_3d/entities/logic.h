@@ -1,13 +1,8 @@
 // *************************************************************
 // File:    logic.h
-// Descr:   simple logic processor (manipilates game objects)
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Descr:   game logic
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
-
-// Note: real logic processor shouldn't include this modules: physics,
-// ai, animation and collision detection. They should be separated.
-// Logic processor should only manage all game objects and game logic
 
 #ifndef GAME_LOGIC_H
 #define GAME_LOGIC_H
@@ -15,7 +10,7 @@
 #include "lib/window/gl_window.h"
 #include "lib/audio/audio_out.h"
 #include "lib/system/rand_toolkit.h"
-#include "lib/draw/fx_colors.h"
+#include "lib/render/fx_colors.h"
 #include "lib/math/vector.h"
 #include "lib/math/polygon.h"
 #include "lib/system/timer.h" 

@@ -1,6 +1,6 @@
 # Matrix transformation example
 
-This example shown loading model from ply file and making simple transformation with it using matrixes. Cameras - uvn or based on Euler`s angles
+This example shown loading model from ply file and making simple transformation with it using matrices. Cameras - uvn or based on Euler`s angles
 
 ## Usage:
 ```bash

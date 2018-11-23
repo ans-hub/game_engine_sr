@@ -1,7 +1,7 @@
 // *************************************************************
 // File:    scene.h
 // Descr:   scene class for mountain race game
-// Author:  Novoselov Anton @ 2018
+// Author:  Novoselov Anton @ 2017
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
@@ -11,9 +11,9 @@
 #include "level.h"
 
 #include "lib/data/cfg_loader.h"
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_render_ctx.h"
-#include "lib/draw/cameras/gl_camera.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_render_ctx.h"
+#include "lib/render/cameras/gl_camera.h"
 #include "lib/window/gl_window.h"
 
 namespace anshub {

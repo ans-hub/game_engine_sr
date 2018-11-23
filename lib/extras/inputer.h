@@ -1,8 +1,7 @@
 // *******************************************************************
 // File:    inputer.h
 // Descr:   abstract base class for user input
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *******************************************************************
 
 #ifndef GC_INPUTER_H
@@ -11,7 +10,7 @@
 #include <vector>
 
 #include "lib/extras/exceptions.h"
-#include "lib/draw/gl_enums.h"
+#include "lib/render/gl_enums.h"
 #include "lib/window/enums.h"
 #include "lib/window/base_window.h"
 #include "lib/extras/camera_button.h"

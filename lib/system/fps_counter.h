@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    fps_counter.h
 // Descr:   simple fps counter
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef SYS_FPS_COUNTER_H

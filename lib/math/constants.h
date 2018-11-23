@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    constants.h
 // Descr:   contains math constants
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GM_CONST_H

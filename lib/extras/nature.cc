@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    nature.cc
-// Descr:   represents nature of the terrain
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Descr:   represents simple nature on the terrain
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "nature.h"
@@ -63,7 +62,9 @@ void Nature::RecognizeObjects()
 
         // Initial rotate
 
-        float roll {rand_toolkit::get_rand(0.0f, 15.0f)};   // todo: bad magic
+        const float k_max_roll = 15.0f;
+
+        float roll {rand_toolkit::get_rand(0.0f, k_max_roll)};
         object::Rotate(obj, {0.0f, roll, 0.0f}, trig_);
         
         objects_.push_back(obj);
@@ -71,7 +72,6 @@ void Nature::RecognizeObjects()
     }
   }
 }
-
 
 }  // namespace anshub
   

@@ -1,7 +1,6 @@
 // *************************************************************
 // File:    polygon.h
 // Descr:   represents 2d polygon helpers (works with vertexes)
-// Author:  Novoselov Anton @ 2017-2018
 // URL:     https://github.com/ans-hub/geomath_lib
 // *************************************************************
 
@@ -18,19 +17,19 @@
 namespace anshub {
 
 using Point = Vector;
-using Vertexes = std::vector<Point>;  // see note #1 after code
+using Vertices = std::vector<Point>;  // see note #1 after code
 
 namespace polygon2d {
 
-  void    CheckInvariant(const Vertexes&);
-  float   Square(const Vertexes&);
-  Point   Barycenter(const Vertexes&, float);
-  bool    PointInside(const Vertexes&, const Point&);
+  void    CheckInvariant(const Vertices&);
+  float   Square(const Vertices&);
+  Point   Barycenter(const Vertices&, float);
+  bool    PointInside(const Vertices&, const Point&);
   bool    PointInside(float, float, float, float, float, float);
   bool    PointInside(const Point&, const Point&, const Point&);
-  bool    PointsInside(float, float, float, float, Vertexes&);
-  bool    PointsInside(float, float, float, float, Vertexes&&);
-  bool    CutConvex(Vertexes&, Vertexes&, const Line&);
+  bool    PointsInside(float, float, float, float, Vertices&);
+  bool    PointsInside(float, float, float, float, Vertices&&);
+  bool    CutConvex(Vertices&, Vertices&, const Line&);
   void    RotatePoint(float&, float&, float, const TrigTable&);
 
 } // namespace polygon2d

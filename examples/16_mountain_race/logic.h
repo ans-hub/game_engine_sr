@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    logic.h
 // Descr:   logic class for mountain race game
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef LOGIC_H

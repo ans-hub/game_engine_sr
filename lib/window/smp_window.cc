@@ -2,7 +2,6 @@
 // File:    smp_window.cc
 // Descr:   implementation of simple gui window
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
 
 #include "smp_window.h"

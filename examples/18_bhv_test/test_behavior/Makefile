@@ -6,7 +6,7 @@ ROOTDIR = ../../../
 # Setup libraries pathes and flags
 
 LIBDIR		= $(ROOTDIR)lib
-LIBDRAW   = $(LIBDIR)/draw
+LIBRENDER = $(LIBDIR)/render
 LIBSYSTEM = $(LIBDIR)/system
 LIBMATH   = $(LIBDIR)/math
 LIBDATA   = $(LIBDIR)/data
@@ -18,7 +18,7 @@ LDFLAGS	 += -lX11 -lGL -lGLU -lXrandr
 CXX       = g++
 CXXFLAGS  = -I $(ROOTDIR) -I .
 CXXFLAGS  += -ansi -pedantic -Wall -Wextra -std=c++14
-CXXLIBS   += -L $(LIBDRAW) -L $(LIBSYSTEM) -L $(LIBMATH) -L $(LIBDATA)
+CXXLIBS   += -L $(LIBRENDER) -L $(LIBSYSTEM) -L $(LIBMATH) -L $(LIBDATA)
 CXXLIBS   += -L /usr/local/lib/
 CXXFLAGS  += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
@@ -33,7 +33,7 @@ OBJECTS   = $(SRCFILES:%.cc=%.o)
 ##############################################################################
 
 all : $(OBJECTS)
-	make debug -C $(LIBDRAW)
+	make debug -C $(LIBRENDER)
 	make debug -C $(LIBSYSTEM)
 	make debug -C $(LIBMATH)
 	make debug -C $(LIBDATA)
@@ -59,7 +59,7 @@ lclean :
 clean :
 	rm -rf gmon.out
 	rm -rf $(APPNAME) $(APPNAME)_* *.d *.o 
-	make clean -C $(LIBDRAW)
+	make clean -C $(LIBRENDER)
 	make clean -C $(LIBSYSTEM)
 	make clean -C $(LIBMATH)
 	make clean -C $(LIBDATA)

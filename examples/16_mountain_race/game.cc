@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    game.cc
 // Descr:   example of simple terrain game
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <stdexcept>
@@ -42,8 +41,6 @@ void PrintDebug(FpsCounter& fps, const Level&, const Scene& scene)
 
 int main(int argc, const char** argv)
 {
-  // System settings
-
   auto cfg = ProcessConfig(argc, argv);
 
   const int kWinWidth {cfg.Get<int>("win_w")};
@@ -70,8 +67,6 @@ int main(int argc, const char** argv)
   Level      level   {cfg};
   Logic      logic   {cfg, win, level};
   Scene      scene   {cfg, win, level};
-
-  // Main loop
 
   const  int MS_PER_FRAME {30};
   double prev = timer.GetCurrentClock();

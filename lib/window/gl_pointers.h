@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    gl_pointers.h
 // Descr:   opengl function pointers
-// Author:  Novoselov Anton @ 2019
-// URL:     https://github.com/ans-hub/iogame_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 // Include this and call Gather... or use GL_GLEXT_PROTOTYPES

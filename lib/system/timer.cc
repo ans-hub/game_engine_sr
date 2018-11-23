@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    timer.cc
 // Descr:   timer class
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "timer.h"
@@ -32,5 +31,3 @@ void Timer::Wait()
 }
  
 } // namespace anshub
-
-// Note : remainder - second = 1/1e3 milli, 1/e6 - micro, 1/1e9 nano

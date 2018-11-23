@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    segment.cc
-// Descr:   represents 2d segment entity
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Descr:   represents 2d segment
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "segment.h"
@@ -94,11 +93,14 @@ bool segment2d::Clip(
   int y1_ = y1;
   int x2_ = x2;
   int y2_ = y2;
+
   bool result = segment2d::Clip(xmin, ymin, xmax, ymax, x1_, y1_, x2_, y2_);
+
   x1 = x1_;
   y1 = y1_;
   x2 = x2_;
   y2 = y2_;
+
   return result;
 }
 

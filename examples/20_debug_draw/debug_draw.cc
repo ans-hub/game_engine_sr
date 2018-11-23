@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    debug_draw.cc
 // Descr:   debug draw example
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>
@@ -19,19 +18,19 @@
 
 #include "lib/math/vector.h"
 #include "lib/math/matrix.h"
-#include "lib/math/matrixes/mx_rotate_eul.h"
+#include "lib/math/matrices/mx_rotate_eul.h"
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 
-#include "lib/draw/gl_render_ctx.h"
-#include "lib/draw/gl_debug_draw.h"
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_text.h"
-#include "lib/draw/gl_lights.cc"
-#include "lib/draw/gl_coords.h"
-#include "lib/draw/gl_object.h"
-#include "lib/draw/gl_z_buffer.h"
-#include "lib/draw/cameras/gl_camera.h"
+#include "lib/render/gl_render_ctx.h"
+#include "lib/render/gl_debug_draw.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_text.h"
+#include "lib/render/gl_lights.cc"
+#include "lib/render/gl_coords.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/gl_z_buffer.h"
+#include "lib/render/cameras/gl_camera.h"
 
 #include "lib/extras/cameraman.h"
 
@@ -42,8 +41,6 @@ using namespace helpers;
 
 int main(int argc, const char** argv)
 {
-  // Hanle input filename
-
   const char* obj_fname {};
 
   if (argc != 2) {
@@ -54,37 +51,25 @@ int main(int argc, const char** argv)
     obj_fname = argv[1];
   }
    
-  // Math processor
-  
   TrigTable trig {};
   rand_toolkit::start_rand();
-
-  // Timers
 
   FpsCounter fps {};
   constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
 
-  // Constants
-
   constexpr int kWidth = 800;
   constexpr int kHeight = 600;
-
-  // Window
 
   auto pos  = io_helpers::GetXYToMiddle(kWidth, kHeight); 
   GlWindow win (pos.x, pos.y, kWidth, kHeight, "Camera"); 
   auto mode = io_helpers::FindVideoMode(kWidth, kHeight);
-
-  // Objects
 
   GlObject obj {obj_fname, {0.0f, 0.0f, 0.0f}};
   object::Scale(obj, {5.f, 5.f, 5.f});
 
   for (auto& vx : obj.vxs_local_)
     vx.color_.a_ = 0.1f;
-
-  // Camera
 
   float    dov     {1.f};
   float    fov     {75.f};
@@ -126,17 +111,13 @@ int main(int argc, const char** argv)
   curr_cam.SetDirection(GlCamera::YAW, 1.0f, 6.0f, -360.0f, 360.0f, false);  
   curr_cam.SetDirection(GlCamera::PITCH, 1.0f, 6.0f, -360.0f, 360.0f, false);  
 
-  Dynamics dyn {0.005f, 0.7f, -0.1f, 100.0f};
-  camman.SetDynamics(std::move(dyn));
+  Physics dyn {0.005f, 0.7f, -0.1f, 100.0f};
+  camman.SetPhysics(std::move(dyn));
 
-  // Prepare lights sources
- 
   Lights lights {};
   lights.AddAmbient(color::fWhite, 0.3f);
   lights.AddInfinite(color::fWhite, 0.7f, {-1.0f, -2.0f, -0.9f});
   lights.AddPoint(color::fBlue, 0.6f, {0.0f, 0.0f, 10.0f}, {0.0f, 0.0f, -1.0f});
-
-  // Create render context
 
   RenderContext render_ctx(kWidth, kHeight, color::Black);
   render_ctx.is_zbuf_  = true;
@@ -151,12 +132,8 @@ int main(int argc, const char** argv)
   GlText text {win};
   Vector obj_rot {0.0f, 0.0f, 0.0f};
 
-  // Make triangles arrays
-
   auto tris_base = triangles::MakeBaseContainer(0);
   auto tris_ptrs = triangles::MakePtrsContainer(0);
-
-  // Debug draw
 
   DebugContext debug {};
   debug.render_first_ = true;
@@ -164,8 +141,6 @@ int main(int argc, const char** argv)
   do {
     timer.Start();
     win.Clear();
-
-    // Handle input
 
     auto& cam = camman.GetCurrentCamera();
     render_ctx.cam_ = &cam;
@@ -189,28 +164,20 @@ int main(int argc, const char** argv)
     if (cam.type_ == CamType::UVN)
       camman.GetCamera(CamType::Uvn::type).LookAt(obj.world_pos_);
 
-    // Some hand transformation
-
     obj.SetCoords(Coords::LOCAL);
     object::Rotate(obj, obj_rot, trig);
     obj.CopyCoords(Coords::LOCAL, Coords::TRANS);
     obj.SetCoords(Coords::TRANS);
     object::Translate(obj, obj.world_pos_);
 
-    // Culling
-
     object::ResetAttributes(obj);
-    auto hidden = 0;//object::RemoveHiddenSurfaces(obj, cam);
-
-    // Light objects
+    auto hidden = 0;
 
     object::ComputeFaceNormals(obj);
     object::ComputeVertexNormalsV2(obj);
     light::Object(obj, lights);
     for (auto& vx : obj.GetCoords())
       debug.AddLine(vx.pos_, vx.pos_ + vx.normal_ * 2.f, color::fYellow);
-
-    // Make triangles
 
     object::World2Camera(obj, cam, trig);
     tris_base.resize(0);
@@ -220,12 +187,8 @@ int main(int argc, const char** argv)
     triangles::MakePointers(tris_base, tris_ptrs);
     triangles::SortZAvg(tris_ptrs);
     
-    // Finally
-    
     triangles::Camera2Persp(tris_base, cam);
     triangles::Persp2Screen(tris_base, cam);
-
-    // Draw axis
 
     Vector start {0.f, 0.f, 0.f};
     Vector fwd {0.f, 0.f, 1.f};
@@ -277,6 +240,8 @@ int main(int argc, const char** argv)
     // positive angle rotates dir vector to positive angle
 
     // Draw normals
+    
+    // ...todo
 
     // Finalize
 

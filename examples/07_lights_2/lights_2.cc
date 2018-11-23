@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    lights_2.cc
 // Descr:   lighting demo v.2
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>
@@ -21,16 +20,16 @@
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_text.h"
-#include "lib/draw/gl_coords.h"
-#include "lib/draw/gl_object.h"
-#include "lib/draw/gl_lights.h"
-#include "lib/draw/cameras/gl_camera.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_text.h"
+#include "lib/render/gl_coords.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/gl_lights.h"
+#include "lib/render/cameras/gl_camera.h"
 
-#include "lib/math/matrixes/mx_rotate_eul.h"
-#include "lib/math/matrixes/mx_rotate_uvn.h"
-#include "lib/math/matrixes/mx_translate.h"
+#include "lib/math/matrices/mx_rotate_eul.h"
+#include "lib/math/matrices/mx_rotate_uvn.h"
+#include "lib/math/matrices/mx_translate.h"
 
 #include "../helpers.h"
 
@@ -46,8 +45,6 @@ const char* HandleInput(int argc, const char** argv)
   else
     return argv[1];
 }
-
-// Creates array of rectangles (w_cnt * h_cnt size) 
 
 auto CreateGround(int rect_cnt, TrigTable& trig)
 {
@@ -112,13 +109,9 @@ int main(int argc, const char** argv)
     std::cerr << "Incorrect file name\n";
     return 1;
   }
-
-  // Math processor
   
   TrigTable trig {};
   rand_toolkit::start_rand();
-
-  // Timers
 
   FpsCounter fps {};
   constexpr int kFpsWait = 1000;
@@ -131,8 +124,6 @@ int main(int argc, const char** argv)
   auto pos  = io_helpers::GetXYToMiddle(kWidth, kHeight); 
   GlWindow win (pos.x, pos.y, kWidth, kHeight, "Camera"); 
 
-  // Object
-
   auto obj = object::Make(
     fname, trig, 
     {1.0f, 1.0f, 1.0f},     // initial scale
@@ -140,8 +131,6 @@ int main(int argc, const char** argv)
     {180.0f, 0.0f, 0.0f}    // initial rotate
   );
   auto ground = CreateGround(20, trig);
-
-  // Camera
 
   float    dov     {2};
   float    fov     {75};
@@ -152,20 +141,14 @@ int main(int argc, const char** argv)
   auto camman = MakeCameraman(
     fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig);
 
-  // Prepare lights sources
- 
   Lights lights {};
   lights.AddAmbient(color::fWhite, 0.2f);
   lights.AddInfinite(color::fYellow, 0.6f, {0.0f, -1.0f, 0.0f});
   lights.AddPoint(color::fYellow, 0.6f, {0.0f, 0.0f, 10.0f}, {0.0f, 0.0f, -1.0f});
 
-  // Other stuff
-
   ScrBuffer buf (kWidth, kHeight, 0);
   GlText    text {win};
   Vector    obj_rot    {0.0f, 0.0f, 0.0f};
-
-  // Make triangles arrays
 
   auto tris_base = triangles::MakeBaseContainer(1);
   auto tris_ptrs = triangles::MakePtrsContainer(1);
@@ -173,8 +156,6 @@ int main(int argc, const char** argv)
   do {
     timer.Start();
     win.Clear();
-
-    // Handle input
 
     camman.ProcessInput(win);
     auto& cam = camman.GetCurrentCamera();
@@ -192,8 +173,6 @@ int main(int argc, const char** argv)
     HandlePause(kbtn, win);
     HandleObject(kbtn, obj_vel, obj_rot, obj_scale);
 
-    // Some hand transformation
-
     obj.world_pos_ += obj_vel;
 
     obj.SetCoords(Coords::LOCAL);
@@ -205,8 +184,6 @@ int main(int argc, const char** argv)
     object::Translate(obj, obj.world_pos_);
     for (auto& it : ground)
       object::Translate(it, it.world_pos_);
-    
-    // Culling
 
     object::ResetAttributes(obj);
     objects::ResetAttributes(ground);
@@ -214,13 +191,9 @@ int main(int argc, const char** argv)
     auto hidden = objects::RemoveHiddenSurfaces(ground, cam);
     hidden += object::RemoveHiddenSurfaces(obj, cam);
 
-    // Light objects
-
     object::ComputeFaceNormals(obj);
     object::ComputeVertexNormalsV2(obj);
     light::Object(obj, lights);
-
-    // Camera routines (go to cam coords)
 
     MatrixCamera mx_cam {};
     if (cam.type_ == CamType::EULER)
@@ -242,8 +215,6 @@ int main(int argc, const char** argv)
     object::ApplyMatrix(mx_cam, obj);
     objects::ApplyMatrix(mx_cam, ground);
 
-    // Make triangles
-
     tris_base.resize(0);
     tris_ptrs.resize(0);
     triangles::AddFromObjects(ground, tris_base);
@@ -252,18 +223,12 @@ int main(int argc, const char** argv)
     triangles::MakePointers(tris_base, tris_ptrs);
     triangles::SortZAvg(tris_ptrs);
     
-    // Finally
-    
     triangles::Camera2Persp(tris_base, cam);
     triangles::Persp2Screen(tris_base, cam);
-
-    // Draw
 
     buf.Clear();
     draw_triangles::Solid(tris_ptrs, buf);
     buf.SendDataToFB();
-
-    // Print fps and other info
     
     PrintInfo(
       text, fps, obj.world_pos_, obj_rot, cam.vrp_, cam.dir_, culled, hidden

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    inv_zbuf_many.cc
 // Descr:   draw some objects using 1/z buffer
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>
@@ -18,13 +17,13 @@
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 
-#include "lib/draw/gl_text.h"
-#include "lib/draw/gl_scr_buffer.h"
-#include "lib/draw/gl_z_buffer.h"
-#include "lib/draw/gl_lights.h"
-#include "lib/draw/gl_object.h"
-#include "lib/draw/cameras/gl_camera.h"
-#include "lib/draw/gl_draw.h"
+#include "lib/render/gl_text.h"
+#include "lib/render/gl_scr_buffer.h"
+#include "lib/render/gl_z_buffer.h"
+#include "lib/render/gl_lights.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/cameras/gl_camera.h"
+#include "lib/render/gl_draw.h"
 
 #include "../helpers.h"
 
@@ -47,12 +46,8 @@ int main(int argc, const char** argv)
     return 1;
   }
 
-  // Math processor
-  
   TrigTable trig {};
   rand_toolkit::start_rand();
-
-  // Timers
 
   FpsCounter fps {};
   constexpr int kFpsWait = 1000;
@@ -102,8 +97,6 @@ int main(int argc, const char** argv)
     );
   }
 
-  // Camera
-
   float    dov     {2};
   float    fov     {60};
   Vector   cam_pos {0.0f, 0.0f, -kWorldSize*3};
@@ -113,8 +106,6 @@ int main(int argc, const char** argv)
   auto camman = MakeCameraman(
     fov, dov, kWidth, kHeight, cam_pos, cam_dir, near_z, far_z, trig);
 
-  // Prepare lights sources
-  
   Lights lights {};
   FColor white  {255.0f, 255.0f, 255.0f};
   FColor yellow {255.0f, 255.0f, 0.0f};
@@ -125,13 +116,9 @@ int main(int argc, const char** argv)
   lights.point_.emplace_back(yellow, 0.6f, 
     Vector{0.0f, 0.0f, 10.0f}, Vector {0.0f, 0.0f, -1.0f});
 
-  // Other stuff
-
   ScrBuffer buf (kWidth, kHeight, color::Black);
   ZBuffer   zbuf (kWidth, kHeight);
   GlText    text {win};
-
-  // Make triangles arrays
 
   auto tris_base = triangles::MakeBaseContainer(1);
   auto tris_ptrs = triangles::MakePtrsContainer(1);
@@ -140,41 +127,27 @@ int main(int argc, const char** argv)
     timer.Start();
     win.Clear();
 
-    // Handle input
-
     camman.ProcessInput(win);
     auto& cam = camman.GetCurrentCamera();
     auto kbtn = win.ReadKeyboardBtn(BtnType::KB_DOWN);
     helpers::HandlePause(kbtn, win);
 
-    // Rotate cubes
-
     objects::SetCoords(cubes, Coords::LOCAL);
     objects::Rotate(cubes, cubes_rot, trig);
-
-    // Translate cubes to world
 
     objects::CopyCoords(cubes, Coords::LOCAL, Coords::TRANS);
     objects::SetCoords(cubes, Coords::TRANS);
     for (auto& cube : cubes)
       object::Translate(cube, cube.world_pos_);
 
-    // Cull hidden surfaces
-
     objects::ResetAttributes(cubes);
     auto hidden = objects::RemoveHiddenSurfaces(cubes, cam);
-    
-    // Light objects
     
     objects::ComputeFaceNormals(cubes);
     objects::ComputeVertexNormalsV2(cubes);
     light::Objects(cubes, lights);
     
-    // Go to camera coordinates
-
     objects::World2Camera(cubes, cam, trig);
-
-    // Make triangles
 
     tris_base.resize(0);
     tris_ptrs.resize(0);
@@ -182,13 +155,9 @@ int main(int argc, const char** argv)
     auto culled = triangles::CullAndClip(tris_base, cam);
     triangles::MakePointers(tris_base, tris_ptrs);
 
-    // Finally
-    
     triangles::SortZAvgInv(tris_ptrs);
     triangles::Camera2Persp(tris_base, cam);
     triangles::Persp2Screen(tris_base, cam);
-
-    // Draw triangles
 
     buf.Clear();
     zbuf.Clear();

@@ -1,19 +1,18 @@
 // *************************************************************
 // File:    birds.h
 // Descr:   represents very simple birds
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GL_EXTRAS_BIRDS_H
 #define GL_EXTRAS_BIRDS_H
 
 #include "lib/system/rand_toolkit.h"
-#include "lib/draw/exceptions.h"
-#include "lib/draw/gl_aliases.h"
-#include "lib/draw/gl_object.h" 
-#include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_vertex.h"
+#include "lib/render/exceptions.h"
+#include "lib/render/gl_aliases.h"
+#include "lib/render/gl_object.h" 
+#include "lib/render/fx_colors.h"
+#include "lib/render/gl_vertex.h"
 
 namespace anshub {
 

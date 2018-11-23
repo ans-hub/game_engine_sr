@@ -1,13 +1,10 @@
 // *************************************************************
 // File:    enums.h
 // Descr:   enumerators
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 namespace anshub {
-
-// Describes game states
 
 enum class GameState
 {

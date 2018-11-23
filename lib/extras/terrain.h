@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    terrain.h
 // Descr:   represents terrain map
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GL_EXTRAS_TERRAIN_H
@@ -10,18 +9,18 @@
 
 #include <memory>
 
-#include "lib/draw/exceptions.h"
-#include "lib/draw/gl_aliases.h"
-#include "lib/draw/gl_object.h"
-#include "lib/draw/gl_vertex.h"
+#include "lib/render/exceptions.h"
+#include "lib/render/gl_aliases.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/gl_vertex.h"
 
 #include "lib/math/math.h"
 
 namespace anshub {
 
 //****************************************************************************
-// Represents global container of vertices and TerrainChunks (derived from
-// GlObject). Every chunk contains fixed part of vertices. recieved
+// Represents global container of vertices and TerrainChunks derived from
+// Object. Every chunk contains fixed part of vertices. recieved
 // from this struct, and several faces, that represents levels of
 // detalization
 

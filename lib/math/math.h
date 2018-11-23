@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    math.h
 // Descr:   math functions
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GM_MATH_H

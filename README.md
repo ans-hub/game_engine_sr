@@ -1,25 +1,14 @@
 # Game engine with software renderer
 
-This repository contains implementation of software game engine. The main idea of this game engine was to study different algorithms (graphics, games, etc), using vurtual linear addressed video buffer. This means that all the manipulations with the graphics (math, transformation, rasterisation, etc.) you must perform manually. And only then you will send data to the video memory. Game engine uses left-handed coordinate system (+z forward in screen) and math lib with column ordered matrices.
-
 ## Linear video buffer implementation
 
 The idea of using abstract linear addressed video buffer was taken from the book of Andre LaMothe. In my implementation the linear video buffer is an abstraction consisting of an array in the system memory with a step of 4 bytes to store the pixel color in the format `ARGB (byte-ordered)`. Usually buffer has size is evaluated as *window_width x widnow_height x bytes_per_pixel*.
 
-The linear buffer has the following interface:
-- `operator[]` - allows you to access and write to the buffer data
-- `Clear()` - Clears the buffer with the specified color
-- `SendDataToFB()` - sends data to video memory (used at the end of rasterization)
-
-`SendDataToFB()` implemented throught OpenGL function `glDrawPixels`, which is now deprecated. But this fact is shouldn't be a problem since this function is present anywhere in compatibility opengl profile (or in the versions <= than 3.0).
-
-For systems which has only OpenGL ES implementations we have another way to substitute `glDrawPixels` in core opengl profile (see comments in the end of `/lib/draw/gl_buffer.cc`).
-
-This buffer can be easily reduced to 16 bit or 8 bit color space manually.
+Hope this code helps someone to get basic knowledge before to dive into game engines. I tried to make code as simple as can without over abstraction and optimizations. Even using STL and not using memory management at all we can achive good FPS amount.
 
 ## Game engine examples
 
-Directory `examples` contains examples based on the game engine. Currently there are placed game called `Raiders 3D` which is my implementation of the game originally written by Andre LaMothe, draft of the game `Mountain race` and draft of the game like FPS.
+Directory `examples` contains examples based on the game engine. Currently there are games: 3d space shooter (which is my implementation of the game originally written by Andre LaMothe), game `Mountain race` and FPS game.
 
 <div style="text-align: center;" markdown="1" />
 <img src="screenshot.png" style="width: 600px;" />
@@ -118,14 +107,3 @@ When start any example, use `vblank_mode=0 ./some_example`
 ### Note about fullscreen on Wayland
 
 If you use wayland, you mas switch to old X mode to use fullscreen (i.e., in Ubuntu you may do this by choose login session called "Gnome on xorg")
-
-## Todo:
-
-* parallelize rasterizer
-* bvh (or other similar struct) for terrain culling
-* occluders
-* ray-tracing
-* normal mapping
-* spot light
-* shadows
-* reflections

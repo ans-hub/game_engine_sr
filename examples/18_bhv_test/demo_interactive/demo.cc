@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    alpha_blending.cc
 // Descr:   alpha blending example
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>
@@ -21,15 +20,15 @@
 #include "lib/math/segment.h"
 #include "lib/math/trig.h"
 
-#include "lib/draw/gl_bvh.h"
-#include "lib/draw/gl_object.h"
-#include "lib/draw/gl_render_ctx.h"
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_text.h"
-#include "lib/draw/gl_lights.cc"
-#include "lib/draw/gl_coords.h"
-#include "lib/draw/gl_z_buffer.h"
-#include "lib/draw/cameras/gl_camera.h"
+#include "lib/render/gl_bvh.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/gl_render_ctx.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_text.h"
+#include "lib/render/gl_lights.cc"
+#include "lib/render/gl_coords.h"
+#include "lib/render/gl_z_buffer.h"
+#include "lib/render/cameras/gl_camera.h"
 
 #include "../../helpers.h"
 
@@ -63,9 +62,6 @@ void PrintInfo(
       << ", octs in tree: " << tree.OctantsCount();
   text.PrintString(60, 50, oss.str().c_str());
 }
-
-
-// Prints usage
 
 void PrintUsage(std::ostream& oss)
 {
@@ -189,8 +185,8 @@ auto MakeCamera(float fov, float dov, int width, int height,
 
   // Set up camera's dynamics
 
-  Dynamics dyn {0.005f, 0.8f, -0.1f, 100.0f};
-  camman.SetDynamics(std::move(dyn));
+  Physics dyn {0.005f, 0.8f, -0.1f, 100.0f};
+  camman.SetPhysics(std::move(dyn));
 
   return camman;
 }
@@ -227,22 +223,14 @@ int DetectCurrentCollisions(Bvh& tree, const GlObject& main)
 
 int main(int argc, const char** argv)
 {
-  // Process file name
-
   InputData args(argc, argv);
-
-  // Math processor
 
   TrigTable trig {};
   rand_toolkit::start_rand();
 
-  // Timers
-
   FpsCounter fps {};
   constexpr int kFpsWait = 1000;
   Timer timer (kFpsWait);
-
-  // Window
 
   constexpr int kWidth = 800;
   constexpr int kHeight = 600;

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    terrain.cc
 // Descr:   represents terrain
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "terrain.h"
@@ -42,10 +41,6 @@ Terrain::Terrain(
     obj.SetFace(0);
   }
 }
-
-//****************************************************************************
-// PUBLIC MEMBER FUNCTIONS IMPLEMENTATION
-//****************************************************************************
 
 // Sets shading of terrain
 
@@ -176,10 +171,6 @@ Vector Terrain::FindGroundNormal(const Vector& pos) const
     return {};
 }
 
-//****************************************************************************
-// PRIVATE MEMBER FUNCTIONS IMPLEMENTATION
-//****************************************************************************
-
 // Loads texture of terrain
 
 void Terrain::LoadTexture(const char* fname)
@@ -189,7 +180,7 @@ void Terrain::LoadTexture(const char* fname)
   tx_w_ = texture_->width();
 
   if (tx_h_ == 0 || tx_w_ == 0)
-    throw DrawExcept("Texture width or height is zero");
+    throw RenderExcept("Texture width or height is zero");
 
   // Note: unnecessary to check for square of texture or
   // to check is w and h of texture is the factor of two 
@@ -205,13 +196,13 @@ void Terrain::LoadHeightmap(const char* fname)
   hm_w_ = heightmap_.width();
 
   if (hm_h_ == 0 || hm_w_ == 0)
-    throw DrawExcept("Heighmap width or height is zero");
+    throw RenderExcept("Heighmap width or height is zero");
   if (hm_h_ != hm_w_)
-    throw DrawExcept("Heightmap width and height are not the same");
+    throw RenderExcept("Heightmap width and height are not the same");
   if (hm_h_ < obj_h_ || hm_w_ < obj_w_)
-    throw DrawExcept("Heightmap width or height less than given chunk width");  
+    throw RenderExcept("Heightmap width or height less than given chunk width");  
   if (!math::IsAbsFactorOfTwo(tx_h_-1) || (!math::IsAbsFactorOfTwo(tx_w_-1)))
-    throw DrawExcept("Heightmap dimensions are not the 2^n+1");
+    throw RenderExcept("Heightmap dimensions are not the 2^n+1");
 }
 
 // Compute vertices for most detalized level. Divide factor used here
@@ -264,7 +255,7 @@ void Terrain::ComputeAllVertices(float div_factor)
 void Terrain::MakeChunks(int vxs_in_row)
 {
   if (!math::IsAbsFactorOfTwo(vxs_in_row - 1))
-    throw DrawExcept("Chunk width is not the 2^n+1");
+    throw RenderExcept("Chunk width is not the 2^n+1");
 
   // Precalculations
 
@@ -353,10 +344,6 @@ void Terrain::ComputeVerticesNormals()
       vx.normal_.Normalize();
   }
 }
-
-//****************************************************************************
-// PROXY CLASS MEMBER FUNCITONS IMPLEMENTATION
-//****************************************************************************
 
 Terrain::Chunk::Chunk(const V_Vertex& cvxs, int ln, int rn, int tn, int bn)
   : GlObject()

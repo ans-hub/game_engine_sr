@@ -2,7 +2,6 @@
 // File:    helpers.h
 // Descr:   low-level helpers to work with system directly
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
 
 
@@ -70,7 +69,6 @@ namespace io_helpers {      // low-level io helpers
   int         GetCurrentVideoMode(Display*, Window);
   int         ChangeVideoMode(Display*, Window, int);
   void        GetWindowDimension(Display*, Window, int*, int*);
-  // void        GetVModeDimension(Display*, Window, int, int*, int*);
   int         FindNearestVideoMode(int, int);
   int         FindVideoMode(int, int);
 

@@ -2,7 +2,6 @@
 // File:    gl_window.cc
 // Descr:   implementation of opengl window
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
 
 #include "gl_window.h"
@@ -43,11 +42,18 @@ GlWindow::GlWindow(
 
   // New style context creating
 
-  if (glxver_.first > 1 || (glxver_.first == 1 && glxver_.second >= 3))
+  const int k_supposed_major = 1;
+  const int k_supposed_minor = 3;
+
+  const bool valid_ver_1 = glxver_.first > k_supposed_major;
+  const bool valid_ver_2 = glxver_.first == k_supposed_major &&
+                           glxver_.second >= k_supposed_minor;
+
+  if (valid_ver_1 || valid_ver_2)
   {
     fbcfgs_   = GetFBConfigs(disp_, fbattr_);
-    // int best  = GetBestMSAAVisual(disp_, fbcfgs_);
-    int best  = 0;   // see note #4 why commented
+    // int best  = GetBestMSAAVisual(disp_, fbcfgs_); // see note #3 why commented
+    int best  = 0;
     auto cfg  = *(fbcfgs_[best]);
     auto fbvi = ChooseGlVisual(disp_, cfg);
     swa_      = GetDefaultWinAttribs(disp_, root_, fbvi.get());
@@ -76,13 +82,11 @@ GlWindow::GlWindow(
     glXMakeCurrent(disp_, self_, context_);
   }
 
-  // Finally
-
   PrintGlInfo(std::cerr);  
   ChangeWindowName(disp_, self_, name);
   this->Show();
-  this->Move(p.x, p.y);       // see note #2
-  this->NotifyWhenClose();    // see note #3
+  this->Move(p.x, p.y);       // see note #1
+  this->NotifyWhenClose();    // see note #2
 
   io_helpers::GetWindowDimension(disp_, self_, &width_, &height_);
 }
@@ -123,10 +127,9 @@ void GlWindow::Exposed()
 
 } // namespace anshub
 
-// Note 1: only after context_ creating we may use opengl functions
-// Note 2: (hack) some window managers ignores our hints about window
+// Note 1: (hack) some window managers ignores our hints about window
 //         position while creating window. Thus we move window after show
-// Note 3: it is necessary call not in base class constructor since
+// Note 2: it is necessary call not in base class constructor since
 //         there yet not created self_ instance  
-// Note 4: when we draw in msaa something wrong with colors... I suppose
+// Note 3: when we draw in msaa something wrong with colors... I suppose
 //         this is depends on compatibility profile of gl

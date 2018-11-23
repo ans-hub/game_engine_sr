@@ -1,8 +1,7 @@
 // ***************************************************************
 // File:    trig.h
 // Descr:   precalculated trigonometry table and helper functions
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // ***************************************************************
 
 #ifndef GM_TRIG_H
@@ -58,7 +57,7 @@ inline constexpr TrigTable::TrigTable()
     cosine_[i]  = std::cos(trig::Deg2rad(i));
   }
   
-  // Exclude negative zeroes
+  // Edge-cases: exclude negative zeroes
 
   sine_[180] = 0;
   sine_[360] = 0;

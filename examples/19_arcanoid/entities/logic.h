@@ -2,7 +2,6 @@
 // File:    logic.h
 // Descr:   simple logic processor (manipilates game objects)
 // Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
 #ifndef GAME_LOGIC_H
@@ -11,7 +10,7 @@
 #include "lib/window/gl_window.h"
 #include "lib/audio/audio_out.h"
 #include "lib/system/rand_toolkit.h"
-#include "lib/draw/fx_colors.h"
+#include "lib/render/fx_colors.h"
 #include "lib/math/vector.h"
 #include "lib/math/polygon.h"
 #include "lib/system/timer.h" 

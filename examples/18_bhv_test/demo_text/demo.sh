@@ -2,7 +2,7 @@
 #
 # File:     demo.sh
 # Descr:    Runs demo application with different command line arguments
-# Author:   Anton Novoselov @ 2018
+# Author:   Anton Novoselov @ 2017
 # URL:      https://github.com/ans-hub/game_console
 #
 # ############################################################################

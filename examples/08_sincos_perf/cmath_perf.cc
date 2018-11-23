@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    sincos_perf.cc
 // Descr:   test sin_cos table perfomance in comparsion with cmath
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>

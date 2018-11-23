@@ -1,8 +1,7 @@
 // *******************************************************************
 // File:    camera_button.h
 // Descr:   used to store info about camera buttons and its delays
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *******************************************************************
 
 #ifndef GC_CAMERA_BUTTON_H

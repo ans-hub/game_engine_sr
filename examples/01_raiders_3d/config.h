@@ -1,7 +1,7 @@
 // *************************************************************
 // File:    config.h
 // Descr:   enumerators
-// Author:  Novoselov Anton @ 2018
+// Author:  Novoselov Anton @ 2017
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
@@ -12,15 +12,7 @@ namespace anshub {
 
 namespace cfg {
 
-//****************************************************************************
-// Music settings
-//****************************************************************************
-
   constexpr const char* kBackgroundMusic = "resources/sounds/background.mp3";
-
-//****************************************************************************
-// Sounds settings
-//****************************************************************************
 
   constexpr const char* kShotSnd = "resources/sounds/shot.mp3";
   constexpr const char* kExplodeSnd = "resources/sounds/explode.mp3";
@@ -28,10 +20,6 @@ namespace cfg {
   constexpr const char* kScratchSnd = "resources/sounds/scratch.mp3";
   constexpr const char* kEnemySnd = "resources/sounds/enemy.mp3";
   constexpr const char* kAlarmSnd = "resources/sounds/alarm.mp3";
-
-//****************************************************************************
-// Game settings
-//****************************************************************************
 
 namespace color {
 

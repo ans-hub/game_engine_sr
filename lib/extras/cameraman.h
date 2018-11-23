@@ -1,8 +1,7 @@
 // *******************************************************************
 // File:    cameraman.h
 // Descr:   used to manage camera movements and user input
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *******************************************************************
 
 #ifndef GC_CAMERAMAN_H
@@ -11,11 +10,11 @@
 #include "lib/extras/exceptions.h"
 #include "lib/extras/inputer.h"
 
-#include "lib/draw/gl_enums.h"
+#include "lib/render/gl_enums.h"
 
-#include "lib/draw/cameras/gl_camera.h"
-#include "lib/draw/cameras/gl_camera_uvn.h"
-#include "lib/draw/cameras/gl_camera_fol.h"
+#include "lib/render/cameras/gl_camera.h"
+#include "lib/render/cameras/gl_camera_uvn.h"
+#include "lib/render/cameras/gl_camera_fol.h"
 
 #include "lib/window/enums.h"
 #include "lib/window/base_window.h"
@@ -27,7 +26,7 @@
 namespace anshub {
 
 //****************************************************************************
-// Inputer enumerators - performs behavior of cameraman
+// Inputer enums - performs behavior of cameraman
 //****************************************************************************
 
 enum class CamAction
@@ -90,7 +89,7 @@ struct CameraMan : public Inputer<CamAction, CamState, CamValue>
   template<class ...Args> CameraMan(Args&&...);
   template<class T> auto& GetCamera(T);
   template<class T> void  UseCamera(T);
-  void  SetDynamics(Dynamics&& dyn) { dyn_ = std::move(dyn); }
+  void  SetPhysics(Physics&& dyn) { dyn_ = std::move(dyn); }
   auto& GetDynamics() const { return dyn_; }  
   auto& GetCurrentCamera() { return *cam_; }
   auto& GetCurrentCamera() const { return *cam_; }
@@ -103,7 +102,7 @@ protected:
   CameraUvn   cam_uvn_;
   CameraFol   cam_fol_;
   GlCamera*   cam_;       // current camera
-  Dynamics    dyn_;       // dynamics movements
+  Physics    dyn_;       // dynamics movements
 
   Pos prev_mouse_pos_;    // used to determine where was mouse in prev frame
 

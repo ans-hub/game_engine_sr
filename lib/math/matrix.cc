@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    matrix.cc
 // Descr:   represents matrix
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "matrix.h"

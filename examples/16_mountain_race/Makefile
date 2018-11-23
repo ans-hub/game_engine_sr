@@ -8,7 +8,7 @@ ROOTDIR = ../../
 LIBDIR		= $(ROOTDIR)lib
 LIBWINDOW = $(LIBDIR)/window
 LIBMATH   = $(LIBDIR)/math
-LIBDRAW   = $(LIBDIR)/draw
+LIBRENDER = $(LIBDIR)/render
 LIBSYSTEM = $(LIBDIR)/system
 LIBAUDIO  = $(LIBDIR)/audio
 LIBEXTRAS = $(LIBDIR)/extras
@@ -22,7 +22,7 @@ LDFLAGS	 += -lX11 -lGL -lGLU -lXrandr -lbass -lbass_fx
 CXX       = g++
 CXXFLAGS  = -I $(ROOTDIR) -I .
 CXXFLAGS  += -ansi -pedantic -Wall -Wextra -std=c++14
-CXXLIBS   += -L $(LIBWINDOW) -L $(LIBMATH) -L $(LIBDRAW) -L $(LIBPHYSICS)
+CXXLIBS   += -L $(LIBWINDOW) -L $(LIBMATH) -L $(LIBRENDER) -L $(LIBPHYSICS)
 CXXLIBS   += -L $(LIBSYSTEM) -L $(LIBAUDIO) -L $(LIBEXTRAS) -L $(LIBDATA)
 CXXLIBS   += -L /usr/local/lib/
 CXXFLAGS  += -MP -MMD
@@ -57,7 +57,7 @@ endif
 $(APPNAME) : $(APPNAME).cc $(OBJECTS)
 	make -C $(LIBWINDOW)
 	make -C $(LIBMATH)
-	make -C $(LIBDRAW)
+	make -C $(LIBRENDER)
 	make -C $(LIBSYSTEM)
 	make -C $(LIBAUDIO)
 	make -C $(LIBEXTRAS)
@@ -70,7 +70,7 @@ $(APPNAME) : $(APPNAME).cc $(OBJECTS)
 debug : $(APPNAME).cc $(OBJECTS)
 	make debug -C $(LIBWINDOW)
 	make debug -C $(LIBMATH)
-	make debug -C $(LIBDRAW)
+	make debug -C $(LIBRENDER)
 	make debug -C $(LIBSYSTEM)
 	make debug -C $(LIBAUDIO)
 	make debug -C $(LIBEXTRAS)
@@ -97,7 +97,7 @@ clean :
 	rm -rf $(APPNAME) $(APPNAME)_* *.d *.o 
 	make clean -C $(LIBWINDOW)
 	make clean -C $(LIBMATH)
-	make clean -C $(LIBDRAW)
+	make clean -C $(LIBRENDER)
 	make clean -C $(LIBSYSTEM)
 	make clean -C $(LIBAUDIO)
 	make clean -C $(LIBEXTRAS)

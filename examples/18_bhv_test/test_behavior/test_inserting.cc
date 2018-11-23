@@ -1,16 +1,15 @@
 // ***************************************************************************
 // File:    test_inserting.cc
 // Descr:   BHV-tree behavior test using Cathc2 test framework
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // ***************************************************************************
 
 #include <sstream>
 
 #include "3rdparty/catch.hpp"
 
-#include "lib/draw/gl_bvh.h"
-#include "lib/draw/gl_object.h"
+#include "lib/render/gl_bvh.h"
+#include "lib/render/gl_object.h"
 
 #include "lib/math/trig.h"
 
@@ -89,7 +88,6 @@ auto MakeObjectsPack_9_small_two()
   return objs;
 }
 
-
 // Creates 9 small objects with particular position and radius,
 // each other placed into the middle of a cube
 
@@ -118,9 +116,6 @@ auto MakeTree_8_3()
   constexpr int   kTreeDepth {3};
   return Bvh(kTreeDepth, kWorldSize);
 }
-
-// ...
-
 
 TEST_CASE("Insert 1 object in the middle of the world", "[insert]" ) {
 

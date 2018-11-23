@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    player.h
 // Descr:   represents player in game
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GC_PLAYER_ENTITY_H
@@ -10,10 +9,10 @@
 
 #include <list>
 
-#include "lib/draw/gl_object.h"
-#include "lib/draw/gl_aliases.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/gl_aliases.h"
 
-#include "lib/draw/cameras/gl_camdir.h"
+#include "lib/render/cameras/gl_camdir.h"
 
 #include "lib/extras/inputer.h"
 #include "lib/extras/terrain.h"
@@ -25,7 +24,7 @@
 namespace anshub {
 
 //****************************************************************************
-// Inputer enumerators - performs behavior of player
+// Inputer enums - performs behavior of player
 //****************************************************************************
 
 enum class ObjAction
@@ -68,7 +67,7 @@ struct Player
   using Btn = ObjAction;
   
   Player(GlObject&&, float player_h, cVector& dir, cVector& pos, cTrigTable&);
-  void  SetDynamics(Dynamics&& dyn) { dyn_ = std::move(dyn); }
+  void  SetPhysics(Physics&& dyn) { dyn_ = std::move(dyn); }
   auto& GetDynamics() { return dyn_; }
   
   void  ProcessInput(const BaseWindow&) override;
@@ -78,13 +77,13 @@ struct Player
   template<class ... Args>
   void SetDirection(DirectionType, Args&&...);
 private:
-  Dynamics  dyn_;
+  Physics  dyn_;
   CamDir    yaw_;
   CamDir    pitch_;
   CamDir    roll_;
   TrigTable trig_;
 
-  std::list<float> heights_;  
+  std::list<float> heights_;  // todo: use std::vector instead
 
   void SetGroundPosition(float ypos);
   void ProcessGroundPosition(const Terrain&);

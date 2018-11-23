@@ -1,9 +1,10 @@
 // *************************************************************
 // File:    vector.h
 // Descr:   represents 2d-3d-4d vector
-// Author:  Novoselov Anton @ 2017-2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
+
+// TODO: do Vector<2>, Vector<3> 
 
 #ifndef GM_VECTOR_H
 #define GM_VECTOR_H
@@ -265,6 +266,3 @@ inline void vector::InUpperBound(Vector& v, float upper)
 // One important thing - is in perspective proj. In quaternions w coordinate uses to
 // represents really coordinate (it may be multiplie, add, and sub ...)
 // Also we make it 0 when we don't want to translate this vector by transform matrix
-
-// Todo #1 : may be do as Vector<2>, Vector<3> ??? Yes, surely
-// Todo #2 : make all inline ??? 

@@ -1,14 +1,13 @@
 // *************************************************************
 // File:    skybox.h
 // Descr:   represents skybox
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GL_EXTRAS_SKYBOX_H
 #define GL_EXTRAS_SKYBOX_H
 
-#include "lib/draw/gl_object.h"
+#include "lib/render/gl_object.h"
 #include "lib/math/vector.h"
 
 namespace anshub {

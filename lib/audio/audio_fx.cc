@@ -1,19 +1,14 @@
 // *************************************************************
 // File:    audio_fx.cc
 // Descr:   wrapper to BASS_FX (addon of BASS audio library)
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/audio_out
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "audio_fx.h"
 
 namespace anshub {
 
-// Constructs AudioOut with BassFx plugin capabilities
-
 AudioFx::AudioFx() : AudioOut() { }
-
-// Overrided destructor
 
 AudioFx::~AudioFx()
 {
@@ -22,24 +17,16 @@ AudioFx::~AudioFx()
       BASS_StreamFree(stream.second.hndl_);
 }
 
-// Loads channel by filename, saves to streams_ vector and return its handle
-// Low pitch and high pitch is the pitch range for future changing tempo
-
 bool AudioFx::LoadFx(cString& fname, bool repeat)
 {
-  // Check if stream already loaded
-
   auto hndl = GetLoadedHandle_FX(fname);
+ 
   if (hndl)
     return audio_helpers::PrintGeneralError(fname + String("already loaded"));
   
-  // Create stream and store it in container
-
   auto flags = BASS_STREAM_DECODE;
   hndl = BASS_StreamCreateFile(FALSE, fname.c_str(), 0,0, flags);
   
-  // Create new tempo stream
-
   if (hndl)
   {
     flags = BASS_FX_FREESOURCE;   // stream auto free
@@ -47,8 +34,6 @@ bool AudioFx::LoadFx(cString& fname, bool repeat)
       flags |= BASS_SAMPLE_LOOP;
     hndl = BASS_FX_TempoCreate(hndl, flags);
     
-    // Add stream to container
-
     streams_[fname] = std::move(SoundInfo(hndl));
     return hndl;
   }
@@ -56,18 +41,12 @@ bool AudioFx::LoadFx(cString& fname, bool repeat)
     return audio_helpers::PrintBassError("BASS_StreamCreateFile");
 }
 
-// Plays the channel (with loading its before)
-
 bool AudioFx::PlayFx(cString& fname, bool repeat)
 {
-  // Try to load stream (may be loaded already)
-
   auto hndl = GetLoadedHandle_FX(fname);
 
   if (!hndl && !LoadFx(fname, repeat))
       return false;
-
-  // Try to play stream
 
   if (BASS_ChannelPlay(hndl, FALSE))
     return true;
@@ -92,39 +71,28 @@ bool AudioFx::StopFx(cString& fname)
     return true;
 }
 
-// Set acessible ranges to modifiers
-
 bool AudioFx::SetModifierRange(cString& fname, Modifier m, float min, float max)
 {
-  // Try to get info about loaded file
-
   auto info = streams_.find(fname);
   if (info == streams_.end())
     return audio_helpers::PrintGeneralError(fname + String(" not loaded"));
   
-  // Set modifier range
-
   assert(min >= audio_consts::kFxRanges.at(m).first);
   assert(max <= audio_consts::kFxRanges.at(m).second);
   assert(min <= max);
+
   info->second.ranges_[m] = std::make_pair(min, max);
   return true;
 }
-
-// Set value to given modifier
 
 bool AudioFx::SetModifierValue(cString& fname, Modifier m, float val)
 {
   assert(val >= audio_consts::kFxRanges.at(m).first);
   assert(val <= audio_consts::kFxRanges.at(m).second);
 
-  // Try to get sound handle
-
   auto hndl = GetLoadedHandle_FX(fname);
   if (!hndl)
     return audio_helpers::PrintGeneralError(fname + String(" not loaded"));    
-
-  // Try to set modifier value to the sound
 
   bool success {false};
 
@@ -148,12 +116,8 @@ bool AudioFx::SetModifierValue(cString& fname, Modifier m, float val)
   return success;
 }
 
-// Returns modifier range values (pair of floats)
-
 AudioFx::P_Range AudioFx::GetModifierRange(const FileName& fname, Modifier m) const
 {
-  // Try to get info about loaded file
-
   auto info = streams_.find(fname);
   if (info == streams_.end())
   {
@@ -163,8 +127,6 @@ AudioFx::P_Range AudioFx::GetModifierRange(const FileName& fname, Modifier m) co
   
   return info->second.ranges_.at(m);
 }
-
-// Returns sound handle by its filename
 
 AudioFx::Handle AudioFx::GetLoadedHandle_FX(const FileName& fname)
 {

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    ply_loader.h
 // Descr:   ply (ascii) format loader
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/ply_loader
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GC_PLY_LOADER_H
@@ -175,6 +174,6 @@ namespace helpers {
 //  sizes_ - contains count of elements 
 
 // #6: although construction of 4d vector is looks creepy, but all memory
-// allocations made 
+// allocations made
 
 // # Todo:   l.SetFilter("vertex", {"x", "y", "z"});

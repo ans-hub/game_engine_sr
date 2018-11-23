@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    scene.cc
 // Descr:   builds visual game scene
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "scene.h"
@@ -27,8 +26,6 @@ Scene::Scene(GlWindow& win, Level& level)
   timer_.Start();
 }
 
-// Main member function which define sequence of actions
-
 void Scene::Build()
 {
   buffer_.Clear();
@@ -47,15 +44,9 @@ void Scene::Build()
   CountFPS();
 }
 
-//****************************************************************************
-// PRIVATE MEMBER FUNCTIONS
-//****************************************************************************
-
 void Scene::DrawStarfield()
 {
-  // Prepare color for draw perspective
-
-  int    color = 0;
+  int   color = 0;
   float brightness = 0;
   float kColor = ((cfg::kMaxBrightness*2)-cfg::kMinBrightness) / cfg::kStarFarZ; 
 

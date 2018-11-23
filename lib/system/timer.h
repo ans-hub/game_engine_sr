@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    timer.h
 // Descr:   timer class
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef SYS_TIMER_H
@@ -12,10 +11,6 @@
 #include <chrono>
 
 namespace anshub {
-
-//***************************************************************************
-// Represents timer
-//***************************************************************************
 
 class Timer
 {
@@ -40,10 +35,6 @@ private:
   slong end_time_;
 
 }; // class Timer 
-
-//***************************************************************************
-// Inline implementation
-//***************************************************************************
 
 inline Timer::slong Timer::GetCurrentClock() const
 {

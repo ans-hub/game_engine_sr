@@ -9,7 +9,7 @@ LIBDIR 		= $(ROOTDIR)lib
 LIBAUDIO 	= $(LIBDIR)/audio
 LIBWINDOW = $(LIBDIR)/window
 LIBMATH 	= $(LIBDIR)/math
-LIBDRAW 	= $(LIBDIR)/draw
+LIBRENDER = $(LIBDIR)/render
 LIBSYSTEM = $(LIBDIR)/system
 LDFLAGS 	= -lwindow -lmath -ldraw -lsystem -laudio	# internal
 LDFLAGS  += -lbass -lX11 -lGL -lGLU -lXrandr				# external
@@ -20,7 +20,7 @@ CXX 			= g++
 CXXFLAGS 	= -I $(ROOTDIR) -I .	# see note below
 CXXFLAGS += -ansi -pedantic -Wall -Wextra -std=c++14
 CXXLIBS  += -L $(LIBAUDIO) -L $(LIBWINDOW)
-CXXLIBS  += -L $(LIBMATH) -L $(LIBDRAW) -L $(LIBSYSTEM)
+CXXLIBS  += -L $(LIBMATH) -L $(LIBRENDER) -L $(LIBSYSTEM)
 CXXLIBS  += -L /usr/local/lib/
 CXXFLAGS += -MP -MMD
 DBGFLAGS  = -ggdb3 -DDEBUG -O0
@@ -55,7 +55,7 @@ $(APPNAME) : $(APPNAME).cc $(OBJECTS)
 	make -C $(LIBWINDOW)
 	make -C $(LIBMATH)
 	make -C $(LIBAUDIO)
-	make -C $(LIBDRAW)
+	make -C $(LIBRENDER)
 	make -C $(LIBSYSTEM)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(RLSFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $@
 
@@ -65,7 +65,7 @@ debug : $(APPNAME).cc $(OBJECTS)
 	make debug -C $(LIBWINDOW)
 	make debug -C $(LIBMATH)
 	make debug -C $(LIBAUDIO)
-	make debug -C $(LIBDRAW)
+	make debug -C $(LIBRENDER)
 	make debug -C $(LIBSYSTEM)
 	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(DBGFLAGS) $< $(OBJECTS) $(LDFLAGS) -o $(APPNAME)_$@
 
@@ -87,7 +87,7 @@ clean :
 	make clean -C $(LIBWINDOW)
 	make clean -C $(LIBMATH)
 	make clean -C $(LIBAUDIO)
-	make clean -C $(LIBDRAW)
+	make clean -C $(LIBRENDER)
 	make clean -C $(LIBSYSTEM)
 
 	# Important note: we have 2 include path - root (for including libraries headers

@@ -2,7 +2,6 @@
 // File:    enums.h
 // Descr:   exceptions class for iogame_lib
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
 
 #ifndef IO_EXCEPTION_H

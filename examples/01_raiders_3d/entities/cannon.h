@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    cannon.h
 // Descr:   cannon entity
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GAME_CANNON_H
@@ -17,9 +16,9 @@ struct Cannon
   Cannon() : mid_{}, ready_{true}, shot_{false}, wait_{0} { }
   Vector  mid_;
   int     color_;
-  bool    ready_;     // ready state
-  bool    shot_;      // shot state
-  int     wait_;      // wait state
+  bool    ready_;
+  bool    shot_;
+  int     wait_;
 
 }; // struct Cannon
 

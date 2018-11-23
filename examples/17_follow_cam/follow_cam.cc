@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    follow_cam.cc
 // Descr:   test follow camera
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include <iostream>
@@ -14,15 +13,15 @@
 #include "lib/window/gl_window.h"
 #include "lib/window/helpers.h"
 
-#include "lib/draw/gl_render_ctx.h"
-#include "lib/draw/gl_object.h"
-#include "lib/draw/gl_draw.h"
-#include "lib/draw/gl_triangle.h"
-#include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_lights.h"
-#include "lib/draw/gl_coords.h"
-#include "lib/draw/gl_z_buffer.h"
-#include "lib/draw/gl_debug_draw.h"
+#include "lib/render/gl_render_ctx.h"
+#include "lib/render/gl_object.h"
+#include "lib/render/gl_draw.h"
+#include "lib/render/gl_triangle.h"
+#include "lib/render/fx_colors.h"
+#include "lib/render/gl_lights.h"
+#include "lib/render/gl_coords.h"
+#include "lib/render/gl_z_buffer.h"
+#include "lib/render/gl_debug_draw.h"
 
 #include "lib/extras/skybox.h"
 #include "lib/extras/player.h"
@@ -49,38 +48,26 @@ int main(int argc, const char** argv)
     return false;
   }
 
-  // Math processor
-  
   TrigTable trig {};
   rand_toolkit::start_rand();
 
-  // Timers
-
   FpsCounter fps {};
   Timer timer (1000);
-
-  // Constants
 
   const int kWinWidth {800};
   const int kWinHeight {600};
   const bool kDebugShow {1};  
 
-  // Window
-  
   auto pos  = io_helpers::GetXYToMiddle(kWinWidth, kWinHeight); 
   auto mode = io_helpers::FindVideoMode(kWinWidth, kWinHeight);
   GlWindow win (pos.x, pos.y, kWinWidth, kWinHeight, "Follow camera");
   
-  // Create terrain
-
   Terrain terrain (
     "../00_data/terrains/new_test_hm.bmp", "../00_data/terrains/new_test_tx.bmp",
     2.0f, 9, Shading::FLAT
   );
   terrain.SetDetalization({50.0f, 100.0f, 150.0f});
   auto& terrain_chunks = terrain.GetChunks();
-
-  // Camera
 
   float    dov     {1.0f};
   float    fov     {75.0f};
@@ -111,8 +98,8 @@ int main(int argc, const char** argv)
   camman.SetValue(CamValue::OPERATOR_HEIGHT, 5.0f);
   camman.SetValue(CamValue::SPEED_UP, 2.0f);
 
-  Dynamics dyn_camera {0.01f, 0.8f, -0.01f, 10.0f};
-  camman.SetDynamics(std::move(dyn_camera));  
+  Physics dyn_camera {0.01f, 0.8f, -0.01f, 10.0f};
+  camman.SetPhysics(std::move(dyn_camera));  
 
   // Create observable model
 
@@ -148,8 +135,8 @@ int main(int argc, const char** argv)
   obj.SetDirection(Player::PITCH, 1.0f, 2.0f, 0.0f, 0.0f, false);
   obj.SetDirection(Player::ROLL, 1.0f, 2.0f, 0.0f, 0.0f, false);
   obj.SetDirection(Player::YAW, 1.0f, 2.0f, 0.0f, 0.0f, false);
-  Dynamics dyn_player {0.01f, 0.8f, -0.01f, 10.0f};
-  obj.SetDynamics(std::move(dyn_player));
+  Physics dyn_player {0.01f, 0.8f, -0.01f, 10.0f};
+  obj.SetPhysics(std::move(dyn_player));
 
   // Set initial camera position (by using orient_z vector)
 
@@ -226,7 +213,7 @@ int main(int argc, const char** argv)
     object::ComputeFaceNormals(obj, true);
     auto hidden = object::RemoveHiddenSurfaces(obj, cam);
 
-       // Cull terrain chunks by world pos
+    // Cull terrain chunks by world pos
 
     int obj_culled {};
     for (auto& chunk : terrain_chunks)

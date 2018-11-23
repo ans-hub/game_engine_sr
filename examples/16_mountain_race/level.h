@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    level.h
 // Descr:   level class for mountain race game
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef LEVEL_H
@@ -14,12 +13,12 @@
 
 #include "lib/data/cfg_loader.h"
 
-#include "lib/draw/gl_bvh.h"
-#include "lib/draw/fx_colors.h"
-#include "lib/draw/gl_lights.h"
-#include "lib/draw/gl_render_ctx.h"
-#include "lib/draw/cameras/gl_camera.h"
-#include "lib/draw/cameras/gl_camera_fol.h"
+#include "lib/render/gl_bvh.h"
+#include "lib/render/fx_colors.h"
+#include "lib/render/gl_lights.h"
+#include "lib/render/gl_render_ctx.h"
+#include "lib/render/cameras/gl_camera.h"
+#include "lib/render/cameras/gl_camera_fol.h"
 
 #include "lib/extras/cameraman.h"
 #include "lib/extras/player.h"
@@ -33,23 +32,17 @@
 
 namespace anshub {
 
-// Level is just container of game objects
-
 struct Level
 {
   Level(const Config&);
 
   TrigTable trig_;
 
-  // Audio objects
-
   AudioFx audio_;
   std::string engine_snd_;
   std::string crash_snd_;
   std::string ambient_snd_;
   AudioFx::Modifier engine_mod_;
-
-  // Gameplay objects 
 
   CameraMan camman_;
   Player player_;
@@ -60,8 +53,6 @@ struct Level
   Nature trees_;
   Nature nature_;
   Rain rain_;
-
-  // Renderer objects
 
   Lights lights_all_;
   Lights lights_sky_;

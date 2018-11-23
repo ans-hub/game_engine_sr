@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    birds.cc
 // Descr:   represents very simple birds
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "birds.h"

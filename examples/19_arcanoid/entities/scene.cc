@@ -2,7 +2,6 @@
 // File:    scene.cc
 // Descr:   builds visual game scene
 // Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 
 #include "scene.h"
@@ -44,10 +43,6 @@ void Scene::Build()
     PrintCentered("YOU ARE DEAD. RETRY? (Y/N)");
   CountFPS();
 }
-
-//****************************************************************************
-// PRIVATE MEMBER FUNCTIONS
-//****************************************************************************
 
 void Scene::DrawPaddle()
 {

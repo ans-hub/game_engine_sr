@@ -1,7 +1,7 @@
 // *************************************************************
 // File:    enums.h
 // Descr:   enumerators
-// Author:  Novoselov Anton @ 2018
+// Author:  Novoselov Anton @ 2017
 // URL:     https://github.com/ans-hub/game_console
 // *************************************************************
 

@@ -1,8 +1,7 @@
 // *******************************************************************
 // File:    camera_operator.cc
 // Descr:   used to manage camera movements, rotating and other stuff
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *******************************************************************
 
 #include "cameraman.h"
@@ -11,11 +10,11 @@ namespace anshub {
 
 void CameraMan::ProcessInput(const BaseWindow& win)
 {
-  // Camera-type specific preprocessing (virtual)
+  // Camera-type specific preprocessing
 
   cam_->Preprocess();
 
-  // Preprocess values
+  // Preprocess base values
 
   bool mode_speedup = IsButtonPressed(win, Btn::SPEED_UP);
   auto mode_fly = GetState(CamState::FLY_MODE);

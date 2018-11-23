@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    level.cc
 // Descr:   level class for mountain race game
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "level.h"
@@ -11,17 +10,11 @@ namespace anshub {
 
 Level::Level(const Config& cfg)
   : trig_{}
-
-  // Initializes audio objects
-
   , audio_{}
   , engine_snd_ {cfg.Get<std::string>("snd_engine")}
   , crash_snd_ {cfg.Get<std::string>("snd_crash")}
   , ambient_snd_ {cfg.Get<std::string>("snd_ambient")}
   , engine_mod_ {AudioFx::Modifier::PITCH}
-
-  // Initializes gameplay objects
-
   , camman_{
       cfg.Get<float>("cam_fov"),
       cfg.Get<float>("cam_dov"),
@@ -114,16 +107,12 @@ Level::Level(const Config& cfg)
     object::Scale(blob, {2.0f, 1.0f, 2.0f});
 }
 
-// Initializes audio routines: loads audio class instance and loads music
-
 void Level::InitAudio(const Config&)
 {
   audio_.LoadFx(engine_snd_, true);
   audio_.Load(ambient_snd_, true);
   audio_.Load(crash_snd_, false);
 }
-
-// Initializes camera
 
 void Level::InitCamera(const Config& cfg)
 {
@@ -149,23 +138,19 @@ void Level::InitCamera(const Config& cfg)
   camman_.SetValue(CamValue::OPERATOR_HEIGHT, cfg.Get<float>("cam_height"));
   camman_.SetValue(CamValue::SPEED_UP, cfg.Get<float>("cam_speed_up"));
 
-  Dynamics dyn_camera {             // were 0.001, 0.9
+  Physics dyn_camera {             // were 0.001, 0.9
     cfg.Get<float>("cam_accel"),
     cfg.Get<float>("cam_frict"),
     cfg.Get<float>("cam_gravity"),
     cfg.Get<float>("cam_max_speed")
   };
-  camman_.SetDynamics(std::move(dyn_camera));  
+  camman_.SetPhysics(std::move(dyn_camera));  
 }
-
-// Initializes player
 
 void Level::InitPlayer(const Config& cfg)
 {
   player_.sphere_rad_ = 0.2f; // todo: magic (to prevent unnecessary collisions)
   
-  // Set player controls
-
   player_.SetButton(ObjAction::TURN_LEFT, KbdBtn::LEFT);
   player_.SetButton(ObjAction::TURN_RIGHT, KbdBtn::RIGHT);
   player_.SetButton(ObjAction::LOOK_UP, KbdBtn::N);
@@ -188,16 +173,14 @@ void Level::InitPlayer(const Config& cfg)
   player_.SetDirection(Player::ROLL, 1.0f, 4.0f, -30.0f, 30.0f, false);
   player_.SetDirection(Player::YAW, 1.0f, 6.0f, 0.0f, 0.0f, false);
 
-  Dynamics dyn_player {
+  Physics dyn_player {
     cfg.Get<float>("cam_accel"),
     cfg.Get<float>("cam_frict"),
     cfg.Get<float>("cam_gravity"),
     cfg.Get<float>("cam_max_speed")
   };
-  player_.SetDynamics(std::move(dyn_player));
+  player_.SetPhysics(std::move(dyn_player));
 }
-
-// Initializes camera and player following
 
 void Level::InitFollowing(const Config&)
 {
@@ -219,8 +202,6 @@ void Level::InitFollowing(const Config&)
   follow_cam_.FollowFor(player_, kVrpOffset, kDirOffset);
 }
 
-// Sets up skybox
-
 void Level::SetupSkybox(const Config&)
 {
   auto far_z = camman_.GetCurrentCamera().z_far_;
@@ -228,14 +209,10 @@ void Level::SetupSkybox(const Config&)
   object::Rotate(skybox_, {90.0f, 0.0f, 0.0f}, trig_);   // todo: magic
 }
 
-// Sets up terrain
-
 void Level::SetupTerrain(const Config& cfg)
 {
   terrain_.SetDetalization(cfg.Get<Config::V_Float>("ter_detaliz"));
 }
-
-// Sets up trees
 
 void Level::SetupTrees(const Config&)
 {
@@ -252,8 +229,6 @@ void Level::SetupTrees(const Config&)
   // fantom collisions 
 }
 
-// Sets up other nature
-
 void Level::SetupNature(const Config&)
 {
   Nature::ObjsList<NatureTypes> nature_list {
@@ -262,8 +237,6 @@ void Level::SetupNature(const Config&)
   nature_.SetObjects<NatureTypes>(nature_list);
   nature_.RecognizeObjects();
 }
-
-// Sets up render context
 
 void Level::SetupRenderContext(const Config& cfg)
 {
@@ -275,8 +248,6 @@ void Level::SetupRenderContext(const Config& cfg)
   render_ctx_.mipmap_dist_ = 240.0f;    // todo: magic
   render_ctx_.clarity_  = cfg.Get<float>("cam_clarity");
 }
-
-// Sets up lights
 
 void Level::SetupLights(const Config& cfg)
 {

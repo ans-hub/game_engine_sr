@@ -2,7 +2,6 @@
 // File:    enums.h
 // Descr:   enumerators and helper structs
 // Author:  Novoselov Anton @ 2017
-// URL:     https://github.com/ans-hub/iogame_lib
 // *************************************************************
 
 #ifndef IO_ENUMS_H

@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    water.cc
-// Descr:   represents very simple water
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Descr:   represents very simple water-plane
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "water.h"

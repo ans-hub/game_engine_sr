@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    logic.cc
-// Descr:   main game logic
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Descr:   game logic
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #include "logic.h"
@@ -14,8 +13,6 @@ Logic::Logic(GlWindow& win, Level& level, AudioOut& audio)
   , level_(level)
   , audio_{audio}
 {
-  // Preload music in memory
-
   audio.Load(cfg::kBackgroundMusic, true);
   audio.Load(cfg::kExplodeSnd, false);
   audio.Load(cfg::kShotSnd, false);

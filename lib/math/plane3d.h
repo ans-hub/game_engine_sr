@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    plane3d.h
 // Descr:   represents 3d plane entity
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/geomath_lib
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GM_PLANE_3D_H

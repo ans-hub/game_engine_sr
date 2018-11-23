@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    files.h
 // Descr:   files helpers
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef SYS_FILES_H

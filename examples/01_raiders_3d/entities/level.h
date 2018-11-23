@@ -1,8 +1,7 @@
 // *************************************************************
 // File:    level.h
 // Descr:   contains game object and state
-// Author:  Novoselov Anton @ 2018
-// URL:     https://github.com/ans-hub/game_console
+// Author:  Novoselov Anton @ 2017
 // *************************************************************
 
 #ifndef GAME_LEVEL_H
@@ -32,8 +31,6 @@ struct Level
 
   Level(int ships);
 
-  // Game objects
-
   VStarships    ships_;
   VStarfield    stars_;
   Cannon        cannon_;
@@ -41,8 +38,6 @@ struct Level
   VEnemyShots   enemy_shots_;
   Player        player_;
   
-  // States
-
   GameState     state_;
   unsigned int  score_;
   unsigned int  ships_destroyed_;
